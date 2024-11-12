@@ -29,12 +29,12 @@
 
 cce_17_0_1:
   variables:
-    SPEC: "~shared +openmp %cce@=17.0.1 ^blt@develop"
+    SPEC: "~shared +mpi +openmp %cce@=17.0.1 ^blt@develop"
   extends: .job_on_tioga
 
 rocmcc_6_2_0_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.2.0 ^hip@6.2.0 ^blt@develop"
+    SPEC: "~shared +mpi +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.2.0 ^hip@6.2.0 ^blt@develop"
   extends: .job_on_tioga
 
 rocmcc_6_2_0_hip_openmp_mpi:
