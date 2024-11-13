@@ -42,7 +42,7 @@ gcc_8_3_1_cuda_11_7_0_ats_disabled:
 gcc_8_3_1_cuda_11_7_0_ats_disabled_mpi:
   extends: .job_on_lassen
   variables:
-    SPEC: " ~shared +mpi +openmp +cuda +mpi %gcc@=8.3.1 cuda_arch=70 ^cuda@11.7.0+allow-unsupported-compilers ^spectrum-mpi ^blt@develop"
+    SPEC: " ~shared +openmp +cuda +mpi %gcc@=8.3.1 cuda_arch=70 ^cuda@11.7.0+allow-unsupported-compilers ^spectrum-mpi ^blt@develop"
     MODULE_LIST: "cuda/11.7.0"
     LASSEN_JOB_ALLOC: "1 --atsdisable -W 30 -q pci"
 

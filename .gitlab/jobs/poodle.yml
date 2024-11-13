@@ -45,5 +45,5 @@ gcc_10_3_1:
 
 intel_2023_2_1_mpi:
   variables:
-    SPEC: "~shared +mpi +openmp +mpi +lowopttest cxxflags==-fp-model=precise %intel@=2023.2.1 ^mvapich2 ^blt@develop"
+    SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %intel@=2023.2.1 ^mvapich2 ^blt@develop"
   extends: .job_on_poodle
