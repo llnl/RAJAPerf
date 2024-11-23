@@ -525,7 +525,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
           tebasisx, tebasisy, tebasisz,
           symmetric_matrix);
 
-         // the inner product: beta*<Curl(w_i), Curl(w_j)>
+        // the inner product: beta*<Curl(w_i), Curl(w_j)>
         inner_product(
           detjwgts*beta,
           tdbasisx, tdbasisy, tdbasisz,
