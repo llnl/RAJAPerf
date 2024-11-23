@@ -568,7 +568,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
   rajaperf::Real_type Z[NB] = {z0[i],z1[i],z2[i],z3[i],z4[i],z5[i],z6[i],z7[i]};\
   rajaperf::Real_type edge_matrix[EB][EB];\
-  edge_MpSmatrix(X, Y, Z, 1.0, 1.0, 0.0, 1.0, NQ_1D, edge_matrix);\
+  symmetric_edge_MpSmatrix(X, Y, Z, 1.0, 1.0, 0.0, 1.0, NQ_1D, edge_matrix);\
   rajaperf::Real_type local_sum = 0.0;\
   for (rajaperf::Int_type m = 0; m < EB; m++) {\
     rajaperf::Real_type check = 0.0;\
