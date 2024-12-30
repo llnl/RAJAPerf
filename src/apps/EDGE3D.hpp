@@ -588,6 +588,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
     local_sum += check;\
   }\
   sum[i] = local_sum;\
+
 #else
   rajaperf::Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
   rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
@@ -603,6 +604,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
     local_sum += check;\
   }\
   sum[i] = local_sum;\
+
 #endif
 
 #include "common/KernelBase.hpp"
