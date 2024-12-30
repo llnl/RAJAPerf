@@ -538,13 +538,22 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   // write back to matrix
   rajaperf::Int_type offset = 0;
   for (rajaperf::Int_type p = 0; p < EB; p++) {
-
-    matrix[p][p] = symmetric_matrix[offset];
-    for (rajaperf::Int_type m = 1; m < (EB-p); m++) {
-      auto x = symmetric_matrix[offset + m];
-      matrix[p][m] = x;
-      matrix[m][p] = x;
+    /*
+    for (rajaperf::Int_type m = p; m < EB; m++) {
+      auto value = symmetric_matrix[offset + m - p];
+      matrix[p][m] = value;
+      matrix[m][p] = value;
     }
+    offset += (EB-p);
+    */
+    // off-diagonal values
+    for (rajaperf::Int_type m = p + 1; m < EB; m++) {
+      auto value = symmetric_matrix[offset + m - p];
+      matrix[p][m] = value;
+      matrix[m][p] = value;
+    }
+    // diagonal value
+    matrix[p][p] = symmetric_matrix[offset];
     offset += (EB-p);
   }
 }
@@ -563,6 +572,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   NDPTRSET(m_domain->jp, m_domain->kp, y,y0,y1,y2,y3,y4,y5,y6,y7) ; \
   NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
 
+#if 1
 #define EDGE3D_BODY \
   rajaperf::Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
   rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
@@ -578,6 +588,22 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
     local_sum += check;\
   }\
   sum[i] = local_sum;\
+#else
+  rajaperf::Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
+  rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
+  rajaperf::Real_type Z[NB] = {z0[i],z1[i],z2[i],z3[i],z4[i],z5[i],z6[i],z7[i]};\
+  rajaperf::Real_type edge_matrix[EB][EB];\
+  edge_MpSmatrix(X, Y, Z, 1.0, 1.0, 0.0, 1.0, NQ_1D, edge_matrix);\
+  rajaperf::Real_type local_sum = 0.0;\
+  for (rajaperf::Int_type m = 0; m < EB; m++) {\
+    rajaperf::Real_type check = 0.0;\
+    for (rajaperf::Int_type p = 0; p < EB; p++) {\
+      check += edge_matrix[m][p];\
+    }\
+    local_sum += check;\
+  }\
+  sum[i] = local_sum;\
+#endif
 
 #include "common/KernelBase.hpp"
 
