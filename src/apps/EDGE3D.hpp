@@ -538,14 +538,6 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   // write back to matrix
   rajaperf::Int_type offset = 0;
   for (rajaperf::Int_type p = 0; p < EB; p++) {
-    /*
-    for (rajaperf::Int_type m = p; m < EB; m++) {
-      auto value = symmetric_matrix[offset + m - p];
-      matrix[p][m] = value;
-      matrix[m][p] = value;
-    }
-    offset += (EB-p);
-    */
     // off-diagonal values
     for (rajaperf::Int_type m = p + 1; m < EB; m++) {
       auto value = symmetric_matrix[offset + m - p];
