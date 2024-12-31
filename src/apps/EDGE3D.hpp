@@ -564,7 +564,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   NDPTRSET(m_domain->jp, m_domain->kp, y,y0,y1,y2,y3,y4,y5,y6,y7) ; \
   NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
 
-#if 1
+#if 1 // Symmetric implementation
 #define EDGE3D_BODY \
   rajaperf::Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
   rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
@@ -581,7 +581,7 @@ RAJA_INLINE void symmetric_edge_MpSmatrix(
   }\
   sum[i] = local_sum;\
 
-#else
+#else // Non-symmetic implementation
   rajaperf::Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
   rajaperf::Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
   rajaperf::Real_type Z[NB] = {z0[i],z1[i],z2[i],z3[i],z4[i],z5[i],z6[i],z7[i]};\
