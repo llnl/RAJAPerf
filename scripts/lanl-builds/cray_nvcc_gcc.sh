@@ -40,6 +40,9 @@ module load cmake/3.29.6
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
+  -DGCC_HOME=/usr/projects/hpcsoft/tce/24-07/cos3-aarch64-cc90/compilers/gcc/${COMP_GCC_VER} \
+  -DCMAKE_CUDA_ARCHITECTURES=${COMP_ARCH} \
+  -DCUDA_TOOLKIT_ROOT_DIR=/opt/nvidia/hpc_sdk/Linux_aarch64/24.7/cuda/${COMP_NVCC_VER} \
   -C ${RAJA_HOSTCONFIG} \
   -DRAJA_PERFSUITE_ENABLE_TESTS=Off \
   -DRAJA_ENABLE_TESTS=Off \
