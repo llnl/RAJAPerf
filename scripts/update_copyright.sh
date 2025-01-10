@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors. 
 # See the RAJAPerf/LICENSE file for details.
 #
@@ -47,18 +47,18 @@ for i in `cat files2change`
 do
     echo $i
     cp $i $i.sed.bak
-    sed "s/Copyright (c) 2017-23/Copyright (c) 2017-24/" $i.sed.bak > $i
+    sed "s/Copyright (c) 2017-24/Copyright (c) 2017-25/" $i.sed.bak > $i
 done
 
 echo LICENSE
 cp LICENSE LICENSE.sed.bak
-sed "s/Copyright (c) 2017-2023/Copyright (c) 2017-2024/" LICENSE.sed.bak > LICENSE
+sed "s/Copyright (c) 2017-2024/Copyright (c) 2017-2025/" LICENSE.sed.bak > LICENSE
 
 for i in RELEASE README.md docs/conf.py
 do
     echo $i
     cp $i $i.sed.bak
-    sed "s/2017-23/2017-24/" $i.sed.bak > $i
+    sed "s/2017-24/2017-25/" $i.sed.bak > $i
 done
 
 #=============================================================================
