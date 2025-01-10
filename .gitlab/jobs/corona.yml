@@ -27,8 +27,8 @@
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
 
-clang_19_0_0_sycl_gcc_10_3_1_rocmcc_5_7_1_hip:
+clang_20_0_0_sycl_gcc_10_3_1_rocmcc_5_7_1_hip:
   variables:
-    SPEC: " ~shared +sycl ~openmp tests=basic %clang@=19.0.0 cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" ^blt@develop"
+    SPEC: " ~shared +sycl ~openmp tests=basic %clang@=20.0.0 cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" ^blt@develop"
     MODULE_LIST: "rocm/5.7.1"
   extends: .job_on_corona
