@@ -79,7 +79,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RAJAPerf'
-copyright = u'2017-2024, Lawrence Livermore National Security, LLNS'
+copyright = u'2017-25, Lawrence Livermore National Security, LLNS'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
