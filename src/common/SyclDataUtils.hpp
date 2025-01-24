@@ -20,7 +20,7 @@
 
 #include "common/GPUUtils.hpp"
 
-#include <sycl.hpp>
+#include "RAJA/util/sycl_compat.hpp"
 
 
 namespace rajaperf
