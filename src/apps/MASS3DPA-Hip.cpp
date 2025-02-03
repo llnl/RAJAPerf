@@ -35,46 +35,38 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
     GPU_FOREACH_THREAD(dx, x, MPA_D1D){
       MASS3DPA_1
     }
-    //GPU_FOREACH_THREAD_DIRECT(dx, x, MPA_Q1D) {
-    {int dx = threadIdx.x;
+    GPU_FOREACH_THREAD_DIRECT(dx, x, MPA_Q1D) {
       MASS3DPA_2
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD(dy, y, MPA_D1D) {
-    //GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D) {
-    {int qx = threadIdx.x;    
+    GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D) {
       MASS3DPA_3
     }
   }
   __syncthreads();
-  //GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D)
-  {int qy = threadIdx.y;
-    //GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D)
-    {int qx = threadIdx.x;
+  GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D) {
       MASS3DPA_4
     }
   }
   __syncthreads();
-  //GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D)
-  {int qy = threadIdx.y;
-    //GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D)
-    {int qx = threadIdx.x;
+  GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(qx, x, MPA_Q1D) {
       MASS3DPA_5
     }
   }
 
   __syncthreads();
   GPU_FOREACH_THREAD(d, y, MPA_D1D) {
-    //GPU_FOREACH_THREAD_DIRECT(q, x, MPA_Q1D)
-    {int q = threadIdx.x;
+    GPU_FOREACH_THREAD_DIRECT(q, x, MPA_Q1D) {
       MASS3DPA_6
     }
   }
 
   __syncthreads();
-  //GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D)
-  {int qy = threadIdx.y;
+  GPU_FOREACH_THREAD_DIRECT(qy, y, MPA_Q1D){
     GPU_FOREACH_THREAD(dx, x, MPA_D1D) {
       MASS3DPA_7
     }

@@ -26,9 +26,7 @@
 
 #if defined(RAJA_ENABLE_CUDA) || defined(RAJA_ENABLE_HIP)
 #define GPU_FOREACH_THREAD_DIRECT(i, k, N)  \
-  for (int i = threadIdx.k; i < N; i += blockDim.k)  
-//if(int i = threadIdx.k < N)
-  //
+    if(int i = threadIdx.k; i <  N)
 #endif
 
 #if defined(RAJA_ENABLE_SYCL)
