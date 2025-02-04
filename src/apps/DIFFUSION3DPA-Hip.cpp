@@ -144,13 +144,13 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
     using inner_x =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<DPA_Q1D>>;
 
     using inner_y =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<DPA_Q1D>>;
 
     using inner_z =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<DPA_Q1D>>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
