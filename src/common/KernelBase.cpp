@@ -665,6 +665,19 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
   }
   )json";
 
+
+  // Check if CALI_CONFIG provided
+  const char* cali_config_env = std::getenv("CALI_CONFIG");
+  if (cali_config_env) {
+    std::string cali_config(cali_config_env);
+    std::cout << "CALI_CONFIG: " << cali_config << std::endl;
+    std::string err_str;
+    err_str = "setCaliperMgrVariantTuning: For the RAJA Performance Suite, do not set"
+      " CALI_CONFIG. Instead use the --add-to-spot-config and --add-to-cali-config"
+      " arguments to modify the Caliper configuration.";
+    throw std::invalid_argument(err_str);
+  }
+
   // Skip check if both empty
   if ((!addToSpotConfig.empty() || !addToCaliConfig.empty()) && !ran_spot_config_check) {
     cali::ConfigManager cm;
