@@ -27,7 +27,7 @@ int main( int argc, char** argv )
   if (caliConfigValue) {
     // Copy CALI_CONFIG to DISABLED_CALI_CONFIG and unset CALI_CONFIG
     if (setenv("DISABLED_CALI_CONFIG", caliConfigValue, 1) == 0 && unsetenv("CALI_CONFIG") == 0) {
-      std::cout << "CALI_CONFIG has been disabled." << std::endl;
+      std::cout << "Configuration options in CALI_CONFIG will be parsed and added to the internal RAJAPerf Caliper config manager." << std::endl;
     }
   }
 #endif
