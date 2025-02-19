@@ -21,6 +21,17 @@
 //------------------------------------------------------------------------------
 int main( int argc, char** argv )
 {
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  // Retrieve the value of CALI_CONFIG
+  const char* caliConfigValue = getenv("CALI_CONFIG");
+  if (caliConfigValue) {
+    // Copy CALI_CONFIG to DISABLED_CALI_CONFIG and unset CALI_CONFIG
+    if (setenv("DISABLED_CALI_CONFIG", caliConfigValue, 1) == 0 && unsetenv("CALI_CONFIG") == 0) {
+      std::cout << "CALI_CONFIG has been disabled." << std::endl;
+    }
+  }
+#endif
+
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
   MPI_Init(&argc, &argv);
 

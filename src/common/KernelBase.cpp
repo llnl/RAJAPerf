@@ -671,7 +671,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
   std::string updatedCaliConfig = addToCaliConfig;
 
   // Parse CALI_CONFIG if provided
-  const char* cali_config_env = std::getenv("CALI_CONFIG");
+  const char* cali_config_env = std::getenv("DISABLED_CALI_CONFIG");
   if (cali_config_env) {
     std::string cali_config(cali_config_env);
     std::cout << "CALI_CONFIG: " << cali_config << std::endl;
