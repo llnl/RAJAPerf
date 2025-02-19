@@ -146,6 +146,7 @@ enum KernelID {
   Apps_DIFFUSION3DPA,
   Apps_EDGE3D,
   Apps_ENERGY,
+  Apps_FEMSWEEP,
   Apps_FIR,
   Apps_LTIMES,
   Apps_LTIMES_NOVIEW,

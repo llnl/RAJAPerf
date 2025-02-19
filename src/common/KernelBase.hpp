@@ -351,6 +351,24 @@ public:
   }
 
   template <typename T>
+  void copyDataSameSpace(T* dst_ptr,
+                         const T* src_ptr,
+                         Size_type len,
+                         VariantID vid)
+  {
+    rajaperf::copyData(getDataSpace(vid), dst_ptr, getDataSpace(vid), src_ptr, len);
+  }
+
+  template <typename T>
+  void copyDataH2Space(T* dst_ptr,
+                       const T* src_ptr,
+                       Size_type len,
+                       VariantID vid)
+  {
+    rajaperf::copyData(getDataSpace(vid), dst_ptr, DataSpace::Host, src_ptr, len);
+  }
+
+  template <typename T>
   void deallocData(DataSpace dataSpace, T& ptr)
   {
     rajaperf::deallocData(dataSpace, ptr);
@@ -360,6 +378,13 @@ public:
   void allocData(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocData(getDataSpace(vid),
+        ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  void allocData(T*& ptr, Size_type len, DataSpace dataSpace)
+  {
+    rajaperf::allocData(dataSpace,
         ptr, len, getDataAlignment());
   }
 
@@ -378,6 +403,13 @@ public:
   }
 
   template <typename T>
+  void allocAndInitDataConst(T*& ptr, Size_type len, T val, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataConst(dataSpace,
+        ptr, len, getDataAlignment(), val);
+  }
+
+  template <typename T>
   void allocAndInitDataRandSign(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitDataRandSign(getDataSpace(vid),
@@ -388,6 +420,13 @@ public:
   void allocAndInitDataRandValue(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitDataRandValue(getDataSpace(vid),
+        ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  void allocAndInitDataRandValue(T*& ptr, Size_type len, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataRandValue(dataSpace,
         ptr, len, getDataAlignment());
   }
 

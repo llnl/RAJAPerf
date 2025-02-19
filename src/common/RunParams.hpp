@@ -165,6 +165,12 @@ public:
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
 
+  Index_type getFemSweepNumE() const { return femsweep_num_e; }
+  Index_type getFemSweepNumD() const { return femsweep_num_d; }
+  Index_type getFemSweepNumFDS() const { return femsweep_num_fds; }
+  Index_type getFemSweepNumA() const { return femsweep_num_a; }
+  Index_type getFemSweepNumG() const { return femsweep_num_g; }
+
   Index_type getArrayOfPtrsArraySize() const { return array_of_ptrs_array_size; }
 
   Index_type getHaloWidth() const { return halo_width; }
@@ -312,6 +318,12 @@ private:
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
+
+  Index_type femsweep_num_e;
+  Index_type femsweep_num_d;
+  Index_type femsweep_num_fds;
+  Index_type femsweep_num_a;
+  Index_type femsweep_num_g;
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 

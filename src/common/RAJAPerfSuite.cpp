@@ -86,6 +86,7 @@
 #include "apps/DIFFUSION3DPA.hpp"
 #include "apps/EDGE3D.hpp"
 #include "apps/ENERGY.hpp"
+#include "apps/FEMSWEEP.hpp"
 #include "apps/FIR.hpp"
 #include "apps/LTIMES.hpp"
 #include "apps/LTIMES_NOVIEW.hpp"
@@ -240,6 +241,7 @@ static const std::string KernelNames [] =
   std::string("Apps_DIFFUSION3DPA"),
   std::string("Apps_EDGE3D"),
   std::string("Apps_ENERGY"),
+  std::string("Apps_FEMSWEEP"),
   std::string("Apps_FIR"),
   std::string("Apps_LTIMES"),
   std::string("Apps_LTIMES_NOVIEW"),
@@ -1022,6 +1024,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Apps_ENERGY : {
        kernel = new apps::ENERGY(run_params);
+       break;
+    }
+    case Apps_FEMSWEEP : {
+       kernel = new apps::FEMSWEEP(run_params);
        break;
     }
     case Apps_FIR : {
