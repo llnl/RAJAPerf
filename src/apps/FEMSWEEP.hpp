@@ -290,7 +290,7 @@ public:
   void tearDown(VariantID vid, size_t tune_idx);
 
   void runSeqVariant(VariantID vid, size_t tune_idx);
-  //void runOpenMPVariant(VariantID vid, size_t tune_idx);
+  void runOpenMPVariant(VariantID vid, size_t tune_idx);
   void runCudaVariant(VariantID vid, size_t tune_idx);
   void runHipVariant(VariantID vid, size_t tune_idx);
 

@@ -31,7 +31,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_ng = params.getFemSweepNumG();
 
   setDefaultProblemSize(m_nd * m_ne * m_ng * m_na);
-  setDefaultReps(10);
+  setDefaultReps(1);
 
   m_Blen = m_nd * m_ne * m_na;
   m_Alen = m_nd * m_nd * m_ne * m_na;
@@ -68,8 +68,8 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setVariantDefined( Base_Seq );
   setVariantDefined( RAJA_Seq );
 
-  //setVariantDefined( Base_OpenMP );
-  //setVariantDefined( RAJA_OpenMP );
+  setVariantDefined( Base_OpenMP );
+  setVariantDefined( RAJA_OpenMP );
 
   //setVariantDefined( Base_CUDA );
   setVariantDefined( RAJA_CUDA );
