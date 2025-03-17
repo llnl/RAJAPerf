@@ -26,7 +26,7 @@
 #include "RAJA/policy/hip/raja_hiperrchk.hpp"
 #endif
 #if defined(RAJA_ENABLE_SYCL)
-#include <sycl.hpp>
+#include "RAJA/util/sycl_compat.hpp"
 #endif
 
 #include "camp/resource.hpp"

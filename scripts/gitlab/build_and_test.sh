@@ -241,10 +241,6 @@ then
     fi
 
     date
-    if [[ "${truehostname}" == "tioga" ]]
-    then
-        module unload rocm
-    fi
     $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \
