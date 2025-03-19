@@ -144,7 +144,7 @@
                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
                  F += Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
-              Xdat[djs % ND + e * ND + g * ND * ne + a * ng * ND * ne] -= F; \
+              b[djs % ND] -= F; \
            } \
         } \
         const double s = Sgdat[e + g * ne]; \
@@ -156,12 +156,11 @@
 constexpr int ND = 8, NLF = 6, FDS = 4;
 
 // LU factorization with no pivoting
-static RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(volatile double *A, 
-                                                         const double s,
-                                                         volatile const double *M, 
-                                                         volatile const double *b, 
-                                                         double * x)//,
-                                                         //double * xfinal)
+RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A, 
+                                                  const double s,
+                                                  const double *M, 
+                                                  const double *b, 
+                                                  double * x)
 {
   double tempA[8][8];
   double L[8][8];
@@ -175,14 +174,14 @@ static RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(volatile double *A,
     for ( int jj = 0; jj < 8; ++jj )
     {
       tempA[ii][jj] = A[ii * 8 + jj] + s * M[ii * 8 + jj];
-      L[ii][jj] = 0;
+      L[ii][jj] = 0.0;
       if ( ii == jj )
       {
-        U[ii][jj] = 1;
+        U[ii][jj] = 1.0;
       }
       else
       {
-        U[ii][jj] = 0;
+        U[ii][jj] = 0.0;
       }
     }
   }
@@ -256,11 +255,6 @@ static RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(volatile double *A,
     }
     x[ii] = D[ii] - sum;
   }
-
-  //for ( int ii = 0; ii < 8; ++ii )
-  //{
-  //  xfinal[ii] = x[ii];
-  //}
 
 }
 
