@@ -17,6 +17,7 @@
 ///   // elements in this hyperplanes processed so far
 ///   int s_nehp_done = 0;
 ///   double A[ND * ND], b[ND];
+///   double Ffactor = std::max(std::sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
 ///   for (int hp = 0; hp < nhp; ++hp) // loop over hyperplanes
 ///   {
 ///      // number of element in this hyperplane
@@ -54,9 +55,9 @@
 ///                  // Fdat : 4 x 4 x 2 x nf_int x na
 ///                  // Note: s ^ 1 == 1 if s == 0, and s ^ 1 == 0 if s == 1.
 ///                  // Instability can happen here
-///                  F += Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
+///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
 ///               } // i
-///               Xdat[djs % ND + e * ND + g * ND * ne + a * ng * ND * ne] -= F;
+///               b[djs % ND] -= F;
 ///            } // j
 ///         }    // local faces
 ///         const double s = Sgdat[e + g * ne];
@@ -110,6 +111,7 @@
   const int nhp = nhpaa_r[a], ohp = ohpaa_r[a]; \
   int s_nehp_done = 0; \
   double A[ND * ND], b[ND]; \
+  double Ffactor = std::max(std::sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
   for (int hp = 0; hp < nhp; ++hp) \
   { \
      const int nehp = phpaa_r[ohp + hp]; \
@@ -142,7 +144,7 @@
               { \
                  const int ffi = f * FDS + i; \
                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
-                 F += Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
+                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
               b[djs % ND] -= F; \
            } \

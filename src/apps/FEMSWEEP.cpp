@@ -86,8 +86,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
   allocAndInitDataRandValue (m_Adat     , m_Alen      , vid);
-  allocAndInitDataConst (m_Fdat     , m_Flen      , Real_type(0.0), vid);
-  //allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
+  allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
   allocAndInitDataRandValue (m_Sgdat    , m_Sglen     , vid);
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
