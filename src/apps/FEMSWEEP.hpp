@@ -85,13 +85,10 @@
   Real_ptr Adat = m_Adat; \
   Real_ptr Fdat = m_Fdat; \
   Real_ptr Xdat = m_Xdat; \
-  Real_ptr Xfinaldat = m_Xfinaldat; \
   Real_ptr Sgdat = m_Sgdat; \
   Real_ptr M0dat = m_M0dat; \
 \
   Index_type ne = m_ne; \
-  Index_type nd = m_nd; \
-  Index_type nfds = m_nfds; \
   Index_type na = m_na; \
   Index_type ng = m_ng; \
 \
@@ -316,7 +313,6 @@ private:
   Real_ptr m_Sgdat;
   Real_ptr m_M0dat;
   Real_ptr m_Xdat;
-  Real_ptr m_Xfinaldat;
 
   Index_ptr m_nhpaa_r;
   Index_ptr m_ohpaa_r;
@@ -335,7 +331,6 @@ private:
   Index_type m_Sglen;
   Index_type m_M0len;
   Index_type m_Xlen;
-  Index_type m_Xfinallen;
 
   Index_type m_nhpaa_rlen;
   Index_type m_ohpaa_rlen;

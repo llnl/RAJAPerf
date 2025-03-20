@@ -39,7 +39,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_Sglen = m_ne * m_ng;
   m_M0len = m_nd * m_nd * m_ne;
   m_Xlen = m_nd * m_ne * m_ng * m_na;
-  m_Xfinallen = m_nd * m_ne * m_ng * m_na;
 
   setActualProblemSize( m_Xlen );
 
@@ -116,9 +115,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  //copyDataSameSpace(m_Xfinaldat, m_Xdat, m_Xfinallen, vid);
   checksum[vid][tune_idx] += calcChecksum(m_Xdat, m_Xlen, checksum_scale_factor , vid);
-  //checksum[vid][tune_idx] += calcChecksum(m_Xfinaldat, m_Xfinallen, checksum_scale_factor , vid);
 }
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -131,7 +128,6 @@ void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_Sgdat, vid);
   deallocData(m_M0dat, vid);
   deallocData(m_Xdat, vid);
-  //deallocData(m_Xfinaldat, vid);
 
   deallocData(m_nhpaa_r, vid);
   deallocData(m_ohpaa_r, vid);
