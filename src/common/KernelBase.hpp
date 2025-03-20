@@ -351,15 +351,6 @@ public:
   }
 
   template <typename T>
-  void copyDataSameSpace(T* dst_ptr,
-                         const T* src_ptr,
-                         Size_type len,
-                         VariantID vid)
-  {
-    rajaperf::copyData(getDataSpace(vid), dst_ptr, getDataSpace(vid), src_ptr, len);
-  }
-
-  template <typename T>
   void copyDataH2Space(T* dst_ptr,
                        const T* src_ptr,
                        Size_type len,
