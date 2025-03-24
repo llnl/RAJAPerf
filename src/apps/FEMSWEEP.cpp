@@ -35,6 +35,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
   m_Blen = m_nd * m_ne * m_na;
   m_Alen = m_nd * m_nd * m_ne * m_na;
+  // 9450 is a property of the mesh. Will need to derive this when mesh generator is available.
   m_Flen = m_nfds * m_nfds * 2 * 9450 * m_na;
   m_Sglen = m_ne * m_ng;
   m_M0len = m_nd * m_nd * m_ne;
@@ -53,11 +54,15 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                       1*sizeof(Real_type) * m_Xlen );
   setBytesWrittenPerRep( 1*sizeof(Real_type) * m_Xlen );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * m_ne * m_ng * m_na * m_nd);
 
-  checksum_scale_factor = 1.0;  //0.001 *
-              //( static_cast<Checksum_type>(getDefaultProblemSize()) /
-              //                             getActualProblemSize() );
+  // This is an estimate of the upper bound FLOPs.
+  setFLOPsPerRep( (m_nd * m_nd * (m_nd-1) * 3 * 2 + // L & U formation
+                  m_nd * (m_nd-1) * 3 +             // forward substitution
+                  m_nd * (m_nd-1) * 3) *            // backward substitution
+                  m_ne +                            // matrix solve performed per element
+                  m_ne * NLF * FDS);                // coupling between sides of faces
+
+  checksum_scale_factor = 1.0;
 
   setComplexity(Complexity::N);
 
