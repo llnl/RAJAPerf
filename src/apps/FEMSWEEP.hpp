@@ -192,12 +192,12 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(double *A,
   }
 
   // set first column of L, and first row of U
-  for ( int ii = 0; ii < ND; ++ii )
+  for ( int ii = 0; ii < N; ++ii )
   {
     L[ii][0] = tempA[ii][0];
   }
 
-  for ( int ii = 1; ii < ND; ++ii )
+  for ( int ii = 1; ii < N; ++ii )
   {
     U[0][ii] = tempA[0][ii]/tempA[0][0];
   }
@@ -264,11 +264,6 @@ class RunParams;
 namespace apps
 {
 
-//
-// These index value types cannot be defined in function scope for
-// RAJA CUDA variant to work.
-//
-
 class FEMSWEEP : public KernelBase
 {
 public:
@@ -300,9 +295,6 @@ private:
                                                          integer::MultipleOf<32>>;
 
   Index_type m_ne;
-  Index_type m_nd;
-  Index_type m_nfds;
-
   Index_type m_na;
   Index_type m_ng;
 

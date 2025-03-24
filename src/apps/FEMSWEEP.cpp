@@ -25,21 +25,19 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
   m_ne = params.getFemSweepNumE();
-  m_nd = params.getFemSweepNumD();
-  m_nfds = params.getFemSweepNumFDS();
   m_na = params.getFemSweepNumA();
   m_ng = params.getFemSweepNumG();
 
-  setDefaultProblemSize(m_nd * m_ne * m_ng * m_na);
+  setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
 
-  m_Blen = m_nd * m_ne * m_na;
-  m_Alen = m_nd * m_nd * m_ne * m_na;
+  m_Blen = ND * m_ne * m_na;
+  m_Alen = ND * ND * m_ne * m_na;
   // 9450 is a property of the mesh. Will need to derive this when mesh generator is available.
-  m_Flen = m_nfds * m_nfds * 2 * 9450 * m_na;
+  m_Flen = FDS * FDS * 2 * 9450 * m_na;
   m_Sglen = m_ne * m_ng;
-  m_M0len = m_nd * m_nd * m_ne;
-  m_Xlen = m_nd * m_ne * m_ng * m_na;
+  m_M0len = ND * ND * m_ne;
+  m_Xlen = ND * m_ne * m_ng * m_na;
 
   setActualProblemSize( m_Xlen );
 
@@ -56,9 +54,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (m_nd * m_nd * (m_nd-1) * 3 * 2 + // L & U formation
-                  m_nd * (m_nd-1) * 3 +             // forward substitution
-                  m_nd * (m_nd-1) * 3) *            // backward substitution
+  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 + // L & U formation
+                  ND * (ND-1) * 3 +             // forward substitution
+                  ND * (ND-1) * 3) *            // backward substitution
                   m_ne +                            // matrix solve performed per element
                   m_ne * NLF * FDS);                // coupling between sides of faces
 
@@ -95,27 +93,29 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
-  allocData(m_nhpaa_r, 72     , vid);
-  allocData(m_ohpaa_r, 72     , vid);
-  allocData(m_phpaa_r, 3096   , vid);
-  allocData(m_order_r, 243000 , vid);
+  // Some of the constants are properties of the mesh.
+  // Will need to derive these when mesh generator is available.
+  allocData(m_nhpaa_r, m_na       , vid);
+  allocData(m_ohpaa_r, m_na       , vid);
+  allocData(m_phpaa_r, m_na * 43  , vid);
+  allocData(m_order_r, m_na * m_ne, vid);
 
-  allocData(m_AngleElem2FaceType, 1458000 , vid);
-  allocData(m_elem_to_faces     , 20250   , vid);
-  allocData(m_F_g2l             , 10800   , vid);
-  allocData(m_idx1              , 37800   , vid);
-  allocData(m_idx2              , 37800   , vid);
+  allocData(m_AngleElem2FaceType, NLF * m_ne * m_na , vid);
+  allocData(m_elem_to_faces     , NLF * m_ne        , vid);
+  allocData(m_F_g2l             , 10800             , vid);
+  allocData(m_idx1              , 37800             , vid);
+  allocData(m_idx2              , 37800             , vid);
 
-  copyDataH2Space(m_nhpaa_r, g_nhpaa_r, 72    , vid);
-  copyDataH2Space(m_ohpaa_r, g_ohpaa_r, 72    , vid);
-  copyDataH2Space(m_phpaa_r, g_phpaa_r, 3096  , vid);
-  copyDataH2Space(m_order_r, g_order_r, 243000, vid);
+  copyDataH2Space(m_nhpaa_r, g_nhpaa_r, m_na        , vid);
+  copyDataH2Space(m_ohpaa_r, g_ohpaa_r, m_na        , vid);
+  copyDataH2Space(m_phpaa_r, g_phpaa_r, m_na * 43   , vid);
+  copyDataH2Space(m_order_r, g_order_r, m_na * m_ne , vid);
 
-  copyDataH2Space(m_AngleElem2FaceType, g_AngleElem2FaceType, 1458000 , vid);
-  copyDataH2Space(m_elem_to_faces     , g_elem_to_faces     , 20250   , vid);
-  copyDataH2Space(m_F_g2l             , g_F_g2l             , 10800   , vid);
-  copyDataH2Space(m_idx1              , g_idx1              , 37800   , vid);
-  copyDataH2Space(m_idx2              , g_idx2              , 37800   , vid);
+  copyDataH2Space(m_AngleElem2FaceType, g_AngleElem2FaceType, NLF * m_ne * m_na , vid);
+  copyDataH2Space(m_elem_to_faces     , g_elem_to_faces     , NLF * m_ne        , vid);
+  copyDataH2Space(m_F_g2l             , g_F_g2l             , 10800             , vid);
+  copyDataH2Space(m_idx1              , g_idx1              , 37800             , vid);
+  copyDataH2Space(m_idx2              , g_idx2              , 37800             , vid);
 }
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
