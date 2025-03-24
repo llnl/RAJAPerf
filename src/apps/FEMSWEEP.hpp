@@ -65,7 +65,7 @@
 ///         }    // local faces
 ///         const double s = Sgdat[e + g * ne];
 ///         // A = A + s * M0, b is the result
-///         SolveLinearSystem8x8(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);  // 8x8 solve
+///         SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);  // 8x8 solve
 ///      }  // thread loop elems in hp
 ///      s_nehp_done += nehp;
 ///   } // hyperplanes
@@ -82,6 +82,10 @@
 #include "common/KernelBase.hpp"
 
 #include "RAJA/RAJA.hpp"
+
+constexpr int ND = 8;   // number of corners per element
+constexpr int NLF = 6;  // number of faces per element
+constexpr int FDS = 4;  // number of DOFs per face
 
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \
@@ -150,32 +154,31 @@
            } \
         } \
         const double s = Sgdat[e + g * ne]; \
-        SolveLinearSystem8x8(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
+        SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
      } \
      s_nehp_done += nehp; \
   } \
 
-constexpr int ND = 8, NLF = 6, FDS = 4;
-
 // LU factorization with no pivoting
-RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A, 
+template <int N>
+RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(double *A, 
                                                   const double s,
                                                   const double *M, 
                                                   const double *b, 
                                                   double * x)
 {
-  double tempA[8][8];
-  double L[8][8];
-  double U[8][8];
-  double D[8];
+  double tempA[N][N];
+  double L[N][N];
+  double U[N][N];
+  double D[N];
 
   // tempA = A + s * M0
   // set L to 0, U to identity
-  for ( int ii = 0; ii < 8; ++ii )
+  for ( int ii = 0; ii < N; ++ii )
   {
-    for ( int jj = 0; jj < 8; ++jj )
+    for ( int jj = 0; jj < N; ++jj )
     {
-      tempA[ii][jj] = A[ii * 8 + jj] + s * M[ii * 8 + jj];
+      tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
       L[ii][jj] = 0.0;
       if ( ii == jj )
       {
@@ -189,30 +192,23 @@ RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A,
   }
 
   // set first column of L, and first row of U
-  L[0][0] = tempA[0][0];
-  L[1][0] = tempA[1][0];
-  L[2][0] = tempA[2][0];
-  L[3][0] = tempA[3][0];
-  L[4][0] = tempA[4][0];
-  L[5][0] = tempA[5][0];
-  L[6][0] = tempA[6][0];
-  L[7][0] = tempA[7][0];
+  for ( int ii = 0; ii < ND; ++ii )
+  {
+    L[ii][0] = tempA[ii][0];
+  }
 
-  U[0][1] = tempA[0][1]/tempA[0][0];
-  U[0][2] = tempA[0][2]/tempA[0][0];
-  U[0][3] = tempA[0][3]/tempA[0][0];
-  U[0][4] = tempA[0][4]/tempA[0][0];
-  U[0][5] = tempA[0][5]/tempA[0][0];
-  U[0][6] = tempA[0][6]/tempA[0][0];
-  U[0][7] = tempA[0][7]/tempA[0][0];
+  for ( int ii = 1; ii < ND; ++ii )
+  {
+    U[0][ii] = tempA[0][ii]/tempA[0][0];
+  }
 
   // form L & U
   // L formed one column at a time
   // U formed one row at a time
-  for ( int ii = 1; ii < 8; ++ii )
+  for ( int ii = 1; ii < N; ++ii )
   {
     // L column formation
-    for ( int jj = ii; jj < 8; ++jj )
+    for ( int jj = ii; jj < N; ++jj )
     {
       double sum = 0.0;
       for ( int kk = 0; kk < jj; ++kk )
@@ -223,7 +219,7 @@ RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A,
     }
 
     // U row formation
-    for ( int jj = ii+1; jj < 8; ++jj )
+    for ( int jj = ii+1; jj < N; ++jj )
     {
       double sum = 0.0;
       for ( int kk = 0; kk < ii; ++kk )
@@ -236,7 +232,7 @@ RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A,
 
   // forward substitution
   D[0] = b[0]/L[0][0];
-  for ( int ii = 1; ii < 8; ++ii )
+  for ( int ii = 1; ii < N; ++ii )
   {
     double sum = 0.0;
     for ( int jj = 0; jj < ii; ++jj )
@@ -247,11 +243,11 @@ RAJA_HOST_DEVICE inline void SolveLinearSystem8x8(double *A,
   }
 
   // backward substitution
-  x[7] = D[7];
-  for ( int ii = 7-1; ii > -1; --ii )
+  x[N-1] = D[N-1];
+  for ( int ii = N - 1 - 1; ii > -1; --ii )
   {
     double sum = 0.0;
-    for ( int jj = ii+1; jj < 8; ++jj )
+    for ( int jj = ii+1; jj < N; ++jj )
     {
       sum += U[ii][jj] * x[jj];
     }
