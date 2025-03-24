@@ -49,10 +49,10 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
              RAJA::LaunchParams(RAJA::Teams(na),
                                 RAJA::Threads(ng)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
-         RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-           [&](int ag) {
-              FEMSWEEP_KERNEL;
-           });  // ag loop
+             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
+               [&](int ag) {
+                 FEMSWEEP_KERNEL;
+               });  // ag loop
          });  // RAJA Launch
 
       }

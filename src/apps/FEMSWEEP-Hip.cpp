@@ -49,10 +49,10 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
              RAJA::LaunchParams(RAJA::Teams(na*ng/64),
                                 RAJA::Threads(64)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
-         RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-           [&](int ag) {
-              FEMSWEEP_KERNEL;
-           });  // ag loop
+               RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
+                 [&](int ag) {
+                   FEMSWEEP_KERNEL;
+                 });  // ag loop
          });  // RAJA Launch
 
       }
