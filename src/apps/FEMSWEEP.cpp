@@ -64,7 +64,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
   checksum_scale_factor = 1.0;
 
-  setComplexity(Complexity::N);
+  setComplexity(Complexity::N_to_the_four);
 
   setUsesFeature(Launch);
   //setUsesFeature(View);
