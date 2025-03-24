@@ -39,9 +39,9 @@ update_spack_upstream=${UPDATE_SPACK_UPSTREAM:-false}
 # REGISTRY_TOKEN allows you to provide your own personal access token to the CI
 # registry. Be sure to set the token with at least read access to the registry.
 registry_token=${REGISTRY_TOKEN:-""}
-ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
 ci_registry_image=${CI_REGISTRY_IMAGE:-"czregistry.llnl.gov:5050/radiuss/rajaperf"}
-ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
+export ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
+export ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
 
 timed_message ()
 {
@@ -65,9 +65,7 @@ fi
 
 if [[ -n ${module_list} ]]
 then
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ Modules to load: ${module_list}"
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    timed_message "Modules to load: ${module_list}"
     module load ${module_list}
 fi
 
@@ -94,7 +92,7 @@ then
     prefix="${prefix}-${job_unique_id}"
 else
     # We set the prefix in the parent directory so that spack dependencies are not installed inside the source tree.
-    prefix="$(pwd)/../spack-and-build-root"
+    prefix="${project_dir}/../spack-and-build-root"
 fi
 
 echo "Creating directory ${prefix}"
@@ -104,7 +102,7 @@ mkdir -p ${prefix}
 
 spack_cmd="${prefix}/spack/bin/spack"
 spack_env_path="${prefix}/spack_env"
-uberenv_cmd="$(pwd)/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=$(pwd)/.uberenv_config.json"
+uberenv_cmd="${project_dir}/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=${project_dir}/.uberenv_config.json"
 if [[ ${spack_debug} == true ]]
 then
     spack_cmd="${spack_cmd} --debug --stacktrace"
@@ -145,7 +143,7 @@ then
     if [[ -n ${ci_registry_token} ]]
     then
         timed_message "GitLab registry as Spack Buildcache"
-        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username ${ci_registry_user} --oci-password ${ci_registry_token} gitlab_ci oci://${ci_registry_image}
+        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
     fi
 
     timed_message "Spack build of dependencies"
@@ -203,9 +201,10 @@ cmake_exe=`grep 'CMake executable' ${hostconfig_path} | cut -d ':' -f 2 | xargs`
 if [[ "${option}" != "--deps-only" && "${option}" != "--test-only" ]]
 then
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~ Host-config: ${hostconfig_path}"
-    echo "~ Build Dir:   ${build_dir}"
-    echo "~ Project Dir: ${project_dir}"
+    echo "~~~~~ Prefix: ${prefix}"
+    echo "~~~~~ Host-config: ${hostconfig_path}"
+    echo "~~~~~ Build Dir:   ${build_dir}"
+    echo "~~~~~ Project Dir: ${project_dir}"
     echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     echo ""
     timed_message "Cleaning working directory"
@@ -231,6 +230,7 @@ then
     rm -rf ${build_dir} 2>/dev/null
     mkdir -p ${build_dir} && cd ${build_dir}
 
+    timed_message "Building RAJA Perf Suite"
     # We set the MPI tests command to allow overlapping.
     # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
     # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
@@ -240,7 +240,6 @@ then
         cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
     fi
 
-    date
     $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \
@@ -277,7 +276,7 @@ then
 
     timed_message "Preparing tests xml reports for export"
     tree Testing
-    xsltproc -o junit.xml ${project_dir}/blt/tests/ctest-to-junit.xsl Testing/*/Test.xml
+    xsltproc -o junit.xml ${project_dir}/scripts/radiuss-spack-configs/utilities/ctest-to-junit.xsl Testing/*/Test.xml
     mv junit.xml ${project_dir}/junit.xml
 
     if grep -q "Errors while running CTest" ./tests_output.txt
@@ -285,7 +284,7 @@ then
         echo "[Error]: Failure(s) while running CTest" && exit 1
     fi
 
-    timed_message "RAJA Perf Suite tests completed"
+    timed_message "RAJA Perf Suite tests complete"
 fi
 
 timed_message "Cleaning up"

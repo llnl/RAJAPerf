@@ -29,7 +29,7 @@
 # We define the following GitLab pipeline variables:
 variables:
 ##### LC GITLAB CONFIGURATION
-# Use a LLNL service user to run CI. This prevents from running pipelines as an
+# Use an LLNL service user to run CI. This prevents from running pipelines as an
 # actual user.
   LLNL_SERVICE_USER: rajasa
 # Use the service user workspace. Solves permission issues, stores everything
@@ -49,6 +49,8 @@ variables:
   GITHUB_PROJECT_NAME: "RAJAPerf"
   GITHUB_PROJECT_ORG: "LLNL"
 # Set the build-and-test command.
+# Nested variables are allowed and useful to customize the job command. We
+# prevent variable expansion so that you can define them at job level.
   JOB_CMD:
     value: "./scripts/gitlab/build_and_test.sh"
     expand: false
@@ -81,6 +83,7 @@ stages:
       pipeline_variables: true
 
 include:
+  # Sets ID tokens for every job using `default:`
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
   # [Optional] checks preliminary to running the actual CI test
