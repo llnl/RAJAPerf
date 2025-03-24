@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -41,7 +41,7 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      qu->submit([&](cl::sycl::handler& h) {
+      qu->submit([&](::sycl::handler& h) {
 
         constexpr int MQ1 = MPA_Q1D;
         constexpr int MD1 = MPA_D1D;
@@ -52,8 +52,8 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
         auto sm1_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
 
         h.parallel_for
-          (cl::sycl::nd_range<3>(gridSize, workGroupSize),
-           [=] (cl::sycl::nd_item<3> itm) {
+          (::sycl::nd_range<3>(gridSize, workGroupSize),
+           [=] (::sycl::nd_item<3> itm) {
 
              const Index_type e = itm.get_group(2);
 

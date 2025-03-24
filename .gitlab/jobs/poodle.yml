@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors.
 # See the RAJAPerf/LICENSE file for details.
 #
@@ -19,9 +19,9 @@
 # the comparison with the original job is easier.
 
 # custom variant
-intel_2023_2_1:
+oneapi_2023_2_1:
   variables:
-    SPEC: "${PROJECT_POODLE_VARIANTS} +lowopttest cxxflags==-fp-model=precise %intel@=2023.2.1 ${PROJECT_POODLE_DEPS}"
+    SPEC: "${PROJECT_POODLE_VARIANTS} +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ${PROJECT_POODLE_DEPS}"
   extends: .job_on_poodle
 
 # omptask variant
@@ -43,7 +43,7 @@ gcc_10_3_1:
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
 
-intel_2023_2_1_mpi:
+oneapi_2023_2_1_mpi:
   variables:
-    SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %intel@=2023.2.1 ^mvapich2 ^blt@develop"
+    SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ^mvapich2 ^blt@develop"
   extends: .job_on_poodle

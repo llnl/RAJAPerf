@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2016-24, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJA/LICENSE file for details.
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
+# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
@@ -13,7 +13,7 @@ if [[ $# -lt 1 ]]; then
   echo "   1) SYCL compiler installation path"
   echo
   echo "For example: "
-  echo "    corona_sycl.sh /usr/workspace/raja-dev/clang_sycl_2f03ef85fee5_hip_gcc10.3.1_rocm5.7.1"
+  echo "    corona_sycl.sh /usr/workspace/raja-dev/clang_sycl_730cd3a5275f_hip_gcc10.3.1_rocm6.0.2"
   exit
 fi
 

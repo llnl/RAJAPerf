@@ -7,7 +7,7 @@ then
 fi
 
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC and RAJA
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC and RAJA
 # project contributors. See the RAJAPerf/LICENSE file for details.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
@@ -241,10 +241,6 @@ then
     fi
 
     date
-    if [[ "${truehostname}" == "tioga" ]]
-    then
-        module unload rocm
-    fi
     $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \
