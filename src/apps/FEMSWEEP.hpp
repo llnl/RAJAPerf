@@ -56,8 +56,11 @@
 ///                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi];
 ///                  // Fdat : 4 x 4 x 2 x nf_int x na
 ///                  // Note: s ^ 1 == 1 if s == 0, and s ^ 1 == 0 if s == 1.
-///                  // Instability can happen here. Ffactor eliminates the perturbation,
-///                  // but we keep the unique data access pattern of the arrays here.
+///                  // The solution remains bounded when matrices and indirection arrays from a
+///                  // finite element discretrization are used, but randomly generating matrix 
+///                  // data can result in exponential growth instead. A specific trick of 
+///                  // multiplying by zero, without the compiler optimizing it away, is 
+///                  // necessary to prevent unbounded growth and avoid computing NaNs.
 ///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
 ///               } // i
 ///               b[djs % ND] -= F;
