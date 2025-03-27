@@ -19,7 +19,7 @@
 
 #define EMPTY_DATA_SETUP
 
-#if defined(RAJA_COMPILER_MSVC)
+#if defined(_WIN32) || defined(_WIN64)
 #define EMPTY_BODY __asm { } ;
 #else
 #define EMPTY_BODY asm volatile ( "" ::: "memory" ) ;
