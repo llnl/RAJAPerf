@@ -46,7 +46,7 @@ void EMPTY::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 #if defined(RUN_RAJA_SEQ)
     case Lambda_Seq : {
 
-      auto empty_lam = [=](Index_type RAJA_UNUSED_ARG(i)) {
+      auto empty_lam = [=](Index_type i) {
                      EMPTY_BODY;
                    };
 
@@ -72,7 +72,7 @@ void EMPTY::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
-          [=](Index_type RAJA_UNUSED_ARG(i)) {
+          [=](Index_type i) {
             EMPTY_BODY;
         });
 

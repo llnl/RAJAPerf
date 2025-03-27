@@ -64,7 +64,7 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      auto empty_lambda = [=] __device__ (Index_type RAJA_UNUSED_ARG(i)) {
+      auto empty_lambda = [=] __device__ (Index_type i) {
         EMPTY_BODY;
       }; 
 
@@ -86,7 +86,7 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type RAJA_UNUSED_ARG(i)) {
+        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
         EMPTY_BODY;
       });
 

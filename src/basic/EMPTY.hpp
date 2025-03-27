@@ -10,7 +10,7 @@
 /// EMPTY kernel reference implementation:
 ///
 /// for (Index_type i = ibegin; i < iend; ++i ) {
-///   y[i] += a * x[i] ;
+///
 /// }
 ///
 
@@ -19,10 +19,14 @@
 
 #define EMPTY_DATA_SETUP
 
+// Add something that will stop the loop from being optimized out
+// while adding as little overhead as possible.
 #if defined(_WIN32) || defined(_WIN64)
-#define EMPTY_BODY __asm { } ;
+// Generate a loop with one write to the stack.
+#define EMPTY_BODY volatile auto unused = i; RAJA_UNUSED_VAR( unused ) ;
 #else
-#define EMPTY_BODY asm volatile ( "" ::: "memory" ) ;
+// Generate an empty loop.
+#define EMPTY_BODY asm volatile ( "" ) ; RAJA_UNUSED_VAR( i ) ;
 #endif
 
 

@@ -48,7 +48,7 @@ void EMPTY::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
 
     case Lambda_OpenMP : {
 
-      auto empty_lam = [=](Index_type RAJA_UNUSED_ARG(i)) {
+      auto empty_lam = [=](Index_type i) {
                          EMPTY_BODY;
                        };
 
@@ -74,7 +74,7 @@ void EMPTY::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
-          RAJA::RangeSegment(ibegin, iend), [=](Index_type RAJA_UNUSED_ARG(i)) {
+          RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           EMPTY_BODY;
         });
 
