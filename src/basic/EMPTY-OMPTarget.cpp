@@ -40,7 +40,7 @@ void EMPTY::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      #pragma omp target is_device_ptr(x, y) device( did )
+      #pragma omp target device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
         EMPTY_BODY;
