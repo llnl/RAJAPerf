@@ -43,9 +43,6 @@ RunParams::RunParams(int argc, char** argv)
    ltimes_num_d(64),
    ltimes_num_g(32),
    ltimes_num_m(25),
-   femsweep_num_e(3375),
-   femsweep_num_a(72),
-   femsweep_num_g(128),
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
@@ -140,10 +137,6 @@ void RunParams::print(std::ostream& str) const
   str << "\n ltimes_num_d = " << ltimes_num_d;
   str << "\n ltimes_num_g = " << ltimes_num_g;
   str << "\n ltimes_num_m = " << ltimes_num_m;
-
-  str << "\n femsweep_num_e = " << femsweep_num_e;
-  str << "\n femsweep_num_a = " << femsweep_num_a;
-  str << "\n femsweep_num_g = " << femsweep_num_g;
 
   str << "\n array_of_ptrs_array_size = " << array_of_ptrs_array_size;
 
