@@ -34,10 +34,11 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
 
     case RAJA_HIP : {
 
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
       constexpr bool async = true;
 
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, 64>>;
+          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
 
       using outer_x =
           RAJA::LoopPolicy<RAJA::hip_global_thread_x>;
@@ -46,8 +47,8 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
          RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(RAJA::Teams(na*ng/64),
-                                RAJA::Threads(64)),
+             RAJA::LaunchParams(RAJA::Teams(grid_size),
+                                RAJA::Threads(block_size)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
                RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
                  [&](int ag) {

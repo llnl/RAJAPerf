@@ -34,10 +34,11 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
     case RAJA_CUDA : {
 
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
       constexpr bool async = true;
 
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, 128>>;
+          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, block_size>>;
 
       using outer_x =
           RAJA::LoopPolicy<RAJA::cuda_global_thread_x>;
@@ -46,8 +47,8 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
          RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(RAJA::Teams(na),
-                                RAJA::Threads(ng)),
+             RAJA::LaunchParams(RAJA::Teams(grid_size),
+                                RAJA::Threads(block_size)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
              RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
                [&](int ag) {
