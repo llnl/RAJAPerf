@@ -287,8 +287,6 @@ enum struct Complexity {
 
   N_to_the_two_thirds,
 
-  N_to_the_four,
-
   NumComplexities // Keep this one last and NEVER comment out (!!)
 
 };
