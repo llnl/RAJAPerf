@@ -56,8 +56,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
          RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(RAJA::Teams(na),
-                                RAJA::Threads(ng)),
+             RAJA::LaunchParams(),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
              RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
                [&](int ag) {
