@@ -25,14 +25,25 @@ template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void empty(Index_type iend)
 {
-   Index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-   if (i < iend) {
-     EMPTY_BODY;
-   }
+  Index_type i = blockIdx.x * block_size + threadIdx.x;
+  if (i < iend) {
+    EMPTY_BODY;
+  }
+}
+
+template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void empty_grid_stride(Index_type iend)
+{
+  Index_type i = blockIdx.x * block_size + threadIdx.x;
+  Index_type grid_stride = gridDim.x * block_size;
+  for ( ; i < iend; i += grid_stride) {
+    EMPTY_BODY;
+  }
 }
 
 
-template < size_t block_size >
+template < size_t block_size, typename MappingHelper >
 void EMPTY::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -45,13 +56,21 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
 
   if ( vid == Base_CUDA ) {
 
+    auto func = MappingHelper::direct
+        ? &empty<block_size>
+        : &empty_grid_stride<block_size>;
+
+    constexpr size_t shmem = 0;
+    const size_t max_grid_size = RAJAPERF_CUDA_GET_MAX_BLOCKS(
+        MappingHelper, func, block_size, shmem);
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      constexpr size_t shmem = 0;
+      const size_t normal_grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const size_t grid_size = std::min(normal_grid_size, max_grid_size);
 
-      RPlaunchCudaKernel( (empty<block_size>),
+      RPlaunchCudaKernel( func,
                           grid_size, block_size,
                           shmem, res.get_stream(),
                           iend );
@@ -61,18 +80,25 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
 
   } else if ( vid == Lambda_CUDA ) {
 
+    auto empty_lambda = [=] __device__ (Index_type i) {
+      EMPTY_BODY;
+    };
+
+    auto func = MappingHelper::direct
+        ? &lambda_cuda_forall<block_size, decltype(empty_lambda)>
+        : &lambda_cuda_forall_grid_stride<block_size, decltype(empty_lambda)>;
+
+    constexpr size_t shmem = 0;
+    const size_t max_grid_size = RAJAPERF_CUDA_GET_MAX_BLOCKS(
+        MappingHelper, func, block_size, shmem);
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      auto empty_lambda = [=] __device__ (Index_type i) {
-        EMPTY_BODY;
-      }; 
+      const size_t normal_grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const size_t grid_size = std::min(normal_grid_size, max_grid_size);
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      constexpr size_t shmem = 0;
-
-      RPlaunchCudaKernel( (lambda_cuda_forall<block_size, 
-                                              decltype(empty_lambda)>),
+      RPlaunchCudaKernel( func,
                           grid_size, block_size,
                           shmem, res.get_stream(),
                           ibegin, iend, empty_lambda );
@@ -82,10 +108,14 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
 
   } else if ( vid == RAJA_CUDA ) {
 
+    using exec_policy = std::conditional_t<MappingHelper::direct,
+        RAJA::cuda_exec<block_size, true /*async*/>,
+        RAJA::cuda_exec_occ_calc<block_size, true /*async*/>>;
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
+      RAJA::forall< exec_policy >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
         EMPTY_BODY;
       });
@@ -98,7 +128,55 @@ void EMPTY::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(EMPTY, Cuda)
+void EMPTY::runCudaVariant(VariantID vid, size_t tune_idx)
+{
+  size_t t = 0;
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      seq_for(gpu_mapping::forall_helpers{}, [&](auto mapping_helper) {
+
+        if (tune_idx == t) {
+
+          setBlockSize(block_size);
+          runCudaVariantImpl<decltype(block_size){},
+                             decltype(mapping_helper)>(vid);
+
+        }
+
+        t += 1;
+
+      });
+
+    }
+
+  });
+
+}
+
+void EMPTY::setCudaTuningDefinitions(VariantID vid)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      seq_for(gpu_mapping::forall_helpers{}, [&](auto mapping_helper) {
+
+          addVariantTuningName(vid, decltype(mapping_helper)::get_name()+"_"+
+                                    std::to_string(block_size));
+
+      });
+
+    }
+
+  });
+
+}
 
 } // end namespace basic
 } // end namespace rajaperf
