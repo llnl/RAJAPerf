@@ -19,7 +19,7 @@
 ///   double A[ND * ND], b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
-///   double Ffactor = std::max(std::sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
+///   double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
 ///   for (int hp = 0; hp < nhp; ++hp) // loop over hyperplanes
 ///   {
 ///      // number of element in this hyperplane
@@ -112,13 +112,14 @@ constexpr int FDS = 4;  // number of DOFs per face
   Index_ptr F_g2l              = m_F_g2l             ; \
   Index_ptr idx1               = m_idx1              ; \
   Index_ptr idx2               = m_idx2              ; \
-  
+
+ 
 #define FEMSWEEP_KERNEL \
   const int a = ag / ng, g = ag % ng; \
   const int nhp = nhpaa_r[a], ohp = ohpaa_r[a]; \
   int s_nehp_done = 0; \
   double A[ND * ND], b[ND]; \
-  double Ffactor = std::max(std::sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
+  double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
   for (int hp = 0; hp < nhp; ++hp) \
   { \
      const int nehp = phpaa_r[ohp + hp]; \
@@ -293,7 +294,11 @@ public:
   void runHipVariantImpl(VariantID vid);
 
 private:
+#if defined(RAJA_ENABLE_HIP)
+  static const size_t default_gpu_block_size = 64;
+#else
   static const size_t default_gpu_block_size = 128;
+#endif
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
@@ -336,6 +341,18 @@ private:
   Index_type m_F_g2llen;
   Index_type m_idx1len;
   Index_type m_idx2len;
+
+  // Mesh data
+  static Index_type g_nhpaa_r[72];
+  static Index_type g_ohpaa_r[72];
+  static Index_type g_phpaa_r[3096];
+  static Index_type g_order_r[243000];
+
+  static Index_type g_AngleElem2FaceType[1458000];
+  static Index_type g_elem_to_faces[20250]     ;
+  static Index_type g_F_g2l[10800]             ;
+  static Index_type g_idx1[37800]              ;
+  static Index_type g_idx2[37800]              ;
 };
 
 } // end namespace apps

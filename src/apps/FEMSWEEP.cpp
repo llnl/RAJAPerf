@@ -14,6 +14,7 @@
 #include "common/DataUtils.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace rajaperf
 {
@@ -24,9 +25,9 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  m_ne = params.getFemSweepNumE();
-  m_na = params.getFemSweepNumA();
-  m_ng = params.getFemSweepNumG();
+  m_ne = 15 * 15 * 15;
+  m_na = 72;
+  m_ng = 128;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
@@ -54,15 +55,15 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 + // L & U formation
-                  ND * (ND-1) * 3 +             // forward substitution
-                  ND * (ND-1) * 3) *            // backward substitution
-                  m_ne +                            // matrix solve performed per element
-                  m_ne * NLF * FDS);                // coupling between sides of faces
+  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +       // L & U formation
+                  ND * (ND-1) * 3 +                 // forward substitution
+                  ND * (ND-1) * 3 +                 // backward substitution
+                  NLF * FDS - pow(m_ne, 2/3) * 6) * // coupling between sides of faces
+                  m_ne * m_na * m_ng );             // for all elements, angles, and groups
 
   checksum_scale_factor = 1.0;
 
-  setComplexity(Complexity::N_to_the_four);
+  setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
   //setUsesFeature(View);
@@ -95,27 +96,16 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
   // Some of the constants are properties of the mesh.
   // Will need to derive these when mesh generator is available.
-  allocData(m_nhpaa_r, m_na       , vid);
-  allocData(m_ohpaa_r, m_na       , vid);
-  allocData(m_phpaa_r, m_na * 43  , vid);
-  allocData(m_order_r, m_na * m_ne, vid);
+  allocAndCopyHostData(m_nhpaa_r, g_nhpaa_r, m_na       , vid);
+  allocAndCopyHostData(m_ohpaa_r, g_ohpaa_r, m_na       , vid);
+  allocAndCopyHostData(m_phpaa_r, g_phpaa_r, m_na * 43  , vid);
+  allocAndCopyHostData(m_order_r, g_order_r, m_na * m_ne, vid);
 
-  allocData(m_AngleElem2FaceType, NLF * m_ne * m_na , vid);
-  allocData(m_elem_to_faces     , NLF * m_ne        , vid);
-  allocData(m_F_g2l             , 10800             , vid);
-  allocData(m_idx1              , 37800             , vid);
-  allocData(m_idx2              , 37800             , vid);
-
-  copyDataH2Space(m_nhpaa_r, g_nhpaa_r, m_na        , vid);
-  copyDataH2Space(m_ohpaa_r, g_ohpaa_r, m_na        , vid);
-  copyDataH2Space(m_phpaa_r, g_phpaa_r, m_na * 43   , vid);
-  copyDataH2Space(m_order_r, g_order_r, m_na * m_ne , vid);
-
-  copyDataH2Space(m_AngleElem2FaceType, g_AngleElem2FaceType, NLF * m_ne * m_na , vid);
-  copyDataH2Space(m_elem_to_faces     , g_elem_to_faces     , NLF * m_ne        , vid);
-  copyDataH2Space(m_F_g2l             , g_F_g2l             , 10800             , vid);
-  copyDataH2Space(m_idx1              , g_idx1              , 37800             , vid);
-  copyDataH2Space(m_idx2              , g_idx2              , 37800             , vid);
+  allocAndCopyHostData(m_AngleElem2FaceType, g_AngleElem2FaceType, NLF * m_ne * m_na , vid);
+  allocAndCopyHostData(m_elem_to_faces     , g_elem_to_faces     , NLF * m_ne        , vid);
+  allocAndCopyHostData(m_F_g2l             , g_F_g2l             , 10800             , vid);
+  allocAndCopyHostData(m_idx1              , g_idx1              , 37800             , vid);
+  allocAndCopyHostData(m_idx2              , g_idx2              , 37800             , vid);
 }
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
