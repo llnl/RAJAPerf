@@ -351,15 +351,6 @@ public:
   }
 
   template <typename T>
-  void copyDataH2Space(T* dst_ptr,
-                       const T* src_ptr,
-                       Size_type len,
-                       VariantID vid)
-  {
-    rajaperf::copyData(getDataSpace(vid), dst_ptr, DataSpace::Host, src_ptr, len);
-  }
-
-  template <typename T>
   void deallocData(DataSpace dataSpace, T& ptr)
   {
     rajaperf::deallocData(dataSpace, ptr);
@@ -373,10 +364,16 @@ public:
   }
 
   template <typename T>
-  void allocData(T*& ptr, Size_type len, DataSpace dataSpace)
+  void allocAndCopyHostData(T*& dst_ptr,
+                            const T* src_ptr,
+                            Size_type len,
+                            VariantID vid)
   {
-    rajaperf::allocData(dataSpace,
-        ptr, len, getDataAlignment());
+    rajaperf::allocData(getDataSpace(vid),
+        dst_ptr, len, getDataAlignment());
+
+    rajaperf::copyData(getDataSpace(vid),
+        dst_ptr, DataSpace::Host, src_ptr, len);
   }
 
   template <typename T>
