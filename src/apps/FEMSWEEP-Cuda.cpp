@@ -41,7 +41,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
           RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, block_size>>;
 
       using outer_x =
-          RAJA::LoopPolicy<RAJA::cuda_global_thread_x>;
+          RAJA::LoopPolicy<RAJA::cuda_global_size_x_direct<block_size>>;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {

@@ -41,7 +41,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
           RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
 
       using outer_x =
-          RAJA::LoopPolicy<RAJA::hip_global_thread_x>;
+          RAJA::LoopPolicy<RAJA::hip_global_size_x_direct<block_size>>;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
