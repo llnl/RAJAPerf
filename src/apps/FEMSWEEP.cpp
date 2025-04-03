@@ -55,11 +55,11 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +       // L & U formation
-                  ND * (ND-1) * 3 +                 // forward substitution
-                  ND * (ND-1) * 3 +                 // backward substitution
-                  NLF * FDS - pow(m_ne, 2/3) * 6) * // coupling between sides of faces
-                  m_ne * m_na * m_ng );             // for all elements, angles, and groups
+  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 + // L & U formation
+                  ND * (ND-1) * 3 +           // forward substitution
+                  ND * (ND-1) * 3 +           // backward substitution
+                  NLF * FDS - 15 * 15 * 6) *  // coupling between sides of faces
+                  m_ne * m_na * m_ng );       // for all elements, angles, and groups
 
 #if defined(RAJA_ENABLE_HIP)
   // The AMD CPU checksum is inaccurate starting at the 10's digit. AMD GPU and NVIDIA GPU results match.
