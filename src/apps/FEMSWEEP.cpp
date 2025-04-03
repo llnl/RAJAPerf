@@ -61,7 +61,12 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   NLF * FDS - pow(m_ne, 2/3) * 6) * // coupling between sides of faces
                   m_ne * m_na * m_ng );             // for all elements, angles, and groups
 
+#if defined(RAJA_ENABLE_HIP)
+  // The AMD CPU checksum is inaccurate starting at the 10's digit. AMD GPU and NVIDIA GPU results match.
+  checksum_scale_factor = 0.0000000001;
+#else
   checksum_scale_factor = 1.0;
+#endif
 
   setComplexity(Complexity::N);
 
@@ -110,13 +115,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
 {
-#if defined(RAJA_ENABLE_HIP)
-  // The AMD CPU checksum is off starting at the 10's digit. AMD GPU and NVIDIA GPU results match.
-  // This truncation will be removed when that issue is resolved.
-  checksum[vid][tune_idx] += (std::trunc(calcChecksum(m_Xdat, m_Xlen, checksum_scale_factor , vid) / 100.0) * 100.0);
-#else
   checksum[vid][tune_idx] += calcChecksum(m_Xdat, m_Xlen, checksum_scale_factor , vid);
-#endif
 }
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
