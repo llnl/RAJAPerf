@@ -49,6 +49,8 @@ blt_add_library(
           FEMSWEEP-Hip.cpp
           FEMSWEEP-Seq.cpp
           FEMSWEEP-OMP.cpp
+          FEMSWEEP-OMPTarget.cpp
+          FEMSWEEP-Sycl.cpp
           FIR.cpp
           FIR-Seq.cpp
           FIR-Hip.cpp
