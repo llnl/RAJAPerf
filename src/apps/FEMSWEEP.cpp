@@ -61,12 +61,8 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   NLF * FDS - 15 * 15 * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );       // for all elements, angles, and groups
 
-#if defined(RAJA_ENABLE_HIP)
-  // The AMD CPU checksum is inaccurate starting at the 10's digit. AMD GPU and NVIDIA GPU results match.
+  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
   checksum_scale_factor = 0.0000000001;
-#else
-  checksum_scale_factor = 1.0;
-#endif
 
   setComplexity(Complexity::N);
 
