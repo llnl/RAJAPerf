@@ -11,9 +11,11 @@
 ///
 /// for (int ag = 0; ag < na * ng; ++ag)
 /// {
-///   const int a = ag / ng, g = ag % ng;
+///   const int a = ag / ng;
+///   const int g = ag % ng;
 ///   // number and offset of hyperplanes for this angle
-///   const int nhp = nhpaa_r[a], ohp = ohpaa_r[a];
+///   const int nhp = nhpaa_r[a];
+///   const int ohp = ohpaa_r[a];
 ///   // elements in this hyperplanes processed so far
 ///   int s_nehp_done = 0;
 ///   double A[ND * ND], b[ND];
@@ -115,8 +117,10 @@ constexpr int FDS = 4;  // number of DOFs per face
 
  
 #define FEMSWEEP_KERNEL \
-  const int a = ag / ng, g = ag % ng; \
-  const int nhp = nhpaa_r[a], ohp = ohpaa_r[a]; \
+  const int a = ag / ng; \
+  const int g = ag % ng; \
+  const int nhp = nhpaa_r[a]; \
+  const int ohp = ohpaa_r[a]; \
   int s_nehp_done = 0; \
   double A[ND * ND], b[ND]; \
   double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
