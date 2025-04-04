@@ -96,6 +96,9 @@ blt_add_executable(
   basic/DAXPY_ATOMIC.cpp
   basic/DAXPY_ATOMIC-Seq.cpp
   basic/DAXPY_ATOMIC-OMPTarget.cpp
+  basic/EMPTY.cpp
+  basic/EMPTY-Seq.cpp
+  basic/EMPTY-OMPTarget.cpp
   basic/IF_QUAD.cpp
   basic/IF_QUAD-Seq.cpp
   basic/IF_QUAD-OMPTarget.cpp
