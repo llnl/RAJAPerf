@@ -26,11 +26,11 @@ void FEMSWEEP::runSyclVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 {
   switch ( vid ) {
 
-    case Base_SyclTarget : {
+    case Base_SYCL : {
       break;
     }
 
-    case RAJA_SyclTarget : {
+    case RAJA_SYCL : {
       break;
     }
 
