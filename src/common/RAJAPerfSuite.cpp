@@ -21,6 +21,7 @@
 #include "basic/COPY8.hpp"
 #include "basic/DAXPY.hpp"
 #include "basic/DAXPY_ATOMIC.hpp"
+#include "basic/EMPTY.hpp"
 #include "basic/IF_QUAD.hpp"
 #include "basic/INDEXLIST.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -176,6 +177,7 @@ static const std::string KernelNames [] =
   std::string("Basic_COPY8"),
   std::string("Basic_DAXPY"),
   std::string("Basic_DAXPY_ATOMIC"),
+  std::string("Basic_EMPTY"),
   std::string("Basic_IF_QUAD"),
   std::string("Basic_INDEXLIST"),
   std::string("Basic_INDEXLIST_3LOOP"),
@@ -811,6 +813,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Basic_DAXPY_ATOMIC : {
        kernel = new basic::DAXPY_ATOMIC(run_params);
+       break;
+    }
+    case Basic_EMPTY : {
+       kernel = new basic::EMPTY(run_params);
        break;
     }
     case Basic_IF_QUAD : {
