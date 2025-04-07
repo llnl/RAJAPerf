@@ -308,6 +308,9 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
+  Index_type m_nx;
+  Index_type m_ny;
+  Index_type m_nz;
   Index_type m_ne;
   Index_type m_na;
   Index_type m_ng;

@@ -25,7 +25,10 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  m_ne = 15 * 15 * 15;
+  m_nx = 15;
+  m_ny = 15;
+  m_nz = 15;
+  m_ne = m_nx * m_ny * m_nz;
   m_na = 72;
   m_ng = 128;
 
@@ -55,11 +58,11 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 + // L & U formation
-                  ND * (ND-1) * 3 +           // forward substitution
-                  ND * (ND-1) * 3 +           // backward substitution
-                  NLF * FDS - 15 * 15 * 6) *  // coupling between sides of faces
-                  m_ne * m_na * m_ng );       // for all elements, angles, and groups
+  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +     // L & U formation
+                  ND * (ND-1) * 3 +               // forward substitution
+                  ND * (ND-1) * 3 +               // backward substitution
+                  NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
+                  m_ne * m_na * m_ng );           // for all elements, angles, and groups
 
   // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
   checksum_scale_factor = 0.0000000001;
