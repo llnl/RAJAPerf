@@ -48,8 +48,6 @@ cmake \
   -DRAJA_PERFSUITE_USE_CALIPER=ON \
   -Dcaliper_DIR=${CALI_DIR} \
   -Dadiak_DIR=${ADIAK_DIR} \
-  -DCMAKE_C_FLAGS="-g -O0" \
-  -DCMAKE_CXX_FLAGS="-g -O0" \
   "$@" \
   ..
 
