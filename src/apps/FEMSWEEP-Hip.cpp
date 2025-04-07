@@ -63,7 +63,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
     }
 
     default : {
-      getCout() << "\n FEMSWEEP : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n FEMSWEEP : Unknown HIP variant id = " << vid << std::endl;
     }
 
   }

@@ -74,7 +74,7 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
     }
 
     default : {
-      getCout() << "\n FEMSWEEP : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n FEMSWEEP : Unknown OpenMP variant id = " << vid << std::endl;
     }
 
   }

@@ -71,7 +71,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     }
 
     default : {
-      getCout() << "\n FEMSWEEP : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n FEMSWEEP : Unknown Sequential variant id = " << vid << std::endl;
     }
 
   }

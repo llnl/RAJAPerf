@@ -63,7 +63,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
     }
 
     default : {
-      getCout() << "\n FEMSWEEP : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n FEMSWEEP : Unknown CUDA variant id = " << vid << std::endl;
     }
 
   }
