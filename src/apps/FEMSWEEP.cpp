@@ -78,10 +78,10 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setVariantDefined( Base_OpenMP );
   setVariantDefined( RAJA_OpenMP );
 
-  //setVariantDefined( Base_CUDA );
+  setVariantDefined( Base_CUDA );
   setVariantDefined( RAJA_CUDA );
 
-  //setVariantDefined( Base_HIP );
+  setVariantDefined( Base_HIP );
   setVariantDefined( RAJA_HIP );
 }
 

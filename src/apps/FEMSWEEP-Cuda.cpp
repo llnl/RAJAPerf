@@ -22,6 +22,30 @@ namespace apps
 {
 
 template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void FEMSweep3D( const Real_ptr Bdat,
+                            const Real_ptr Adat,
+                            const Real_ptr Fdat,
+                            Real_ptr Xdat,
+                            const Real_ptr Sgdat,
+                            const Real_ptr M0dat,
+                            const Index_type ne,
+                            const Index_type ng,
+                            const Index_ptr nhpaa_r,
+                            const Index_ptr ohpaa_r,
+                            const Index_ptr phpaa_r,
+                            const Index_ptr order_r,
+                            const Index_ptr AngleElem2FaceType,
+                            const Index_ptr elem_to_faces,
+                            const Index_ptr F_g2l,
+                            const Index_ptr idx1,
+                            const Index_ptr idx2 )
+{
+  const int ag = blockIdx.x * block_size + threadIdx.x;
+  FEMSWEEP_KERNEL;
+}
+
+template < size_t block_size >
 void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -31,6 +55,41 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
   FEMSWEEP_DATA_SETUP;
 
   switch ( vid ) {
+
+    case Base_CUDA : {
+
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+         const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
+         constexpr size_t shmem = 0;
+
+         RPlaunchCudaKernel( (FEMSweep3D<block_size>),
+                             grid_size, block_size,
+                             shmem, res.get_stream(),
+                             Bdat,
+                             Adat,
+                             Fdat,
+                             Xdat,
+                             Sgdat,
+                             M0dat,
+                             ne,
+                             ng,
+                             nhpaa_r,
+                             ohpaa_r,
+                             phpaa_r,
+                             order_r,
+                             AngleElem2FaceType,
+                             elem_to_faces,
+                             F_g2l,
+                             idx1,
+                             idx2 );
+
+      }
+      stopTimer();
+
+      break;
+    }
 
     case RAJA_CUDA : {
 
