@@ -54,6 +54,9 @@ blt_add_executable(
   apps/ENERGY.cpp
   apps/ENERGY-Seq.cpp
   apps/ENERGY-OMPTarget.cpp
+  apps/FEMSWEEP.cpp
+  apps/FEMSWEEP-Seq.cpp
+  apps/FEMSWEEP-OMPTarget.cpp
   apps/FIR.cpp
   apps/FIR-Seq.cpp
   apps/FIR-OMPTarget.cpp
