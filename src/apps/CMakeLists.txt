@@ -44,6 +44,13 @@ blt_add_library(
           ENERGY-OMP.cpp
           ENERGY-OMPTarget.cpp
           ENERGY-Sycl.cpp
+          FEMSWEEP.cpp
+          FEMSWEEP-Cuda.cpp
+          FEMSWEEP-Hip.cpp
+          FEMSWEEP-Seq.cpp
+          FEMSWEEP-OMP.cpp
+          FEMSWEEP-OMPTarget.cpp
+          FEMSWEEP-Sycl.cpp
           FIR.cpp
           FIR-Seq.cpp
           FIR-Hip.cpp
