@@ -230,8 +230,46 @@ inline void copyData(DataSpace dst_dataSpace, T* dst_ptr,
                      DataSpace src_dataSpace, const T* src_ptr,
                      Size_type len)
 {
+  printf("\ncopyData(%i, %p, %i, %p, %zu)\n",
+         (int)dst_dataSpace, dst_ptr, (int)src_dataSpace, src_ptr, len);
+  fflush(stdout);
+
+  T data0;
+  if (len > 0) {
+    data0 = src_ptr[0];
+  }
+
+    printf("src data %p = [", src_ptr);
+    for (Index_type i = 0; i < len; ++i) {
+      printf(" %g", (double)src_ptr[i]);
+    }
+    printf("]\n");
+    fflush(stdout);
+    printf("before copy dst data %p = [", dst_ptr);
+    for (Index_type i = 0; i < len; ++i) {
+      printf(" %g", (double)dst_ptr[i]);
+    }
+    printf("]\n");
+    fflush(stdout);
+
   Size_type nbytes = len*sizeof(T);
   detail::copyData(dst_dataSpace, dst_ptr, src_dataSpace, src_ptr, nbytes);
+
+    printf("after copy dst data %p = [", dst_ptr);
+    for (Index_type i = 0; i < len; ++i) {
+      printf(" %g", (double)dst_ptr[i]);
+    }
+    printf("]\n");
+    fflush(stdout);
+
+  if (len > 0) {
+    if (data0 != dst_ptr[0]) {
+      throw 1;
+    }
+  }
+
+  printf("copyData\n");
+  fflush(stdout);
 }
 
 /*!
