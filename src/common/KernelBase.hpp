@@ -26,7 +26,7 @@
 #include "RAJA/policy/hip/raja_hiperrchk.hpp"
 #endif
 #if defined(RAJA_ENABLE_SYCL)
-#include <sycl.hpp>
+#include "RAJA/util/sycl_compat.hpp"
 #endif
 
 #include "camp/resource.hpp"
@@ -364,6 +364,19 @@ public:
   }
 
   template <typename T>
+  void allocAndCopyHostData(T*& dst_ptr,
+                            const T* src_ptr,
+                            Size_type len,
+                            VariantID vid)
+  {
+    rajaperf::allocData(getDataSpace(vid),
+        dst_ptr, len, getDataAlignment());
+
+    rajaperf::copyData(getDataSpace(vid),
+        dst_ptr, DataSpace::Host, src_ptr, len);
+  }
+
+  template <typename T>
   void allocAndInitData(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitData(getDataSpace(vid),
@@ -378,6 +391,13 @@ public:
   }
 
   template <typename T>
+  void allocAndInitDataConst(T*& ptr, Size_type len, T val, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataConst(dataSpace,
+        ptr, len, getDataAlignment(), val);
+  }
+
+  template <typename T>
   void allocAndInitDataRandSign(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitDataRandSign(getDataSpace(vid),
@@ -388,6 +408,13 @@ public:
   void allocAndInitDataRandValue(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitDataRandValue(getDataSpace(vid),
+        ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  void allocAndInitDataRandValue(T*& ptr, Size_type len, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataRandValue(dataSpace,
         ptr, len, getDataAlignment());
   }
 

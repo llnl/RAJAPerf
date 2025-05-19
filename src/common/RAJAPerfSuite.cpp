@@ -21,6 +21,7 @@
 #include "basic/COPY8.hpp"
 #include "basic/DAXPY.hpp"
 #include "basic/DAXPY_ATOMIC.hpp"
+#include "basic/EMPTY.hpp"
 #include "basic/IF_QUAD.hpp"
 #include "basic/INDEXLIST.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -86,6 +87,7 @@
 #include "apps/DIFFUSION3DPA.hpp"
 #include "apps/EDGE3D.hpp"
 #include "apps/ENERGY.hpp"
+#include "apps/FEMSWEEP.hpp"
 #include "apps/FIR.hpp"
 #include "apps/LTIMES.hpp"
 #include "apps/LTIMES_NOVIEW.hpp"
@@ -175,6 +177,7 @@ static const std::string KernelNames [] =
   std::string("Basic_COPY8"),
   std::string("Basic_DAXPY"),
   std::string("Basic_DAXPY_ATOMIC"),
+  std::string("Basic_EMPTY"),
   std::string("Basic_IF_QUAD"),
   std::string("Basic_INDEXLIST"),
   std::string("Basic_INDEXLIST_3LOOP"),
@@ -240,6 +243,7 @@ static const std::string KernelNames [] =
   std::string("Apps_DIFFUSION3DPA"),
   std::string("Apps_EDGE3D"),
   std::string("Apps_ENERGY"),
+  std::string("Apps_FEMSWEEP"),
   std::string("Apps_FIR"),
   std::string("Apps_LTIMES"),
   std::string("Apps_LTIMES_NOVIEW"),
@@ -811,6 +815,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new basic::DAXPY_ATOMIC(run_params);
        break;
     }
+    case Basic_EMPTY : {
+       kernel = new basic::EMPTY(run_params);
+       break;
+    }
     case Basic_IF_QUAD : {
        kernel = new basic::IF_QUAD(run_params);
        break;
@@ -1022,6 +1030,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Apps_ENERGY : {
        kernel = new apps::ENERGY(run_params);
+       break;
+    }
+    case Apps_FEMSWEEP : {
+       kernel = new apps::FEMSWEEP(run_params);
        break;
     }
     case Apps_FIR : {
