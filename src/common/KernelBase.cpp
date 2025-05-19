@@ -593,7 +593,7 @@ void KernelBase::doOnceCaliMetaEnd(VariantID vid, size_t tune_idx)
 
 void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
                                   std::string tstr,
-                                  const std::string& outdir,
+                                  const std::string& outfile,
                                   const std::string& addToSpotConfig,
                                   const std::string& addToCaliConfig)
 {
@@ -741,12 +741,14 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
   if(config_ok) {
     cali::ConfigManager m;
     mgr[vid][tstr] = m;
-    std::string od("./");
-    if (outdir.size()) {
-      od = outdir + "/";
-    }
     std::string vstr = getVariantName(vid);
-    std::string profile = "spot(output=" + od + vstr + "-" + tstr + ".cali";
+    std::string profile;
+    if (outfile == "RAJAPerf") {
+      profile = "spot(output=" + vstr + "-" + tstr + ".cali";
+    }
+    else {
+      profile = "spot(output=" + outfile + ".cali";
+    }
     if(!updatedSpotConfig.empty()) {
       profile += "," + updatedSpotConfig;
     }

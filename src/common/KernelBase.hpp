@@ -535,7 +535,7 @@ public:
   void doOnceCaliMetaEnd(VariantID vid, size_t tune_idx);
   static void setCaliperMgrVariantTuning(VariantID vid,
                                     std::string tstr,
-                                    const std::string& outdir,
+                                    const std::string& outfile,
                                     const std::string& addToSpotConfig,
                                     const std::string& addToCaliConfig);
 
