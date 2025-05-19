@@ -595,7 +595,8 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
                                   std::string tstr,
                                   const std::string& outfile,
                                   const std::string& addToSpotConfig,
-                                  const std::string& addToCaliConfig)
+                                  const std::string& addToCaliConfig,
+                                  const int num_variants_tunings)
 {
   static bool ran_spot_config_check = false;
   bool config_ok = true;
@@ -743,10 +744,14 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     mgr[vid][tstr] = m;
     std::string vstr = getVariantName(vid);
     std::string profile;
+    // If --outfile not provided, give generic name
     if (outfile == "RAJAPerf") {
       profile = "spot(output=" + vstr + "-" + tstr + ".cali";
     }
     else {
+      // Ensure cali files for each variant/tuning are not same file name
+      if (num_variants_tunings > 1)
+        throw std::runtime_error("Error: Cannot use '--outfile' with Caliper if running multiple variants/tunings. Must be running single variant & tuning.");
       profile = "spot(output=" + outfile + ".cali";
     }
     if(!updatedSpotConfig.empty()) {

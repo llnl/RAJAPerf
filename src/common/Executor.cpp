@@ -337,7 +337,8 @@ void Executor::setupSuite()
                                              tstr,
                                              run_params.getOutputFilePrefix(),
                                              run_params.getAddToSpotConfig(),
-                                             run_params.getAddToCaliperConfig());
+                                             run_params.getAddToCaliperConfig(),
+                                             tuning_names_order_map.size());
 #endif
     }
 
