@@ -220,6 +220,10 @@ struct global_loop_occupancy_grid_stride_helper
   static std::string get_name() { return "occgs"; }
 };
 
+using forall_helpers = camp::list<
+    global_direct_helper,
+    global_loop_occupancy_grid_stride_helper >;
+
 using reducer_helpers = camp::list<
     global_direct_helper,
     global_loop_occupancy_grid_stride_helper >;
