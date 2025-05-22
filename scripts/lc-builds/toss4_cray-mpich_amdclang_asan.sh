@@ -10,18 +10,20 @@
 if [[ $# -lt 2 ]]; then
   echo
   echo "You must pass 2 or more arguments to the script (in this order): "
-  echo "   1) compiler version number"
+  echo "   1) cray-mpich compiler version number"
+  echo "   1) HIP compiler version number"
   echo "   2) HIP compute architecture"
   echo "   3...) optional arguments to cmake"
   echo
   echo "For example: "
-  echo "    toss4_amdclang_asan.sh 5.7.0 gfx90a"
+  echo "    toss4_cray-mpich_amdclang_asan.sh 8.1.14 4.1.0 gfx906"
   exit
 fi
 
-COMP_VER=$1
-COMP_ARCH=$2
-shift 2
+MPI_VER=$1
+COMP_VER=$2
+COMP_ARCH=$3
+shift 3
 
 HOSTCONFIG="hip_3_X"
 
@@ -36,11 +38,17 @@ else
   echo "Unknown hip version, using ${HOSTCONFIG} host-config"
 fi
 
-BUILD_SUFFIX=lc_toss4-amdclang-${COMP_VER}-${COMP_ARCH}-asan
+# if [[ ${COMP_ARCH} == gfx90a ]]
+# then
+  # note that unsafe atomics require use of coarse grain memory
+##HIP_CLANG_FLAGS="-munsafe-fp-atomics"
+# fi
+
+BUILD_SUFFIX=lc_toss4-cray-mpich-${MPI_VER}-amdclang-${COMP_VER}-${COMP_ARCH}-asan
 RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/${HOSTCONFIG}.cmake
 
 echo
-echo "Creating build directory build_${BUILD_SUFFIX} and generating configuration in it"
+echo "Creating build directory ${BUILD_SUFFIX} and generating configuration in it"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -50,21 +58,36 @@ echo
 echo "To use fp64 HW atomics you must configure with these options when using gfx90a and hip >= 5.2"
 echo "   -DCMAKE_CXX_FLAGS=\"-munsafe-fp-atomics\""
 echo
+echo "To work around some issues where *_FUSED kernels crash add these options"
+echo "   -DCMAKE_CXX_FLAGS=\"-fgpu-rdc\""
+echo "   -DCMAKE_EXE_LINKER_FLAGS=\"-fgpu-rdc\""
+echo
+echo "To work around some issues where *_FUSED kernels perform poorly use this environment variable"
+echo "   env HSA_SCRATCH_SINGLE_LIMIT=4000000000"
+echo
+echo "To work around some issues where the build fails with a weird error about max or fmax add these options"
+echo "   -DCMAKE_CXX_FLAGS=\"--hip-version={hip_version:ex=6.1.2}\""
+echo "   -DCMAKE_EXE_LINKER_FLAGS=\"--hip-version={hip_version:ex=6.1.2}\""
+echo
+
+
 
 rm -rf build_${BUILD_SUFFIX} >/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
 
-module load cmake/3.24.2
+module load cmake/3.23.1
 
 # unload rocm to avoid configuration problems where the loaded rocm and COMP_VER
 # are inconsistent causing the rocprim from the module to be used unexpectedly
-# module unload rocm
+module unload rocm rocmcc
 
-if [[ ${COMP_VER} =~ .*magic.* ]]; then
+if [[ "${COMP_VER}" == *-magic ]]; then
   ROCM_PATH="/usr/tce/packages/rocmcc/rocmcc-${COMP_VER}"
+  MPI_ROCM_PATH="/usr/tce/packages/cray-mpich/cray-mpich-${MPI_VER}-rocmcc-${COMP_VER}"
 else
-  ROCM_PATH="/usr/tce/packages/rocmcc-tce/rocmcc-${COMP_VER}"
+  ROCM_PATH="/opt/rocm-${COMP_VER}"
+  MPI_ROCM_PATH=/usr/tce/packages/cray-mpich-tce/cray-mpich-${MPI_VER}-rocmcc-${COMP_VER}
 fi
 
 COMP_HIP_VER="${COMP_VER%-magic}"
@@ -72,24 +95,27 @@ COMP_CLANG_MAJOR_VER="$(ls /opt/rocm-${COMP_HIP_VER}/lib/llvm/lib/clang/)"
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
+  -DMPI_C_COMPILER="${MPI_ROCM_PATH}/bin/mpiamdclang" \
+  -DMPI_CXX_COMPILER="${MPI_ROCM_PATH}/bin/mpiamdclang++" \
   -DCMAKE_PREFIX_PATH="${ROCM_PATH}/lib/cmake" \
   -DHIP_PLATFORM=amd \
   -DROCM_ROOT_DIR="${ROCM_PATH}" \
   -DHIP_ROOT_DIR="${ROCM_PATH}/hip" \
-  -DHIP_PATH=${ROCM_PATH}/llvm/bin \
-  -DCMAKE_C_COMPILER=${ROCM_PATH}/llvm/bin/amdclang \
-  -DCMAKE_CXX_COMPILER=${ROCM_PATH}/llvm/bin/amdclang++ \
+  -DHIP_PATH="${ROCM_PATH}/llvm/bin" \
+  -DCMAKE_C_COMPILER="${ROCM_PATH}/llvm/bin/amdclang" \
+  -DCMAKE_CXX_COMPILER="${ROCM_PATH}/llvm/bin/amdclang++" \
   -DCMAKE_HIP_ARCHITECTURES="${COMP_ARCH}:xnack+" \
   -DGPU_TARGETS="${COMP_ARCH}:xnack+" \
   -DAMDGPU_TARGETS="${COMP_ARCH}:xnack+" \
-  -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan" \
-  -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan" \
-  -DCMAKE_HIP_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
+  -DCMAKE_C_FLAGS="-fsanitize=address -shared-libsan" \
+  -DCMAKE_CXX_FLAGS="-fsanitize=address -shared-libsan" \
+  -DCMAKE_HIP_FLAGS="-fsanitize=address -shared-libsan -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
   -DCMAKE_EXE_LINKER_FLAGS="-L/opt/rocm-${COMP_HIP_VER}/lib/asan/ -L/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan -Wl,-rpath,/opt/rocm-${COMP_HIP_VER}/lib/asan/:/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan:/opt/rocm-${COMP_HIP_VER}/lib/llvm/lib/clang/${COMP_CLANG_MAJOR_VER}/lib/linux -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
   -DBLT_CXX_STD=c++14 \
   -C ${RAJA_HOSTCONFIG} \
+  -DENABLE_MPI=ON \
   -DENABLE_HIP=ON \
-  -DENABLE_OPENMP=ON \
+  -DENABLE_OPENMP=OFF \
   -DENABLE_CUDA=OFF \
   -DCMAKE_INSTALL_PREFIX=../install_${BUILD_SUFFIX} \
   "$@" \
@@ -98,17 +124,19 @@ cmake \
 echo
 echo "***********************************************************************"
 echo
-echo "cd into directory build_${BUILD_SUFFIX} and run make to build RAJAPerf"
+echo "cd into directory build_${BUILD_SUFFIX} and run make to build RAJA"
 echo
 echo "  Please note that you have to have a consistent build environment"
-echo "  when you make RAJA as cmake may reconfigure; load the appropriate"
-echo "  rocm and rocmcc modules (${COMP_VER}) when building."
+echo "  when you make RAJA as cmake may reconfigure; unload the rocm module"
+echo "  or load the appropriate rocm module (${COMP_VER}) when building."
 echo
-echo "    module load rocm/COMP_VER rocmcc/COMP_VER"
+echo "    module unload rocm"
 echo "    srun -n1 make"
 echo
-echo "  Run with these environment options when using asan"
-echo "    ASAN_OPTIONS=print_suppressions=0:detect_leaks=0"
-echo "    HSA_XNACK=1"
+echo "  Please note that rocm requires libpgmath.so from rocm/llvm to run."
+echo "  Until this is handled transparently in the build system you may add "
+echo "  rocm/llvm to your LD_LIBRARY_PATH."
+echo
+echo "    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/opt/rocm-${COMP_VER}/llvm/lib"
 echo
 echo "***********************************************************************"
