@@ -34,7 +34,7 @@
     } \
     m_final = init; \
     for (size_t r = 0; r < replication; ++r ) { \
-      m_final += atomic[r]; \
+      m_final += atomic_host[r]; \
     } \
     if (ds != hds) { \
       rajaperf::deallocData(hds, atomic_host); \
