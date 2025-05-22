@@ -79,16 +79,14 @@ VOL3D::~VOL3D()
 
 void VOL3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  {
-    auto reset_x = allocAndInitDataConstForSeqInit(m_x, m_array_length, 0.0, vid);
-    auto reset_y = allocAndInitDataConstForSeqInit(m_y, m_array_length, 0.0, vid);
-    auto reset_z = allocAndInitDataConstForSeqInit(m_z, m_array_length, 0.0, vid);
+  auto reset_x = allocAndInitDataConstForInit(m_x, m_array_length, 0.0, vid);
+  auto reset_y = allocAndInitDataConstForInit(m_y, m_array_length, 0.0, vid);
+  auto reset_z = allocAndInitDataConstForInit(m_z, m_array_length, 0.0, vid);
 
-    Real_type dx = 0.3;
-    Real_type dy = 0.2;
-    Real_type dz = 0.1;
-    setMeshPositions_3d(m_x, dx, m_y, dy, m_z, dz, *m_domain);
-  }
+  Real_type dx = 0.3;
+  Real_type dy = 0.2;
+  Real_type dz = 0.1;
+  setMeshPositions_3d(m_x, dx, m_y, dy, m_z, dz, *m_domain);
 
   allocAndInitDataConst(m_vol, m_array_length, 0.0, vid);
 

@@ -419,7 +419,7 @@ public:
   }
 
   template <typename T>
-  rajaperf::AutoDataMover<T> allocDataForSeqInit(T*& ptr, Size_type len, VariantID vid)
+  rajaperf::AutoDataMover<T> allocDataForInit(T*& ptr, Size_type len, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);
     DataSpace hds = rajaperf::hostCopyDataSpace(ds);
@@ -428,7 +428,7 @@ public:
   }
 
   template <typename T>
-  rajaperf::AutoDataMover<T> allocAndInitDataForSeqInit(T*& ptr, Size_type len, VariantID vid)
+  rajaperf::AutoDataMover<T> allocAndInitDataForInit(T*& ptr, Size_type len, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);
     DataSpace hds = rajaperf::hostCopyDataSpace(ds);
@@ -437,7 +437,7 @@ public:
   }
 
   template <typename T>
-  rajaperf::AutoDataMover<T> allocAndInitDataConstForSeqInit(T*& ptr, Size_type len, T val, VariantID vid)
+  rajaperf::AutoDataMover<T> allocAndInitDataConstForInit(T*& ptr, Size_type len, T val, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);
     DataSpace hds = rajaperf::hostCopyDataSpace(ds);

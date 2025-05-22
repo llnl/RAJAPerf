@@ -81,7 +81,7 @@ void HALO_EXCHANGE_FUSED::setUp(VariantID vid, size_t tune_idx)
 
   m_vars.resize(m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
-    auto reset_var = allocAndInitDataForSeqInit(m_vars[v], m_var_size, vid);
+    auto reset_var = allocAndInitDataForInit(m_vars[v], m_var_size, vid);
 
     Real_ptr var = m_vars[v];
 
