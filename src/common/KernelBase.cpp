@@ -22,6 +22,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   , did(getOpenMPTargetDevice())
+  , hid(getOpenMPTargetHost())
 #endif
 {
   kernel_id = kid;

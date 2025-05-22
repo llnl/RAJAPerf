@@ -598,6 +598,7 @@ protected:
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
+  int hid;
 #endif
 
 private:
