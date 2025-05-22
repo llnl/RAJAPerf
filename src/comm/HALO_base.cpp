@@ -233,8 +233,7 @@ void HALO_base::create_lists(
                                    (extent.j_max - extent.j_min) *
                                    (extent.k_max - extent.k_min) ;
 
-      allocAndInitData(pack_index_lists[l], pack_index_list_lengths[l], vid);
-      auto reset_list = scopedMoveData(pack_index_lists[l], pack_index_list_lengths[l], vid);
+      auto reset_list = allocAndInitDataForSeqInit(pack_index_lists[l], pack_index_list_lengths[l], vid);
 
       Int_ptr pack_list = pack_index_lists[l];
 
@@ -266,8 +265,7 @@ void HALO_base::create_lists(
                                      (extent.j_max - extent.j_min) *
                                      (extent.k_max - extent.k_min) ;
 
-      allocAndInitData(unpack_index_lists[l], unpack_index_list_lengths[l], vid);
-      auto reset_list = scopedMoveData(unpack_index_lists[l], unpack_index_list_lengths[l], vid);
+      auto reset_list = allocAndInitDataForSeqInit(unpack_index_lists[l], unpack_index_list_lengths[l], vid);
 
       Int_ptr unpack_list = unpack_index_lists[l];
 

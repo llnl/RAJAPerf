@@ -85,10 +85,20 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
 {
   {
-    auto reset_px = scopedMoveData(m_px, m_array_length, vid);
+    Real_ptr px_host = m_px;
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    if (ds != hds) {
+      rajaperf::allocData(hds, px_host, m_array_length, getDataAlignment());
+      rajaperf::copyData(hds, px_host, ds, m_px, m_array_length);
+    }
 
     for (Index_type i = 0; i < getActualProblemSize(); ++i) {
-      m_px[i] -= m_px_initval;
+      px_host[i] -= m_px_initval;
+    }
+
+    if (ds != hds) {
+      rajaperf::deallocData(hds, px_host);
     }
   }
 

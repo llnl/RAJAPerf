@@ -70,8 +70,7 @@ void HALO_PACKING::setUp(VariantID vid, size_t tune_idx)
 
   m_vars.resize(m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
-    allocAndInitData(m_vars[v], m_var_size, vid);
-    auto reset_var = scopedMoveData(m_vars[v], m_var_size, vid);
+    auto reset_var = allocDataForSeqInit(m_vars[v], m_var_size, vid);
 
     Real_ptr var = m_vars[v];
 

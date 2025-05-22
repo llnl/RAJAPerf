@@ -70,9 +70,8 @@ HISTOGRAM::~HISTOGRAM()
 
 void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocData(m_bins, getActualProblemSize(), vid);
   {
-    auto reset_bins = scopedMoveData(m_bins, getActualProblemSize(), vid);
+    auto reset_bins = allocDataForSeqInit(m_bins, getActualProblemSize(), vid);
 
     const bool init_random_per_iterate =
         (m_bin_assignment_algorithm == RunParams::BinAssignmentAlgorithm::Random);

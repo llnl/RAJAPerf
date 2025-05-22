@@ -146,11 +146,9 @@ void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   m_matrix.ufc = m_matrix.dbc     + m_domain->jp + m_domain->kp ;
   m_matrix.ufr = m_matrix.dbl + 1 + m_domain->jp + m_domain->kp ;
 
-  allocAndInitDataConst(m_real_zones, m_domain->n_real_zones,
-                        static_cast<Index_type>(-1), vid);
-
   {
-    auto reset_rz = scopedMoveData(m_real_zones, m_domain->n_real_zones, vid);
+    auto reset_rz = allocAndInitDataConstForSeqInit(m_real_zones, m_domain->n_real_zones,
+                        static_cast<Index_type>(-1), vid);
 
     setRealZones_3d(m_real_zones, *m_domain);
   }

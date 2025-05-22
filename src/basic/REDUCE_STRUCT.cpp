@@ -71,12 +71,10 @@ void REDUCE_STRUCT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_init_sum = 0.0;
   m_init_min = std::numeric_limits<Real_type>::max();
   m_init_max = std::numeric_limits<Real_type>::lowest();
-  allocAndInitData(m_x, getActualProblemSize(), vid);
-  allocAndInitData(m_y, getActualProblemSize(), vid);
 
   {
-    auto reset_x = scopedMoveData(m_x, getActualProblemSize(), vid);
-    auto reset_y = scopedMoveData(m_y, getActualProblemSize(), vid);
+    auto reset_x = allocAndInitDataForSeqInit(m_x, getActualProblemSize(), vid);
+    auto reset_y = allocAndInitDataForSeqInit(m_y, getActualProblemSize(), vid);
 
     Real_type dx = Lx/(Real_type)(getActualProblemSize());
     Real_type dy = Ly/(Real_type)(getActualProblemSize());
