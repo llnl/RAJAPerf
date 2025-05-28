@@ -28,6 +28,8 @@ int main( int argc, char** argv )
     // Copy CALI_CONFIG to DISABLED_CALI_CONFIG and unset CALI_CONFIG
     if (setenv("DISABLED_CALI_CONFIG", caliConfigValue, 1) == 0 && unsetenv("CALI_CONFIG") == 0) {
       std::cout << "Configuration options in CALI_CONFIG will be parsed and added to the internal RAJAPerf Caliper config manager." << std::endl;
+    } else {
+      throw std::runtime_error("main: Failed to update environment variables. Unable to set DISABLED_CALI_CONFIG or unset CALI_CONFIG.");
     }
   }
 #endif
