@@ -129,8 +129,8 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::launch<launch_policy>( res,
-            RAJA::LaunchParams(RAJA::Teams(z_grid_sz, g_grid_sz, m_grid_sz),
-                               RAJA::Threads(z_wg_sz, g_wg_sz, m_wg_sz)),
+            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
+                               RAJA::Threads(m_wg_sz, g_wg_sz, z_wg_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
