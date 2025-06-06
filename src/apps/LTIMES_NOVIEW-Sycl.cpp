@@ -109,11 +109,11 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 
       using launch_policy = RAJA::LaunchPolicy<RAJA::sycl_launch_t<async>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::sycl_global_2<z_wg_sz>>;
+      using z_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_2>;
 
-      using g_policy = RAJA::LoopPolicy<RAJA::sycl_global_1<g_wg_sz>>;
+      using g_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_1>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::sycl_global_0<m_wg_sz>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_0>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
