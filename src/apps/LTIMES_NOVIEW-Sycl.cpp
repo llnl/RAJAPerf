@@ -75,9 +75,9 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::SyclKernelAsync<
-            RAJA::statement::For<1, RAJA::sycl_global_2<z_wg_sz>,      //z
+            RAJA::statement::For<1, RAJA::sycl_global_0<z_wg_sz>,      //z
               RAJA::statement::For<2, RAJA::sycl_global_1<g_wg_sz>,    //g
-                RAJA::statement::For<3, RAJA::sycl_global_0<m_wg_sz>,  //m
+                RAJA::statement::For<3, RAJA::sycl_global_2<m_wg_sz>,  //m
                   RAJA::statement::For<0, RAJA::seq_exec,              //d
                     RAJA::statement::Lambda<0>
                   >
@@ -109,11 +109,11 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 
       using launch_policy = RAJA::LaunchPolicy<RAJA::sycl_launch_t<async>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_2>;
+      using z_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_0>;
 
       using g_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_1>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_0>;
+      using m_policy = RAJA::LoopPolicy<RAJA::sycl_global_item_2>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
@@ -127,8 +127,8 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::launch<launch_policy>( res,
-            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
-                               RAJA::Threads(m_wg_sz, g_wg_sz, z_wg_sz)),
+            RAJA::LaunchParams(RAJA::Teams(z_grid_sz, g_grid_sz, m_grid_sz),
+                               RAJA::Threads(z_wg_sz, g_wg_sz, m_wg_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, RAJA::RangeSegment(0, num_z),
