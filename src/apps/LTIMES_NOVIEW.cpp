@@ -56,6 +56,7 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
+  setUsesFeature(Launch);
 
   setVariantDefined( Base_Seq );
   setVariantDefined( Lambda_Seq );
