@@ -236,7 +236,7 @@ void LTIMES::runHipVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, tune_idx);
+          runHipVariantImpl<block_size>(vid, 0);
 
         }
 
@@ -244,7 +244,7 @@ void LTIMES::runHipVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, tune_idx);
+          runHipVariantImpl<block_size>(vid, 1);
 
         }
 
@@ -254,7 +254,7 @@ void LTIMES::runHipVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, tune_idx);
+          runHipVariantImpl<block_size>(vid, 0);
 
         }
 

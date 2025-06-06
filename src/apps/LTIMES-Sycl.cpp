@@ -29,7 +29,7 @@ namespace apps
 #define z_wg_sz (integer::lesser_of_squarest_factor_pair(work_group_size/m_wg_sz))
 
 template <size_t work_group_size >
-void LTIMES::runSyclVariantImpl(VariantID vid)
+void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 {
   const Index_type run_reps = getRunReps();
 
@@ -176,7 +176,7 @@ void LTIMES::runSyclVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+          runSyclVariantImpl<work_group_size>(vid, 0);
 
         }
 
@@ -184,7 +184,7 @@ void LTIMES::runSyclVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+          runSyclVariantImpl<work_group_size>(vid, 1);
 
         }
 
@@ -194,7 +194,7 @@ void LTIMES::runSyclVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+          runSyclVariantImpl<work_group_size>(vid, 0);
 
         }
 

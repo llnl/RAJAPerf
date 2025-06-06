@@ -237,7 +237,7 @@ void LTIMES::runCudaVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runCudaVariantImpl<block_size>(vid, tune_idx);
+          runCudaVariantImpl<block_size>(vid, 0);
 
         }
 
@@ -245,7 +245,7 @@ void LTIMES::runCudaVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runCudaVariantImpl<block_size>(vid, tune_idx);
+          runCudaVariantImpl<block_size>(vid, 1);
 
         }
 
@@ -255,7 +255,7 @@ void LTIMES::runCudaVariant(VariantID vid, size_t tune_idx)
 
         if (tune_idx == t) {
           setBlockSize(block_size);
-          runCudaVariantImpl<block_size>(vid, tune_idx);
+          runCudaVariantImpl<block_size>(vid, 0);
 
         }
 
