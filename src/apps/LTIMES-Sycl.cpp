@@ -72,20 +72,22 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 
     LTIMES_VIEWS_RANGES_RAJA;
 
-    using EXEC_POL =
-      RAJA::KernelPolicy<
-        RAJA::statement::SyclKernelAsync<
-          RAJA::statement::For<1, RAJA::sycl_global_2<z_wg_sz>,      //z 
-            RAJA::statement::For<2, RAJA::sycl_global_1<g_wg_sz>,    //g
-              RAJA::statement::For<3, RAJA::sycl_global_0<m_wg_sz>,  //m
-                RAJA::statement::For<0, RAJA::seq_exec,              //d
-                  RAJA::statement::Lambda<0>
+    if (tune_idx == 0) {
+
+      using EXEC_POL =
+        RAJA::KernelPolicy<
+          RAJA::statement::SyclKernelAsync<
+            RAJA::statement::For<1, RAJA::sycl_global_2<z_wg_sz>,      //z
+              RAJA::statement::For<2, RAJA::sycl_global_1<g_wg_sz>,    //g
+                RAJA::statement::For<3, RAJA::sycl_global_0<m_wg_sz>,  //m
+                  RAJA::statement::For<0, RAJA::seq_exec,              //d
+                    RAJA::statement::Lambda<0>
+                  >
                 >
               >
             >
           >
-        >
-      >;
+        >;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
@@ -103,12 +105,127 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
       }
       stopTimer();
 
+    } else if (tune_idx == 1) {
+
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<RAJA::sycl_launch_t<async>>;
+
+      using z_policy = RAJA::LoopPolicy<RAJA::sycl_global_2<z_wg_sz>>;
+
+      using g_policy = RAJA::LoopPolicy<RAJA::sycl_global_1<g_wg_sz>>;
+
+      using m_policy = RAJA::LoopPolicy<RAJA::sycl_global_0<m_wg_sz>>;
+
+      using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(num_z, z_wg_sz);
+
+      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(num_g, g_wg_sz);
+
+      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_wg_sz);
+
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+        RAJA::launch<launch_policy>( res,
+            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
+                               RAJA::Threads(m_wg_sz, g_wg_sz, z_wg_sz)),
+            [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+
+              RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
+                [&](IZ z) {
+                  RAJA::loop<g_policy>(ctx, IGRange(0, num_g),
+                    [&](IG g) {
+                      RAJA::loop<m_policy>(ctx, IMRange(0, num_m),
+                        [&](IM m) {
+                          RAJA::loop<d_policy>(ctx, IDRange(0, num_d),
+                            [&](ID d) {
+                              LTIMES_BODY_RAJA
+                            }
+                          ); // RAJA::loop<d_policy>
+                        }
+                      ); // RAJA::loop<m_policy>
+                    }
+                  ); // RAJA::loop<g_policy>
+                }
+              ); // RAJA::loop<z_policy>
+
+            } // outer lambda (ctx)
+        );    // RAJA::launch
+
+      } // loop over kernel reps
+      stopTimer();
+    }
+
   } else {
      std::cout << "\n LTIMES : Unknown Sycl variant id = " << vid << std::endl;
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(LTIMES, Sycl)
+void LTIMES::runSyclVariant(VariantID vid, size_t tune_idx)
+{
+  size_t t = 0;
+
+  seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(work_group_size)) {
+
+      if (vid == RAJA_SYCL) {
+
+        if (tune_idx == t) {
+          setBlockSize(work_group_size);
+          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(work_group_size);
+          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+
+        }
+
+        t += 1;
+
+      } else {
+
+        if (tune_idx == t) {
+          setBlockSize(work_group_size);
+          runSyclVariantImpl<work_group_size>(vid, tune_idx);
+
+        }
+
+        t += 1;
+      }
+
+    }
+
+  });
+}
+
+void LTIMES::setSyclTuningDefinitions(VariantID vid)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(work_group_size)) {
+
+      if (vid == RAJA_SYCL) {
+        addVariantTuningName(vid, "kernel_"+std::to_string(work_group_size));
+        addVariantTuningName(vid, "launch_"+std::to_string(work_group_size));
+      } else {
+        addVariantTuningName(vid, "block_"+std::to_string(work_group_size));
+      }
+
+    }
+
+  });
+
+}
 
 } // end namespace apps
 } // end namespace rajaperf

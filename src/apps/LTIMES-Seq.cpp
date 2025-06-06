@@ -18,7 +18,7 @@ namespace apps
 {
 
 
-void LTIMES::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
 {
   const Index_type run_reps = getRunReps();
 
@@ -80,37 +80,84 @@ void LTIMES::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
       LTIMES_VIEWS_RANGES_RAJA;
 
-      auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
-                          LTIMES_BODY_RAJA;
-                        };
+      if (tune_idx == 0) {
+
+        auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
+                            LTIMES_BODY_RAJA;
+                          };
 
 
-      using EXEC_POL =
-        RAJA::KernelPolicy<
-          RAJA::statement::For<1, RAJA::seq_exec,       // z
-            RAJA::statement::For<2, RAJA::seq_exec,     // g
-              RAJA::statement::For<3, RAJA::seq_exec,   // m
-                RAJA::statement::For<0, RAJA::seq_exec, // d
-                  RAJA::statement::Lambda<0>
+        using EXEC_POL =
+          RAJA::KernelPolicy<
+            RAJA::statement::For<1, RAJA::seq_exec,       // z
+              RAJA::statement::For<2, RAJA::seq_exec,     // g
+                RAJA::statement::For<3, RAJA::seq_exec,   // m
+                  RAJA::statement::For<0, RAJA::seq_exec, // d
+                    RAJA::statement::Lambda<0>
+                  >
                 >
               >
             >
-          >
-        >;
+          >;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        startTimer();
+        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-        RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, num_d),
-                                                          IZRange(0, num_z),
-                                                          IGRange(0, num_g),
-                                                          IMRange(0, num_m)),
-                                         res,
-                                         ltimes_lam
-                                       );
+          RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, num_d),
+                                                            IZRange(0, num_z),
+                                                            IGRange(0, num_g),
+                                                            IMRange(0, num_m)),
+                                           res,
+                                           ltimes_lam
+                                         );
+
+        }
+        stopTimer();
+
+      } else if (tune_idx == 1) {
+
+        using launch_policy = RAJA::LaunchPolicy<RAJA::seq_launch_t>;
+
+        using z_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        using g_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        using m_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        startTimer();
+        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+          RAJA::launch<launch_policy>( res,
+              RAJA::LaunchParams(),
+              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+
+                RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
+                  [&](IZ z) {
+                    RAJA::loop<g_policy>(ctx, IGRange(0, num_g),
+                      [&](IG g) {
+                        RAJA::loop<m_policy>(ctx, IMRange(0, num_m),
+                          [&](IM m) {
+                            RAJA::loop<d_policy>(ctx, IDRange(0, num_d),
+                              [&](ID d) {
+                                LTIMES_BODY_RAJA
+                              }
+                            ); // RAJA::loop<d_policy>
+                          }
+                        ); // RAJA::loop<m_policy>
+                      }
+                    ); // RAJA::loop<g_policy>
+                  }
+                ); // RAJA::loop<z_policy>
+
+              } // outer lambda (ctx)
+          );    // RAJA::launch
+
+        } // loop over kernel reps
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -120,6 +167,18 @@ void LTIMES::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       getCout() << "\n LTIMES : Unknown variant id = " << vid << std::endl;
     }
 
+  }
+
+}
+
+void LTIMES::setSeqTuningDefinitions(VariantID vid)
+{
+
+  if (vid == RAJA_Seq) {
+    addVariantTuningName(vid, "kernel");
+    addVariantTuningName(vid, "launch");
+  } else {
+    addVariantTuningName(vid, "default");
   }
 
 }
