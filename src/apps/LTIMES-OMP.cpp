@@ -17,6 +17,7 @@ namespace rajaperf
 namespace apps
 {
 
+using namespace ltimes_idx;
 
 void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 {
@@ -34,10 +35,11 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         #pragma omp parallel for
-        for (Index_type z = 0; z < num_z; ++z ) {
-          for (Index_type g = 0; g < num_g; ++g ) {
-            for (Index_type m = 0; m < num_m; ++m ) {
-              for (Index_type d = 0; d < num_d; ++d ) {
+        for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
+          IZ z(iz);
+          for (IG g(0); g < num_g; ++g ) {
+            for (IM m(0); m < num_m; ++m ) {
+              for (ID d(0); d < num_d; ++d ) {
                 LTIMES_BODY;
               }
             }
@@ -52,8 +54,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
     case Lambda_OpenMP : {
 
-      auto ltimes_base_lam = [=](Index_type d, Index_type z,
-                                 Index_type g, Index_type m) {
+      auto ltimes_base_lam = [=](ID d, IZ z, IG g, IM m) {
                                LTIMES_BODY;
                              };
 
@@ -61,10 +62,11 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         #pragma omp parallel for
-        for (Index_type z = 0; z < num_z; ++z ) {
-          for (Index_type g = 0; g < num_g; ++g ) {
-            for (Index_type m = 0; m < num_m; ++m ) {
-              for (Index_type d = 0; d < num_d; ++d ) {
+        for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
+          IZ z(iz);
+          for (IG g(0); g < num_g; ++g ) {
+            for (IM m(0); m < num_m; ++m ) {
+              for (ID d(0); d < num_d; ++d ) {
                 ltimes_base_lam(d, z, g, m);
               }
             }
@@ -81,12 +83,10 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      LTIMES_VIEWS_RANGES_RAJA;
-
       if (tune_idx == 0) {
 
         auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
-                            LTIMES_BODY_RAJA;
+                            LTIMES_BODY;
                           };
 
         using EXEC_POL =
@@ -105,10 +105,10 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
         startTimer();
         for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-          RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, num_d),
-                                                            IZRange(0, num_z),
-                                                            IGRange(0, num_g),
-                                                            IMRange(0, num_m)),
+          RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
+                                                            IZRange(0, *num_z),
+                                                            IGRange(0, *num_g),
+                                                            IMRange(0, *num_m)),
                                            res,
                                            ltimes_lam
                                          );
@@ -135,15 +135,15 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
               RAJA::LaunchParams(),
               [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
-                RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
+                RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
                   [&](IZ z) {
-                    RAJA::loop<g_policy>(ctx, IGRange(0, num_g),
+                    RAJA::loop<g_policy>(ctx, IGRange(0, *num_g),
                       [&](IG g) {
-                        RAJA::loop<m_policy>(ctx, IMRange(0, num_m),
+                        RAJA::loop<m_policy>(ctx, IMRange(0, *num_m),
                           [&](IM m) {
-                            RAJA::loop<d_policy>(ctx, IDRange(0, num_d),
+                            RAJA::loop<d_policy>(ctx, IDRange(0, *num_d),
                               [&](ID d) {
-                                LTIMES_BODY_RAJA
+                                LTIMES_BODY
                               }
                             ); // RAJA::loop<d_policy>
                           }
