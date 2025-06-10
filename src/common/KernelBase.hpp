@@ -419,6 +419,33 @@ public:
   }
 
   template <typename T>
+  rajaperf::AutoDataMover<T> allocDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataConstForInit(T*& ptr, Size_type len, T val, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitDataConst(hds, ptr, len, getDataAlignment(), val);
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
   rajaperf::AutoDataMover<T> scopedMoveData(T*& ptr, Size_type len, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);
@@ -572,6 +599,7 @@ protected:
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
+  int hid;
 #endif
 
 private:
