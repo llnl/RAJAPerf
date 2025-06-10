@@ -166,6 +166,7 @@ inline void copyHipData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
   hipErrchk( hipMemcpy( dst_ptr, src_ptr, len,
              hipMemcpyDefault ) );
+  hipErrchk( hipDeviceSynchronize( ) );
 }
 
 /*!

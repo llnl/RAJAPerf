@@ -419,6 +419,33 @@ public:
   }
 
   template <typename T>
+  rajaperf::AutoDataMover<T> allocDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataConstForInit(T*& ptr, Size_type len, T val, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitDataConst(hds, ptr, len, getDataAlignment(), val);
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
   rajaperf::AutoDataMover<T> scopedMoveData(T*& ptr, Size_type len, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);
@@ -535,9 +562,10 @@ public:
   void doOnceCaliMetaEnd(VariantID vid, size_t tune_idx);
   static void setCaliperMgrVariantTuning(VariantID vid,
                                     std::string tstr,
-                                    const std::string& outdir,
+                                    const std::string& outfile,
                                     const std::string& addToSpotConfig,
-                                    const std::string& addToCaliConfig);
+                                    const std::string& addToCaliConfig,
+                                    const int num_variants_tunings);
 
   static void setCaliperMgrStart(VariantID vid, std::string tstr) { mgr[vid][tstr].start(); }
   static void setCaliperMgrStop(VariantID vid, std::string tstr) { mgr[vid][tstr].stop(); }
@@ -571,6 +599,7 @@ protected:
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
+  int hid;
 #endif
 
 private:

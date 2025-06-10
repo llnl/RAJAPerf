@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <regex>
 
 namespace rajaperf {
 
@@ -22,6 +23,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   , did(getOpenMPTargetDevice())
+  , hid(getOpenMPTargetHost())
 #endif
 {
   kernel_id = kid;
@@ -592,9 +594,10 @@ void KernelBase::doOnceCaliMetaEnd(VariantID vid, size_t tune_idx)
 
 void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
                                   std::string tstr,
-                                  const std::string& outdir,
+                                  const std::string& outfile,
                                   const std::string& addToSpotConfig,
-                                  const std::string& addToCaliConfig)
+                                  const std::string& addToCaliConfig,
+                                  const int num_variants_tunings)
 {
   static bool ran_spot_config_check = false;
   bool config_ok = true;
@@ -665,20 +668,64 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
   }
   )json";
 
-  // Skip check if both empty
-  if ((!addToSpotConfig.empty() || !addToCaliConfig.empty()) && !ran_spot_config_check) {
+  // Update these later if CALI_CONFIG present
+  std::string updatedSpotConfig = addToSpotConfig;
+  std::string updatedCaliConfig = addToCaliConfig;
+
+  // Parse CALI_CONFIG if provided
+  const char* cali_config_env = std::getenv("DISABLED_CALI_CONFIG");
+  if (cali_config_env) {
+    std::string cali_config(cali_config_env);
+    std::cout << "CALI_CONFIG: " << cali_config << std::endl;
+
+    // Match spot() config
+    std::regex pattern(R"(spot\(([^)]*)\))");
+    std::smatch match;
+    if (std::regex_search(cali_config, match, pattern)) {
+      std::string spot_config = match[1];
+      std::regex file_pattern(R"(\boutput=[^,)]*\.cali)");
+
+      // Remove cali file from config
+      std::string withoutFile = std::regex_replace(spot_config, file_pattern, "");
+      std::smatch file_match;
+      if (std::regex_search(spot_config, file_match, file_pattern)) {
+        std::cout << "WARNING: Removing requested output name from config: '"
+                  << file_match[0]
+                  << "'. Output cali file name will be automatically generated."
+                  << std::endl;
+      }
+
+      updatedSpotConfig += withoutFile;
+    }
+
+    // Parameters outside the spot config directly added to cali config
+    std::string remaining_config = std::regex_replace(cali_config, pattern, "");
+    updatedCaliConfig += remaining_config;
+
+    auto trimCommas = [](std::string &str) {
+      if (!str.empty() && str.front() == ',')
+        str.erase(0, 1);
+      if (!str.empty() && str.back() == ',')
+        str.pop_back();
+    };
+    trimCommas(updatedCaliConfig);
+    trimCommas(updatedSpotConfig);
+  }
+
+  // Caliper configuration check. Skip check if both empty
+  if ((!updatedSpotConfig.empty() || !updatedCaliConfig.empty()) && !ran_spot_config_check) {
     cali::ConfigManager cm;
     std::string check_profile;
     // If both not empty
-    if (!addToSpotConfig.empty() && !addToCaliConfig.empty()) {
-      check_profile = "spot(" + addToSpotConfig + ")," + addToCaliConfig;
+    if (!updatedSpotConfig.empty() && !updatedCaliConfig.empty()) {
+      check_profile = "spot(" + updatedSpotConfig + ")," + updatedCaliConfig;
     }
-    else if (!addToSpotConfig.empty()) {
-      check_profile = "spot(" + addToSpotConfig + ")";
+    else if (!updatedSpotConfig.empty()) {
+      check_profile = "spot(" + updatedSpotConfig + ")";
     }
-    // if !addToCaliConfig.empty()
+    // if !updatedCaliConfig.empty()
     else {
-      check_profile = addToCaliConfig;
+      check_profile = updatedCaliConfig;
     }
 
     std::string msg = cm.check(check_profile.c_str());
@@ -692,21 +739,28 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     std::cout << "Caliper ran Spot config check\n";
   }
 
+  // Setup variant/tuning caliper config if check passes
   if(config_ok) {
     cali::ConfigManager m;
     mgr[vid][tstr] = m;
-    std::string od("./");
-    if (outdir.size()) {
-      od = outdir + "/";
-    }
     std::string vstr = getVariantName(vid);
-    std::string profile = "spot(output=" + od + vstr + "-" + tstr + ".cali";
-    if(!addToSpotConfig.empty()) {
-      profile += "," + addToSpotConfig;
+    std::string profile;
+    // If --outfile not provided, give generic name
+    if (outfile == "RAJAPerf") {
+      profile = "spot(output=" + vstr + "-" + tstr + ".cali";
+    }
+    else {
+      // Ensure cali files for each variant/tuning are not same file name
+      if (num_variants_tunings > 1)
+        throw std::runtime_error("Error: Cannot use '--outfile' with Caliper if running multiple variants/tunings. Must be running single variant & tuning.");
+      profile = "spot(output=" + outfile + ".cali";
+    }
+    if(!updatedSpotConfig.empty()) {
+      profile += "," + updatedSpotConfig;
     }
     profile += ")";
-    if (!addToCaliConfig.empty()) {
-      profile += "," + addToCaliConfig;
+    if (!updatedCaliConfig.empty()) {
+      profile += "," + updatedCaliConfig;
     }
     std::cout << "Profile: " << profile << std::endl;
     mgr[vid][tstr].add_option_spec(kernel_info_spec);

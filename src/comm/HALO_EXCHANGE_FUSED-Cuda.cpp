@@ -143,9 +143,9 @@ void HALO_EXCHANGE_FUSED::runCudaVariantDirect(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          cudaErrchk( cudaMemcpyAsync(send_buffers[l], pack_buffers[l],
+                                      len*num_vars*sizeof(Real_type),
+                                      cudaMemcpyDefault, res.get_stream()) );
         }
       }
       cudaErrchk( cudaStreamSynchronize( res.get_stream() ) );
@@ -165,9 +165,9 @@ void HALO_EXCHANGE_FUSED::runCudaVariantDirect(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          cudaErrchk( cudaMemcpyAsync(unpack_buffers[l], recv_buffers[l],
+                                      len*num_vars*sizeof(Real_type),
+                                      cudaMemcpyDefault, res.get_stream()) );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -277,9 +277,7 @@ void HALO_EXCHANGE_FUSED::runCudaVariantWorkGroup(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
         }
       }
       res.wait();
@@ -296,9 +294,7 @@ void HALO_EXCHANGE_FUSED::runCudaVariantWorkGroup(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
