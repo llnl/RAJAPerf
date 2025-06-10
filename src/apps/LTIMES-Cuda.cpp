@@ -108,7 +108,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       auto ltimes_lambda = [=] __device__ (IZ z, IG g, IM m) {
-        for (Index_type d(0); d < num_d; ++d ) {
+        for (ID d(0); d < num_d; ++d ) {
           LTIMES_BODY;
         }
       };
