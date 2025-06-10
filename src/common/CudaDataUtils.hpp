@@ -179,6 +179,7 @@ inline void copyCudaData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
   cudaErrchk( cudaMemcpy( dst_ptr, src_ptr, len,
               cudaMemcpyDefault ) );
+  cudaErrchk( cudaDeviceSynchronize( ) );
 }
 
 /*!

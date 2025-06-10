@@ -67,9 +67,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -87,9 +85,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -158,9 +154,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -178,9 +172,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -294,9 +286,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -312,9 +302,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {

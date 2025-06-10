@@ -335,9 +335,10 @@ void Executor::setupSuite()
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
       KernelBase::setCaliperMgrVariantTuning(vid,
                                              tstr,
-                                             run_params.getOutputDirName(),
+                                             run_params.getOutputFilePrefix(),
                                              run_params.getAddToSpotConfig(),
-                                             run_params.getAddToCaliperConfig());
+                                             run_params.getAddToCaliperConfig(),
+                                             tuning_names_order_map.size());
 #endif
     }
 
