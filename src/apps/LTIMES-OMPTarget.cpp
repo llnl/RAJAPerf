@@ -84,6 +84,17 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   }
 }
 
+void LTIMES::setOpenMPTargetTuningDefinitions(VariantID vid)
+{
+
+  if (vid == RAJA_OpenMPTarget) {
+    addVariantTuningName(vid, "kernel");
+  } else {
+    addVariantTuningName(vid, "default");
+  }
+
+}
+
 } // end namespace apps
 } // end namespace rajaperf
 
