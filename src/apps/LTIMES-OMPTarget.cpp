@@ -34,7 +34,7 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      #pragma omp target device( did )
+      #pragma omp target firstprivate(psi, ell, phi, num_z, num_g, num_m, num_d) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
       for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
         for (RAJA::Index_type ig = 0; ig < *num_g; ++ig ) {
