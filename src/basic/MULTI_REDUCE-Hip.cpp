@@ -21,7 +21,7 @@ namespace rajaperf
 namespace basic
 {
 
-constexpr Index_type warp_size = 64;
+constexpr Index_type warp_size = RAJA_HIP_WAVESIZE;
 
 template < Index_type block_size >
 __launch_bounds__(block_size)
