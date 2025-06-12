@@ -24,7 +24,7 @@ namespace rajaperf
 namespace algorithm
 {
 
-const size_t warp_size = 64;
+const size_t warp_size = RAJA_HIP_WAVESIZE;
 
 template < size_t block_size, size_t replication >
 __launch_bounds__(block_size)
