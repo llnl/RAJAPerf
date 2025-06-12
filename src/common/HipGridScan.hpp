@@ -15,6 +15,8 @@
 
 #include <iostream>
 
+#include "RAJA/config.hpp"
+
 namespace rajaperf
 {
 namespace detail
@@ -25,7 +27,7 @@ namespace hip
 //
 // Define magic numbers for HIP execution
 //
-const size_t warp_size = 64;
+const size_t warp_size = RAJA_HIP_WAVESIZE;
 const size_t max_static_shmem = 65536;
 
 
