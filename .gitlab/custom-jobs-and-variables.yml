@@ -24,15 +24,15 @@ variables:
 # Project specific deps for ruby
   PROJECT_RUBY_DEPS: "^blt@develop "
 
-# Poodle
+# Dane
 # Arguments for top level allocation
-  POODLE_SHARED_ALLOC: "--exclusive --time=45 --nodes=1"
+  DANE_SHARED_ALLOC: "--exclusive --time=45 --nodes=1"
 # Arguments for job level allocation
-  POODLE_JOB_ALLOC: "--nodes=1"
-# Project specific variants for poodle
-  PROJECT_POODLE_VARIANTS: "~shared +openmp"
-# Project specific deps for poodle
-  PROJECT_POODLE_DEPS: "^blt@develop "
+  DANE_JOB_ALLOC: "--nodes=1"
+# Project specific variants for dane
+  PROJECT_DANE_VARIANTS: "~shared +openmp"
+# Project specific deps for dane
+  PROJECT_DANE_DEPS: "^blt@develop "
 
 # Corona
 # Arguments for top level allocation
@@ -53,6 +53,16 @@ variables:
   PROJECT_TIOGA_VARIANTS: "~shared +openmp"
 # Project specific deps for tioga
   PROJECT_TIOGA_DEPS: "^blt@develop "
+
+# Tuolumne
+# Arguments for top level allocation
+  TUOLUMNE_SHARED_ALLOC: "--queue=pci --exclusive --time-limit=31m --nodes=1 -o per-resource.count=2"
+# Arguments for job level allocation
+  TUOLUMNE_JOB_ALLOC: "--nodes=1 --begin-time=+5s"
+# Project specific variants for tuolumne
+  PROJECT_TUOLUMNE_VARIANTS: "~shared +openmp"
+# Project specific deps for tuolumne
+  PROJECT_TUOLUMNE_DEPS: "^blt@develop "
 
 # Lassen and Butte use a different job scheduler (spectrum lsf) that does not
 # allow pre-allocation the same way slurm does.

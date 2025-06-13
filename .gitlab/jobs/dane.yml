@@ -7,7 +7,7 @@
 ##############################################################################
 
 # Override reproducer section to define projet specific variables.
-.poodle_reproducer_vars:
+.dane_reproducer_vars:
   script:
     - !reference [.reproducer_vars, script]
 
@@ -21,20 +21,20 @@
 # custom variant
 oneapi_2023_2_1:
   variables:
-    SPEC: "${PROJECT_POODLE_VARIANTS} +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ${PROJECT_POODLE_DEPS}"
-  extends: .job_on_poodle
+    SPEC: "${PROJECT_DANE_VARIANTS} +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ${PROJECT_DANE_DEPS}"
+  extends: .job_on_dane
 
 # omptask variant
 clang_14_0_6:
   variables:
-    SPEC: "${PROJECT_POODLE_VARIANTS} +omptask %clang@=14.0.6 ${PROJECT_POODLE_DEPS}"
-  extends: .job_on_poodle
+    SPEC: "${PROJECT_DANE_VARIANTS} +omptask %clang@=14.0.6 ${PROJECT_DANE_DEPS}"
+  extends: .job_on_dane
 
 # omptask variant
 gcc_10_3_1:
   variables:
-    SPEC: "${PROJECT_POODLE_VARIANTS} +omptask %gcc@=10.3.1 ${PROJECT_POODLE_DEPS}"
-  extends: .job_on_poodle
+    SPEC: "${PROJECT_DANE_VARIANTS} +omptask %gcc@=10.3.1 ${PROJECT_DANE_DEPS}"
+  extends: .job_on_dane
 
 ############
 # Extra jobs
@@ -46,4 +46,4 @@ gcc_10_3_1:
 oneapi_2023_2_1_mpi:
   variables:
     SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ^mvapich2 ^blt@develop"
-  extends: .job_on_poodle
+  extends: .job_on_dane
