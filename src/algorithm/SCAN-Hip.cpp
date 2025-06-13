@@ -38,7 +38,7 @@ using hip_items_per_thread_type = integer::make_gpu_items_per_thread_list_type<
 
 template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
-__global__ void scan(Real_ptr x,
+__global__ void scan_custom(Real_ptr x,
                      Real_ptr y,
                      Real_ptr block_counts,
                      Real_ptr grid_counts,
@@ -168,7 +168,7 @@ void SCAN::runHipVariantLibrary(VariantID vid)
 }
 
 template < size_t block_size, size_t items_per_thread >
-void SCAN::runHipVariantImpl(VariantID vid)
+void SCAN::runHipVariantCustom(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -196,7 +196,7 @@ void SCAN::runHipVariantImpl(VariantID vid)
       hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
                                 res.get_stream()) );
 
-      RPlaunchHipKernel( (scan<block_size, items_per_thread>),
+      RPlaunchHipKernel( (scan_custom<block_size, items_per_thread>),
                          grid_size, block_size,
                          shmem_size, res.get_stream(),
                          x+ibegin, y+ibegin,
@@ -230,7 +230,7 @@ void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
 
     t += 1;
 
-    if ( vid == Base_HIP ) {
+    if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
       seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -243,7 +243,7 @@ void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
 
             if (tune_idx == t) {
 
-              runHipVariantImpl<decltype(block_size)::value,
+              runHipVariantCustom<decltype(block_size)::value,
                                  detail::hip::grid_scan_default_items_per_thread<
                                     Real_type, block_size, RAJA_PERFSUITE_TUNING_HIP_ARCH>::value
                                  >(vid);
@@ -261,7 +261,7 @@ void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
 
               if (tune_idx == t) {
 
-                runHipVariantImpl<block_size, items_per_thread>(vid);
+                runHipVariantCustom<block_size, items_per_thread>(vid);
 
               }
 
@@ -289,7 +289,7 @@ void SCAN::setHipTuningDefinitions(VariantID vid)
 
     addVariantTuningName(vid, "rocprim");
 
-    if ( vid == Base_HIP ) {
+    if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
       seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 

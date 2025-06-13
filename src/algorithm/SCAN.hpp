@@ -70,9 +70,9 @@ public:
   void runHipVariantLibrary(VariantID vid);
 
   template < size_t block_size, size_t items_per_thread >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantCustom(VariantID vid);
   template < size_t block_size, size_t items_per_thread >
-  void runHipVariantImpl(VariantID vid);
+  void runHipVariantCustom(VariantID vid);
 
 private:
   static const size_t default_gpu_block_size = 256;
