@@ -37,7 +37,6 @@ variables:
 #  CUSTOM_CI_BUILDS_DIR: "/usr/workspace/rajasa/gitlab-runner"
 # Tells Gitlab to recursively update the submodules when cloning the project.
   GIT_SUBMODULE_STRATEGY: recursive
-  GIT_SUBMODULE_UPDATE_FLAGS: --jobs 4
 
 ##### PROJECT VARIABLES
 # We build the projects in the CI clone directory (used in
