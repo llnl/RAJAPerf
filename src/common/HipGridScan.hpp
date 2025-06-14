@@ -13,9 +13,8 @@
 #include <rocprim/warp/warp_reduce.hpp>
 #include <rocprim/warp/warp_scan.hpp>
 
-#include <iostream>
-
-#include "RAJA/config.hpp"
+#include <cassert>
+#include <climits>
 
 namespace rajaperf
 {
@@ -27,8 +26,14 @@ namespace hip
 //
 // Define magic numbers for HIP execution
 //
-const size_t warp_size = RAJA_HIP_WAVESIZE;
 const size_t max_static_shmem = 65536;
+
+template < size_t warp_size >
+struct ballot_type_helper;
+template < >
+struct ballot_type_helper<32> { using type = unsigned; };
+template < >
+struct ballot_type_helper<64> { using type = unsigned long long; };
 
 
 // perform a grid scan on val and returns the result at each thread
@@ -38,12 +43,14 @@ struct GridScan
 {
   using BlockScan = rocprim::block_scan<DataType, block_size>; //, rocprim::block_scan_algorithm::reduce_then_scan>;
   using BlockExchange = rocprim::block_exchange<DataType, block_size, items_per_thread>;
-  using WarpReduce = rocprim::warp_reduce<DataType, warp_size>;
+  using WarpReduce32 = rocprim::warp_reduce<DataType, 32>;
+  using WarpReduce64 = rocprim::warp_reduce<DataType, 64>;
 
   union SharedStorage {
     typename BlockScan::storage_type block_scan_storage;
     typename BlockExchange::storage_type block_exchange_storage;
-    typename WarpReduce::storage_type warp_reduce_storage;
+    typename WarpReduce32::storage_type warp_reduce_storage32;
+    typename WarpReduce64::storage_type warp_reduce_storage64;
     volatile DataType prev_grid_count;
   };
 
@@ -61,10 +68,6 @@ struct GridScan
     const bool first_block = (block_id == 0);
     const bool last_block = (block_id == static_cast<int>(gridDim.x-1));
     const bool last_thread = (threadIdx.x == block_size-1);
-    const bool last_warp = (threadIdx.x >= block_size - warp_size);
-    const int warp_index = (threadIdx.x % warp_size);
-    const unsigned long long warp_index_mask = (1ull << warp_index);
-    const unsigned long long warp_index_mask_right = warp_index_mask | (warp_index_mask - 1ull);
 
     __shared__ SharedStorage s_temp_storage;
 
@@ -101,99 +104,135 @@ struct GridScan
         atomicExch(&block_readys[block_id], 1u); // write block_counts is ready
       }
 
-      // get prev_grid_count using last warp in block
-      if (last_warp) {
-
-        DataType prev_grid_count = 0;
-
-        // accumulate previous block counts into registers of warp
-
-        int prev_block_base_id = block_id - warp_size;
-
-        unsigned prev_block_ready = 0u;
-        unsigned long long prev_blocks_ready_ballot = 0ull;
-        unsigned long long prev_grids_ready_ballot = 0ull;
-
-        // accumulate full warp worths of block counts
-        // stop if run out of full warps of a grid count is ready
-        while (prev_block_base_id >= 0) {
-
-          const int prev_block_id = prev_block_base_id + warp_index;
-
-          // ensure previous block_counts are ready
-          do {
-            prev_block_ready = atomicCAS(&block_readys[prev_block_id], 11u, 11u);
-
-            prev_blocks_ready_ballot = __ballot(prev_block_ready >= 1u);
-
-          } while (prev_blocks_ready_ballot != 0xffffffffffffffffull);
-
-          prev_grids_ready_ballot = __ballot(prev_block_ready == 2u);
-
-          if (prev_grids_ready_ballot != 0ull) {
-            break;
-          }
-
-          __threadfence(); // ensure block_counts or grid_counts ready (acquire)
-
-          // accumulate block_counts for prev_block_id
-          prev_grid_count += block_counts[prev_block_id];
-
-          prev_block_ready = 0u;
-
-          prev_block_base_id -= warp_size;
-        }
-
-        const int prev_block_id = prev_block_base_id + warp_index;
-
-        // ensure previous block_counts are ready
-        // this checks that block counts is ready for all blocks above
-        // the highest grid count that is ready
-        while (~prev_blocks_ready_ballot >= prev_grids_ready_ballot) {
-
-          if (prev_block_id >= 0) {
-            prev_block_ready = atomicCAS(&block_readys[prev_block_id], 11u, 11u);
-          }
-
-          prev_blocks_ready_ballot = __ballot(prev_block_ready >= 1u);
-          prev_grids_ready_ballot = __ballot(prev_block_ready == 2u);
-        }
-        __threadfence(); // ensure block_counts or grid_counts ready (acquire)
-
-        // read one grid_count from a block with id grid_count_ready_id
-        // and read the block_counts from blocks with higher ids.
-        if (warp_index_mask > prev_grids_ready_ballot) {
-          // accumulate block_counts for prev_block_id
-          prev_grid_count += block_counts[prev_block_id];
-        } else if (prev_grids_ready_ballot == (prev_grids_ready_ballot & warp_index_mask_right)) {
-          // accumulate grid_count for grid_count_ready_id
-          prev_grid_count += grid_counts[prev_block_id];
-        }
-
-
-        WarpReduce().reduce(prev_grid_count, prev_grid_count, s_temp_storage.warp_reduce_storage);
-        prev_grid_count = __shfl(prev_grid_count, 0, warp_size); // broadcast output to all threads in warp
-
-        if (last_thread) {
-
-          if (!last_block) {
-            grid_counts[block_id] = prev_grid_count + inclusive[items_per_thread-1];   // write inclusive scan result for grid through block
-            __threadfence();                        // ensure grid_counts ready (release)
-            atomicExch(&block_readys[block_id], 2u); // write grid_counts is ready
-          }
-
-          s_temp_storage.prev_grid_count = prev_grid_count;
-        }
+      DataType prev_grid_count{};
+      if (warpSize == 64) {
+        prev_grid_count = get_previous_grid_count<64, WarpReduce64>(
+            block_id, last_block, last_thread,
+            s_temp_storage.warp_reduce_storage64, s_temp_storage.prev_grid_count,
+            inclusive, block_counts, grid_counts, block_readys);
+      } else if (warpSize == 32) {
+        prev_grid_count = get_previous_grid_count<32, WarpReduce32>(
+            block_id, last_block, last_thread,
+            s_temp_storage.warp_reduce_storage32, s_temp_storage.prev_grid_count,
+            inclusive, block_counts, grid_counts, block_readys);
+      } else {
+        assert(warpSize == 32 || warpSize == 64);
       }
-
-      __syncthreads();
-      DataType prev_grid_count = s_temp_storage.prev_grid_count;
 
       for (size_t ti = 0; ti < items_per_thread; ++ti) {
         exclusive[ti] = prev_grid_count + exclusive[ti];
         inclusive[ti] = prev_grid_count + inclusive[ti];
       }
     }
+  }
+
+  template < size_t warp_size, typename WarpReduce >
+  __device__
+  static DataType get_previous_grid_count(const int block_id,
+                                          const bool last_block,
+                                          const bool last_thread,
+                                          typename WarpReduce::storage_type& s_warp_reduce_storage,
+                                          volatile DataType& s_prev_grid_count,
+                                          DataType (&inclusive)[items_per_thread],
+                                          DataType* block_counts,
+                                          DataType* grid_counts,
+                                          unsigned* block_readys)
+  {
+    using ballot_type = typename ballot_type_helper<warp_size>::type;
+    static_assert(warp_size == sizeof(ballot_type)*CHAR_BIT, "");
+
+    // get prev_grid_count using last warp in block
+    const bool last_warp = (threadIdx.x >= block_size - warp_size);
+    if (last_warp) {
+
+      const int warp_index = (threadIdx.x % warp_size);
+      const ballot_type warp_index_mask = (ballot_type(1) << warp_index);
+      const ballot_type warp_index_mask_right = warp_index_mask | (warp_index_mask - ballot_type(1));
+
+      DataType prev_grid_count = 0;
+
+      // accumulate previous block counts into registers of warp
+
+      int prev_block_base_id = block_id - warp_size;
+
+      unsigned prev_block_ready = 0u;
+
+      ballot_type prev_blocks_ready_ballot = ballot_type(0);
+      ballot_type prev_grids_ready_ballot = ballot_type(0);
+
+      // accumulate full warp worths of block counts
+      // stop if run out of full warps of a grid count is ready
+      while (prev_block_base_id >= 0) {
+
+        const int prev_block_id = prev_block_base_id + warp_index;
+
+        // ensure previous block_counts are ready
+        do {
+          prev_block_ready = atomicCAS(&block_readys[prev_block_id], 11u, 11u);
+
+          prev_blocks_ready_ballot = __ballot(prev_block_ready >= 1u);
+
+        } while (prev_blocks_ready_ballot != ~ballot_type(0));
+
+        prev_grids_ready_ballot = __ballot(prev_block_ready == 2u);
+
+        if (prev_grids_ready_ballot != ballot_type(0)) {
+          break;
+        }
+
+        __threadfence(); // ensure block_counts or grid_counts ready (acquire)
+
+        // accumulate block_counts for prev_block_id
+        prev_grid_count += block_counts[prev_block_id];
+
+        prev_block_ready = 0u;
+
+        prev_block_base_id -= warp_size;
+      }
+
+      const int prev_block_id = prev_block_base_id + warp_index;
+
+      // ensure previous block_counts are ready
+      // this checks that block counts is ready for all blocks above
+      // the highest grid count that is ready
+      while (~prev_blocks_ready_ballot >= prev_grids_ready_ballot) {
+
+        if (prev_block_id >= 0) {
+          prev_block_ready = atomicCAS(&block_readys[prev_block_id], 11u, 11u);
+        }
+
+        prev_blocks_ready_ballot = __ballot(prev_block_ready >= 1u);
+        prev_grids_ready_ballot = __ballot(prev_block_ready == 2u);
+      }
+      __threadfence(); // ensure block_counts or grid_counts ready (acquire)
+
+      // read one grid_count from a block with id grid_count_ready_id
+      // and read the block_counts from blocks with higher ids.
+      if (warp_index_mask > prev_grids_ready_ballot) {
+        // accumulate block_counts for prev_block_id
+        prev_grid_count += block_counts[prev_block_id];
+      } else if (prev_grids_ready_ballot == (prev_grids_ready_ballot & warp_index_mask_right)) {
+        // accumulate grid_count for grid_count_ready_id
+        prev_grid_count += grid_counts[prev_block_id];
+      }
+
+      WarpReduce().reduce(prev_grid_count, prev_grid_count, s_warp_reduce_storage);
+      prev_grid_count = __shfl(prev_grid_count, 0, warp_size); // broadcast output to all threads in warp
+
+      if (last_thread) {
+
+        if (!last_block) {
+          grid_counts[block_id] = prev_grid_count + inclusive[items_per_thread-1];   // write inclusive scan result for grid through block
+          __threadfence();                        // ensure grid_counts ready (release)
+          atomicExch(&block_readys[block_id], 2u); // write grid_counts is ready
+        }
+
+        s_prev_grid_count = prev_grid_count;
+      }
+    }
+
+    __syncthreads();
+    return s_prev_grid_count;
   }
 
 };
