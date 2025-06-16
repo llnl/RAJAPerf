@@ -34,11 +34,11 @@ using cuda_items_per_thread_type = integer::make_gpu_items_per_thread_list_type<
 template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
 __global__ void scan_custom(Real_ptr x,
-                     Real_ptr y,
-                     Real_ptr block_counts,
-                     Real_ptr grid_counts,
-                     unsigned* block_readys,
-                     Index_type iend)
+                            Real_ptr y,
+                            Real_ptr block_counts,
+                            Real_ptr grid_counts,
+                            unsigned* block_readys,
+                            Index_type iend)
 {
   // blocks do start running in order in cuda, so a block with a higher
   // index can wait on a block with a lower index without deadlocking

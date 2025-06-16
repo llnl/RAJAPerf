@@ -31,12 +31,12 @@ using hip_items_per_thread_type = integer::make_gpu_items_per_thread_list_type<
 template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
 __global__ void indexlist_custom(Real_ptr x,
-                          Int_ptr list,
-                          Index_type* block_counts,
-                          Index_type* grid_counts,
-                          unsigned* block_readys,
-                          Index_type* len,
-                          Index_type iend)
+                                 Int_ptr list,
+                                 Index_type* block_counts,
+                                 Index_type* grid_counts,
+                                 unsigned* block_readys,
+                                 Index_type* len,
+                                 Index_type iend)
 {
   // It looks like blocks do not start running in order in hip, so a block
   // with a higher index can't wait on a block with a lower index without
