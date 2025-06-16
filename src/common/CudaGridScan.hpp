@@ -35,12 +35,12 @@ struct GridScan
 {
   using BlockScan = cub::BlockScan<DataType, block_size>; //, cub::BLOCK_SCAN_WARP_SCANS>;
   using BlockExchange = cub::BlockExchange<DataType, block_size, items_per_thread>;
-  using WarpReduce = cub::WarpReduce<DataType, warp_size>;
+  using WarpReduce32 = cub::WarpReduce<DataType, 32>;
 
   union SharedStorage {
     typename BlockScan::TempStorage block_scan_storage;
     typename BlockExchange::TempStorage block_exchange_storage;
-    typename WarpReduce::TempStorage warp_reduce_storage;
+    typename WarpReduce32::TempStorage warp_reduce_storage32;
     volatile DataType prev_grid_count;
   };
 
@@ -96,7 +96,7 @@ struct GridScan
 
       DataType prev_grid_count = get_previous_grid_count(
             block_id, last_block, last_thread,
-            s_temp_storage.warp_reduce_storage, s_temp_storage.prev_grid_count,
+            s_temp_storage.warp_reduce_storage32, s_temp_storage.prev_grid_count,
             inclusive, block_counts, grid_counts, block_readys);
 
       for (size_t ti = 0; ti < items_per_thread; ++ti) {
@@ -110,7 +110,7 @@ struct GridScan
   static DataType get_previous_grid_count(const int block_id,
                                           const bool last_block,
                                           const bool last_thread,
-                                          typename WarpReduce::storage_type& s_warp_reduce_storage,
+                                          typename WarpReduce32::storage_type& s_warp_reduce_storage,
                                           volatile DataType& s_prev_grid_count,
                                           DataType (&inclusive)[items_per_thread],
                                           DataType* block_counts,
@@ -119,7 +119,7 @@ struct GridScan
   {
     const size_t warp_size = 32;
 
-    using ballot_type = typename ballot_type_helper<warp_size>::type;
+    using ballot_type = unsigned;
     static_assert(warp_size == sizeof(ballot_type)*CHAR_BIT, "");
 
     // get prev_grid_count using last warp in block
