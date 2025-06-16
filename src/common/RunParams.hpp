@@ -320,7 +320,7 @@ private:
   Index_type halo_width; /*!< halo width used in halo kernels (input option) */
   Index_type halo_num_vars; /*!< num vars used in halo kernels (input option) */
 
-  bool enable_custom_scan;
+  bool enable_custom_scan; /*!< enable tunings using custom scan implementations (input option) */
 
   int gpu_stream; /*!< 0 -> use stream 0; anything else -> use raja default stream */
   std::vector<size_t> gpu_block_sizes; /*!< Block sizes for gpu tunings to run (input option) */
