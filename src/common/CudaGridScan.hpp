@@ -198,7 +198,7 @@ struct GridScan
       }
 
 
-      prev_grid_count = WarpReduce(s_warp_reduce_storage).Sum(prev_grid_count);
+      prev_grid_count = WarpReduce32(s_warp_reduce_storage).Sum(prev_grid_count);
       prev_grid_count = __shfl_sync(0xffffffffu, prev_grid_count, 0, warp_size); // broadcast output to all threads in warp
 
       if (last_thread) {
