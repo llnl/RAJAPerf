@@ -21,6 +21,8 @@ namespace rajaperf
 namespace apps
 {
 
+using namespace ltimes_idx;
+
 //
 // Define work-group shape for SYCL execution
 //
@@ -40,9 +42,9 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 
   if ( vid == Base_SYCL ) {
 
-    sycl::range<3> global_dim(z_wg_sz * RAJA_DIVIDE_CEILING_INT(num_z, z_wg_sz),
-                              g_wg_sz * RAJA_DIVIDE_CEILING_INT(num_g, g_wg_sz),
-                              m_wg_sz * RAJA_DIVIDE_CEILING_INT(num_m, m_wg_sz));
+    sycl::range<3> global_dim(z_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_z, z_wg_sz),
+                              g_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_g, g_wg_sz),
+                              m_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz));
     sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
 
     startTimer();
@@ -52,12 +54,12 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
-          Index_type m = item.get_global_id(2);
-          Index_type g = item.get_global_id(1);
-          Index_type z = item.get_global_id(0);
+          IM m(item.get_global_id(2));
+          IG g(item.get_global_id(1));
+          IZ z(item.get_global_id(0));
 
           if (m < num_m && g < num_g && z < num_z) {
-            for (Index_type d = 0; d < num_d; ++d) {
+            for (ID d(0); d < num_d; ++d) {
               LTIMES_BODY;
             }
           }
@@ -69,8 +71,6 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
     stopTimer();
 
   } else if ( vid == RAJA_SYCL ) {
-
-    LTIMES_VIEWS_RANGES_RAJA;
 
     if (tune_idx == 0) {
 
@@ -93,13 +93,13 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::kernel_resource<EXEC_POL>( 
-          RAJA::make_tuple(IDRange(0, num_d),
-                           IZRange(0, num_z),
-                           IGRange(0, num_g),
-                           IMRange(0, num_m)),
+          RAJA::make_tuple(IDRange(0, *num_d),
+                           IZRange(0, *num_z),
+                           IGRange(0, *num_g),
+                           IMRange(0, *num_m)),
           res,
           [=] (ID d, IZ z, IG g, IM m) {
-          LTIMES_BODY_RAJA;
+          LTIMES_BODY;
         });
 
       }
@@ -119,11 +119,11 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(num_z, z_wg_sz);
+      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, z_wg_sz);
 
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(num_g, g_wg_sz);
+      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, g_wg_sz);
 
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_wg_sz);
+      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz);
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
@@ -133,15 +133,15 @@ void LTIMES::runSyclVariantImpl(VariantID vid, size_t tune_idx)
                                RAJA::Threads(m_wg_sz, g_wg_sz, z_wg_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
-              RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
+              RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
                 [&](IZ z) {
-                  RAJA::loop<g_policy>(ctx, IGRange(0, num_g),
+                  RAJA::loop<g_policy>(ctx, IGRange(0, *num_g),
                     [&](IG g) {
-                      RAJA::loop<m_policy>(ctx, IMRange(0, num_m),
+                      RAJA::loop<m_policy>(ctx, IMRange(0, *num_m),
                         [&](IM m) {
-                          RAJA::loop<d_policy>(ctx, IDRange(0, num_d),
+                          RAJA::loop<d_policy>(ctx, IDRange(0, *num_d),
                             [&](ID d) {
-                              LTIMES_BODY_RAJA
+                              LTIMES_BODY
                             }
                           ); // RAJA::loop<d_policy>
                         }

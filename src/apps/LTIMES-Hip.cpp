@@ -21,6 +21,8 @@ namespace rajaperf
 namespace apps
 {
 
+using namespace ltimes_idx;
+
 //
 // Define thread block shape for Hip execution
 //
@@ -35,23 +37,22 @@ namespace apps
   dim3 nthreads_per_block(LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
 
 #define LTIMES_NBLOCKS_HIP \
-  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_g, g_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_z, z_block_sz)));
+  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz)), \
+               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_g, g_block_sz)), \
+               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_z, z_block_sz)));
 
 
 template < size_t m_block_size, size_t g_block_size, size_t z_block_size >
 __launch_bounds__(m_block_size*g_block_size*z_block_size)
-__global__ void ltimes(Real_ptr phidat, Real_ptr elldat, Real_ptr psidat,
-                       Index_type num_d,
-                       Index_type num_m, Index_type num_g, Index_type num_z)
+__global__ void ltimes(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
+                       ID num_d, IM num_m, IG num_g, IZ num_z)
 {
-   Index_type m = blockIdx.x * m_block_size + threadIdx.x;
-   Index_type g = blockIdx.y * g_block_size + threadIdx.y;
-   Index_type z = blockIdx.z * z_block_size + threadIdx.z;
+   IM m(blockIdx.x * m_block_size + threadIdx.x);
+   IG g(blockIdx.y * g_block_size + threadIdx.y);
+   IZ z(blockIdx.z * z_block_size + threadIdx.z);
 
    if (m < num_m && g < num_g && z < num_z) {
-     for (Index_type d = 0; d < num_d; ++d ) {
+     for (ID d(0); d < num_d; ++d ) {
        LTIMES_BODY;
      }
    }
@@ -59,12 +60,12 @@ __global__ void ltimes(Real_ptr phidat, Real_ptr elldat, Real_ptr psidat,
 
 template < size_t m_block_size, size_t g_block_size, size_t z_block_size, typename Lambda >
 __launch_bounds__(m_block_size*g_block_size*z_block_size)
-__global__ void ltimes_lam(Index_type num_m, Index_type num_g, Index_type num_z,
+__global__ void ltimes_lam(IM num_m, IG num_g, IZ num_z,
                            Lambda body)
 {
-   Index_type m = blockIdx.x * m_block_size + threadIdx.x;
-   Index_type g = blockIdx.y * g_block_size + threadIdx.y;
-   Index_type z = blockIdx.z * z_block_size + threadIdx.z;
+   IM m(blockIdx.x * m_block_size + threadIdx.x);
+   IG g(blockIdx.y * g_block_size + threadIdx.y);
+   IZ z(blockIdx.z * z_block_size + threadIdx.z);
 
    if (m < num_m && g < num_g && z < num_z) {
      body(z, g, m);
@@ -94,7 +95,7 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
         (ltimes<LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
-        phidat, elldat, psidat,
+        phi, ell, psi,
         num_d, num_m, num_g, num_z );
 
     }
@@ -105,9 +106,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      auto ltimes_lambda = [=] __device__ (Index_type z, Index_type g, 
-                                           Index_type m) {
-       for (Index_type d = 0; d < num_d; ++d ) {
+      auto ltimes_lambda = [=] __device__ (IZ z, IG g, IM m) {
+       for (ID d(0); d < num_d; ++d ) {
          LTIMES_BODY;
        }
       };
@@ -128,8 +128,6 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
     stopTimer();
 
   } else if ( vid == RAJA_HIP ) {
-
-    LTIMES_VIEWS_RANGES_RAJA;
 
     if (tune_idx == 0) {
 
@@ -152,13 +150,13 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(IDRange(0, num_d),
-                           IZRange(0, num_z),
-                           IGRange(0, num_g),
-                           IMRange(0, num_m)),
+          RAJA::make_tuple(IDRange(0, *num_d),
+                           IZRange(0, *num_z),
+                           IGRange(0, *num_g),
+                           IMRange(0, *num_m)),
           res,
           [=] __device__ (ID d, IZ z, IG g, IM m) {
-            LTIMES_BODY_RAJA;
+            LTIMES_BODY;
           }
         );
 
@@ -179,11 +177,11 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(num_z, z_block_sz);
+      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, z_block_sz);
 
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(num_g, g_block_sz);
+      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, g_block_sz);
 
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz);
+      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz);
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
@@ -193,15 +191,15 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
                                RAJA::Threads(m_block_sz, g_block_sz, z_block_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
-              RAJA::loop<z_policy>(ctx, IZRange(0, num_z),
+              RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
                 [&](IZ z) {
-                  RAJA::loop<g_policy>(ctx, IGRange(0, num_g),
+                  RAJA::loop<g_policy>(ctx, IGRange(0, *num_g),
                     [&](IG g) {
-                      RAJA::loop<m_policy>(ctx, IMRange(0, num_m),
+                      RAJA::loop<m_policy>(ctx, IMRange(0, *num_m),
                         [&](IM m) {
-                          RAJA::loop<d_policy>(ctx, IDRange(0, num_d),
+                          RAJA::loop<d_policy>(ctx, IDRange(0, *num_d),
                             [&](ID d) {
-                              LTIMES_BODY_RAJA
+                              LTIMES_BODY
                             }
                           ); // RAJA::loop<d_policy>
                         }
