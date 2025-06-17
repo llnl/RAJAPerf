@@ -110,7 +110,7 @@ struct GridScan
   static DataType get_previous_grid_count(const int block_id,
                                           const bool last_block,
                                           const bool last_thread,
-                                          typename WarpReduce32::storage_type& s_warp_reduce_storage,
+                                          typename WarpReduce32::TempStorage& s_warp_reduce_storage,
                                           volatile DataType& s_prev_grid_count,
                                           DataType (&inclusive)[items_per_thread],
                                           DataType* block_counts,
