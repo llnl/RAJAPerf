@@ -22,7 +22,7 @@ void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   ARRAY_OF_PTRS_DATA_SETUP;
 
   using view_type = std::decay_t<decltype(getViewFromPointer(x[0], iend))>;
-  auto x_view[ARRAY_OF_PTRS_MAX_ARRAY_SIZE];
+  view_type x_view[ARRAY_OF_PTRS_MAX_ARRAY_SIZE];
   for (Index_type a = 0; a < array_size; ++a) {
     x_view[a] = getViewFromPointer(x[a], iend) ;
   }
