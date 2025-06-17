@@ -308,6 +308,13 @@ public:
   }
 
   Size_type getDataAlignment() const;
+  Size_type getSizePaddedToDataAlignment(Size_type size) const;
+
+  template <typename T>
+  T offsetPointer(T ptr, Size_type size) const
+  {
+    return (T)(((char*)ptr) + size);
+  }
 
   DataSpace getDataSpace(VariantID vid) const;
   DataSpace getReductionDataSpace(VariantID vid) const;
