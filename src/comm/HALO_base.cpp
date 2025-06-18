@@ -50,7 +50,8 @@ HALO_base::~HALO_base()
 }
 
 void HALO_base::setUp_base(const int my_mpi_rank, const int* mpi_dims,
-                                   VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+                           const Index_type num_vars,
+                           VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_mpi_ranks.resize(s_num_neighbors, -1);
   m_send_tags.resize(s_num_neighbors, -1);
@@ -64,10 +65,18 @@ void HALO_base::setUp_base(const int my_mpi_rank, const int* mpi_dims,
       m_recv_tags, m_unpack_index_lists, m_unpack_index_list_lengths,
       m_halo_width, m_grid_dims,
       s_num_neighbors, vid);
+  create_buffers(m_pack_index_list_lengths, m_pack_buffers, m_send_buffers,
+                 s_num_neighbors, num_vars, vid);
+  create_buffers(m_unpack_index_list_lengths, m_unpack_buffers, m_recv_buffers,
+                 s_num_neighbors, num_vars, vid);
 }
 
 void HALO_base::tearDown_base(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  destroy_buffers(m_unpack_buffers, m_recv_buffers,
+                  s_num_neighbors, vid);
+  destroy_buffers(m_pack_buffers, m_send_buffers,
+                  s_num_neighbors, vid);
   destroy_lists(m_pack_index_lists, m_unpack_index_lists, s_num_neighbors, vid);
   m_unpack_index_list_lengths.clear();
   m_unpack_index_lists.clear();
@@ -303,6 +312,66 @@ void HALO_base::destroy_lists(
   for (Index_type l = 0; l < num_neighbors; ++l) {
     deallocData(unpack_index_lists[l], vid);
   }
+}
+
+
+void HALO_base::create_buffers(std::vector<Index_type> const& index_list_lengths,
+                               std::vector<Real_ptr>& our_buffers,
+                               std::vector<Real_ptr>& mpi_buffers,
+                               const Index_type num_neighbors,
+                               const Index_type num_vars,
+                               VariantID vid)
+{
+  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
+
+  Size_type combined_buffer_size = 0;
+  for (Index_type l = 0; l < num_neighbors; ++l) {
+    Index_type buffer_len = num_vars * index_list_lengths[l];
+    Size_type buffer_size = getSizePaddedToDataAlignment(buffer_len*sizeof(Real_type));
+    combined_buffer_size += buffer_size;
+  }
+
+  our_buffers.resize(num_neighbors, nullptr);
+  mpi_buffers.resize(num_neighbors, nullptr);
+
+  if (num_neighbors > 0) {
+    if (separate_buffers) {
+      rajaperf::allocAndInitData(getDataSpace(vid),
+          our_buffers[0], combined_buffer_size, getDataAlignment());
+      rajaperf::allocAndInitData(DataSpace::Host,
+          mpi_buffers[0], combined_buffer_size, getDataAlignment());
+    } else {
+      rajaperf::allocAndInitData(getMPIDataSpace(vid),
+          our_buffers[0], combined_buffer_size, getDataAlignment());
+      mpi_buffers[0] = our_buffers[0];
+    }
+
+    for (Index_type l = 1; l < num_neighbors; ++l) {
+      Index_type last_buffer_len = num_vars * index_list_lengths[l-1];
+      Size_type last_buffer_size = getSizePaddedToDataAlignment(last_buffer_len*sizeof(Real_type));
+      our_buffers[l] = offsetPointer(our_buffers[l-1], last_buffer_size);
+      mpi_buffers[l] = offsetPointer(mpi_buffers[l-1], last_buffer_size);
+    }
+  }
+}
+
+void HALO_base::destroy_buffers(std::vector<Real_ptr>& our_buffers,
+                                std::vector<Real_ptr>& mpi_buffers,
+                                const Index_type num_neighbors,
+                                VariantID vid)
+{
+  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
+
+  if (!mpi_buffers.empty()) {
+    if (separate_buffers) {
+      deallocData(DataSpace::Host, mpi_buffers[0]);
+      deallocData(getDataSpace(vid), our_buffers[0]);
+    } else {
+      deallocData(getMPIDataSpace(vid), our_buffers[0]);
+    }
+  }
+  mpi_buffers.clear();
+  our_buffers.clear();
 }
 
 } // end namespace comm
