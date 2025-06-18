@@ -238,6 +238,15 @@ Size_type KernelBase::getDataAlignment() const
   return run_params.getDataAlignment();
 }
 
+Size_type KernelBase::getSizePaddedToDataAlignment(Size_type size) const
+{
+  Size_type misalignment = size % run_params.getDataAlignment();
+  if (misalignment) {
+    size += run_params.getDataAlignment() - misalignment;
+  }
+  return size;
+}
+
 DataSpace KernelBase::getDataSpace(VariantID vid) const
 {
   switch ( vid ) {

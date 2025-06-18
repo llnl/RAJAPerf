@@ -112,9 +112,6 @@ private:
 
   Index_type m_num_vars;
   Index_type m_var_size;
-
-  std::vector<Real_ptr> m_send_buffers;
-  std::vector<Real_ptr> m_recv_buffers;
 };
 
 } // end namespace comm

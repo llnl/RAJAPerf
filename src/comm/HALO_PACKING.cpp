@@ -66,7 +66,7 @@ void HALO_PACKING::setUp(VariantID vid, size_t tune_idx)
 {
   int my_mpi_rank = 0;
   const int mpi_dims[3] = {1,1,1};
-  setUp_base(my_mpi_rank, mpi_dims, vid, tune_idx);
+  setUp_base(my_mpi_rank, mpi_dims, m_num_vars, vid, tune_idx);
 
   m_vars.resize(m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
@@ -76,34 +76,6 @@ void HALO_PACKING::setUp(VariantID vid, size_t tune_idx)
 
     for (Index_type i = 0; i < m_var_size; i++) {
       var[i] = i + v;
-    }
-  }
-
-  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
-
-  m_pack_buffers.resize(s_num_neighbors, nullptr);
-  m_send_buffers.resize(s_num_neighbors, nullptr);
-  for (Index_type l = 0; l < s_num_neighbors; ++l) {
-    Index_type buffer_len = m_num_vars * m_pack_index_list_lengths[l];
-    if (separate_buffers) {
-      allocAndInitData(getDataSpace(vid), m_pack_buffers[l], buffer_len);
-      allocAndInitData(DataSpace::Host, m_send_buffers[l], buffer_len);
-    } else {
-      allocAndInitData(getMPIDataSpace(vid), m_pack_buffers[l], buffer_len);
-      m_send_buffers[l] = m_pack_buffers[l];
-    }
-  }
-
-  m_unpack_buffers.resize(s_num_neighbors, nullptr);
-  m_recv_buffers.resize(s_num_neighbors, nullptr);
-  for (Index_type l = 0; l < s_num_neighbors; ++l) {
-    Index_type buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
-    if (separate_buffers) {
-      allocAndInitData(getDataSpace(vid), m_unpack_buffers[l], buffer_len);
-      allocAndInitData(DataSpace::Host, m_recv_buffers[l], buffer_len);
-    } else {
-      allocAndInitData(getMPIDataSpace(vid), m_unpack_buffers[l], buffer_len);
-      m_recv_buffers[l] = m_unpack_buffers[l];
     }
   }
 }
@@ -128,30 +100,6 @@ void HALO_PACKING::updateChecksum(VariantID vid, size_t tune_idx)
 
 void HALO_PACKING::tearDown(VariantID vid, size_t tune_idx)
 {
-  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
-
-  for (int l = 0; l < s_num_neighbors; ++l) {
-    if (separate_buffers) {
-      deallocData(DataSpace::Host, m_recv_buffers[l]);
-      deallocData(getDataSpace(vid), m_unpack_buffers[l]);
-    } else {
-      deallocData(getMPIDataSpace(vid), m_unpack_buffers[l]);
-    }
-  }
-  m_recv_buffers.clear();
-  m_unpack_buffers.clear();
-
-  for (int l = 0; l < s_num_neighbors; ++l) {
-    if (separate_buffers) {
-      deallocData(DataSpace::Host, m_send_buffers[l]);
-      deallocData(getDataSpace(vid), m_pack_buffers[l]);
-    } else {
-      deallocData(getMPIDataSpace(vid), m_pack_buffers[l]);
-    }
-  }
-  m_send_buffers.clear();
-  m_pack_buffers.clear();
-
   for (int v = 0; v < m_num_vars; ++v) {
     deallocData(m_vars[v], vid);
   }
