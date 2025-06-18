@@ -46,6 +46,7 @@ RunParams::RunParams(int argc, char** argv)
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
+   enable_custom_scan(true),
    gpu_stream(1),
    gpu_block_sizes(),
    atomic_replications(),
@@ -142,6 +143,8 @@ void RunParams::print(std::ostream& str) const
 
   str << "\n halo_width = " << halo_width;
   str << "\n halo_num_vars = " << halo_num_vars;
+
+  str << "\n custom_scan = " << (enable_custom_scan ? "enabled" : "disabled");
 
   str << "\n gpu stream = " << ((gpu_stream == 0) ? "0" : "RAJA default");
   str << "\n gpu_block_sizes = ";
@@ -676,6 +679,14 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                   << std::endl;
         input_state = BadInput;
       }
+
+    } else if ( opt == std::string("--enable_custom_scan") ) {
+
+      enable_custom_scan = true;
+
+    } else if ( opt == std::string("--disable_custom_scan") ) {
+
+      enable_custom_scan = false;
 
     } else if ( opt == std::string("--gpu_stream_0") ) {
 
@@ -1395,6 +1406,11 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Examples...\n"
       << "\t\t --exclude-features Forall (exclude all kernels that use RAJA forall)\n"
       << "\t\t -ef Forall Reduction (exclude all kernels that use RAJA forall or RAJA reductions)\n\n";
+
+  str << "\t --enable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
+      << "\t      (when this option is given, enable custom scan tunings HIP and CUDA kernel variants)\n\n";
+  str << "\t --disable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
+      << "\t      (when this option is given, disable custom scan tunings HIP and CUDA kernel variants)\n\n";
 
   str << "\t Options for selecting run size....\n"
       << "\t ==================================\n\n";;
