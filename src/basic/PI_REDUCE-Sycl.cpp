@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -87,7 +87,8 @@ void PI_REDUCE::runSyclVariantImpl(VariantID vid)
         res,
         RAJA::RangeSegment(ibegin, iend),
         RAJA::expt::Reduce<RAJA::operators::plus>(&tpi),
-        [=] (Index_type i, Real_type& pi) {
+        [=] (Index_type i,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::plus>& pi) {
           PI_REDUCE_BODY;
         }
       );

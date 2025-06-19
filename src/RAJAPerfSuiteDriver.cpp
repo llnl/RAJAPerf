@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -21,6 +21,19 @@
 //------------------------------------------------------------------------------
 int main( int argc, char** argv )
 {
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  // Retrieve the value of CALI_CONFIG
+  const char* caliConfigValue = getenv("CALI_CONFIG");
+  if (caliConfigValue) {
+    // unset CALI_CONFIG and Copy CALI_CONFIG to DISABLED_CALI_CONFIG
+    if (unsetenv("CALI_CONFIG") == 0 && setenv("DISABLED_CALI_CONFIG", caliConfigValue, 1) == 0) {
+      std::cout << "Configuration options in CALI_CONFIG will be parsed and added to the internal RAJAPerf Caliper config manager." << std::endl;
+    } else {
+      throw std::runtime_error("main: Failed to update environment variables. Unable to set DISABLED_CALI_CONFIG or unset CALI_CONFIG.");
+    }
+  }
+#endif
+
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
   MPI_Init(&argc, &argv);
 

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -68,6 +68,8 @@ void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
 
   } else if ( vid == RAJA_OpenMPTarget ) {
 
+    auto res{getOmpTargetResource()};
+
     HYDRO_2D_VIEWS_RAJA;
 
     using EXECPOL =
@@ -81,23 +83,26 @@ void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::kernel<EXECPOL>(
+      RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
                           RAJA::RangeSegment(jbeg, jend)),
+        res,
         [=] (Index_type k, Index_type j) {
         HYDRO_2D_BODY1_RAJA;
       });
 
-      RAJA::kernel<EXECPOL>(
+      RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
                           RAJA::RangeSegment(jbeg, jend)),
+        res,
         [=] (Index_type k, Index_type j) {
         HYDRO_2D_BODY2_RAJA;
       });
 
-      RAJA::kernel<EXECPOL>(
+      RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
                           RAJA::RangeSegment(jbeg, jend)),
+        res,
         [=] (Index_type k, Index_type j) {
         HYDRO_2D_BODY3_RAJA;
       });

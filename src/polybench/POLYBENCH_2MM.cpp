@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -59,6 +59,8 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   checksum_scale_factor = 0.000001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
+
+  setComplexity(Complexity::N_to_the_three_halves);
 
   setUsesFeature(Kernel);
 

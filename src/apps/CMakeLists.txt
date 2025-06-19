@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors.
 # See the RAJAPerf/LICENSE file for details.
 #
@@ -44,6 +44,13 @@ blt_add_library(
           ENERGY-OMP.cpp
           ENERGY-OMPTarget.cpp
           ENERGY-Sycl.cpp
+          FEMSWEEP.cpp
+          FEMSWEEP-Cuda.cpp
+          FEMSWEEP-Hip.cpp
+          FEMSWEEP-Seq.cpp
+          FEMSWEEP-OMP.cpp
+          FEMSWEEP-OMPTarget.cpp
+          FEMSWEEP-Sycl.cpp
           FIR.cpp
           FIR-Seq.cpp
           FIR-Hip.cpp

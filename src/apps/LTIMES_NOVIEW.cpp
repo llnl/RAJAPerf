@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -53,7 +53,10 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setComplexity(Complexity::N);
+
   setUsesFeature(Kernel);
+  setUsesFeature(Launch);
 
   setVariantDefined( Base_Seq );
   setVariantDefined( Lambda_Seq );

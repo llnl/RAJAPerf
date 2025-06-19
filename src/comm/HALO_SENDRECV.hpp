@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -112,9 +112,6 @@ private:
 
   Index_type m_num_vars;
   Index_type m_var_size;
-
-  std::vector<Real_ptr> m_send_buffers;
-  std::vector<Real_ptr> m_recv_buffers;
 };
 
 } // end namespace comm

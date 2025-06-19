@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -170,6 +170,8 @@ public:
   Index_type getHaloWidth() const { return halo_width; }
   Index_type getHaloNumVars() const { return halo_num_vars; }
 
+  bool getEnableCustomScan() const { return enable_custom_scan; }
+
   int getGPUStream() const { return gpu_stream; }
   size_t numValidGPUBlockSize() const { return gpu_block_sizes.size(); }
   bool validGPUBlockSize(size_t block_size) const
@@ -280,6 +282,9 @@ private:
   void printFeatureNames(std::ostream& str) const;
   void printFeatureKernels(std::ostream& str) const;
   void printKernelFeatures(std::ostream& str) const;
+  void printComplexityNames(std::ostream& str) const;
+  void printComplexityKernels(std::ostream& str) const;
+  void printKernelComplexities(std::ostream& str) const;
 
   void processNpassesCombinerInput();
   void processKernelInput();
@@ -314,6 +319,8 @@ private:
 
   Index_type halo_width; /*!< halo width used in halo kernels (input option) */
   Index_type halo_num_vars; /*!< num vars used in halo kernels (input option) */
+
+  bool enable_custom_scan; /*!< enable tunings using custom scan implementations (input option) */
 
   int gpu_stream; /*!< 0 -> use stream 0; anything else -> use raja default stream */
   std::vector<size_t> gpu_block_sizes; /*!< Block sizes for gpu tunings to run (input option) */

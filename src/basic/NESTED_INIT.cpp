@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -43,6 +43,8 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize()  );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * getActualProblemSize());
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
 

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -79,6 +79,30 @@ __global__ void lambda_hip_forall(Index_type ibegin, Index_type iend, Lambda bod
 }
 
 /*!
+ * \brief Grid stride forall hip kernel that runs a lambda.
+ */
+template < typename Lambda >
+__global__ void lambda_hip_forall_grid_stride(Index_type ibegin, Index_type iend, Lambda body)
+{
+  Index_type i = ibegin + blockIdx.x * blockDim.x + threadIdx.x;
+  Index_type grid_stride = gridDim.x * blockDim.x;
+  for ( ; i < iend; i += grid_stride) {
+    body(i);
+  }
+}
+///
+template < size_t block_size, typename Lambda >
+__launch_bounds__(block_size)
+__global__ void lambda_hip_forall_grid_stride(Index_type ibegin, Index_type iend, Lambda body)
+{
+  Index_type i = ibegin + blockIdx.x * block_size + threadIdx.x;
+  Index_type grid_stride = gridDim.x * block_size;
+  for ( ; i < iend; i += grid_stride) {
+    body(i);
+  }
+}
+
+/*!
  * \brief Simple hip kernel that runs a lambda.
  */
 template < typename Lambda >
@@ -142,6 +166,7 @@ inline void copyHipData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
   hipErrchk( hipMemcpy( dst_ptr, src_ptr, len,
              hipMemcpyDefault ) );
+  hipErrchk( hipDeviceSynchronize( ) );
 }
 
 /*!

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -81,12 +81,15 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
     case RAJA_Seq : {
 
+      auto res{getHostResource()};
+
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         HISTOGRAM_INIT_COUNTS_RAJA(RAJA::seq_multi_reduce);
 
-        RAJA::forall<RAJA::seq_exec>( RAJA::RangeSegment(ibegin, iend),
+        RAJA::forall<RAJA::seq_exec>( res,
+          RAJA::RangeSegment(ibegin, iend),
           [=](Index_type i) {
             HISTOGRAM_BODY;
         });

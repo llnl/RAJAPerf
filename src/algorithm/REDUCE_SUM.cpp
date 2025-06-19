@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -32,6 +32,8 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
   setBytesWrittenPerRep( 1*sizeof(Real_type) );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(getActualProblemSize());
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);

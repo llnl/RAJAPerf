@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -11,7 +11,7 @@
 ///
 /// for (Index_type z = 0; z < num_z; ++z ) {
 ///   for (Index_type g = 0; g < num_g; ++g ) {
-///     for (Index_type m = 0; z < num_m; ++m ) {
+///     for (Index_type m = 0; m < num_m; ++m ) {
 ///       for (Index_type d = 0; d < num_d; ++d ) {
 ///
 ///         phi[m+ (g * num_m) + (z * num_m * num_g)] +=
@@ -68,16 +68,19 @@ public:
   void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
   void runSyclVariant(VariantID vid, size_t tune_idx);
 
+  void setSeqTuningDefinitions(VariantID vid);
+  void setOpenMPTuningDefinitions(VariantID vid);
   void setCudaTuningDefinitions(VariantID vid);
   void setHipTuningDefinitions(VariantID vid);
+  void setOpenMPTargetTuningDefinitions(VariantID vid);
   void setSyclTuningDefinitions(VariantID vid);
 
   template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t block_size >
-  void runHipVariantImpl(VariantID vid);
+  void runHipVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t work_group_size >
-  void runSyclVariantImpl(VariantID vid);
+  void runSyclVariantImpl(VariantID vid, size_t tune_idx);
 
 private:
   static const size_t default_gpu_block_size = 256;

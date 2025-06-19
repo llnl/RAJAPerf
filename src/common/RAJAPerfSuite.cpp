@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -21,6 +21,7 @@
 #include "basic/COPY8.hpp"
 #include "basic/DAXPY.hpp"
 #include "basic/DAXPY_ATOMIC.hpp"
+#include "basic/EMPTY.hpp"
 #include "basic/IF_QUAD.hpp"
 #include "basic/INDEXLIST.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -86,6 +87,7 @@
 #include "apps/DIFFUSION3DPA.hpp"
 #include "apps/EDGE3D.hpp"
 #include "apps/ENERGY.hpp"
+#include "apps/FEMSWEEP.hpp"
 #include "apps/FIR.hpp"
 #include "apps/LTIMES.hpp"
 #include "apps/LTIMES_NOVIEW.hpp"
@@ -175,6 +177,7 @@ static const std::string KernelNames [] =
   std::string("Basic_COPY8"),
   std::string("Basic_DAXPY"),
   std::string("Basic_DAXPY_ATOMIC"),
+  std::string("Basic_EMPTY"),
   std::string("Basic_IF_QUAD"),
   std::string("Basic_INDEXLIST"),
   std::string("Basic_INDEXLIST_3LOOP"),
@@ -240,6 +243,7 @@ static const std::string KernelNames [] =
   std::string("Apps_DIFFUSION3DPA"),
   std::string("Apps_EDGE3D"),
   std::string("Apps_ENERGY"),
+  std::string("Apps_FEMSWEEP"),
   std::string("Apps_FIR"),
   std::string("Apps_LTIMES"),
   std::string("Apps_LTIMES_NOVIEW"),
@@ -302,8 +306,8 @@ static const std::string VariantNames [] =
   std::string("Lambda_OpenMP"),
   std::string("RAJA_OpenMP"),
 
-  std::string("Base_OMPTarget"),
-  std::string("RAJA_OMPTarget"),
+  std::string("Base_OpenMPTarget"),
+  std::string("RAJA_OpenMPTarget"),
 
   std::string("Base_CUDA"),
   std::string("Lambda_CUDA"),
@@ -358,6 +362,33 @@ static const std::string FeatureNames [] =
   std::string("Unknown Feature")  // Keep this at the end and DO NOT remove....
 
 }; // END FeatureNames
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Array of names for each COMPLEXITY used in suite.
+ *
+ * IMPORTANT: This is only modified when a new complexity is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE Complexity enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string ComplexityNames [] =
+{
+  std::string("N"),
+
+  std::string("NlogN"),
+
+  std::string("N^(3/2)"),
+
+  std::string("N^(2/3)"),
+
+  std::string("Unknown Complexity")  // Keep this at the end and DO NOT remove....
+
+}; // END ComplexityNames
 
 
 /*!
@@ -618,6 +649,19 @@ const std::string& getFeatureName(FeatureID fid)
 /*
  *******************************************************************************
  *
+ * Return complexity name associated with Complexity enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getComplexityName(Complexity ac)
+{
+  return ComplexityNames[static_cast<int>(ac)];
+}
+
+
+/*
+ *******************************************************************************
+ *
  * Return memory space name associated with DataSpace enum value.
  *
  *******************************************************************************
@@ -769,6 +813,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Basic_DAXPY_ATOMIC : {
        kernel = new basic::DAXPY_ATOMIC(run_params);
+       break;
+    }
+    case Basic_EMPTY : {
+       kernel = new basic::EMPTY(run_params);
        break;
     }
     case Basic_IF_QUAD : {
@@ -982,6 +1030,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Apps_ENERGY : {
        kernel = new apps::ENERGY(run_params);
+       break;
+    }
+    case Apps_FEMSWEEP : {
+       kernel = new apps::FEMSWEEP(run_params);
        break;
     }
     case Apps_FIR : {

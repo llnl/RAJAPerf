@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -32,6 +32,8 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // not useful in this case due to O(n*log(n)) algorithm
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setComplexity(Complexity::N_logN);
 
   setUsesFeature(Sort);
 

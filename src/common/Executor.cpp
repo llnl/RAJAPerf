@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -42,7 +42,11 @@
 #include <cmath>
 #include <algorithm>
 
+#if defined(_WIN32)
+#include<direct.h>
+#else
 #include <unistd.h>
+#endif
 
 
 namespace rajaperf {
@@ -331,9 +335,10 @@ void Executor::setupSuite()
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
       KernelBase::setCaliperMgrVariantTuning(vid,
                                              tstr,
-                                             run_params.getOutputDirName(),
+                                             run_params.getOutputFilePrefix(),
                                              run_params.getAddToSpotConfig(),
-                                             run_params.getAddToCaliperConfig());
+                                             run_params.getAddToCaliperConfig(),
+                                             tuning_names_order_map.size());
 #endif
     }
 
@@ -674,6 +679,13 @@ KernelBase* Executor::makeKernel()
 
 void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
 {
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+  int num_ranks = -1;
+  if ( run_params.showProgress() ) {
+    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+  }
+#endif
+
   if ( run_params.showProgress() || print_kernel_name) {
     getCout()  << endl << "Run kernel -- " << kernel->getName() << endl;
   }
@@ -702,13 +714,32 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
       { 
         // Check if valid tuning
         if ( run_params.showProgress() ) {
-          getCout() << "\t\tRunning " << tuning_name << " tuning";
+          const auto default_width = getCout().width();
+          size_t tuning_width = std::max(size_t(12), tuning_name.size());
+          getCout() << "\t\tRunning " << setw(tuning_width) << tuning_name
+                    << setw(default_width) << " tuning" << flush;
         }
 
         kernel->execute(vid, tune_idx); // Execute kernel
 
         if ( run_params.showProgress() ) {
-          getCout() << " -- " << kernel->getLastTime() << " sec." << endl;
+          getCout() << " -- " << kernel->getLastTime() << " sec.";
+
+          size_t prec = 20;
+          const auto default_precision = getCout().precision();
+          Checksum_type checksum = kernel->getChecksum(vid, tune_idx);
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+          {
+            Checksum_type checksum_sum = 0;
+            Allreduce(&checksum, &checksum_sum, 1, MPI_SUM, MPI_COMM_WORLD);
+            checksum = checksum_sum / num_ranks;
+          }
+          getCout() << " checksum_avg ";
+#else
+          getCout() << " checksum ";
+#endif
+          getCout() << setprecision(prec) << checksum
+                    << setprecision(default_precision) << endl;
         }
 
       } else {
@@ -834,7 +865,11 @@ void Executor::outputRunData()
   string out_fprefix;
   string outdir = recursiveMkdir(run_params.getOutputDirName());
   if ( !outdir.empty() ) {
+#if defined(_WIN32)
+    _chdir(outdir.c_str());
+#else
     chdir(outdir.c_str());
+#endif
   }
   out_fprefix = "./" + run_params.getOutputFilePrefix();
 

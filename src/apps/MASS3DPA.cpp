@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -47,6 +47,9 @@ MASS3DPA::MASS3DPA(const RunParams& params)
                          2 * MPA_Q1D * MPA_Q1D * MPA_Q1D * MPA_D1D +
                          2 * MPA_Q1D * MPA_Q1D * MPA_D1D * MPA_D1D +
                          2 * MPA_Q1D * MPA_D1D * MPA_D1D * MPA_D1D + MPA_D1D * MPA_D1D * MPA_D1D));
+
+  setComplexity(Complexity::N);
+
   setUsesFeature(Launch);
 
   setVariantDefined( Base_Seq );

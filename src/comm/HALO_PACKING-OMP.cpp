@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -47,9 +47,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           }
 
           if (separate_buffers) {
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
 
@@ -58,9 +56,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -101,9 +97,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           }
 
           if (separate_buffers) {
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
 
@@ -112,9 +106,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -138,6 +130,8 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
     case RAJA_OpenMP : {
 
+      auto res{getHostResource()};
+
       using EXEC_POL = RAJA::omp_parallel_for_exec;
 
       startTimer();
@@ -152,16 +146,14 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
             auto halo_packing_pack_base_lam = [=](Index_type i) {
                   HALO_PACK_BODY;
                 };
-            RAJA::forall<EXEC_POL>(
+            RAJA::forall<EXEC_POL>( res,
                 RAJA::TypedRangeSegment<Index_type>(0, len),
                 halo_packing_pack_base_lam );
             buffer += len;
           }
 
           if (separate_buffers) {
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
 
@@ -170,9 +162,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -180,7 +170,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
             auto halo_packing_unpack_base_lam = [=](Index_type i) {
                   HALO_UNPACK_BODY;
                 };
-            RAJA::forall<EXEC_POL>(
+            RAJA::forall<EXEC_POL>( res,
                 RAJA::TypedRangeSegment<Index_type>(0, len),
                 halo_packing_unpack_base_lam );
             buffer += len;

@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors.
 # See the RAJAPerf/LICENSE file for details.
 #
@@ -35,6 +35,13 @@ blt_add_library(
           DAXPY_ATOMIC-Cuda.cpp
           DAXPY_ATOMIC-OMP.cpp
           DAXPY_ATOMIC-OMPTarget.cpp
+          EMPTY.cpp
+          EMPTY-Seq.cpp
+          EMPTY-Hip.cpp
+          EMPTY-Cuda.cpp
+          EMPTY-OMP.cpp
+          EMPTY-OMPTarget.cpp
+          EMPTY-Sycl.cpp
           IF_QUAD.cpp
           IF_QUAD-Seq.cpp
           IF_QUAD-Hip.cpp

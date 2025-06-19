@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -36,6 +36,8 @@ PRESSURE::PRESSURE(const RunParams& params)
   setFLOPsPerRep((2 +
                   1
                   ) * getActualProblemSize());
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 

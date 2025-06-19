@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -51,6 +51,8 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
                          7 * DPA_Q1D * DPA_Q1D * DPA_D1D * DPA_D1D +
                          7 * DPA_D1D * DPA_Q1D * DPA_D1D * DPA_D1D +
                          3 * DPA_D1D * DPA_D1D * DPA_D1D));
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -241,10 +241,14 @@ void REDUCE_STRUCT::runHipVariantRAJANewReduce(VariantID vid)
         RAJA::expt::Reduce<RAJA::operators::minimum>(&tymin),
         RAJA::expt::Reduce<RAJA::operators::maximum>(&txmax),
         RAJA::expt::Reduce<RAJA::operators::maximum>(&tymax),
-        [=] __device__ (Index_type i, Real_type& xsum, Real_type& ysum,
-                                      Real_type& xmin, Real_type& ymin,
-                                      Real_type& xmax, Real_type& ymax) {
-          REDUCE_STRUCT_BODY;
+        [=] __device__ (Index_type i,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::plus>& xsum,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::plus>& ysum,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::minimum>& xmin,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::minimum>& ymin,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::maximum>& xmax,
+          RAJA::expt::ValOp<Real_type, RAJA::operators::maximum>& ymax ) {
+          REDUCE_STRUCT_BODY_RAJA;
         }
       );
 

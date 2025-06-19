@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -57,6 +57,8 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
 
   } else if (vid == RAJA_OpenMPTarget) {
 
+    auto res{getOmpTargetResource()};
+
     POLYBENCH_JACOBI_2D_VIEWS_RAJA;
 
     using EXEC_POL =
@@ -76,8 +78,10 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
-        RAJA::kernel<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                                                 RAJA::RangeSegment{1, N-1}),
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res, 
           [=] (Index_type i, Index_type j) {
             POLYBENCH_JACOBI_2D_BODY1_RAJA;
           },

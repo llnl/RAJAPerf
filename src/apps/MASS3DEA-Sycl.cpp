@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -39,14 +39,14 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       constexpr size_t shmem = 0;
-      qu->submit([&](cl::sycl::handler& h) {
+      qu->submit([&](::sycl::handler& h) {
 
       ::sycl::local_accessor<double, 2> s_B(::sycl::range<2>(MEA_Q1D,MEA_D1D),h);
       ::sycl::local_accessor<double, 3> s_D(::sycl::range<3>(MEA_Q1D,MEA_Q1D,MEA_Q1D),h);
 
       h.parallel_for
-        (cl::sycl::nd_range<3>(gridSize, workGroupSize),
-         [=] (cl::sycl::nd_item<3> itm) {
+        (::sycl::nd_range<3>(gridSize, workGroupSize),
+         [=] (::sycl::nd_item<3> itm) {
 
            const Index_type e = itm.get_group(2);
 

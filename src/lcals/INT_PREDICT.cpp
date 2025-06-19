@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -32,6 +32,8 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
   setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(17 * getActualProblemSize());
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
@@ -82,15 +84,25 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  {
-    auto reset_px = scopedMoveData(m_px, m_array_length, vid);
+  Real_ptr px_host = m_px;
 
-    for (Index_type i = 0; i < getActualProblemSize(); ++i) {
-      m_px[i] -= m_px_initval;
-    }
+  DataSpace ds = getDataSpace(vid);
+  DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+  if (ds != hds) {
+    rajaperf::allocData(hds, px_host, m_array_length, getDataAlignment());
+    rajaperf::copyData(hds, px_host, ds, m_px, m_array_length);
   }
 
-  checksum[vid][tune_idx] += calcChecksum(m_px, getActualProblemSize(), vid);
+  for (Index_type i = 0; i < getActualProblemSize(); ++i) {
+    px_host[i] -= m_px_initval;
+  }
+
+  checksum[vid][tune_idx] += calcChecksum(px_host, getActualProblemSize(), vid);
+
+  if (ds != hds) {
+    rajaperf::copyData(ds, m_px, hds, px_host, m_array_length);
+    rajaperf::deallocData(hds, px_host);
+  }
 }
 
 void INT_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

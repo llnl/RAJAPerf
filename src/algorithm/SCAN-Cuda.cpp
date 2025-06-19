@@ -33,12 +33,12 @@ using cuda_items_per_thread_type = integer::make_gpu_items_per_thread_list_type<
 
 template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
-__global__ void scan(Real_ptr x,
-                     Real_ptr y,
-                     Real_ptr block_counts,
-                     Real_ptr grid_counts,
-                     unsigned* block_readys,
-                     Index_type iend)
+__global__ void scan_custom(Real_ptr x,
+                            Real_ptr y,
+                            Real_ptr block_counts,
+                            Real_ptr grid_counts,
+                            unsigned* block_readys,
+                            Index_type iend)
 {
   // blocks do start running in order in cuda, so a block with a higher
   // index can wait on a block with a lower index without deadlocking
@@ -141,7 +141,7 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
 }
 
 template < size_t block_size, size_t items_per_thread >
-void SCAN::runCudaVariantImpl(VariantID vid)
+void SCAN::runCudaVariantCustom(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -168,7 +168,7 @@ void SCAN::runCudaVariantImpl(VariantID vid)
 
       cudaErrchk( cudaMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
                                   res.get_stream()) );
-      RPlaunchCudaKernel( (scan<block_size, items_per_thread>),
+      RPlaunchCudaKernel( (scan_custom<block_size, items_per_thread>),
                           grid_size, block_size,
                           shmem_size, res.get_stream(),
                           x+ibegin, y+ibegin,
@@ -203,7 +203,7 @@ void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
 
     t += 1;
 
-    if ( vid == Base_CUDA ) {
+    if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
 
       seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -216,7 +216,7 @@ void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
 
             if (tune_idx == t) {
 
-              runCudaVariantImpl<decltype(block_size)::value,
+              runCudaVariantCustom<decltype(block_size)::value,
                                  detail::cuda::grid_scan_default_items_per_thread<
                                     Real_type, block_size, RAJA_PERFSUITE_TUNING_CUDA_ARCH>::value
                                  >(vid);
@@ -234,7 +234,7 @@ void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
 
               if (tune_idx == t) {
 
-                runCudaVariantImpl<decltype(block_size)::value, items_per_thread>(vid);
+                runCudaVariantCustom<decltype(block_size)::value, items_per_thread>(vid);
 
               }
 
@@ -263,7 +263,7 @@ void SCAN::setCudaTuningDefinitions(VariantID vid)
 
     addVariantTuningName(vid, "cub");
 
-    if ( vid == Base_CUDA ) {
+    if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
 
       seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 

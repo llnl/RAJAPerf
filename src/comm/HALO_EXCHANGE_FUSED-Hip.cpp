@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -143,9 +143,9 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          hipErrchk( hipMemcpyAsync(send_buffers[l], pack_buffers[l],
+                                    len*num_vars*sizeof(Real_type),
+                                    hipMemcpyDefault, res.get_stream()) );
         }
       }
       hipErrchk( hipStreamSynchronize( res.get_stream() ) );
@@ -165,9 +165,9 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          hipErrchk( hipMemcpyAsync(unpack_buffers[l], recv_buffers[l],
+                                    len*num_vars*sizeof(Real_type),
+                                    hipMemcpyDefault, res.get_stream()) );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -277,9 +277,7 @@ void HALO_EXCHANGE_FUSED::runHipVariantWorkGroup(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
         }
       }
       res.wait();
@@ -296,9 +294,7 @@ void HALO_EXCHANGE_FUSED::runHipVariantWorkGroup(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {

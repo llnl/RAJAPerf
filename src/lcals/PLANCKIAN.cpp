@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -32,6 +32,8 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
   setBytesWrittenPerRep( 2*sizeof(Real_type ) * getActualProblemSize() );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 

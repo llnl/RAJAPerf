@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -26,7 +26,7 @@ namespace stream
   //
   const size_t threads_per_team = 256;
 
-void DOT::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
+void DOT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -60,46 +60,26 @@ void DOT::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
 
     case RAJA_OpenMPTarget : {
 
-      if (tune_idx == 0) {
+      auto res{getOmpTargetResource()};
 
-        startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-          RAJA::ReduceSum<RAJA::omp_target_reduce, Real_type> dot(m_dot_init);
+        Real_type tdot = m_dot_init;
 
-          RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
-            RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
+          RAJA::RangeSegment(ibegin, iend),
+          RAJA::expt::Reduce<RAJA::operators::plus>(&tdot),
+          [=] (Index_type i,
+            RAJA::expt::ValOp<Real_type, RAJA::operators::plus>& dot) {
             DOT_BODY;
-          });
+          }
+        );
 
-          m_dot += static_cast<Real_type>(dot.get());
+        m_dot += static_cast<Real_type>(tdot);
 
-        }
-        stopTimer();
-
-      } else if (tune_idx == 1) {
-
-        startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-          Real_type tdot = m_dot_init;
-
-          RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
-            RAJA::RangeSegment(ibegin, iend),
-            RAJA::expt::Reduce<RAJA::operators::plus>(&tdot),
-            [=] (Index_type i, Real_type& dot) {
-              DOT_BODY;
-            }
-          );
-
-          m_dot += static_cast<Real_type>(tdot);
-
-        }
-        stopTimer();
-
-      } else {
-        getCout() << "\n  DOT : Unknown OMP Target tuning index = " << tune_idx << std::endl;
       }
+      stopTimer();
 
       break;
     }
@@ -110,14 +90,6 @@ void DOT::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
 
   }
 
-}
-
-void DOT::setOpenMPTargetTuningDefinitions(VariantID vid)
-{
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_OpenMPTarget) {
-    addVariantTuningName(vid, "new");
-  }
 }
 
 } // end namespace stream

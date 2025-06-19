@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -19,7 +19,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <iomanip>
+
+#if defined(_WIN32)
+#include<direct.h>
+#else
 #include <unistd.h>
+#endif
 
 namespace rajaperf
 {
@@ -606,8 +612,8 @@ long double calcChecksumImpl(Data_getter data, Size_type len,
     ckahan = z - y;
     tchk = t;
 #if 0 // RDH DEBUG
-    if ( (j % 100) == 0 ) {
-      getCout() << "j : tchk = " << j << " : " << tchk << std::endl;
+    if ( (j % 10000000) == 0 ) {
+      getCout() << "j : tchk = " << std::setprecision(std::numeric_limits<double>::max_digits10) << j << " : " << tchk << std::endl;
     }
 #endif
   }

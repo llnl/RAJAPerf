@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -89,37 +89,39 @@ void ENERGY::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
   } else if ( vid == RAJA_OpenMPTarget ) {
 
+    auto res{getOmpTargetResource()};
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       RAJA::region<RAJA::seq_region>( [=]() {
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY1;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY2;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY3;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY4;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY5;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>(
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
           ENERGY_BODY6;
         });

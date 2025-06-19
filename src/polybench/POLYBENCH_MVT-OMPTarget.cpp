@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -62,6 +62,8 @@ void POLYBENCH_MVT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
 
   } else if (vid == RAJA_OpenMPTarget) {
 
+    auto res{getOmpTargetResource()};
+
     POLYBENCH_MVT_VIEWS_RAJA;
 
     using EXEC_POL =
@@ -80,10 +82,11 @@ void POLYBENCH_MVT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
 
       RAJA::region<RAJA::seq_region>( [=]() {
 
-        RAJA::kernel_param<EXEC_POL>(
+        RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, N},
                            RAJA::RangeSegment{0, N}),
           RAJA::tuple<Real_type>{0.0},
+          res,
 
           [=] (Real_type &dot) {
             POLYBENCH_MVT_BODY1_RAJA;
@@ -97,10 +100,11 @@ void POLYBENCH_MVT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
 
         );
 
-        RAJA::kernel_param<EXEC_POL>(
+        RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, N},
                            RAJA::RangeSegment{0, N}),
           RAJA::tuple<Real_type>{0.0},
+          res,
 
           [=] (Real_type &dot) {
             POLYBENCH_MVT_BODY4_RAJA;

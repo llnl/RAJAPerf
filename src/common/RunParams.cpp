@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -46,6 +46,7 @@ RunParams::RunParams(int argc, char** argv)
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
+   enable_custom_scan(true),
    gpu_stream(1),
    gpu_block_sizes(),
    atomic_replications(),
@@ -142,6 +143,8 @@ void RunParams::print(std::ostream& str) const
 
   str << "\n halo_width = " << halo_width;
   str << "\n halo_num_vars = " << halo_num_vars;
+
+  str << "\n custom_scan = " << (enable_custom_scan ? "enabled" : "disabled");
 
   str << "\n gpu stream = " << ((gpu_stream == 0) ? "0" : "RAJA default");
   str << "\n gpu_block_sizes = ";
@@ -351,6 +354,24 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 opt == std::string("-pkf") ) {
 
       printKernelFeatures(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-complexities") ||
+                opt == std::string("-pc") ) {
+
+      printComplexityNames(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-complexity-kernels") ||
+                opt == std::string("-pck") ) {
+
+      printComplexityKernels(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-kernel-complexities") ||
+                opt == std::string("-pkc") ) {
+
+      printKernelComplexities(getCout());
       input_state = InfoRequest;
 
     } else if ( opt == std::string("--npasses") ) {
@@ -658,6 +679,14 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                   << std::endl;
         input_state = BadInput;
       }
+
+    } else if ( opt == std::string("--enable_custom_scan") ) {
+
+      enable_custom_scan = true;
+
+    } else if ( opt == std::string("--disable_custom_scan") ) {
+
+      enable_custom_scan = false;
 
     } else if ( opt == std::string("--gpu_stream_0") ) {
 
@@ -1273,6 +1302,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --print-kernel-features, -pkf \n"
       << "\t      (print names of features used by each kernel)\n\n";
 
+  str << "\t --print-complexities, -pc (print names of algorithmic complexities exercised in Suite)\n\n";
+
+  str << "\t --print-complexity-kernels, -pck \n"
+      << "\t      (print names of kernels that have each complexity)\n\n";
+
+  str << "\t --print-kernel-complexities, -pkc \n"
+      << "\t      (print the name of the complexity of each kernel)\n\n";
+
   str << "\t --print-data-spaces, -pds (print names of data spaces)\n\n";
 
   str << "\t Options for selecting output details....\n"
@@ -1369,6 +1406,11 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Examples...\n"
       << "\t\t --exclude-features Forall (exclude all kernels that use RAJA forall)\n"
       << "\t\t -ef Forall Reduction (exclude all kernels that use RAJA forall or RAJA reductions)\n\n";
+
+  str << "\t --enable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
+      << "\t      (when this option is given, enable custom scan tunings HIP and CUDA kernel variants)\n\n";
+  str << "\t --disable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
+      << "\t      (when this option is given, disable custom scan tunings HIP and CUDA kernel variants)\n\n";
 
   str << "\t Options for selecting run size....\n"
       << "\t ==================================\n\n";;
@@ -1769,6 +1811,51 @@ void RunParams::printKernelFeatures(std::ostream& str) const
          str << "\t" << getFeatureName(tfid) << std::endl;
       }
     }  // loop over features
+    delete kern;
+  }  // loop over kernels
+  str.flush();
+}
+
+void RunParams::printComplexityNames(std::ostream& str) const
+{
+  str << "\nAvailable complexities:";
+  str << "\n-------------------\n";
+  for (int ac = 0; ac < int(Complexity::NumComplexities); ++ac) {
+    str << getComplexityName(static_cast<Complexity>(ac)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printComplexityKernels(std::ostream& str) const
+{
+  str << "\nAvailable complexities and kernels that use each:";
+  str << "\n---------------------------------------------\n";
+  for (int ac = 0; ac < int(Complexity::NumComplexities); ++ac) {
+    Complexity tac = static_cast<Complexity>(ac);
+    str << getComplexityName(tac) << std::endl;
+    for (int kid = 0; kid < NumKernels; ++kid) {
+      KernelID tkid = static_cast<KernelID>(kid);
+      KernelBase* kern = getKernelObject(tkid, *this);
+      if ( kern->getComplexity() == tac ) {
+        str << "\t" << getFullKernelName(tkid) << std::endl;
+      }
+      delete kern;
+    }  // loop over kernels
+    str << std::endl;
+  }  // loop over complexities
+  str.flush();
+}
+
+void RunParams::printKernelComplexities(std::ostream& str) const
+{
+  str << "\nAvailable kernels and complexities each uses:";
+  str << "\n-----------------------------------------\n";
+  for (int kid = 0; kid < NumKernels; ++kid) {
+    KernelID tkid = static_cast<KernelID>(kid);
+    str << getFullKernelName(tkid) << std::endl;
+    KernelBase* kern = getKernelObject(tkid, *this);
+    Complexity tac = kern->getComplexity();
+    str << "\t" << getComplexityName(tac) << std::endl;
     delete kern;
   }  // loop over kernels
   str.flush();
@@ -2339,7 +2426,7 @@ void RunParams::processVariantInput()
   
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-         invalid_variant_input.push_back(variant_input[it]);
+        invalid_variant_input.push_back(variant_input[it]);
       } 
 
     }

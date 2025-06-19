@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -164,7 +164,8 @@ void DOT::runCudaVariantRAJANewReduce(VariantID vid)
        RAJA::forall<exec_policy>( res,
          RAJA::RangeSegment(ibegin, iend),
          RAJA::expt::Reduce<RAJA::operators::plus>(&tdot),
-         [=] __device__ (Index_type i, Real_type& dot) {
+         [=] __device__ (Index_type i,
+           RAJA::expt::ValOp<Real_type, RAJA::operators::plus>& dot) {
            DOT_BODY;
          }
        );

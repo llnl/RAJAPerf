@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -50,6 +50,8 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
                          2 * CPA_Q1D * CPA_D1D * CPA_Q1D * CPA_D1D + // 7
                          (1 + 2*CPA_Q1D) * CPA_D1D * CPA_D1D * CPA_D1D // 8
                          ));
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 

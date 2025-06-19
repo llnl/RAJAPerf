@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -52,6 +52,8 @@ ENERGY::ENERGY(const RunParams& params)
                   19 + // 1 sqrt
                   9    // 1 sqrt
                   ) * getActualProblemSize());
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 

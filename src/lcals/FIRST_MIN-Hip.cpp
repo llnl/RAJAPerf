@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -114,8 +114,6 @@ void FIRST_MIN::runHipVariantBase(VariantID vid)
 template < size_t block_size, typename MappingHelper >
 void FIRST_MIN::runHipVariantRAJA(VariantID vid)
 {
-  using reduction_policy = RAJA::hip_reduce;
-
   using exec_policy = std::conditional_t<MappingHelper::direct,
       RAJA::hip_exec<block_size, true /*async*/>,
       RAJA::hip_exec_occ_calc<block_size, true /*async*/>>;
@@ -133,15 +131,16 @@ void FIRST_MIN::runHipVariantRAJA(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-       RAJA::ReduceMinLoc<reduction_policy, Real_type, Index_type> loc(
-                                                        m_xmin_init, m_initloc);
+       RAJA::ReduceMinLoc<RAJA::hip_reduce,
+                          Real_type, Index_type> minloc(m_xmin_init,
+                                                        m_initloc);
 
        RAJA::forall<exec_policy>( res,
          RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
          FIRST_MIN_BODY_RAJA;
        });
 
-       m_minloc = loc.getLoc();
+       m_minloc = minloc.getLoc();
 
     }
     stopTimer();
@@ -168,22 +167,23 @@ void FIRST_MIN::runHipVariantRAJANewReduce(VariantID vid)
 
   if ( vid == RAJA_HIP ) {
 
-    using VL_TYPE = RAJA::expt::ValLoc<Real_type>;
-
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-       VL_TYPE tloc(m_xmin_init, m_initloc);
+      RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
+                                                        m_initloc);
 
-       RAJA::forall<exec_policy>( res,
-         RAJA::RangeSegment(ibegin, iend),
-         RAJA::expt::Reduce<RAJA::operators::minimum>(&tloc),
-         [=] __device__ (Index_type i, VL_TYPE& loc) {
-           loc.min(x[i], i);
-         }
-       );
+      RAJA::forall<exec_policy>( res,
+        RAJA::RangeSegment(ibegin, iend),
+        RAJA::expt::Reduce<RAJA::operators::minimum>(&tminloc),
+        [=] __device__ (Index_type i,
+          RAJA::expt::ValLocOp<Real_type, Index_type,
+                               RAJA::operators::minimum>& minloc) {
+          FIRST_MIN_BODY_RAJA;
+        }
+      );
 
-       m_minloc = static_cast<Index_type>(tloc.getLoc());
+      m_minloc = static_cast<Index_type>(tminloc.getLoc()); 
 
     }
     stopTimer();

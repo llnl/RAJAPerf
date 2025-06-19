@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -76,6 +76,8 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
 
   } else if ( vid == RAJA_OpenMPTarget ) {
 
+    auto res{getOmpTargetResource()}; 
+
     POLYBENCH_GEMVER_VIEWS_RAJA;
 
     using EXEC_POL1 =
@@ -102,17 +104,20 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::kernel<EXEC_POL1>( RAJA::make_tuple(RAJA::RangeSegment{0, n},
-                                                RAJA::RangeSegment{0, n}),
+      RAJA::kernel_resource<EXEC_POL1>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, n},
+                         RAJA::RangeSegment{0, n}),
+        res,
         [=] (Index_type i, Index_type j) {
           POLYBENCH_GEMVER_BODY1_RAJA;
         }
       );
 
-      RAJA::kernel_param<EXEC_POL24>(
+      RAJA::kernel_param_resource<EXEC_POL24>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},
                          RAJA::RangeSegment{0, n}),
         RAJA::tuple<Real_type>{0.0},
+        res,
 
         [=] (Index_type /* i */, Real_type &dot) {
           POLYBENCH_GEMVER_BODY2_RAJA;
@@ -125,16 +130,17 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
         }
       );
 
-      RAJA::forall<EXEC_POL3> (RAJA::RangeSegment{0, n},
+      RAJA::forall<EXEC_POL3> (res, RAJA::RangeSegment{0, n},
         [=] (Index_type i) {
           POLYBENCH_GEMVER_BODY5_RAJA;
         }
       );
 
-      RAJA::kernel_param<EXEC_POL24>(
+      RAJA::kernel_param_resource<EXEC_POL24>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},
                          RAJA::RangeSegment{0, n}),
         RAJA::tuple<Real_type>{0.0},
+        res,
 
         [=] (Index_type i, Real_type &dot) {
           POLYBENCH_GEMVER_BODY6_RAJA;

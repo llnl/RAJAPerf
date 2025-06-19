@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -40,7 +40,7 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      qu->submit([&](cl::sycl::handler& h) {
+      qu->submit([&](::sycl::handler& h) {
 
         constexpr int max_D1D = CPA_D1D;
         constexpr int max_Q1D = CPA_Q1D;
@@ -54,8 +54,8 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
         auto sm5_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
 
         h.parallel_for
-          (cl::sycl::nd_range<3>(gridSize, workGroupSize),
-           [=] (cl::sycl::nd_item<3> itm) {
+          (::sycl::nd_range<3>(gridSize, workGroupSize),
+           [=] (::sycl::nd_item<3> itm) {
 
              const Index_type e = itm.get_group(2);
 

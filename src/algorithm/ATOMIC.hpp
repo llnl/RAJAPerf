@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -25,10 +25,19 @@
 
 #define ATOMIC_DATA_TEARDOWN(replication) \
   { \
-    auto reset_atomic = scopedMoveData(atomic, replication, vid); \
+    Real_ptr atomic_host = atomic; \
+    DataSpace ds = getDataSpace(vid); \
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds); \
+    if (ds != hds) { \
+      rajaperf::allocData(hds, atomic_host, replication, getDataAlignment()); \
+      rajaperf::copyData(hds, atomic_host, ds, atomic, replication); \
+    } \
     m_final = init; \
     for (size_t r = 0; r < replication; ++r ) { \
-      m_final += atomic[r]; \
+      m_final += atomic_host[r]; \
+    } \
+    if (ds != hds) { \
+      rajaperf::deallocData(hds, atomic_host); \
     } \
   } \
   deallocData(atomic, vid);
@@ -68,7 +77,6 @@ public:
   void runCudaVariant(VariantID vid, size_t tune_idx);
   void runHipVariant(VariantID vid, size_t tune_idx);
   void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runKokkosVariant(VariantID vid, size_t tune_idx);
 
   void setSeqTuningDefinitions(VariantID vid);
   void setOpenMPTuningDefinitions(VariantID vid);
@@ -78,20 +86,25 @@ public:
 
   template < size_t replication >
   void runSeqVariantReplicate(VariantID vid);
+
   template < size_t replication >
   void runOpenMPVariantReplicate(VariantID vid);
+
   template < size_t block_size, size_t replication >
   void runCudaVariantReplicateGlobal(VariantID vid);
   template < size_t block_size, size_t replication >
   void runHipVariantReplicateGlobal(VariantID vid);
   template < size_t block_size, size_t replication >
+
   void runCudaVariantReplicateWarp(VariantID vid);
   template < size_t block_size, size_t replication >
   void runHipVariantReplicateWarp(VariantID vid);
+
   template < size_t block_size, size_t replication >
   void runCudaVariantReplicateBlock(VariantID vid);
   template < size_t block_size, size_t replication >
   void runHipVariantReplicateBlock(VariantID vid);
+
   template < size_t replication >
   void runOpenMPTargetVariantReplicate(VariantID vid);
 

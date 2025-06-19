@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -17,8 +17,9 @@ namespace rajaperf
 namespace apps
 {
 
+using namespace ltimes_idx;
 
-void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -34,10 +35,11 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         #pragma omp parallel for
-        for (Index_type z = 0; z < num_z; ++z ) {
-          for (Index_type g = 0; g < num_g; ++g ) {
-            for (Index_type m = 0; m < num_m; ++m ) {
-              for (Index_type d = 0; d < num_d; ++d ) {
+        for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
+          IZ z(iz);
+          for (IG g(0); g < num_g; ++g ) {
+            for (IM m(0); m < num_m; ++m ) {
+              for (ID d(0); d < num_d; ++d ) {
                 LTIMES_BODY;
               }
             }
@@ -52,8 +54,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
     case Lambda_OpenMP : {
 
-      auto ltimes_base_lam = [=](Index_type d, Index_type z,
-                                 Index_type g, Index_type m) {
+      auto ltimes_base_lam = [=](ID d, IZ z, IG g, IM m) {
                                LTIMES_BODY;
                              };
 
@@ -61,10 +62,11 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         #pragma omp parallel for
-        for (Index_type z = 0; z < num_z; ++z ) {
-          for (Index_type g = 0; g < num_g; ++g ) {
-            for (Index_type m = 0; m < num_m; ++m ) {
-              for (Index_type d = 0; d < num_d; ++d ) {
+        for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
+          IZ z(iz);
+          for (IG g(0); g < num_g; ++g ) {
+            for (IM m(0); m < num_m; ++m ) {
+              for (ID d(0); d < num_d; ++d ) {
                 ltimes_base_lam(d, z, g, m);
               }
             }
@@ -79,37 +81,85 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
     case RAJA_OpenMP : {
 
-      LTIMES_VIEWS_RANGES_RAJA;
+      auto res{getHostResource()};
 
-      auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
-                          LTIMES_BODY_RAJA;
-                        };
+      if (tune_idx == 0) {
 
-      using EXEC_POL =
-        RAJA::KernelPolicy<
-          RAJA::statement::For<1, RAJA::omp_parallel_for_exec, // z
-            RAJA::statement::For<2, RAJA::seq_exec,            // g
-              RAJA::statement::For<3, RAJA::seq_exec,          // m
-                RAJA::statement::For<0, RAJA::seq_exec,        // d
-                  RAJA::statement::Lambda<0>
+        auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
+                            LTIMES_BODY;
+                          };
+
+        using EXEC_POL =
+          RAJA::KernelPolicy<
+            RAJA::statement::For<1, RAJA::omp_parallel_for_exec, // z
+              RAJA::statement::For<2, RAJA::seq_exec,            // g
+                RAJA::statement::For<3, RAJA::seq_exec,          // m
+                  RAJA::statement::For<0, RAJA::seq_exec,        // d
+                    RAJA::statement::Lambda<0>
+                  >
                 >
               >
             >
-          >
-        >;
+          >;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        startTimer();
+        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-        RAJA::kernel<EXEC_POL>( RAJA::make_tuple(IDRange(0, num_d),
-                                                 IZRange(0, num_z),
-                                                 IGRange(0, num_g),
-                                                 IMRange(0, num_m)),
-                                ltimes_lam
-                              );
+          RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
+                                                            IZRange(0, *num_z),
+                                                            IGRange(0, *num_g),
+                                                            IMRange(0, *num_m)),
+                                           res,
+                                           ltimes_lam
+                                         );
+
+        }
+        stopTimer();
+
+      } else if (tune_idx == 1) {
+
+        using launch_policy = RAJA::LaunchPolicy<RAJA::omp_launch_t>;
+
+        using z_policy = RAJA::LoopPolicy<RAJA::omp_for_exec>;
+
+        using g_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        using m_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+        startTimer();
+        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+          RAJA::launch<launch_policy>( res,
+              RAJA::LaunchParams(),
+              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+
+                RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
+                  [&](IZ z) {
+                    RAJA::loop<g_policy>(ctx, IGRange(0, *num_g),
+                      [&](IG g) {
+                        RAJA::loop<m_policy>(ctx, IMRange(0, *num_m),
+                          [&](IM m) {
+                            RAJA::loop<d_policy>(ctx, IDRange(0, *num_d),
+                              [&](ID d) {
+                                LTIMES_BODY
+                              }
+                            ); // RAJA::loop<d_policy>
+                          }
+                        ); // RAJA::loop<m_policy>
+                      }
+                    ); // RAJA::loop<g_policy>
+                  }
+                ); // RAJA::loop<z_policy>
+
+              } // outer lambda (ctx)
+          );    // RAJA::launch
+
+        } // loop over kernel reps
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -123,6 +173,18 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 #else
   RAJA_UNUSED_VAR(vid);
 #endif
+}
+
+void LTIMES::setOpenMPTuningDefinitions(VariantID vid)
+{
+
+  if (vid == RAJA_OpenMP) {
+    addVariantTuningName(vid, "kernel");
+    addVariantTuningName(vid, "launch");
+  } else {
+    addVariantTuningName(vid, "default");
+  }
+
 }
 
 } // end namespace apps

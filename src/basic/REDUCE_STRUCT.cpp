@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -38,7 +38,8 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
   setBytesWrittenPerRep( 6*sizeof(Real_type) );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * getActualProblemSize() + 2);
-    
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
@@ -70,19 +71,15 @@ void REDUCE_STRUCT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_init_sum = 0.0;
   m_init_min = std::numeric_limits<Real_type>::max();
   m_init_max = std::numeric_limits<Real_type>::lowest();
-  allocAndInitData(m_x, getActualProblemSize(), vid);
-  allocAndInitData(m_y, getActualProblemSize(), vid);
 
-  {
-    auto reset_x = scopedMoveData(m_x, getActualProblemSize(), vid);
-    auto reset_y = scopedMoveData(m_y, getActualProblemSize(), vid);
+  auto reset_x = allocAndInitDataForInit(m_x, getActualProblemSize(), vid);
+  auto reset_y = allocAndInitDataForInit(m_y, getActualProblemSize(), vid);
 
-    Real_type dx = Lx/(Real_type)(getActualProblemSize());
-    Real_type dy = Ly/(Real_type)(getActualProblemSize());
-    for (int i=0;i<getActualProblemSize();i++){ \
-      m_x[i] = i*dx;
-      m_y[i] = i*dy;
-    }
+  Real_type dx = Lx/(Real_type)(getActualProblemSize());
+  Real_type dy = Ly/(Real_type)(getActualProblemSize());
+  for (int i=0;i<getActualProblemSize();i++){ \
+    m_x[i] = i*dx;
+    m_y[i] = i*dy;
   }
 }
 

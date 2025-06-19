@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -48,6 +48,8 @@ void NESTED_INIT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
 
   } else if ( vid == RAJA_OpenMPTarget ) {
 
+    auto res{getOmpTargetResource()};
+
     using EXEC_POL =
       RAJA::KernelPolicy<
         RAJA::statement::Collapse<RAJA::omp_target_parallel_collapse_exec,
@@ -59,10 +61,12 @@ void NESTED_INIT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::kernel<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, ni),
-                                               RAJA::RangeSegment(0, nj),
-                                               RAJA::RangeSegment(0, nk)),
-           [=](Index_type i, Index_type j, Index_type k) {
+      RAJA::kernel_resource<EXEC_POL>(
+         RAJA::make_tuple(RAJA::RangeSegment(0, ni),
+                          RAJA::RangeSegment(0, nj),
+                          RAJA::RangeSegment(0, nk)),
+         res,
+         [=](Index_type i, Index_type j, Index_type k) {
            NESTED_INIT_BODY;
       });
 

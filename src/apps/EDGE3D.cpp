@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -58,9 +58,11 @@ EDGE3D::EDGE3D(const RunParams& params)
 
   setFLOPsPerRep(number_of_elements * flops_per_element);
 
-  checksum_scale_factor = 0.001 *
+  m_checksum_scale_factor = 0.001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
@@ -94,27 +96,21 @@ EDGE3D::~EDGE3D()
 
 void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_x, m_array_length, Real_type(0.0), vid);
-  allocAndInitDataConst(m_y, m_array_length, Real_type(0.0), vid);
-  allocAndInitDataConst(m_z, m_array_length, Real_type(0.0), vid);
+  auto reset_x = allocAndInitDataConstForInit(m_x, m_array_length, Real_type(0.0), vid);
+  auto reset_y = allocAndInitDataConstForInit(m_y, m_array_length, Real_type(0.0), vid);
+  auto reset_z = allocAndInitDataConstForInit(m_z, m_array_length, Real_type(0.0), vid);
 
-  {
-    auto reset_x = scopedMoveData(m_x, m_array_length, vid);
-    auto reset_y = scopedMoveData(m_y, m_array_length, vid);
-    auto reset_z = scopedMoveData(m_z, m_array_length, vid);
-
-    Real_type dx = 0.3;
-    Real_type dy = 0.2;
-    Real_type dz = 0.1;
-    setMeshPositions_3d(m_x, dx, m_y, dy, m_z, dz, *m_domain);
-  }
+  Real_type dx = 0.3;
+  Real_type dy = 0.2;
+  Real_type dz = 0.1;
+  setMeshPositions_3d(m_x, dx, m_y, dy, m_z, dz, *m_domain);
 
   allocAndInitDataConst(m_sum, m_array_length, Real_type(0.0), vid);
 }
 
 void EDGE3D::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, checksum_scale_factor, vid  );
+  checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, m_checksum_scale_factor, vid  );
 }
 
 void EDGE3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -129,6 +129,8 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 #if defined(RUN_RAJA_SEQ)
   case RAJA_Seq: {
 
+    auto res{getHostResource()};
+
     using launch_policy = RAJA::LaunchPolicy<RAJA::seq_launch_t>;
 
     using outer_x = RAJA::LoopPolicy<RAJA::seq_exec>;
@@ -143,7 +145,7 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       // Grid is empty as the host does not need a compute grid to be specified
-      RAJA::launch<launch_policy>(
+      RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 

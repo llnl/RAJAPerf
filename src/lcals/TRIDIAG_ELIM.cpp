@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -34,6 +34,8 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * (getActualProblemSize()-1));
+
+  setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 

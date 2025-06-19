@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -70,8 +70,6 @@
   std::vector<MPI_Request> pack_mpi_requests(num_neighbors); \
   std::vector<MPI_Request> unpack_mpi_requests(num_neighbors); \
   \
-  const DataSpace dataSpace = getDataSpace(vid); \
-  \
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy); \
   \
   std::vector<Real_ptr> pack_buffers = m_pack_buffers; \
@@ -115,6 +113,7 @@ public:
 
   void setCudaTuningDefinitions(VariantID vid);
   void setHipTuningDefinitions(VariantID vid);
+
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
   template < size_t block_size >
@@ -132,12 +131,6 @@ private:
   Index_type m_var_size;
 
   std::vector<Real_ptr> m_vars;
-
-  std::vector<Real_ptr> m_pack_buffers;
-  std::vector<Real_ptr> m_unpack_buffers;
-
-  std::vector<Real_ptr> m_send_buffers;
-  std::vector<Real_ptr> m_recv_buffers;
 };
 
 } // end namespace comm

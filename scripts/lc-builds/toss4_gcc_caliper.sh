@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
@@ -48,8 +48,6 @@ cmake \
   -DRAJA_PERFSUITE_USE_CALIPER=ON \
   -Dcaliper_DIR=${CALI_DIR} \
   -Dadiak_DIR=${ADIAK_DIR} \
-  -DCMAKE_C_FLAGS="-g -O0" \
-  -DCMAKE_CXX_FLAGS="-g -O0" \
   "$@" \
   ..
 

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -57,17 +57,19 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
 
   } else if (vid == RAJA_OpenMPTarget ) {
 
+    auto res{getOmpTargetResource()};
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> (
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
           RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
             POLYBENCH_JACOBI_1D_BODY1;
         });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> (
+        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
           RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
             POLYBENCH_JACOBI_1D_BODY2;
         });

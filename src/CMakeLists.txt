@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors.
 # See the RAJAPerf/LICENSE file for details.
 #
@@ -54,6 +54,9 @@ blt_add_executable(
   apps/ENERGY.cpp
   apps/ENERGY-Seq.cpp
   apps/ENERGY-OMPTarget.cpp
+  apps/FEMSWEEP.cpp
+  apps/FEMSWEEP-Seq.cpp
+  apps/FEMSWEEP-OMPTarget.cpp
   apps/FIR.cpp
   apps/FIR-Seq.cpp
   apps/FIR-OMPTarget.cpp
@@ -96,6 +99,9 @@ blt_add_executable(
   basic/DAXPY_ATOMIC.cpp
   basic/DAXPY_ATOMIC-Seq.cpp
   basic/DAXPY_ATOMIC-OMPTarget.cpp
+  basic/EMPTY.cpp
+  basic/EMPTY-Seq.cpp
+  basic/EMPTY-OMPTarget.cpp
   basic/IF_QUAD.cpp
   basic/IF_QUAD-Seq.cpp
   basic/IF_QUAD-OMPTarget.cpp

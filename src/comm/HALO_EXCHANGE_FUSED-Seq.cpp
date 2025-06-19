@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -67,9 +67,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -87,9 +85,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -158,9 +154,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -178,9 +172,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantDirect(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -229,6 +221,8 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
 
 #if defined(RUN_RAJA_SEQ)
     case RAJA_Seq : {
+
+      auto res{getHostResource()};
 
       using AllocatorHolder = RAJAPoolAllocatorHolder<
         RAJA::basic_mempool::MemPool<RAJA::basic_mempool::generic_allocator>>;
@@ -288,13 +282,11 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
           }
         }
         workgroup group_pack = pool_pack.instantiate();
-        worksite site_pack = group_pack.run();
+        worksite site_pack = group_pack.run(res);
         if (separate_buffers) {
           for (Index_type l = 0; l < num_neighbors; ++l) {
             Index_type len = pack_index_list_lengths[l];
-            copyData(DataSpace::Host, send_buffers[l],
-                     dataSpace, pack_buffers[l],
-                     len*num_vars);
+            res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
           }
         }
         for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -310,9 +302,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
           Int_ptr list = unpack_index_lists[l];
           Index_type len = unpack_index_list_lengths[l];
           if (separate_buffers) {
-            copyData(dataSpace, unpack_buffers[l],
-                     DataSpace::Host, recv_buffers[l],
-                     len*num_vars);
+            res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
           }
 
           for (Index_type v = 0; v < num_vars; ++v) {
@@ -322,7 +312,7 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
           }
         }
         workgroup group_unpack = pool_unpack.instantiate();
-        worksite site_unpack = group_unpack.run();
+        worksite site_unpack = group_unpack.run(res);
 
         MPI_Waitall(num_neighbors, pack_mpi_requests.data(), MPI_STATUSES_IGNORE);
 

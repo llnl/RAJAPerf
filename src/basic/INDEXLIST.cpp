@@ -35,6 +35,8 @@ INDEXLIST::INDEXLIST(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setComplexity(Complexity::N);
+
   setUsesFeature(Forall);
   setUsesFeature(Scan);
 
@@ -48,9 +50,13 @@ INDEXLIST::INDEXLIST(const RunParams& params)
   setVariantDefined( Base_OpenMPTarget );
 #endif
 
-  setVariantDefined( Base_CUDA );
+  if (run_params.getEnableCustomScan()) {
 
-  setVariantDefined( Base_HIP );
+    setVariantDefined( Base_CUDA );
+
+    setVariantDefined( Base_HIP );
+
+  }
 }
 
 INDEXLIST::~INDEXLIST()

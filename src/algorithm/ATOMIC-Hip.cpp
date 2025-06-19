@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -24,7 +24,7 @@ namespace rajaperf
 namespace algorithm
 {
 
-const size_t warp_size = 64;
+const size_t warp_size = RAJA_HIP_WAVESIZE;
 
 template < size_t block_size, size_t replication >
 __launch_bounds__(block_size)
@@ -111,7 +111,7 @@ void ATOMIC::runHipVariantReplicateGlobal(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::forall<RAJA::hip_exec<block_size, true /*async*/>>(
+      RAJA::forall<RAJA::hip_exec<block_size, true /*async*/>>( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
           ATOMIC_RAJA_BODY(RAJA::hip_atomic, i, ATOMIC_VALUE);
       });

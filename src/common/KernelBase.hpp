@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -26,7 +26,7 @@
 #include "RAJA/policy/hip/raja_hiperrchk.hpp"
 #endif
 #if defined(RAJA_ENABLE_SYCL)
-#include <sycl.hpp>
+#include "RAJA/util/sycl_compat.hpp"
 #endif
 
 #include "camp/resource.hpp"
@@ -107,6 +107,7 @@ public:
   void setBytesAtomicModifyWrittenPerRep(Index_type bytes) { bytes_atomic_modify_written_per_rep = bytes;}
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
+  void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -163,6 +164,7 @@ public:
   Index_type getBytesAtomicModifyWrittenPerRep() const { return bytes_atomic_modify_written_per_rep; }
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
+  Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
   Index_type getRunReps() const;
@@ -236,6 +238,11 @@ public:
 
   void execute(VariantID vid, size_t tune_idx);
 
+  camp::resources::Host getHostResource()
+  {
+    return camp::resources::Host::get_default();
+  }
+
 #if defined(RAJA_ENABLE_CUDA)
   camp::resources::Cuda getCudaResource()
   {
@@ -245,6 +252,7 @@ public:
     return camp::resources::Cuda::get_default();
   }
 #endif
+
 #if defined(RAJA_ENABLE_HIP)
   camp::resources::Hip getHipResource()
   {
@@ -254,6 +262,7 @@ public:
     return camp::resources::Hip::get_default();
   }
 #endif
+
 #if defined(RAJA_ENABLE_SYCL)
   camp::resources::Sycl getSyclResource()
   {
@@ -263,6 +272,13 @@ public:
     }
     */
     return camp::resources::Sycl::get_default();
+  }
+#endif
+
+#if defined(RAJA_ENABLE_TARGET_OPENMP)
+  camp::resources::Omp getOmpTargetResource()
+  {
+    return camp::resources::Omp::get_default();
   }
 #endif
 
@@ -292,6 +308,13 @@ public:
   }
 
   Size_type getDataAlignment() const;
+  Size_type getSizePaddedToDataAlignment(Size_type size) const;
+
+  template <typename T>
+  T offsetPointer(T ptr, Size_type size) const
+  {
+    return (T)(((char*)ptr) + size);
+  }
 
   DataSpace getDataSpace(VariantID vid) const;
   DataSpace getReductionDataSpace(VariantID vid) const;
@@ -348,6 +371,19 @@ public:
   }
 
   template <typename T>
+  void allocAndCopyHostData(T*& dst_ptr,
+                            const T* src_ptr,
+                            Size_type len,
+                            VariantID vid)
+  {
+    rajaperf::allocData(getDataSpace(vid),
+        dst_ptr, len, getDataAlignment());
+
+    rajaperf::copyData(getDataSpace(vid),
+        dst_ptr, DataSpace::Host, src_ptr, len);
+  }
+
+  template <typename T>
   void allocAndInitData(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitData(getDataSpace(vid),
@@ -358,6 +394,13 @@ public:
   void allocAndInitDataConst(T*& ptr, Size_type len, T val, VariantID vid)
   {
     rajaperf::allocAndInitDataConst(getDataSpace(vid),
+        ptr, len, getDataAlignment(), val);
+  }
+
+  template <typename T>
+  void allocAndInitDataConst(T*& ptr, Size_type len, T val, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataConst(dataSpace,
         ptr, len, getDataAlignment(), val);
   }
 
@@ -373,6 +416,40 @@ public:
   {
     rajaperf::allocAndInitDataRandValue(getDataSpace(vid),
         ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  void allocAndInitDataRandValue(T*& ptr, Size_type len, DataSpace dataSpace)
+  {
+    rajaperf::allocAndInitDataRandValue(dataSpace,
+        ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataForInit(T*& ptr, Size_type len, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataConstForInit(T*& ptr, Size_type len, T val, VariantID vid)
+  {
+    DataSpace ds = getDataSpace(vid);
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitDataConst(hds, ptr, len, getDataAlignment(), val);
+    return {ds, hds, ptr, len, getDataAlignment()};
   }
 
   template <typename T>
@@ -492,9 +569,10 @@ public:
   void doOnceCaliMetaEnd(VariantID vid, size_t tune_idx);
   static void setCaliperMgrVariantTuning(VariantID vid,
                                     std::string tstr,
-                                    const std::string& outdir,
+                                    const std::string& outfile,
                                     const std::string& addToSpotConfig,
-                                    const std::string& addToCaliConfig);
+                                    const std::string& addToCaliConfig,
+                                    const int num_variants_tunings);
 
   static void setCaliperMgrStart(VariantID vid, std::string tstr) { mgr[vid][tstr].start(); }
   static void setCaliperMgrStop(VariantID vid, std::string tstr) { mgr[vid][tstr].stop(); }
@@ -528,6 +606,7 @@ protected:
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
+  int hid;
 #endif
 
 private:
@@ -547,6 +626,8 @@ private:
   Index_type actual_prob_size;
 
   bool uses_feature[NumFeatures];
+
+  Complexity complexity;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
 
@@ -582,6 +663,7 @@ private:
   cali_id_t Flops_Rep_attr;
   cali_id_t BlockSize_attr;
   std::map<std::string, cali_id_t> Feature_attrs;
+  cali_id_t Complexity_attr;
 
 
   // we need a Caliper Manager object per variant

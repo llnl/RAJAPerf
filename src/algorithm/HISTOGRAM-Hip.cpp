@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -29,7 +29,7 @@ namespace rajaperf
 namespace algorithm
 {
 
-constexpr Index_type warp_size = 64;
+constexpr Index_type warp_size = RAJA_HIP_WAVESIZE;
 
 template < Index_type block_size >
 __launch_bounds__(block_size)

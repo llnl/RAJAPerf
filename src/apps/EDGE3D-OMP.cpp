@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -58,8 +58,6 @@ void EDGE3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-        auto edge3d_lam = [=](Index_type i) { EDGE3D_BODY; };
-
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           edge3d_lam(i);
@@ -73,10 +71,12 @@ void EDGE3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
     case RAJA_OpenMP : {
 
+      auto res{getHostResource()};
+
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-        RAJA::forall<RAJA::omp_parallel_for_exec>(
+        RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), edge3d_lam);
 
       }
@@ -86,7 +86,7 @@ void EDGE3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     }
 
     default : {
-      getCout() << "\n  EDGE3D : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n  EDGE3D : Unknown OpenMP variant id = " << vid << std::endl;
     }
 
   }

@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-24, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/LICENSE file for details.
 //
@@ -114,9 +114,9 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantDirect(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          omp_target_memcpy(send_buffers[l], pack_buffers[l],
+                            len*num_vars*sizeof(Real_type),
+                            0, 0, did, hid);
         }
       }
 
@@ -128,9 +128,9 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantDirect(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          omp_target_memcpy(unpack_buffers[l], recv_buffers[l],
+                            len*num_vars*sizeof(Real_type),
+                            0, 0, hid, did);
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -176,6 +176,8 @@ template < typename dispatch_helper >
 void HALO_PACKING_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
+
+  auto res{getOmpTargetResource()};
 
   HALO_PACKING_FUSED_DATA_SETUP;
 
@@ -233,13 +235,11 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
         }
       }
       workgroup group_pack = pool_pack.instantiate();
-      worksite site_pack = group_pack.run();
+      worksite site_pack = group_pack.run(res);
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
         }
       }
 
@@ -248,9 +248,7 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -260,7 +258,7 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
         }
       }
       workgroup group_unpack = pool_unpack.instantiate();
-      worksite site_unpack = group_unpack.run();
+      worksite site_unpack = group_unpack.run(res);
 
     }
     stopTimer();
