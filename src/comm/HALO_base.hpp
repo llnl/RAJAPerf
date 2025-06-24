@@ -85,7 +85,8 @@ public:
   ~HALO_base();
 
   void setUp_base(const int my_mpi_rank, const int* mpi_dims,
-             VariantID vid, size_t tune_idx);
+                  const Index_type num_vars,
+                  VariantID vid, size_t tune_idx);
   void tearDown_base(VariantID vid, size_t tune_idx);
 
   struct Packer {
@@ -139,10 +140,14 @@ protected:
   std::vector<int> m_send_tags;
   std::vector<Int_ptr> m_pack_index_lists;
   std::vector<Index_type > m_pack_index_list_lengths;
+  std::vector<Real_ptr> m_pack_buffers;
+  std::vector<Real_ptr> m_send_buffers;
 
   std::vector<int> m_recv_tags;
   std::vector<Int_ptr> m_unpack_index_lists;
   std::vector<Index_type > m_unpack_index_list_lengths;
+  std::vector<Real_ptr> m_unpack_buffers;
+  std::vector<Real_ptr> m_recv_buffers;
 
   Extent make_boundary_extent(
     const message_type msg_type,
@@ -166,6 +171,20 @@ protected:
   void destroy_lists(
       std::vector<Int_ptr>& pack_index_lists,
       std::vector<Int_ptr>& unpack_index_lists,
+      const Index_type num_neighbors,
+      VariantID vid);
+
+  void create_buffers(
+      std::vector<Index_type> const& index_list_lengths,
+      std::vector<Real_ptr>& our_buffers,
+      std::vector<Real_ptr>& mpi_buffers,
+      const Index_type num_neighbors,
+      const Index_type num_vars,
+      VariantID vid);
+
+  void destroy_buffers(
+      std::vector<Real_ptr>& our_buffers,
+      std::vector<Real_ptr>& mpi_buffers,
       const Index_type num_neighbors,
       VariantID vid);
 };
