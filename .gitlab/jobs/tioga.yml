@@ -27,17 +27,17 @@
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
 
-cce_17_0_1:
+cce_19_0_0:
   variables:
-    SPEC: "~shared +openmp %cce@=17.0.1 ^blt@develop"
+    SPEC: "~shared +openmp %cce@=19.0.0 ^blt@develop"
   extends: .job_on_tioga
 
-rocmcc_6_3_0_hip_openmp:
+rocmcc_6_4_1_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.3.0 ^hip@6.3.0 ^blt@develop"
+    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
   extends: .job_on_tioga
 
-rocmcc_6_3_0_hip_openmp_mpi:
+rocmcc_6_4_1_hip_openmp_mpi:
   variables:
-    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %rocmcc@=6.3.0 ^hip@6.3.0 ^blt@develop"
+    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
   extends: .job_on_tioga
