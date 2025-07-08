@@ -36,6 +36,7 @@ DAXPY_ATOMIC::DAXPY_ATOMIC(const RunParams& params)
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
+  setUsesFeature(Atomic);
 
   setVariantDefined( Base_Seq );
   setVariantDefined( Lambda_Seq );
