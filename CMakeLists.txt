@@ -19,10 +19,13 @@ option(ENABLE_KOKKOS "Include Kokkos implementations of the kernels in the RAJA 
 
 if (ENABLE_KOKKOS OR RAJA_ENABLE_SYCL)
   set(CMAKE_CXX_STANDARD 17)
-  set(BLT_CXX_STD c++17)
+  set(BLT_CXX_STD c++17 CACHE STRING "C++ standard" FORCE)
 else()
-  set(CMAKE_CXX_STANDARD 14)
-  set(BLT_CXX_STD c++14)
+  # Only set if not already in cache
+  if(NOT DEFINED CACHE{BLT_CXX_STD})
+    set(CMAKE_CXX_STANDARD 14)
+    set(BLT_CXX_STD c++14 CACHE STRING "C++ standard" FORCE)
+  endif()
 endif()
 
 include(blt/SetupBLT.cmake)
