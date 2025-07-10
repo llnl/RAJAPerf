@@ -574,36 +574,29 @@ void KernelBase::print(std::ostream& os) const
 void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
 {
   if(doCaliMetaOnce[vid].at(tune_idx)) {
-    // attributes are class variables initialized in ctor
-    int index_type_size = sizeof(Index_type);
+    // Set values for Index_type.
+    // Some of these may overflow if using "cali_set_int"
+    auto cali_set_helper = [](cali_id_t const& attr, Index_type val) {
+      cali_set(attr, &val, sizeof(Index_type));
+    };
+    cali_set_helper(ProblemSize_attr, getActualProblemSize());
+    cali_set_helper(Reps_attr, getRunReps());
+    cali_set_helper(Iters_Rep_attr, getItsPerRep());
+    cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
+    cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
+    cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
+    cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
+    cali_set_helper(BlockSize_attr, getBlockSize());
 
-    Index_type problem_size = getActualProblemSize();
-    Index_type reps = getRunReps();
-    Index_type iters_rep = getItsPerRep();
-    Index_type kernels_rep = getKernelsPerRep();
-    Index_type bytes_rep = getBytesPerRep();
-    Index_type bytes_read_per_rep = getBytesReadPerRep();
-    Index_type bytes_written_per_rep = getBytesWrittenPerRep();
-    Index_type bytes_atomic_modify_written_per_rep = getBytesAtomicModifyWrittenPerRep();
-    Index_type flops_rep = getFLOPsPerRep();
-    Index_type block_size = getBlockSize();
-
-    cali_set(ProblemSize_attr, &problem_size, index_type_size);
-    cali_set(Reps_attr, &reps, index_type_size);
-    cali_set(Iters_Rep_attr, &iters_rep, index_type_size);
-    cali_set(Kernels_Rep_attr, &kernels_rep, index_type_size);
-    cali_set(Bytes_Rep_attr, &bytes_rep, index_type_size);
-    cali_set(Bytes_Read_Rep_attr, &bytes_read_per_rep, index_type_size);
-    cali_set(Bytes_Written_Rep_attr, &bytes_written_per_rep, index_type_size);
-    cali_set(Bytes_AtomicModifyWritten_Rep_attr, &bytes_atomic_modify_written_per_rep, index_type_size);
-    cali_set(Flops_Rep_attr, &flops_rep, index_type_size);
-    cali_set(BlockSize_attr, &block_size, index_type_size);
-
+    // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
         FeatureID fid = static_cast<FeatureID>(i);
         std::string feature = getFeatureName(fid);
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
+
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }
