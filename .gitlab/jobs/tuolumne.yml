@@ -32,12 +32,6 @@ cce_19_0_0:
     SPEC: "~shared +openmp %cce@=19.0.0 ^blt@develop"
   extends: .job_on_tuolumne
 
-rocmcc_6_4_1_hip_openmp_caliper:
-  variables:
-    CALI_CONFIG: "event-trace"
-    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
-  extends: .job_on_tuolumne
-
 rocmcc_6_4_1_hip_openmp:
   variables:
     SPEC: "~shared +rocm +openmp amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"

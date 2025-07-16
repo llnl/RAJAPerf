@@ -1,0 +1,20 @@
+##############################################################################
+# Copyright (c) 2025, Lawrence Livermore National Security, LLC
+# and RAJA Performance Suite project contributors.
+# See the RAJAPerf/LICENSE file for details.
+#
+# SPDX-License-Identifier: (BSD-3-Clause)
+##############################################################################
+
+# TODO: Should I run with +omptask ?
+clang_14_0_6_caliper:
+  variables:
+    CALI_CONFIG: "event-trace"
+    SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
+  extends: .perf_on_dane
+
+rocmcc_6_4_1_hip_openmp_caliper:
+  variables:
+    CALI_CONFIG: "event-trace"
+    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+  extends: .perf_on_tuolumne
