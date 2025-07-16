@@ -47,3 +47,10 @@ oneapi_2023_2_1_mpi:
   variables:
     SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ^mvapich2 ^blt@develop"
   extends: .job_on_dane
+
+# TODO: Should I run with +omptask ?
+clang_14_0_6_caliper:
+  variables:
+    CALI_CONFIG: "event-trace"
+    SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
+  extends: .job_on_dane
