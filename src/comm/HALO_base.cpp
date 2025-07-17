@@ -357,7 +357,7 @@ void HALO_base::create_buffers(std::vector<Index_type> const& index_list_lengths
 
 void HALO_base::destroy_buffers(std::vector<Real_ptr>& our_buffers,
                                 std::vector<Real_ptr>& mpi_buffers,
-                                const Index_type num_neighbors,
+                                const Index_type RAJA_UNUSED_ARG(num_neighbors),
                                 VariantID vid)
 {
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
