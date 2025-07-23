@@ -29,6 +29,7 @@ use_dev_shm=${USE_DEV_SHM:-true}
 spack_debug=${SPACK_DEBUG:-false}
 debug_mode=${DEBUG_MODE:-false}
 push_to_registry=${PUSH_TO_REGISTRY:-true}
+perf_artifact_dir=${PERF_ARTIFACT_DIR:-""}
 
 raja_version=${UPDATE_RAJA:-""}
 sys_type=${SYS_TYPE:-""}
@@ -258,7 +259,6 @@ fi
 # Test
 if [[ "${option}" != "--build-only" ]] && grep -q -i "ENABLE_TESTS.*ON" ${hostconfig_path}
 then
-
     if [[ ! -d ${build_dir} ]]
     then
         echo "[Error]: Build directory not found : ${build_dir}" && exit 1
@@ -290,15 +290,15 @@ fi
 
 # Export performance data
 # This is CI specific, see RADIUSS Shared CI performance pipeline.
-if [[ "${option}" != "--build-only" && -d "${PERF_ARTIFACT_DIR}" ]]
+if [[ "${option}" != "--build-only" && -d "${perf_artifact_dir}" ]]
 then
     timed_message "Exporting performance data"
     if [[ -d "${build_dir}/bin" ]]
     then
-        cp ${build_dir}/bin/*.cali ${PERF_ARTIFACT_DIR}
-        cp ${build_dir}/bin/*.csv ${PERF_ARTIFACT_DIR}
+        cp ${build_dir}/bin/*.cali ${perf_artifact_dir}
+        cp ${build_dir}/bin/*.csv ${perf_artifact_dir}
     else
-        echo "[Warning]: No bin directory found in build directory."
+        echo "[Warning]: No bin directory found in build directory." && exit 1
     fi
 fi
 
