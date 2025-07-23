@@ -288,6 +288,20 @@ then
     timed_message "RAJA Perf Suite tests completed"
 fi
 
+# Export performance data
+# This is CI specific, see RADIUSS Shared CI performance pipeline.
+if [[ "${option}" != "--build-only" && -d "${PERF_ARTIFACT_DIR}" ]]
+then
+    timed_message "Exporting performance data"
+    if [[ -d "${build_dir}/bin" ]]
+    then
+        cp ${build_dir}/bin/*.cali ${PERF_ARTIFACT_DIR}
+        cp ${build_dir}/bin/*.csv ${PERF_ARTIFACT_DIR}
+    else
+        echo "[Warning]: No bin directory found in build directory."
+    fi
+fi
+
 timed_message "Cleaning up"
 make clean
 
