@@ -55,43 +55,43 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   // Init Caliper column metadata attributes
   // Aggregatable attributes need to be initialized before manager.start()
-  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_DOUBLE,
+  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_DOUBLE,
+  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_INT,
                                     CALI_ATTR_ASVALUE |
                                     CALI_ATTR_AGGREGATABLE |
                                     CALI_ATTR_SKIP_EVENTS);
-  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_DOUBLE,
+  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_DOUBLE,
+  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_INT,
                                               CALI_ATTR_ASVALUE |
                                               CALI_ATTR_AGGREGATABLE |
                                               CALI_ATTR_SKIP_EVENTS);
-  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_INT,
                                                  CALI_ATTR_ASVALUE |
                                                  CALI_ATTR_AGGREGATABLE |
                                                  CALI_ATTR_SKIP_EVENTS);
-  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_INT,
                                                              CALI_ATTR_ASVALUE |
                                                              CALI_ATTR_AGGREGATABLE |
                                                              CALI_ATTR_SKIP_EVENTS);
-  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_DOUBLE,
+  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_DOUBLE,
+  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
@@ -574,22 +574,29 @@ void KernelBase::print(std::ostream& os) const
 void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
 {
   if(doCaliMetaOnce[vid].at(tune_idx)) {
-    // attributes are class variables initialized in ctor
-    cali_set_double(ProblemSize_attr,(double)getActualProblemSize());
-    cali_set_double(Reps_attr,(double)getRunReps());
-    cali_set_double(Iters_Rep_attr,(double)getItsPerRep());
-    cali_set_double(Kernels_Rep_attr,(double)getKernelsPerRep());
-    cali_set_double(Bytes_Rep_attr,(double)getBytesPerRep());
-    cali_set_double(Bytes_Read_Rep_attr,(double)getBytesReadPerRep());
-    cali_set_double(Bytes_Written_Rep_attr,(double)getBytesWrittenPerRep());
-    cali_set_double(Bytes_AtomicModifyWritten_Rep_attr,(double)getBytesAtomicModifyWrittenPerRep());
-    cali_set_double(Flops_Rep_attr,(double)getFLOPsPerRep());
-    cali_set_double(BlockSize_attr, getBlockSize());
+    // Set values for Index_type.
+    // Some of these may overflow if using "cali_set_int"
+    auto cali_set_helper = [](cali_id_t const& attr, Index_type val) {
+      cali_set(attr, &val, sizeof(Index_type));
+    };
+    cali_set_helper(ProblemSize_attr, getActualProblemSize());
+    cali_set_helper(Reps_attr, getRunReps());
+    cali_set_helper(Iters_Rep_attr, getItsPerRep());
+    cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
+    cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
+    cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
+    cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
+    cali_set_helper(BlockSize_attr, getBlockSize());
+
+    // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
         FeatureID fid = static_cast<FeatureID>(i);
         std::string feature = getFeatureName(fid);
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
+
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }
