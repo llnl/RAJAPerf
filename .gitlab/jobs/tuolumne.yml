@@ -7,7 +7,7 @@
 #############################################################################
 
 # Override reproducer section to define project specific variables.
-.tioga_reproducer_vars:
+.tuolumne_reproducer_vars:
   script:
     - !reference [.reproducer_vars, script]
 
@@ -30,20 +30,20 @@
 cce_19_0_0:
   variables:
     SPEC: "~shared +openmp %cce@=19.0.0 ^blt@develop"
-  extends: .job_on_tioga
+  extends: .job_on_tuolumne
 
 rocmcc_6_4_1_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+    SPEC: "~shared +rocm +openmp amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
-  extends: .job_on_tioga
+  extends: .job_on_tuolumne
 
 rocmcc_6_4_1_hip_openmp_mpi:
   variables:
-    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
-  extends: .job_on_tioga
+  extends: .job_on_tuolumne

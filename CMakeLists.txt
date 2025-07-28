@@ -15,17 +15,60 @@ else()
   cmake_minimum_required(VERSION 3.20)
 endif()
 
-option(ENABLE_KOKKOS "Include Kokkos implementations of the kernels in the RAJA Perfsuite" Off)
+# Detect C++ standard and add appropriate flag _before_ loading BLT
+set(COMPILERS_KNOWN_TO_CMAKE33 AppleClang Clang GNU MSVC)
 
-if (ENABLE_KOKKOS OR RAJA_ENABLE_SYCL)
-  set(CMAKE_CXX_STANDARD 17)
-  set(BLT_CXX_STD c++17)
-else()
-  set(CMAKE_CXX_STANDARD 14)
-  set(BLT_CXX_STD c++14)
+include(CheckCXXCompilerFlag)
+if(NOT DEFINED BLT_CXX_STD)
+  if("cxx_std_20" IN_LIST CMAKE_CXX_KNOWN_FEATURES)
+    set(BLT_CXX_STD c++20 CACHE STRING "Version of C++ standard")
+    message("Using C++ standard: ${BLT_CXX_STD}")
+  elseif("cxx_std_17" IN_LIST CMAKE_CXX_KNOWN_FEATURES)
+    set(BLT_CXX_STD c++17 CACHE STRING "Version of C++ standard")
+    message("Using C++ standard: ${BLT_CXX_STD}")
+  elseif("${CMAKE_CXX_COMPILER_ID}" IN_LIST COMPILERS_KNOWN_TO_CMAKE33)
+    set(BLT_CXX_STD c++17 CACHE STRING "Version of C++ standard")
+    message("Using C++ standard: ${BLT_CXX_STD}")
+  else() #cmake has no idea what to do, do it ourselves...
+    set(flag_var "c++17")
+    CHECK_CXX_COMPILER_FLAG("-std=${flag_var}" COMPILER_SUPPORTS_${flag_var})
+    if(COMPILER_SUPPORTS_${flag_var})
+      set(BLT_CXX_STD ${flag_var} CACHE STRING "Version of C++ standard")
+      message("Using C++ standard: ${BLT_CXX_STD}")
+    endif()
+    unset(flag_var)
+  endif()
+else() #check BLT_CXX_STD is high enough by disallowing the only invalid option
+  if(("${BLT_CXX_STD}" STREQUAL "c++98") OR
+     ("${BLT_CXX_STD}" STREQUAL "c++11") OR
+     ("${BLT_CXX_STD}" STREQUAL "c++14"))
+    message(FATAL_ERROR "RAJA requires minimum C++ standard of c++17")
+  endif()
+endif(NOT DEFINED BLT_CXX_STD)
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if (NOT BLT_LOADED)
+  if (DEFINED BLT_SOURCE_DIR)
+    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
+      message(FATAL_ERROR "Given BLT_SOURCE_DIR does not contain SetupBLT.cmake")
+    endif()
+  else ()
+    set (BLT_SOURCE_DIR ${PROJECT_SOURCE_DIR}/blt CACHE PATH "")
+
+    if (NOT EXISTS ${BLT_SOURCE_DIR}/SetupBLT.cmake)
+      message(FATAL_ERROR "\
+      The BLT submodule is not present. \
+      If in git repository run the following two commands:\n \
+      git submodule init\n \
+      git submodule update")
+    endif ()
+  endif ()
+
+  include(${BLT_SOURCE_DIR}/SetupBLT.cmake)
 endif()
 
-include(blt/SetupBLT.cmake)
+option(ENABLE_KOKKOS "Include Kokkos implementations of the kernels in the RAJA Perfsuite" Off)
 
 #
 # Define RAJA PERFSUITE settings...
