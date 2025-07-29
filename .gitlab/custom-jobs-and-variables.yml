@@ -89,7 +89,7 @@ variables:
     paths:
       - ./*.cmake
 
-.perf_custom:
+.custom_perf:
   variables:
     CALI_CONFIG: "event-trace"
 
