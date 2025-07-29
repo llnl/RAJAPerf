@@ -16,3 +16,14 @@ rocmcc_6_4_1_hip_openmp_caliper:
   variables:
     SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
   extends: .perf_on_tuolumne
+
+process_results:
+  extends: .process_results
+  script:
+    - ls -l ${PERF_ARTIFACTS_DIR}
+
+report_results:
+  extends: .report_results
+  script:
+    - echo "No results to report, this is a demo pipeline."
+  
