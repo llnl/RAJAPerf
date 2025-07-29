@@ -21,9 +21,13 @@ process_results:
   extends: .process_results
   script:
     - ls -l ${PERF_ARTIFACTS_DIR}
+  dependencies:
+    - clang_14_0_6_caliper
+    - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
   extends: .report_results
   script:
     - echo "No results to report, this is a demo pipeline."
-  
+  dependencies:
+    - process_results
