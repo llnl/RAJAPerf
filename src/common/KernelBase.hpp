@@ -108,7 +108,7 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setComplexity(Complexity ac) { complexity = ac; }
-  void setLoops(Index_type nloops) { num_nested_loops = nloops; }
+  void setNestedLoops(Index_type nloops) { num_nested_loops = nloops; }
   void setArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -167,7 +167,7 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   Complexity getComplexity() const { return complexity; };
-  Index_type getLoops() const { return num_nested_loops; };
+  Index_type getNestedLoops() const { return num_nested_loops; };
   Index_type getArrayDimensions() const { return array_dimension; };
 
   Index_type getTargetProblemSize() const;

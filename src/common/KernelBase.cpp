@@ -599,7 +599,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
-    cali_set_helper(Loops_attr, getLoops());
+    cali_set_helper(Loops_attr, getNestedLoops());
     cali_set_helper(ArrayDimensions_attr, getArrayDimensions());
 
     // Feature values will be either (0, 1)
