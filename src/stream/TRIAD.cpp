@@ -41,6 +41,7 @@ TRIAD::TRIAD(const RunParams& params)
 
   setNestedLoops(1);
   setArrayDimensions(1);
+  setNumArrays(3);
 
   setUsesFeature( Forall );
 

@@ -110,6 +110,7 @@ public:
   void setComplexity(Complexity ac) { complexity = ac; }
   void setNestedLoops(Index_type nloops) { num_nested_loops = nloops; }
   void setArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
+  void setNumArrays(Index_type narr) { num_arrays = narr; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -169,6 +170,7 @@ public:
   Complexity getComplexity() const { return complexity; };
   Index_type getNestedLoops() const { return num_nested_loops; };
   Index_type getArrayDimensions() const { return array_dimension; };
+  Index_type getNumArrays() const { return num_arrays; };
 
   Index_type getTargetProblemSize() const;
   Index_type getRunReps() const;
@@ -635,6 +637,7 @@ private:
 
   Index_type num_nested_loops;
   Index_type array_dimension;
+  Index_type num_arrays;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
 
@@ -673,6 +676,7 @@ private:
   cali_id_t Complexity_attr;
   cali_id_t Loops_attr;
   cali_id_t ArrayDimensions_attr;
+  cali_id_t NumArrays_attr;
 
 
   // we need a Caliper Manager object per variant

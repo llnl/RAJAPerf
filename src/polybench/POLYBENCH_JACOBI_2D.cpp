@@ -52,6 +52,7 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
 
   setNestedLoops(2);
   setArrayDimensions(2);
+  setNumArrays(2);
 
   setUsesFeature(Kernel);
 
