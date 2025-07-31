@@ -105,6 +105,14 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   }
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
                                            CALI_ATTR_SKIP_EVENTS);
+  Loops_attr = cali_create_attribute("NestedLoops", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
+                                           CALI_ATTR_SKIP_EVENTS);
+  ArrayDimensions_attr = cali_create_attribute("ArrayDimensions", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
+                                           CALI_ATTR_SKIP_EVENTS);
 #endif
 }
 
@@ -512,6 +520,8 @@ void KernelBase::print(std::ostream& os) const
                      << " : " << uses_feature[j] << std::endl;
   }
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
+  os << "\t\t\t number_nested_loops = " << num_nested_loops << std::endl;
+  os << "\t\t\t array_dimensions = " << array_dimension << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
@@ -589,6 +599,8 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
+    cali_set_helper(Loops_attr, getLoops());
+    cali_set_helper(ArrayDimensions_attr, getArrayDimensions());
 
     // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
@@ -650,6 +662,8 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(max#View)", "as": "FeatureView" },
           { "expr": "any(max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(max#NestedLoops)", "as": "NestedLoops" },
+          { "expr": "any(max#ArrayDimensions)", "as": "ArrayDimensions" },
         ],
         "group by": ["Complexity"],
       },
@@ -677,6 +691,8 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(any#max#View)", "as": "FeatureView" },
           { "expr": "any(any#max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(any#max#NestedLoops)", "as": "NestedLoops" },
+          { "expr": "any(any#max#ArrayDimensions)", "as": "ArrayDimensions" },
         ],
         "group by": ["Complexity"],
       }

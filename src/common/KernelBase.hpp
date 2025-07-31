@@ -108,6 +108,8 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setComplexity(Complexity ac) { complexity = ac; }
+  void setLoops(Index_type nloops) { num_nested_loops = nloops; }
+  void setArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -165,6 +167,8 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   Complexity getComplexity() const { return complexity; };
+  Index_type getLoops() const { return num_nested_loops; };
+  Index_type getArrayDimensions() const { return array_dimension; };
 
   Index_type getTargetProblemSize() const;
   Index_type getRunReps() const;
@@ -629,6 +633,9 @@ private:
 
   Complexity complexity;
 
+  Index_type num_nested_loops;
+  Index_type array_dimension;
+
   std::vector<std::string> variant_tuning_names[NumVariants];
 
   //
@@ -664,6 +671,8 @@ private:
   cali_id_t BlockSize_attr;
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t Complexity_attr;
+  cali_id_t Loops_attr;
+  cali_id_t ArrayDimensions_attr;
 
 
   // we need a Caliper Manager object per variant

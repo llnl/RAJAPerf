@@ -39,6 +39,9 @@ TRIAD::TRIAD(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setLoops(1);
+  setArrayDimensions(1);
+
   setUsesFeature( Forall );
 
   setVariantDefined( Base_Seq );
