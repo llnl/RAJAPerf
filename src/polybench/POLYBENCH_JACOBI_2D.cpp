@@ -50,6 +50,9 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setLoops(2);
+  setArrayDimensions(2);
+
   setUsesFeature(Kernel);
 
   setVariantDefined( Base_Seq );
