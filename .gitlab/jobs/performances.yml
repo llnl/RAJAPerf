@@ -18,7 +18,7 @@ rocmcc_6_4_1_hip_openmp_caliper:
   extends: .perf_on_tuolumne
 
 process_results:
-  extends: .process_results
+  extends: .results_processing
   script:
     - ls -l ${PERF_ARTIFACTS_DIR}
   dependencies:
@@ -26,7 +26,7 @@ process_results:
     - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
-  extends: .report_results
+  extends: .results_reporting
   script:
     - echo "No results to report, this is a demo pipeline."
   dependencies:
