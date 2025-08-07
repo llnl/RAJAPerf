@@ -45,6 +45,10 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setNestedLoops(0);
+  setArrayDimensions(1);
+  setNumArrays(17);
+
   setUsesFeature(Forall);
 
   setVariantDefined( Base_Seq );

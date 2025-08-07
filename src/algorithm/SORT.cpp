@@ -35,6 +35,10 @@ SORT::SORT(const RunParams& params)
 
   setComplexity(Complexity::N_logN);
 
+  setNestedLoops(0);
+  setArrayDimensions(1);
+  setNumArrays(1);
+
   setUsesFeature(Sort);
 
   setVariantDefined( Base_Seq );

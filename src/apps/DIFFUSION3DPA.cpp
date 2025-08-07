@@ -54,6 +54,10 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setNestedLoops(0);
+  setArrayDimensions(2);
+  setNumArrays(2);
+
   setUsesFeature(Launch);
 
   setVariantDefined( Base_Seq );

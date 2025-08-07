@@ -40,6 +40,10 @@ SCAN::SCAN(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setNestedLoops(0);
+  setArrayDimensions(1);
+  setNumArrays(2);
+
   setUsesFeature(Scan);
 
   setVariantDefined( Base_Seq );
