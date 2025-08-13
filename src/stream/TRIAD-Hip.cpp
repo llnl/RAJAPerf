@@ -84,14 +84,19 @@ void TRIAD::runHipVariantImpl(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
+
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-        TRIAD_BODY;
-      });
 
+          for (RepIndex_type extra_rep = 0; extra_rep < extra_kernel_reps; ++extra_rep) {
+            TRIAD_BODY;
+          }
+
+      });
     }
+
     stopTimer();
 
   } else {
