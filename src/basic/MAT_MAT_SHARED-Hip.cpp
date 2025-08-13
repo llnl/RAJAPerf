@@ -86,7 +86,7 @@ void MAT_MAT_SHARED::runHipVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       auto mat_mat_shared_lambda = [=] __device__() {
-
+      for (RepIndex_type extra_rep = 0; extra_rep < extra_kernel_reps; ++extra_rep) {
         auto outer_y = [&](Index_type by) {
           auto outer_x = [&](Index_type bx) {
             MAT_MAT_SHARED_BODY_0(tile_size)
@@ -173,6 +173,7 @@ void MAT_MAT_SHARED::runHipVariantImpl(VariantID vid)
           Index_type by = blockIdx.y;
           if(by < Ny) outer_y(by);
         }
+      }
       };
 
       RPlaunchHipKernel( (lambda_hip<tile_size*tile_size,

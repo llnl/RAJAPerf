@@ -75,6 +75,7 @@ constexpr rajaperf::Index_type TL_SZ = 16;
   Real_ptr A = m_A;                                                            \
   Real_ptr B = m_B;                                                            \
   Real_ptr C = m_C;
+  // constexpr int extra_kernel_reps = 5;
 
 /*
  When doing the device compile pass hipcc/clang will put in the device
