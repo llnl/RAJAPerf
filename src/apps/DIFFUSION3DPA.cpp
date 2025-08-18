@@ -54,9 +54,9 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setMaxLoopDimensions(0);
-  setMaxArrayDimensions(2);
-  setNumArrays(2);
+  setMaxLoopDimensions(4); // Not counting NE outer loop (arrays initialized inside)
+  setMaxArrayDimensions(3);
+  setNumArrays(22);
 
   setUsesFeature(Launch);
 

@@ -40,7 +40,7 @@ SCAN::SCAN(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setMaxLoopDimensions(0);
+  setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(2);
 

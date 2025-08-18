@@ -45,9 +45,9 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
 
   setComplexity(Complexity::N_to_the_three_halves);
 
-  setMaxLoopDimensions(3);
+  setMaxLoopDimensions(5);
   setMaxArrayDimensions(2);
-  setNumArrays(3);
+  setNumArrays(4); // As, Bs, Cs, C
 
   setUsesFeature(Launch);
 

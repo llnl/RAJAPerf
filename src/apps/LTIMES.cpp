@@ -55,6 +55,10 @@ LTIMES::LTIMES(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxLoopDimensions(4);
+  setMaxArrayDimensions(3);
+  setNumArrays(3);
+
   setUsesFeature(Kernel);
   setUsesFeature(Launch);
   setUsesFeature(View);
