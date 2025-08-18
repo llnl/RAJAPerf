@@ -50,7 +50,7 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setMaxLoopDimensions(2);
+  setMaxLoopDimensions(1); // Do not count TSTEPS as it is not a part of the kernel
   setMaxArrayDimensions(1);
   setNumArrays(2);
 
