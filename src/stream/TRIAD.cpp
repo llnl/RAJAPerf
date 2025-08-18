@@ -39,8 +39,8 @@ TRIAD::TRIAD(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setNestedLoops(1);
-  setArrayDimensions(1);
+  setMaxLoopDimensions(1);
+  setMaxArrayDimensions(1);
   setNumArrays(3);
 
   setUsesFeature( Forall );

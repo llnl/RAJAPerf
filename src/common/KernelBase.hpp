@@ -108,8 +108,8 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setComplexity(Complexity ac) { complexity = ac; }
-  void setNestedLoops(Index_type nloops) { num_nested_loops = nloops; }
-  void setArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
+  void setMaxLoopDimensions(Index_type nloops) { num_nested_loops = nloops; }
+  void setMaxArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
   void setNumArrays(Index_type narr) { num_arrays = narr; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -168,8 +168,8 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   Complexity getComplexity() const { return complexity; };
-  Index_type getNestedLoops() const { return num_nested_loops; };
-  Index_type getArrayDimensions() const { return array_dimension; };
+  Index_type getMaxLoopDimensions() const { return num_nested_loops; };
+  Index_type getMaxArrayDimensions() const { return array_dimension; };
   Index_type getNumArrays() const { return num_arrays; };
 
   Index_type getTargetProblemSize() const;
@@ -675,7 +675,7 @@ private:
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t Complexity_attr;
   cali_id_t Loops_attr;
-  cali_id_t ArrayDimensions_attr;
+  cali_id_t MaxArrayDimensions_attr;
   cali_id_t NumArrays_attr;
 
 

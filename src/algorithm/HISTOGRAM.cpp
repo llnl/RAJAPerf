@@ -42,8 +42,8 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setNestedLoops(0);
-  setArrayDimensions(1);
+  setMaxLoopDimensions(0);
+  setMaxArrayDimensions(1);
   setNumArrays(1);
 
   setUsesFeature(Forall);

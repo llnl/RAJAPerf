@@ -50,8 +50,8 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setNestedLoops(1);
-  setArrayDimensions(1);
+  setMaxLoopDimensions(1);
+  setMaxArrayDimensions(1);
   setNumArrays(2);
 
   setUsesFeature(Forall);

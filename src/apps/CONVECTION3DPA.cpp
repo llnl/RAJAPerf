@@ -53,8 +53,8 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setNestedLoops(1);
-  setArrayDimensions(2);
+  setMaxLoopDimensions(1);
+  setMaxArrayDimensions(2);
   setNumArrays(6);
 
   setUsesFeature(Launch);
