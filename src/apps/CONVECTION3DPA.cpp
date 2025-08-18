@@ -53,7 +53,7 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setMaxLoopDimensions(4); // Not counting NE outer loop (arrays initialized inside)
+  setMaxLoopDimensions(5);
   setMaxArrayDimensions(3);
   setNumArrays(6);
 
