@@ -54,6 +54,7 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
   setMaxLoopDimensions(5);
   setMaxArrayDimensions(3);
   setNumArrays(22);

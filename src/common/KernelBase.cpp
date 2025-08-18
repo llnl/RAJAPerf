@@ -105,7 +105,11 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   }
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
                                            CALI_ATTR_SKIP_EVENTS);
-  Loops_attr = cali_create_attribute("MaxLoopDimensions", CALI_TYPE_INT,
+  MaxPerfectLoopDimensions_attr = cali_create_attribute("MaxPerfectLoopDimensions", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
+                                           CALI_ATTR_SKIP_EVENTS);
+  MaxLoopDimensions_attr = cali_create_attribute("MaxLoopDimensions", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
@@ -524,8 +528,9 @@ void KernelBase::print(std::ostream& os) const
                      << " : " << uses_feature[j] << std::endl;
   }
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
-  os << "\t\t\t number_nested_loop_levels = " << num_nested_loops << std::endl;
-  os << "\t\t\t array_dimensions = " << array_dimension << std::endl;
+  os << "\t\t\t number_max_nested_perfect_loop_levels = " << num_nested_perfect_loops << std::endl;
+  os << "\t\t\t number_max_nested_loop_levels = " << num_nested_loops << std::endl;
+  os << "\t\t\t max_array_dimensions = " << array_dimension << std::endl;
   os << "\t\t\t num_arrays = " << num_arrays << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
@@ -604,7 +609,8 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
-    cali_set_helper(Loops_attr, getMaxLoopDimensions());
+    cali_set_helper(MaxPerfectLoopDimensions_attr, getMaxPerfectLoopDimensions());
+    cali_set_helper(MaxLoopDimensions_attr, getMaxLoopDimensions());
     cali_set_helper(MaxArrayDimensions_attr, getMaxArrayDimensions());
     cali_set_helper(NumArrays_attr, getNumArrays());
 
@@ -668,6 +674,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(max#View)", "as": "FeatureView" },
           { "expr": "any(max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
           { "expr": "any(max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
           { "expr": "any(max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
           { "expr": "any(max#NumArrays)", "as": "NumArrays" },
@@ -698,6 +705,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(any#max#View)", "as": "FeatureView" },
           { "expr": "any(any#max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(any#max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
           { "expr": "any(any#max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
           { "expr": "any(any#max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
           { "expr": "any(any#max#NumArrays)", "as": "NumArrays" },
