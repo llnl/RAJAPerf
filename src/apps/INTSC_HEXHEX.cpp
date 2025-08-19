@@ -22,6 +22,62 @@ namespace apps
 {
 
 
+void INTSC_HEXHEX::intsc_hexhex_setup
+    ()
+{
+  // One standard intersection is 8 subzone intersections.
+  long n_intsc = 8L*getDefaultProblemSize() ;
+
+  // coordinates for donor zone
+  double xdzone[8] =
+      { -0.2, -0.1, -0.2, -0.1, -0.2, -0.1, -0.2, -0.1 } ;
+
+  double ydzone[8] =
+      { 0.1, 0.1, 0.2, 0.2, 0.1, 0.1, 0.2, 0.2 } ;
+
+  double zdzone[8] =
+      { -0.8, -0.8, -0.8, -0.8, -0.7, -0.7, -0.7, -0.7 } ;
+
+  double shift=0.01 ;
+  double xtzone[8], ytzone[8], ztzone[8] ;
+  for ( int i=0 ; i<8 ; ++i ) {
+    xtzone[i] = xdzone[i] + shift ;
+    ytzone[i] = ydzone[i] + shift ;
+    ztzone[i] = zdzone[i] + shift ;
+  }
+
+  printf ( "\n\nnumber of standard intersections = %ld\n", n_intsc ) ;
+
+  FILE *f = fopen ( "geomsubz.out", "w" ) ;
+
+  auto wt_out = [=] ( long const *izone1, double const *vv1 ) {
+    if ( fabs(vv1[0]) > 1.0e-20 ) {
+      fprintf ( f,
+                "intsc = %7d   overlay volume = %19.11e\n"
+                "                        x moment =%19.11e\n"
+                "                        y moment =%19.11e\n"
+                "                        z moment =%19.11e\n"
+               , 0, vv1[0], vv1[1], vv1[2], vv1[3] ) ;
+    } } ;
+
+  // Make contiguous arrays
+
+  m_dcoord = new double[24] ;
+  memcpy ( m_dcoord   , xdzone, 8*sizeof(double) ) ;
+  memcpy ( m_dcoord+ 8, ydzone, 8*sizeof(double) ) ;
+  memcpy ( m_dcoord+16, zdzone, 8*sizeof(double) ) ;
+
+  m_tcoord = new double[24] ;
+  memcpy ( m_tcoord   , xtzone, 8*sizeof(double) ) ;
+  memcpy ( m_tcoord+ 8, ytzone, 8*sizeof(double) ) ;
+  memcpy ( m_tcoord+16, ztzone, 8*sizeof(double) ) ;
+
+  m_vv = new double [ 4L * n_intsc * sizeof(double) ] ;
+
+  m_f_geomsubz = f ;
+}
+
+
 INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   : KernelBase(rajaperf::Apps_INTSC_HEXHEX, params)
 {
@@ -79,6 +135,10 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
 {
+  delete[] m_dcoord ;
+  delete[] m_tcoord ;
+  delete[] m_vv ;
+  fclose ( m_f_geomsubz ) ;
 }
 
 void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
