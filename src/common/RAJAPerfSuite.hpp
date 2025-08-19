@@ -149,6 +149,7 @@ enum KernelID {
   Apps_ENERGY,
   Apps_FEMSWEEP,
   Apps_FIR,
+  Apps_INTSC_HEXHEX,
   Apps_LTIMES,
   Apps_LTIMES_NOVIEW,
   Apps_MASS3DEA,
