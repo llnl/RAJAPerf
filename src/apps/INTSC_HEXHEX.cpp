@@ -22,9 +22,10 @@ namespace apps
 {
 
 
-void INTSC_HEXHEX::intsc_hexhex_setup
-    ()
+void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  m_vid = vid ;    // Remember variant to deallocate data.
+
   // One standard intersection is 8 subzone intersections.
   long n_intsc = 8L*getDefaultProblemSize() ;
 
@@ -60,19 +61,63 @@ void INTSC_HEXHEX::intsc_hexhex_setup
                , 0, vv1[0], vv1[1], vv1[2], vv1[3] ) ;
     } } ;
 
-  // Make contiguous arrays
+  Real_ptr dcoord ;   // donor  coordinates [24]
+  Real_ptr tcoord ;   // target coordinates [24]
 
-  m_dcoord = new double[24] ;
-  memcpy ( m_dcoord   , xdzone, 8*sizeof(double) ) ;
-  memcpy ( m_dcoord+ 8, ydzone, 8*sizeof(double) ) ;
-  memcpy ( m_dcoord+16, zdzone, 8*sizeof(double) ) ;
+  // Expanded donor and target coordinates on host
+  Real_ptr ds_h, ts_h ;
 
-  m_tcoord = new double[24] ;
-  memcpy ( m_tcoord   , xtzone, 8*sizeof(double) ) ;
-  memcpy ( m_tcoord+ 8, ytzone, 8*sizeof(double) ) ;
-  memcpy ( m_tcoord+16, ztzone, 8*sizeof(double) ) ;
+  do {
+    using namespace detail ;
 
-  m_vv = new double [ 4L * n_intsc * sizeof(double) ] ;
+    dcoord = (Real_ptr) allocHostData ( 24*sizeof(double), getDataAlignment() );
+    memcpy ( dcoord   , xdzone, 8*sizeof(double) ) ;
+    memcpy ( dcoord+ 8, ydzone, 8*sizeof(double) ) ;
+    memcpy ( dcoord+16, zdzone, 8*sizeof(double) ) ;
+
+    tcoord = (Real_ptr) allocHostData ( 24*sizeof(double), getDataAlignment() );
+    memcpy ( tcoord   , xtzone, 8*sizeof(double) ) ;
+    memcpy ( tcoord+ 8, ytzone, 8*sizeof(double) ) ;
+    memcpy ( tcoord+16, ztzone, 8*sizeof(double) ) ;
+
+    m_vv = (Real_ptr) allocHostData
+        ( 4L*n_intsc*sizeof(double), getDataAlignment() ) ;
+
+    ds_h = (Real_ptr) allocHostData
+        ( 24L*n_intsc*sizeof(double) , getDataAlignment() ) ;
+    ts_h = (Real_ptr) allocHostData
+        ( 24L*n_intsc*sizeof(double) , getDataAlignment() ) ;
+
+  } while ( false ) ;
+
+  //  Repeat the same calculation n_intsc times, expand the
+  //  same donor and target zones.
+  for ( int k=0 ; k < n_intsc ; ++k ) {
+    memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(double) ) ;
+    memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(double) ) ;
+  }
+
+  allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_intsc, vid ) ;
+  allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_intsc, vid ) ;
+
+  do {
+    using namespace detail ;
+    deallocHostData ( ds_h ) ;
+    deallocHostData ( ts_h ) ;
+    deallocHostData ( dcoord ) ;
+    deallocHostData ( tcoord ) ;
+  } while ( false ) ;
+
+  const int block_size = default_gpu_block_size ;
+  m_nthreads = 72L * n_intsc ;
+  m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
+
+  fprintf ( f, "workgroup size                   = %d\n" , block_size );
+  fprintf ( f, "number of workgroups             = %ld\n", m_gsize ) ;
+  fprintf ( f, "number of threads                = %ld\n", m_nthreads ) ;
+
+  // intermediate volumes, moments
+  allocData ( m_vv_int, 8L*m_gsize, vid ) ;
 
   m_f_geomsubz = f ;
 }
@@ -135,16 +180,9 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
 {
-  delete[] m_dcoord ;
-  delete[] m_tcoord ;
-  delete[] m_vv ;
-  fclose ( m_f_geomsubz ) ;
 }
 
-void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
-{
-  //  auto reset_x = allocAndInitDataConstForInit(m_x, m_array_length, Real_type(0.0), vid);
-}
+
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 {
@@ -153,7 +191,13 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  // deallocData(m_x, vid);
+  using namespace detail ;
+  deallocHostData ( m_vv ) ;
+  deallocData ( m_dsubz, vid ) ;
+  deallocData ( m_tsubz, vid ) ;
+  deallocData ( m_vv_int, vid ) ;
+
+  fclose ( m_f_geomsubz ) ;
 }
 
 } // end namespace apps
