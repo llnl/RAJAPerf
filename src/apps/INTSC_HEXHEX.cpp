@@ -26,8 +26,17 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;    // Remember variant to deallocate data.
 
+  //   Run a smaller problem in sequential because it's slow.
+  long factor = 1L ;
+  if ( ( vid == Base_Seq ) or ( vid == Lambda_Seq ) or ( vid == RAJA_Seq ) ) {
+    factor = 8L ;
+  }
+
+  setActualProblemSize( getDefaultProblemSize() / factor );
+
   // One standard intersection is 8 subzone intersections.
-  long n_intsc = 8L*getDefaultProblemSize() ;
+  long n_intsc = getActualProblemSize() ;
+  long n_subz_intsc = 8L * n_intsc ;
 
   // coordinates for donor zone
   double xdzone[8] =
@@ -80,24 +89,24 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     memcpy ( tcoord+16, ztzone, 8*sizeof(double) ) ;
 
     m_vv = (Real_ptr) allocHostData
-        ( 4L*n_intsc*sizeof(double), getDataAlignment() ) ;
+        ( 4L*n_subz_intsc*sizeof(double), getDataAlignment() ) ;
 
     ds_h = (Real_ptr) allocHostData
-        ( 24L*n_intsc*sizeof(double) , getDataAlignment() ) ;
+        ( 24L*n_subz_intsc*sizeof(double) , getDataAlignment() ) ;
     ts_h = (Real_ptr) allocHostData
-        ( 24L*n_intsc*sizeof(double) , getDataAlignment() ) ;
+        ( 24L*n_subz_intsc*sizeof(double) , getDataAlignment() ) ;
 
   } while ( false ) ;
 
-  //  Repeat the same calculation n_intsc times, expand the
+  //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
-  for ( int k=0 ; k < n_intsc ; ++k ) {
+  for ( int k=0 ; k < n_subz_intsc ; ++k ) {
     memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(double) ) ;
     memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(double) ) ;
   }
 
-  allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_intsc, vid ) ;
-  allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_intsc, vid ) ;
+  allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_subz_intsc, vid ) ;
+  allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_subz_intsc, vid ) ;
 
   do {
     using namespace detail ;
@@ -108,7 +117,7 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   } while ( false ) ;
 
   const int block_size = default_gpu_block_size ;
-  m_nthreads = 72L * n_intsc ;
+  m_nthreads = 72L * n_subz_intsc ;
   m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
   fprintf ( f, "workgroup size                   = %d\n" , block_size );
@@ -118,72 +127,83 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   // intermediate volumes, moments
   allocData ( m_vv_int, 8L*m_gsize, vid ) ;
 
-  allocAndInitDataConst ( m_vv_out, 4L*n_intsc, 0.0, vid ) ;
+  allocAndInitDataConst ( m_vv_out, 4L*n_subz_intsc, 0.0, vid ) ;
 
   m_f_geomsubz = f ;
 }
 
 
+//   Number of subzone intersections = 8 * number of standard intersections.
+//
 void INTSC_HEXHEX::check_intsc_volume_moments
     ( FILE* f,
-      long const n_intsc,  // number of standard intersections
+      long const n_subz_intsc,  // number of subzone intersections
       double const *vv )   // computed volumes, moments on the host
 {
-  //   Determine the correct volume and moments.
-  double v0, vx, vy, vz ;
+  int rank = 0;
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif // RAJA_PERFSUITE_ENABLE_MPI
 
-  double xmin = m_xmin, ymin = m_ymin, zmin = m_zmin ;
-  double xmax = m_xmax, ymax = m_ymax, zmax = m_zmax ;
+  // Check on rank 0, other ranks are identical.
+  if ( rank == 0 ) {
 
-  if ( m_shift > 0.0 ) {
-    xmin += m_shift ;   ymin += m_shift ;   zmin += m_shift ;
-  } else {
-    xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
-  }
-  double dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
-  if ( dx <= 0.0 or dy <= 0.0 or dz <= 0.0 ) {
-    v0 = vx = vy = vz = 0.0 ;
-  } else {
-    double xc = 0.5 * ( xmax + xmin ) ;
-    double yc = 0.5 * ( ymax + ymin ) ;
-    double zc = 0.5 * ( zmax + zmin ) ;
+    //   Determine the correct volume and moments.
+    double v0, vx, vy, vz ;
 
-    v0 = dx * dy * dz ;
-    vx = v0 * xc ;
-    vy = v0 * yc ;
-    vz = v0 * zc ;
-  }
+    double xmin = m_xmin, ymin = m_ymin, zmin = m_zmin ;
+    double xmax = m_xmax, ymax = m_ymax, zmax = m_zmax ;
 
-  fprintf ( f, " correct   volume = %19.11e\n"
-            " correct x moment = %19.11e\n"
-            " correct y moment = %19.11e\n"
-            " correct z moment = %19.11e\n", v0, vx, vy, vz ) ;
-
-  // Do the check.
-  double tolsq = 1.0e-24 ;
-  bool correct = true ;
-  for ( long k = 0 ; k < n_intsc ; ++k ) {
-    double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
-    double dxm = vv[ 4*k + 1 ] - vx ;
-    double dym = vv[ 4*k + 2 ] - vy ;
-    double dzm = vv[ 4*k + 3 ] - vz ;
-    if ( ( dv*dv > tolsq * v0*v0 ) or
-         ( dxm*dxm > tolsq * v0*v0 * ( fabs(xmax) + fabs(xmin) ) ) or
-         ( dym*dym > tolsq * v0*v0 * ( fabs(ymax) + fabs(ymin) ) ) or
-         ( dzm*dzm > tolsq * v0*v0 * ( fabs(zmax) + fabs(zmin) ) ) ) {
-      correct = false ;
-      fprintf ( f, "k = %ld    vv = %19.11e\n"
-               "k = %ld    vx = %19.11e\n"
-               "k = %ld    vy = %19.11e\n"
-               "k = %ld    vz = %19.11e\n", k, vv[4*k],
-               k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
-      break ;
+    if ( m_shift > 0.0 ) {
+      xmin += m_shift ;   ymin += m_shift ;   zmin += m_shift ;
+    } else {
+      xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
     }
-  }
-  if ( correct ) {
-    fprintf ( f, "%s", "Volumes and moments are correct.\n" ) ;
-  } else {
-    fprintf ( f, "%s", "Volumes and moments are INCORRECT.\n" ) ;
+    double dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
+    if ( dx <= 0.0 or dy <= 0.0 or dz <= 0.0 ) {
+      v0 = vx = vy = vz = 0.0 ;
+    } else {
+      double xc = 0.5 * ( xmax + xmin ) ;
+      double yc = 0.5 * ( ymax + ymin ) ;
+      double zc = 0.5 * ( zmax + zmin ) ;
+
+      v0 = dx * dy * dz ;
+      vx = v0 * xc ;
+      vy = v0 * yc ;
+      vz = v0 * zc ;
+    }
+
+    fprintf ( f, " correct   volume = %19.11e\n"
+              " correct x moment = %19.11e\n"
+              " correct y moment = %19.11e\n"
+              " correct z moment = %19.11e\n", v0, vx, vy, vz ) ;
+
+    // Do the check.
+    double tolsq = 1.0e-24 ;
+    bool correct = true ;
+    for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
+      double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
+      double dxm = vv[ 4*k + 1 ] - vx ;
+      double dym = vv[ 4*k + 2 ] - vy ;
+      double dzm = vv[ 4*k + 3 ] - vz ;
+      if ( ( dv*dv > tolsq * v0*v0 ) or
+           ( dxm*dxm > tolsq * v0*v0 * ( fabs(xmax) + fabs(xmin) ) ) or
+           ( dym*dym > tolsq * v0*v0 * ( fabs(ymax) + fabs(ymin) ) ) or
+           ( dzm*dzm > tolsq * v0*v0 * ( fabs(zmax) + fabs(zmin) ) ) ) {
+        correct = false ;
+        fprintf ( f, "k = %ld    vv = %19.11e\n"
+                  "k = %ld    vx = %19.11e\n"
+                  "k = %ld    vy = %19.11e\n"
+                  "k = %ld    vz = %19.11e\n", k, vv[4*k],
+                  k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
+        break ;
+      }
+    }
+    if ( correct ) {
+      fprintf ( f, "%s", "Volumes and moments are correct.\n" ) ;
+    } else {
+      fprintf ( f, "%s", "Volumes and moments are INCORRECT.\n" ) ;
+    }
   }
 }
 
@@ -191,13 +211,14 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   : KernelBase(rajaperf::Apps_INTSC_HEXHEX, params)
 {
-  constexpr size_t number_of_intsc = 21*21*21 ;
-  setDefaultProblemSize(number_of_intsc);
+  //  one standard intersection = eight subzone intersections.
+  //  Set number of standard intersections here.
+  //
+  constexpr size_t num_std_intsc = 100*100*100 ;
+  setDefaultProblemSize(num_std_intsc);
   setDefaultReps(1);
 
-  setActualProblemSize( getDefaultProblemSize() );
-
-  setItsPerRep( number_of_intsc );
+  setItsPerRep( num_std_intsc );
   setKernelsPerRep(1);
 
   // touched data size, not actual number of stores and loads
@@ -209,7 +230,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   constexpr size_t flops_per_tri = 700 ;
   constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
-  setFLOPsPerRep(number_of_intsc * flops_per_intsc);
+  setFLOPsPerRep(num_std_intsc * flops_per_intsc);
 
   checksum_scale_factor = 0.001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
@@ -255,13 +276,13 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  long n_intsc = 8L*getDefaultProblemSize() ;
+  long n_subz_intsc = 8L*getActualProblemSize() ;
 
   copyData ( DataSpace::Host, m_vv,
-             getDataSpace(vid), m_vv_out, 4L*n_intsc ) ;
+             getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;
 
   check_intsc_volume_moments
-      ( stdout, n_intsc, m_vv ) ;
+      ( stdout, n_subz_intsc, m_vv ) ;
 
   detail::deallocHostData ( m_vv ) ;
   deallocData ( m_dsubz, vid ) ;

@@ -37,18 +37,6 @@ void INTSC_HEXHEX::intscHexHexSeq
   // Volumes directly to vv_out on the CPU.
   Real_ptr vv_out = m_vv_out + 4L*ipair;
 
-  if ( ipair == 0 ) {
-    printf (  "vv_out = %19.11e %19.11e\n"
-              "         %19.11e %19.11e\n"
-              "ith = %ld    vv = %19.11e %19.11e\n"
-              "ith = %ld    vx = %19.11e %19.11e\n"
-              "ith = %ld    vy = %19.11e %19.11e\n"
-              "ith = %ld    vz = %19.11e %19.11e\n", vv_out[0], vv_out[1],
-              vv_out[2], vv_out[3], ith, vv_hi, vv_lo,
-              ith, vx_hi, vx_lo, ith, vy_hi, vy_lo, ith, vz_hi, vz_lo ) ;
-  }
-
-
   //   Save results for this triangle, for the subzone pair intersection.
   vv_out[0] += vv_hi + vv_lo ;
   vv_out[1] += vx_hi + vx_lo ;
@@ -61,7 +49,7 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type iend = getDefaultProblemSize() * 576 ;
+  const Index_type iend = m_nthreads ;
 
   INTSC_HEXHEX_DATA_SETUP;
 
