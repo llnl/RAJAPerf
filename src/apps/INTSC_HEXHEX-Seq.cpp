@@ -14,23 +14,60 @@
 
 #include <iostream>
 
+
+
 namespace rajaperf
 {
 namespace apps
 {
+
+void INTSC_HEXHEX::intscHexHexSeq
+    ( Index_type i,
+      Index_type nisc_stage )   // is iend, for compatibility with the macro
+{
+  long blksize = default_gpu_block_size ;  // for compatibility with gpu code
+  long ith = i ;
+  long blk = ith / blksize ;   // which "block" for gpu compatibility
+
+  Real_ptr tsubz = m_tsubz ;
+  Real_ptr dsubz = m_dsubz ;
+
+  INTSC_HEXHEX_BODY_SEQ ;
+
+  // Volumes directly to vv_out on the CPU.
+  Real_ptr vv_out = m_vv_out + 4L*ipair;
+
+  if ( ipair == 0 ) {
+    printf (  "vv_out = %19.11e %19.11e\n"
+              "         %19.11e %19.11e\n"
+              "ith = %ld    vv = %19.11e %19.11e\n"
+              "ith = %ld    vx = %19.11e %19.11e\n"
+              "ith = %ld    vy = %19.11e %19.11e\n"
+              "ith = %ld    vz = %19.11e %19.11e\n", vv_out[0], vv_out[1],
+              vv_out[2], vv_out[3], ith, vv_hi, vv_lo,
+              ith, vx_hi, vx_lo, ith, vy_hi, vy_lo, ith, vz_hi, vz_lo ) ;
+  }
+
+
+  //   Save results for this triangle, for the subzone pair intersection.
+  vv_out[0] += vv_hi + vv_lo ;
+  vv_out[1] += vx_hi + vx_lo ;
+  vv_out[2] += vy_hi + vy_lo ;
+  vv_out[3] += vz_hi + vz_lo ;
+}
 
 
 void INTSC_HEXHEX::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type iend = getDefaultProblemSize() ;
+  const Index_type iend = getDefaultProblemSize() * 576 ;
 
   INTSC_HEXHEX_DATA_SETUP;
 
 #if defined(RUN_RAJA_SEQ)
   auto intsc_hexhex_lam = [=](Index_type i) {
-                     INTSC_HEXHEX_BODY;
+                     intscHexHexSeq ( i, iend ) ;
                    };
 #endif
 
@@ -42,7 +79,7 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         for (Index_type i = ibegin ; i < iend ; ++i ) {
-          INTSC_HEXHEX_BODY;
+          intscHexHexSeq ( i, iend ) ;
         }
 
       }
@@ -58,7 +95,7 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         for (Index_type i = ibegin ; i < iend; ++i ) {
-          intsc_hexhex_lam(i);
+          intsc_hexhex_lam( i );
         }
 
       }

@@ -31,20 +31,19 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
   // coordinates for donor zone
   double xdzone[8] =
-      { -0.2, -0.1, -0.2, -0.1, -0.2, -0.1, -0.2, -0.1 } ;
+      { m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax } ;
 
   double ydzone[8] =
-      { 0.1, 0.1, 0.2, 0.2, 0.1, 0.1, 0.2, 0.2 } ;
+      { m_ymin, m_ymin, m_ymax, m_ymax, m_ymin, m_ymin, m_ymax, m_ymax } ;
 
   double zdzone[8] =
-      { -0.8, -0.8, -0.8, -0.8, -0.7, -0.7, -0.7, -0.7 } ;
+      { m_zmin, m_zmin, m_zmin, m_zmin, m_zmax, m_zmax, m_zmax, m_zmax } ;
 
-  double shift=0.01 ;
   double xtzone[8], ytzone[8], ztzone[8] ;
   for ( int i=0 ; i<8 ; ++i ) {
-    xtzone[i] = xdzone[i] + shift ;
-    ytzone[i] = ydzone[i] + shift ;
-    ztzone[i] = zdzone[i] + shift ;
+    xtzone[i] = xdzone[i] + m_shift ;
+    ytzone[i] = ydzone[i] + m_shift ;
+    ztzone[i] = zdzone[i] + m_shift ;
   }
 
   printf ( "\n\nnumber of standard intersections = %ld\n", n_intsc ) ;
@@ -119,16 +118,82 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   // intermediate volumes, moments
   allocData ( m_vv_int, 8L*m_gsize, vid ) ;
 
+  allocAndInitDataConst ( m_vv_out, 4L*n_intsc, 0.0, vid ) ;
+
   m_f_geomsubz = f ;
+}
+
+
+void INTSC_HEXHEX::check_intsc_volume_moments
+    ( FILE* f,
+      long const n_intsc,  // number of standard intersections
+      double const *vv )   // computed volumes, moments on the host
+{
+  //   Determine the correct volume and moments.
+  double v0, vx, vy, vz ;
+
+  double xmin = m_xmin, ymin = m_ymin, zmin = m_zmin ;
+  double xmax = m_xmax, ymax = m_ymax, zmax = m_zmax ;
+
+  if ( m_shift > 0.0 ) {
+    xmin += m_shift ;   ymin += m_shift ;   zmin += m_shift ;
+  } else {
+    xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
+  }
+  double dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
+  if ( dx <= 0.0 or dy <= 0.0 or dz <= 0.0 ) {
+    v0 = vx = vy = vz = 0.0 ;
+  } else {
+    double xc = 0.5 * ( xmax + xmin ) ;
+    double yc = 0.5 * ( ymax + ymin ) ;
+    double zc = 0.5 * ( zmax + zmin ) ;
+
+    v0 = dx * dy * dz ;
+    vx = v0 * xc ;
+    vy = v0 * yc ;
+    vz = v0 * zc ;
+  }
+
+  fprintf ( f, " correct   volume = %19.11e\n"
+            " correct x moment = %19.11e\n"
+            " correct y moment = %19.11e\n"
+            " correct z moment = %19.11e\n", v0, vx, vy, vz ) ;
+
+  // Do the check.
+  double tolsq = 1.0e-24 ;
+  bool correct = true ;
+  for ( long k = 0 ; k < n_intsc ; ++k ) {
+    double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
+    double dxm = vv[ 4*k + 1 ] - vx ;
+    double dym = vv[ 4*k + 2 ] - vy ;
+    double dzm = vv[ 4*k + 3 ] - vz ;
+    if ( ( dv*dv > tolsq * v0*v0 ) or
+         ( dxm*dxm > tolsq * v0*v0 * ( fabs(xmax) + fabs(xmin) ) ) or
+         ( dym*dym > tolsq * v0*v0 * ( fabs(ymax) + fabs(ymin) ) ) or
+         ( dzm*dzm > tolsq * v0*v0 * ( fabs(zmax) + fabs(zmin) ) ) ) {
+      correct = false ;
+      fprintf ( f, "k = %ld    vv = %19.11e\n"
+               "k = %ld    vx = %19.11e\n"
+               "k = %ld    vy = %19.11e\n"
+               "k = %ld    vz = %19.11e\n", k, vv[4*k],
+               k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
+      break ;
+    }
+  }
+  if ( correct ) {
+    fprintf ( f, "%s", "Volumes and moments are correct.\n" ) ;
+  } else {
+    fprintf ( f, "%s", "Volumes and moments are INCORRECT.\n" ) ;
+  }
 }
 
 
 INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   : KernelBase(rajaperf::Apps_INTSC_HEXHEX, params)
 {
-  constexpr size_t number_of_intsc = 100*100*100 ;
+  constexpr size_t number_of_intsc = 21*21*21 ;
   setDefaultProblemSize(number_of_intsc);
-  setDefaultReps(10);
+  setDefaultReps(1);
 
   setActualProblemSize( getDefaultProblemSize() );
 
@@ -142,8 +207,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr size_t flops_per_tri = 700 ;
-  constexpr size_t tri_per_intsc = 576 ;
-  constexpr size_t flops_per_intsc = flops_per_tri * tri_per_intsc ;
+  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
   setFLOPsPerRep(number_of_intsc * flops_per_intsc);
 
@@ -191,11 +255,19 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  using namespace detail ;
-  deallocHostData ( m_vv ) ;
+  long n_intsc = 8L*getDefaultProblemSize() ;
+
+  copyData ( DataSpace::Host, m_vv,
+             getDataSpace(vid), m_vv_out, 4L*n_intsc ) ;
+
+  check_intsc_volume_moments
+      ( stdout, n_intsc, m_vv ) ;
+
+  detail::deallocHostData ( m_vv ) ;
   deallocData ( m_dsubz, vid ) ;
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
+  deallocData ( m_vv_out, vid ) ;
 
   fclose ( m_f_geomsubz ) ;
 }
