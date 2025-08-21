@@ -19,20 +19,51 @@ namespace rajaperf
 namespace apps
 {
 
+void INTSC_HEXHEX::intscHexHexOMP
+    ( Index_type i,
+      Index_type iend )  // number of standard intersections
+{
+  long nisc_stage = iend * m_tri_per_intsc ;
+
+  for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
+
+    long blksize = default_gpu_block_size ;  // for compatibility with gpu code
+    long ith = i * m_tri_per_intsc + j ;    // which triangle contribution
+    long blk = ith / blksize ;   // which "block" for gpu compatibility
+
+    Real_ptr tsubz = m_tsubz ;
+    Real_ptr dsubz = m_dsubz ;
+
+    INTSC_HEXHEX_BODY_SEQ ;
+
+    // Volumes directly to vv_out on the CPU.
+    Real_ptr vv_out = m_vv_out + 4L*ipair;
+
+    //   Save results for this triangle, for the subzone pair intersection.
+    vv_out[0] += vv_hi + vv_lo ;
+    vv_out[1] += vx_hi + vx_lo ;
+    vv_out[2] += vy_hi + vy_lo ;
+    vv_out[3] += vz_hi + vz_lo ;
+  }
+}
+
 
 void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
+  //  We compute each standard intersection within a single thread
+  //  to avoid collisions in vv_out hence only distribute different
+  //  standard intersections among threads, iend is getActualProblemSize.
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = m_domain->fpz;
-  const Index_type iend = m_domain->lpz+1;
+  const Index_type ibegin = 0 ;
+  const Index_type iend = getActualProblemSize() ;
 
   INTSC_HEXHEX_DATA_SETUP;
 
-  auto edge3d_lam =
+  auto intsc_hexhex_lam =
     [=](Index_type i) {
-      INTSC_HEXHEX_BODY;
+      intscHexHexOMP ( i, iend ) ;
     };
 
   switch ( vid ) {
@@ -44,7 +75,7 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
-          INTSC_HEXHEX_BODY;
+          intscHexHexOMP( i, iend ) ;
         }
 
       }
@@ -60,7 +91,7 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
-          edge3d_lam(i);
+          intsc_hexhex_lam(i);
         }
 
       }
@@ -77,7 +108,7 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
-          RAJA::RangeSegment(ibegin, iend), edge3d_lam);
+          RAJA::RangeSegment(ibegin, iend), intsc_hexhex_lam);
 
       }
       stopTimer();

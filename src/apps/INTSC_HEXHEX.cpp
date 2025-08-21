@@ -35,8 +35,8 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   setActualProblemSize( getDefaultProblemSize() / factor );
 
   // One standard intersection is 8 subzone intersections.
-  long n_intsc = getActualProblemSize() ;
-  long n_subz_intsc = 8L * n_intsc ;
+  long n_std_intsc  = getActualProblemSize() ;
+  long n_subz_intsc = 8L * n_std_intsc ;
 
   // coordinates for donor zone
   double xdzone[8] =
@@ -55,19 +55,7 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     ztzone[i] = zdzone[i] + m_shift ;
   }
 
-  printf ( "\n\nnumber of standard intersections = %ld\n", n_intsc ) ;
-
   FILE *f = fopen ( "geomsubz.out", "w" ) ;
-
-  auto wt_out = [=] ( long const *izone1, double const *vv1 ) {
-    if ( fabs(vv1[0]) > 1.0e-20 ) {
-      fprintf ( f,
-                "intsc = %7d   overlay volume = %19.11e\n"
-                "                        x moment =%19.11e\n"
-                "                        y moment =%19.11e\n"
-                "                        z moment =%19.11e\n"
-               , 0, vv1[0], vv1[1], vv1[2], vv1[3] ) ;
-    } } ;
 
   Real_ptr dcoord ;   // donor  coordinates [24]
   Real_ptr tcoord ;   // target coordinates [24]
@@ -147,6 +135,9 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
   // Check on rank 0, other ranks are identical.
   if ( rank == 0 ) {
+
+    long n_std_intsc = getActualProblemSize() ;
+    printf ( "\n\nnumber of standard intersections = %ld\n", n_std_intsc ) ;
 
     //   Determine the correct volume and moments.
     double v0, vx, vy, vz ;
@@ -272,6 +263,8 @@ INTSC_HEXHEX::~INTSC_HEXHEX()
 void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 {
   // checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, m_checksum_scale_factor, vid  );
+  (void)(vid+0) ;
+  (void)(tune_idx+0) ;
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
