@@ -23,11 +23,24 @@ namespace rajaperf
 namespace apps
 {
 
+#define WARPSIZE 32
+
 template < size_t block_size >
 __launch_bounds__(block_size)
-__global__ void intsc_hexhex()
+__global__ void intsc_hexhex
+  ( Real_ptr const dsubz,
+    Real_ptr const tsubz,
+    Size_type  const nisc_stage,
+    Real_ptr vv_int )
 {
-  Index_type i = blockIdx.x * block_size + threadIdx.x;
+  __shared__ double vv_reduce[16] ;
+
+  long blksize = block_size ;        // blocksize = 64  must <= nth_per_isc
+  long blk     = blockIdx.x ;
+  long ith     = blk*blksize + threadIdx.x ;   // which thread with offset
+
+  double *vv_out = (double *) vv_int + 8*blk ;
+
   INTSC_HEXHEX_BODY;
 }
 
@@ -36,8 +49,11 @@ template < size_t block_size >
 void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = 0 ;
-  const Index_type iend = getDefaultProblemSize() ;
+  const Index_type ibegin   = 0 ;
+  const Index_type iend     = m_tri_per_intsc * getActualProblemSize() ;
+
+  const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
+  const Size_type  nisc_stage   = n_subz_intsc ;
 
   auto res{getCudaResource()};
 
@@ -53,7 +69,9 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
 
       RPlaunchCudaKernel( (intsc_hexhex<block_size>),
                           grid_size, block_size,
-                          shmem, res.get_stream() ) ;
+                          shmem, res.get_stream(),
+                          m_dsubz, m_tsubz,
+                          n_subz_intsc, m_vv_int ) ;
 
     }
     stopTimer();
@@ -63,8 +81,16 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      auto intsc_hexhex_lambda = [=] __device__ (Index_type i)
-                                 { INTSC_HEXHEX_BODY; };
+      auto intsc_hexhex_lambda = [=] __device__
+          ( Index_type i )
+         {
+           __shared__ double vv_reduce[16] ;
+
+           long blksize   = blockDim.x ;
+           long blk       = blockIdx.x ;
+           long ith       = blk*blksize + threadIdx.x ;
+           double *vv_out = (double *) vv_int + 8*blk ;
+           INTSC_HEXHEX_BODY; };
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -73,7 +99,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
                                               decltype(intsc_hexhex_lambda)>),
                           grid_size, block_size,
                           shmem, res.get_stream(),
-                          0, iend,
+                          ibegin, iend,
                           intsc_hexhex_lambda );
 
     }
@@ -85,9 +111,17 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-        INTSC_HEXHEX_BODY;
-      });
+        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
+          {
+            __shared__ double vv_reduce[16] ;
+
+            long blksize   = blockDim.x ;
+            long blk       = blockIdx.x ;
+            long ith       = blk*blksize + threadIdx.x ;
+            double *vv_out = (double *) vv_int + 8*blk ;
+            INTSC_HEXHEX_BODY;
+          }
+      ) ;
 
     }
     stopTimer();

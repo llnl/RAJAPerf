@@ -411,7 +411,10 @@ RAJA_INLINE void hex_intsc_subz
 
 
 
-#define  INTSC_HEXHEX_DATA_SETUP
+#define  INTSC_HEXHEX_DATA_SETUP \
+  Real_ptr const dsubz  = m_dsubz ; \
+  Real_ptr const tsubz  = m_tsubz ; \
+  Real_ptr const vv_int = m_vv_int ;
 
 #define INTSC_HEXHEX_BODY_SEQ \
   long const n_dsz_tris = 12 ; \
@@ -444,7 +447,39 @@ RAJA_INLINE void hex_intsc_subz
 
 
 #define INTSC_HEXHEX_BODY \
-  intsc_hexhex_stub
+  INTSC_HEXHEX_BODY_SEQ \
+  \
+  __syncthreads() ; \
+  for ( int k = 1 ; k < WARPSIZE ; k *= 2 ) { \
+    vv_hi += __shfl_xor_sync ( 0xffffffff, vv_hi, k ) ; \
+    vx_hi += __shfl_xor_sync ( 0xffffffff, vx_hi, k ) ; \
+    vy_hi += __shfl_xor_sync ( 0xffffffff, vy_hi, k ) ; \
+    vz_hi += __shfl_xor_sync ( 0xffffffff, vz_hi, k ) ; \
+    vv_lo += __shfl_xor_sync ( 0xffffffff, vv_lo, k ) ; \
+    vx_lo += __shfl_xor_sync ( 0xffffffff, vx_lo, k ) ; \
+    vy_lo += __shfl_xor_sync ( 0xffffffff, vy_lo, k ) ; \
+    vz_lo += __shfl_xor_sync ( 0xffffffff, vz_lo, k ) ; \
+  } \
+  int const nwarps = blksize / WARPSIZE ; \
+  int k = threadIdx.x / WARPSIZE ; \
+  if ( threadIdx.x == k*WARPSIZE ) { \
+    vv_reduce[k+ 0] = vv_lo ; \
+    vv_reduce[k+ 2] = vx_lo ; \
+    vv_reduce[k+ 4] = vy_lo ; \
+    vv_reduce[k+ 6] = vz_lo ; \
+    vv_reduce[k+ 8] = vv_hi ; \
+    vv_reduce[k+10] = vx_hi ; \
+    vv_reduce[k+12] = vy_hi ; \
+    vv_reduce[k+14] = vz_hi ; \
+  } \
+  __syncthreads() ; \
+  if ( threadIdx.x < 8 ) { \
+    for ( int k = 1 ; k < nwarps ; ++k ) { \
+      vv_reduce[ 2*threadIdx.x ] += vv_reduce[ 2*threadIdx.x + 1 ] ; \
+    } \
+    vv_out[threadIdx.x] = vv_reduce[ 2 * threadIdx.x ] ; \
+  }
+
 
 
 #include "common/KernelBase.hpp"
