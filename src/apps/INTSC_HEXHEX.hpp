@@ -414,7 +414,8 @@ RAJA_INLINE void hex_intsc_subz
 #define  INTSC_HEXHEX_DATA_SETUP \
   Real_ptr const dsubz  = m_dsubz ; \
   Real_ptr const tsubz  = m_tsubz ; \
-  Real_ptr const vv_int = m_vv_int ;
+  Real_ptr       vv_int = m_vv_int ; \
+  Real_ptr      vv_pair = m_vv_out ;
 
 #define INTSC_HEXHEX_BODY_SEQ \
   long const n_dsz_tris = 12 ; \
@@ -480,6 +481,26 @@ RAJA_INLINE void hex_intsc_subz
     vv_out[threadIdx.x] = vv_reduce[ 2 * threadIdx.x ] ; \
   }
 
+//  This is not needed on Seq and OMP CPU variants.
+//
+#define FIXUP_VV_BODY \
+  double *vv          = vv_pair + 32*ith ; \
+  double const *vv_in = vv_int  + 72*ith ; \
+  int k=0 ; \
+  if ( 8*ith + k < n_szpairs ) { \
+    vv[4*k+0] = vv_in[8*k+0] + vv_in[8*k+8] ; \
+    vv[4*k+1] = vv_in[8*k+1] + vv_in[8*k+9] ; \
+    vv[4*k+2] = vv_in[8*k+2] + vv_in[8*k+10] ; \
+    vv[4*k+3] = vv_in[8*k+3] + vv_in[8*k+11] ; \
+  } \
+  for ( int k=1 ; k<8 ; ++k ) { \
+    if ( 8*ith + k < n_szpairs ) { \
+      vv[4*k+0] = vv_in[8*k+4] + vv_in[8*k+8] ; \
+      vv[4*k+1] = vv_in[8*k+5] + vv_in[8*k+9] ; \
+      vv[4*k+2] = vv_in[8*k+6] + vv_in[8*k+10] ; \
+      vv[4*k+3] = vv_in[8*k+7] + vv_in[8*k+11] ; \
+    } \
+  }
 
 
 #include "common/KernelBase.hpp"

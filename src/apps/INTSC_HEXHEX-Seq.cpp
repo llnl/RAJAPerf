@@ -51,8 +51,6 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
   const Index_type ibegin = 0 ;
   const Index_type iend = m_nthreads ;
 
-  INTSC_HEXHEX_DATA_SETUP;
-
 #if defined(RUN_RAJA_SEQ)
   auto intsc_hexhex_lam = [=](Index_type i) {
                      intscHexHexSeq ( i, iend ) ;

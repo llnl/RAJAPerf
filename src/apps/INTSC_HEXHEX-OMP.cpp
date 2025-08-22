@@ -59,7 +59,6 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   const Index_type ibegin = 0 ;
   const Index_type iend = getActualProblemSize() ;
 
-  INTSC_HEXHEX_DATA_SETUP;
 
   auto intsc_hexhex_lam =
     [=](Index_type i) {
