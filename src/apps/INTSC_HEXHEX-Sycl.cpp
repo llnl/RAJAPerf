@@ -18,6 +18,9 @@
 
 #include <iostream>
 
+#define WARPSIZE 32
+#define __shfl_xor_sync(mask,val,n) __shfl_xor(val,n)
+
 namespace rajaperf
 {
 namespace apps
@@ -29,7 +32,16 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type iend = getDefaultProblemSize() ;
+  const Index_type iend     = m_tri_per_intsc * getActualProblemSize() ;
+
+  const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
+  const Size_type  nisc_stage   = n_subz_intsc ;
+
+  const Size_type  n_szgrp     = ( n_subz_intsc + 7 ) / 8 ;
+  const size_t     gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, work_group_size) ;
+  const Index_type iend_fixup  = gsize_fixup * work_group_size ;
+
+  const Size_type  n_szpairs   = n_subz_intsc ;
 
   auto res{getSyclResource()};
   auto qu = res.get_queue();
@@ -48,10 +60,22 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
                        [=] (sycl::nd_item<1> item ) {
 
           Index_type i = item.get_global_id(0) + ibegin;
-          if (i < iend) {
-            INTSC_HEXHEX_BODY;
-          }
 
+          long ith     = i ;
+          long blksize = work_group_size ;
+          long blk     = i / blksize ;
+          double *vv_out = (double*) vv_int + 8*blk ;
+          INTSC_HEXHEX_BODY;
+        });
+      });
+
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<1>(gsize_fixup, work_group_size),
+                       [=] (sycl::nd_item<1> item ) {
+
+          Index_type i = item.get_global_id(0) + ibegin;
+          int ith     = i ;
+          FIXUP_VV_BODY ;
         });
       });
 
@@ -65,8 +89,19 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+
+        long ith     = i ;
+        long blksize = work_group_size ;
+        long blk     = i / blksize ;
+        double *vv_out = (double*) vv_int + 8*blk ;
         INTSC_HEXHEX_BODY;
       });
+
+      RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
+        RAJA::RangeSegment(ibegin, iend_fixup), [=] (Index_type i) {
+        int ith     = i ;
+        FIXUP_VV_BODY ;
+        }
 
     }
     stopTimer();
