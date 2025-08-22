@@ -24,33 +24,63 @@ namespace apps
 {
 
   //
-  // Define threads per team for target execution
+  // Define threads per team for target execution (workgroup size)
   //
-  const size_t threads_per_team = 256;
+  const size_t threads_per_team = 64;
+
+
+void INTSC_HEXHEX::intscHexHexOMP_Target
+    ( Index_type i,
+      Index_type iend )  // number of standard intersections
+{
+  long nisc_stage = iend * m_tri_per_intsc ;
+
+  for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
+
+    long blksize = threads_per_team ;
+    long ith = i * m_tri_per_intsc + j ;    // which triangle contribution
+    long blk = ith / blksize ;   // which "block" for gpu compatibility
+
+    Real_ptr tsubz = m_tsubz ;
+    Real_ptr dsubz = m_dsubz ;
+
+    INTSC_HEXHEX_BODY_SEQ ;
+
+    // Volumes directly to vv_out on the CPU.
+    Real_ptr vv_out = m_vv_out + 4L*ipair;
+
+    //   Save results for this triangle, for the subzone pair intersection.
+    vv_out[0] += vv_hi + vv_lo ;
+    vv_out[1] += vx_hi + vx_lo ;
+    vv_out[2] += vy_hi + vy_lo ;
+    vv_out[3] += vz_hi + vz_lo ;
+  }
+}
+
 
 
 void INTSC_HEXHEX::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  printf ( "Entered INTSC_HEXHEX::runOpenMPTargetVariant\n" ) ;
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = m_domain->fpz;
-  const Index_type iend = m_domain->lpz+1;
-
-  INTSC_HEXHEX_DATA_SETUP;
+  const Index_type ibegin   = 0 ;
+  const Index_type iend     = getActualProblemSize() ;
 
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      printf ( "INTSC_HEXHEX : Running Base_OpenMPTarget\n" ) ;
+      printf ( "INTSC_HEXHEX : did=%d\n", did ) ;
 
-      #pragma omp target is_device_ptr(x0,x1,x2,x3,x4,x5,x6,x7, \
-                                       y0,y1,y2,y3,y4,y5,y6,y7, \
-                                       z0,z1,z2,z3,z4,z5,z6,z7, \
-                                       sum) device( did )
-      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+#pragma omp target is_device_ptr          \
+  (m_dsubz,m_tsubz,m_vv_out) \
+  device( did )
+#pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin ; i < iend ; ++i ) {
-        INTSC_HEXHEX_BODY;
+        intscHexHexOMP_Target( i, iend ) ;
       }
-
+      printf ( "INTSC_HEXHEX : Finished Base_OpenMPTarget\n" ) ;
     }
     stopTimer();
 
@@ -63,9 +93,8 @@ void INTSC_HEXHEX::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-        INTSC_HEXHEX_BODY;
+          intscHexHexOMP_Target (i, iend) ;
       });
-
     }
     stopTimer();
 
