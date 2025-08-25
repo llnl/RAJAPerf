@@ -57,6 +57,7 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
   setMaxLoopDimensions(5);
   setMaxArrayDimensions(3);
   setNumArrays(6);
+  setBatchSize(8);
 
   setUsesFeature(Launch);
 

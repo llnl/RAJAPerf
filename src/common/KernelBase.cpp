@@ -121,6 +121,10 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
+  BatchSize_attr = cali_create_attribute("BatchSize", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
+                                           CALI_ATTR_SKIP_EVENTS);
 #endif
 }
 
@@ -532,6 +536,7 @@ void KernelBase::print(std::ostream& os) const
   os << "\t\t\t number_max_nested_loop_levels = " << num_nested_loops << std::endl;
   os << "\t\t\t max_array_dimensions = " << array_dimension << std::endl;
   os << "\t\t\t num_arrays = " << num_arrays << std::endl;
+  os << "\t\t\t batch_size = " << batch_size << std:endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
@@ -613,6 +618,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(MaxLoopDimensions_attr, getMaxLoopDimensions());
     cali_set_helper(MaxArrayDimensions_attr, getMaxArrayDimensions());
     cali_set_helper(NumArrays_attr, getNumArrays());
+    cali_set_helper(BatchSize_attr, getBatchSize());
 
     // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
@@ -678,6 +684,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
           { "expr": "any(max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
           { "expr": "any(max#NumArrays)", "as": "NumArrays" },
+          { "expr": "any(max#BatchSize)", "as": "BatchSize" },
         ],
         "group by": ["Complexity"],
       },
@@ -709,6 +716,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
           { "expr": "any(any#max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
           { "expr": "any(any#max#NumArrays)", "as": "NumArrays" },
+          { "expr": "any(any#max#BatchSize)", "as": "BatchSize" },
         ],
         "group by": ["Complexity"],
       }
