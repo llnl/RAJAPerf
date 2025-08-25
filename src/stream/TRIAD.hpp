@@ -26,7 +26,7 @@
 #define TRIAD_BODY  \
   a[i] = b[i] + alpha * c[i] ;
 
-constexpr int extra_kernel_reps = 5;
+constexpr int extra_kernel_reps = 20;
 
 #include "common/KernelBase.hpp"
 
