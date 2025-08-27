@@ -100,6 +100,9 @@ public:
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 
+  template < size_t block_size, size_t reorder_num >
+  void runHipVariantReorder(VariantID vid);
+
 private:
   static const size_t default_gpu_block_size = 256;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
