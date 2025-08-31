@@ -35,7 +35,7 @@ void FIR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   std::copy(std::begin(coeff_array), std::end(coeff_array), std::begin(coeff));
 
   auto fir_lam = [=](Index_type i) {
-                   FIR_BODY;
+                   FIR_BODY(coeff);
                  };
 
   switch ( vid ) {
@@ -47,7 +47,7 @@ void FIR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-           FIR_BODY;
+           FIR_BODY(coeff);
         }
 
       }

@@ -43,11 +43,11 @@
                                          -1.0, -1.0, 3.0, -1.0, \
                                          -1.0, -1.0, -1.0, 3.0 };
 
-#define FIR_BODY \
+#define FIR_BODY(coeff) \
   Real_type sum = 0.0; \
 \
   for (Index_type j = 0; j < coefflen; ++j ) { \
-    sum += coeff[j]*in[i+j]; \
+    sum += (coeff)[j]*in[i+j]; \
   } \
   out[i] = sum;
 
@@ -85,9 +85,21 @@ public:
   void setSyclTuningDefinitions(VariantID vid);
 
   template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantParam(VariantID vid);
   template < size_t block_size >
-  void runHipVariantImpl(VariantID vid);
+  void runCudaVariantConst(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantShared(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantMemory(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runHipVariantParam(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantConst(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantShared(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runHipVariantMemory(DataSpace dataSpace, VariantID vid);
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 
@@ -99,6 +111,20 @@ private:
   Real_ptr m_out;
 
   Index_type m_coefflen;
+};
+
+struct FIR_Array {
+  Real_type array[FIR_COEFFLEN];
+
+  template < size_t ... Indices >
+  FIR_Array(Real_type (&array_)[FIR_COEFFLEN],
+                      camp::int_seq<size_t, Indices...>)
+    : array{array_[Indices]...}
+  { }
+
+  FIR_Array(Real_type (&array_)[FIR_COEFFLEN])
+    : FIR_Array(array_, camp::make_int_seq_t<size_t, FIR_COEFFLEN>{})
+  { }
 };
 
 } // end namespace apps

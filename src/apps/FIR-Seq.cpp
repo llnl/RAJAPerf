@@ -34,7 +34,7 @@ void FIR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 #if defined(RUN_RAJA_SEQ)
   auto fir_lam = [=](Index_type i) {
-                   FIR_BODY;
+                   FIR_BODY(coeff);
                  };
 #endif
 
@@ -46,7 +46,7 @@ void FIR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
-          FIR_BODY;
+          FIR_BODY(coeff);
         }
 
       }

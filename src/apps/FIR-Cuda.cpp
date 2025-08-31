@@ -22,64 +22,89 @@ namespace rajaperf
 namespace apps
 {
 
-#define USE_CUDA_CONSTANT_MEMORY
-//#undef USE_CUDA_CONSTANT_MEMORY
+__constant__ Real_type coeff_const[FIR_COEFFLEN];
 
-#if defined(USE_CUDA_CONSTANT_MEMORY)
-
-__constant__ Real_type coeff[FIR_COEFFLEN];
-
-#define FIR_DATA_SETUP_CUDA \
-  Real_type *dcoeff_addr; \
-  cudaErrchk( cudaGetSymbolAddress((void**)&dcoeff_addr, coeff) ); \
-  cudaErrchk( cudaMemcpyAsync(dcoeff_addr, coeff_array, FIR_COEFFLEN * sizeof(Real_type), cudaMemcpyHostToDevice, res.get_stream()) );
+#define FIR_DATA_SETUP_CUDA_CONST \
+  Real_type *dcoeff_const_addr; \
+  cudaErrchk( cudaGetSymbolAddress((void**)&dcoeff_const_addr, coeff_const) ); \
+  cudaErrchk( cudaMemcpyAsync(dcoeff_const_addr, &coeff_array[0], \
+                              coefflen * sizeof(Real_type), \
+                              cudaMemcpyHostToDevice, res.get_stream()) );
 
 
-#define FIR_DATA_TEARDOWN_CUDA
+#define FIR_DATA_TEARDOWN_CUDA_CONST
 
-template < size_t block_size >
-__launch_bounds__(block_size)
-__global__ void fir(Real_ptr out, Real_ptr in,
-                    const Index_type coefflen,
-                    Index_type iend)
-{
-   Index_type i = blockIdx.x * block_size + threadIdx.x;
-   if (i < iend) {
-     FIR_BODY;
-   }
-}
 
-#else  // use global memory for coefficients
-
-#define FIR_DATA_SETUP_CUDA \
-  Real_ptr coeff; \
+#define FIR_DATA_SETUP_CUDA_MEMORY(dataSpace) \
+  Real_ptr coeff_memory; \
   \
-  Real_ptr tcoeff = &coeff_array[0]; \
-  allocData(DataSpace::CudaDevice, coeff, FIR_COEFFLEN); \
-  copyData(DataSpace::CudaDevice, coeff, DataSpace::Host, tcoeff, FIR_COEFFLEN);
+  allocData(dataSpace, coeff_memory, coefflen); \
+  copyData(dataSpace, coeff_memory, DataSpace::Host, &coeff_array[0], coefflen);
 
 
-#define FIR_DATA_TEARDOWN_CUDA \
-  deallocData(DataSpace::CudaDevice, coeff);
+#define FIR_DATA_TEARDOWN_CUDA_MEMORY(dataSpace) \
+  deallocData(dataSpace, coeff_memory);
+
 
 template < size_t block_size >
 __launch_bounds__(block_size)
-__global__ void fir(Real_ptr out, Real_ptr in,
-                    Real_ptr coeff,
-                    const Index_type coefflen,
-                    Index_type iend)
+__global__ void fir_param(Real_ptr out, Real_ptr in,
+                          FIR_Array coeff_param,
+                          const Index_type coefflen,
+                          Index_type iend)
 {
    Index_type i = blockIdx.x * block_size + threadIdx.x;
    if (i < iend) {
-     FIR_BODY;
+     FIR_BODY(coeff_param.array);
    }
 }
 
-#endif
+template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void fir_const(Real_ptr out, Real_ptr in,
+                          const Index_type coefflen,
+                          Index_type iend)
+{
+   Index_type i = blockIdx.x * block_size + threadIdx.x;
+   if (i < iend) {
+     FIR_BODY(coeff_const);
+   }
+}
+
+template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void fir_shared(Real_ptr out, Real_ptr in,
+                           Real_ptr coeff_memory,
+                           const Index_type coefflen,
+                           Index_type iend)
+{
+  __shared__ Real_type coeff_shared[FIR_COEFFLEN];
+  for (Index_type l = threadIdx.x; l < coefflen; l += block_size) {
+    coeff_shared[l] = coeff_memory[l];
+  }
+  __syncthreads();
+   Index_type i = blockIdx.x * block_size + threadIdx.x;
+   if (i < iend) {
+     FIR_BODY(coeff_shared);
+   }
+}
+
+template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void fir_memory(Real_ptr out, Real_ptr in,
+                           Real_ptr coeff_memory,
+                           const Index_type coefflen,
+                           Index_type iend)
+{
+   Index_type i = blockIdx.x * block_size + threadIdx.x;
+   if (i < iend) {
+     FIR_BODY(coeff_memory);
+   }
+}
 
 
 template < size_t block_size >
-void FIR::runCudaVariantImpl(VariantID vid)
+void FIR::runCudaVariantParam(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -88,12 +113,11 @@ void FIR::runCudaVariantImpl(VariantID vid)
   auto res{getCudaResource()};
 
   FIR_DATA_SETUP;
+  FIR_COEFF;
 
   if ( vid == Base_CUDA ) {
 
-    FIR_COEFF;
-
-    FIR_DATA_SETUP_CUDA;
+    FIR_Array coeff_param = coeff_array;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
@@ -101,53 +125,242 @@ void FIR::runCudaVariantImpl(VariantID vid)
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
 
-#if defined(USE_CUDA_CONSTANT_MEMORY)
-      RPlaunchCudaKernel( (fir<block_size>),
-                          grid_size, block_size,
-                          shmem, res.get_stream(),
-                          out, in,
-                          coefflen,
-                          iend ); 
-#else
-      RPlaunchCudaKernel( (fir<block_size>),
-                          grid_size, block_size,
-                          shmem, res.get_stream(),
-                          out, in,
-                          coeff,
-                          coefflen,
-                          iend );
-#endif
+      RPlaunchCudaKernel( (fir_param<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coeff_param,
+                         coefflen,
+                         iend );
 
     }
     stopTimer();
 
-    FIR_DATA_TEARDOWN_CUDA;
-
   } else if ( vid == RAJA_CUDA ) {
-
-    FIR_COEFF;
-
-    FIR_DATA_SETUP_CUDA;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
        RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
          RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-         FIR_BODY;
+         FIR_BODY(coeff_array);
        });
 
     }
     stopTimer();
 
-    FIR_DATA_TEARDOWN_CUDA;
-
   } else {
-     getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
+    getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIR, Cuda)
+template < size_t block_size >
+void FIR::runCudaVariantConst(VariantID vid)
+{
+  const Index_type run_reps = getRunReps();
+  const Index_type iend = getActualProblemSize();
+
+  auto res{getCudaResource()};
+
+  FIR_DATA_SETUP;
+  FIR_COEFF;
+  FIR_DATA_SETUP_CUDA_CONST;
+
+  if ( vid == Base_CUDA ) {
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr size_t shmem = 0;
+
+      RPlaunchCudaKernel( (fir_const<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coefflen,
+                         iend );
+
+    }
+    stopTimer();
+
+
+  } else {
+    getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
+  }
+
+  FIR_DATA_TEARDOWN_CUDA_CONST;
+}
+
+template < size_t block_size >
+void FIR::runCudaVariantShared(DataSpace dataSpace, VariantID vid)
+{
+  const Index_type run_reps = getRunReps();
+  const Index_type iend = getActualProblemSize();
+
+  auto res{getCudaResource()};
+
+  FIR_DATA_SETUP;
+  FIR_COEFF;
+  FIR_DATA_SETUP_CUDA_MEMORY(dataSpace);
+
+  if ( vid == Base_CUDA ) {
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr size_t shmem = 0;
+
+      RPlaunchCudaKernel( (fir_shared<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coeff_memory,
+                         coefflen,
+                         iend );
+
+    }
+    stopTimer();
+
+
+  } else {
+    getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
+  }
+
+  FIR_DATA_TEARDOWN_CUDA_MEMORY(dataSpace);
+}
+
+template < size_t block_size >
+void FIR::runCudaVariantMemory(DataSpace dataSpace, VariantID vid)
+{
+  const Index_type run_reps = getRunReps();
+  const Index_type iend = getActualProblemSize();
+
+  auto res{getCudaResource()};
+
+  FIR_DATA_SETUP;
+  FIR_COEFF;
+  FIR_DATA_SETUP_CUDA_MEMORY(dataSpace);
+
+  if ( vid == Base_CUDA ) {
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr size_t shmem = 0;
+
+      RPlaunchCudaKernel( (fir_memory<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coeff_memory,
+                         coefflen,
+                         iend );
+
+    }
+    stopTimer();
+
+  } else {
+    getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
+  }
+
+  FIR_DATA_TEARDOWN_CUDA_MEMORY(dataSpace);
+}
+
+
+void FIR::runCudaVariant(VariantID vid, size_t tune_idx)
+{
+  size_t t = 0;
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      if (tune_idx == t) {
+        setBlockSize(block_size);
+        runCudaVariantParam<block_size>(vid);
+
+      }
+
+      t += 1;
+
+      if (vid == Base_CUDA) {
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantConst<block_size>(vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantShared<block_size>(DataSpace::CudaDevice, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantShared<block_size>(DataSpace::CudaPinned, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantMemory<block_size>(DataSpace::CudaDevice, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantMemory<block_size>(DataSpace::CudaPinned, vid);
+
+        }
+
+        t += 1;
+
+      }
+
+    }
+
+  });
+
+}
+
+void FIR::setCudaTuningDefinitions(VariantID vid)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      addVariantTuningName(vid, "param_"+std::to_string(block_size));
+
+      if (vid == Base_CUDA) {
+        addVariantTuningName(vid, "const_"+std::to_string(block_size));
+        addVariantTuningName(vid, "shared_device_"+std::to_string(block_size));
+        addVariantTuningName(vid, "shared_pinned_"+std::to_string(block_size));
+        addVariantTuningName(vid, "device_"+std::to_string(block_size));
+        addVariantTuningName(vid, "pinned_"+std::to_string(block_size));
+      }
+
+    }
+
+  });
+
+}
+
 
 } // end namespace apps
 } // end namespace rajaperf

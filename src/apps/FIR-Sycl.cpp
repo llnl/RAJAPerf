@@ -61,7 +61,7 @@ void FIR::runSyclVariantImpl(VariantID vid)
 
           Index_type i = item.get_global_id(0);
           if (i < iend) {
-            FIR_BODY
+            FIR_BODY(coeff)
           }
 
         });
@@ -83,7 +83,7 @@ void FIR::runSyclVariantImpl(VariantID vid)
 
        RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
          RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
-         FIR_BODY;
+         FIR_BODY(coeff);
        });
 
     }
