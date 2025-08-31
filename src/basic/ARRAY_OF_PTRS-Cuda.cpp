@@ -24,7 +24,7 @@ namespace basic
 __constant__ Real_ptr x_array_const[ARRAY_OF_PTRS_MAX_ARRAY_SIZE];
 
 #define ARRAY_OF_PTRS_DATA_SETUP_CUDA_CONST \
-  Real_ptr *x_array_const_addr; \
+  Real_ptr *dx_array_const_addr; \
   cudaErrchk( cudaGetSymbolAddress((void**)&dx_array_const_addr, x_array_const) ); \
   cudaErrchk( cudaMemcpyAsync(dx_array_const_addr, &x[0], \
                               array_size * sizeof(Real_ptr), \
@@ -169,7 +169,6 @@ template < size_t block_size >
 void ARRAY_OF_PTRS::runCudaVariantConst(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
   auto res{getCudaResource()};
@@ -205,7 +204,6 @@ template < size_t block_size >
 void ARRAY_OF_PTRS::runCudaVariantShared(DataSpace dataSpace, VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
   auto res{getCudaResource()};
@@ -241,7 +239,6 @@ template < size_t block_size >
 void ARRAY_OF_PTRS::runCudaVariantMemory(DataSpace dataSpace, VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
   auto res{getCudaResource()};
