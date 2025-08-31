@@ -79,9 +79,21 @@ public:
   void setSyclTuningDefinitions(VariantID vid);
 
   template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantParam(VariantID vid);
   template < size_t block_size >
-  void runHipVariantImpl(VariantID vid);
+  void runCudaVariantConst(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantShared(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantMemory(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runHipVariantParam(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantConst(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantShared(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runHipVariantMemory(DataSpace dataSpace, VariantID vid);
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 
@@ -104,7 +116,7 @@ struct ARRAY_OF_PTRS_Array {
   { }
 
   ARRAY_OF_PTRS_Array(Real_ptr (&array_)[ARRAY_OF_PTRS_MAX_ARRAY_SIZE])
-    : ARRAY_OF_PTRS_Array(array_, camp::make_int_seq_t<size_t, 26>{})
+    : ARRAY_OF_PTRS_Array(array_, camp::make_int_seq_t<size_t, ARRAY_OF_PTRS_MAX_ARRAY_SIZE>{})
   { }
 };
 
