@@ -22,6 +22,11 @@ namespace rajaperf
 namespace apps
 {
 
+#if __CUDACC_VER_MAJOR__ >= 11 && __CUDACC_VER_MINOR__ >= 7
+#define RAJAPERF_CUDA_HAVE_GRID_CONSTANT 1
+// also requires __CUDA__ARCH__ >= 700
+#endif
+
 __constant__ Real_type coeff_const[FIR_COEFFLEN];
 
 #define FIR_DATA_SETUP_CUDA_CONST \
@@ -58,6 +63,23 @@ __global__ void fir_param(Real_ptr out, Real_ptr in,
      FIR_BODY(coeff_param.array);
    }
 }
+
+#ifdef RAJAPERF_CUDA_HAVE_GRID_CONSTANT
+
+template < size_t block_size >
+__launch_bounds__(block_size)
+__global__ void fir_param_grid_const(Real_ptr out, Real_ptr in,
+                          const __grid_constant__ FIR_Array coeff_param,
+                          const Index_type coefflen,
+                          Index_type iend)
+{
+   Index_type i = blockIdx.x * block_size + threadIdx.x;
+   if (i < iend) {
+     FIR_BODY(coeff_param.array);
+   }
+}
+
+#endif
 
 template < size_t block_size >
 __launch_bounds__(block_size)
@@ -150,6 +172,46 @@ void FIR::runCudaVariantParam(VariantID vid)
     stopTimer();
 
   } else {
+    getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
+  }
+}
+
+template < size_t block_size >
+void FIR::runCudaVariantParamGridConst(VariantID vid)
+{
+#ifdef RAJAPERF_CUDA_HAVE_GRID_CONSTANT
+  const Index_type run_reps = getRunReps();
+  const Index_type iend = getActualProblemSize();
+
+  auto res{getCudaResource()};
+
+  FIR_DATA_SETUP;
+  FIR_COEFF;
+
+  if ( vid == Base_CUDA ) {
+
+    FIR_Array coeff_param = coeff_array;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr size_t shmem = 0;
+
+      RPlaunchCudaKernel( (fir_param_grid_const<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coeff_param,
+                         coefflen,
+                         iend );
+
+    }
+    stopTimer();
+
+  } else
+#endif
+  {
     getCout() << "\n  FIR : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
@@ -329,6 +391,16 @@ void FIR::runCudaVariant(VariantID vid, size_t tune_idx)
 
         t += 1;
 
+#ifdef RAJAPERF_CUDA_HAVE_GRID_CONSTANT
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantParamGridConst<block_size>(vid);
+
+        }
+
+        t += 1;
+#endif
+
       }
 
     }
@@ -353,6 +425,9 @@ void FIR::setCudaTuningDefinitions(VariantID vid)
         addVariantTuningName(vid, "shared_pinned_"+std::to_string(block_size));
         addVariantTuningName(vid, "device_"+std::to_string(block_size));
         addVariantTuningName(vid, "pinned_"+std::to_string(block_size));
+#ifdef RAJAPERF_CUDA_HAVE_GRID_CONSTANT
+        addVariantTuningName(vid, "paramGridConst_"+std::to_string(block_size));
+#endif
       }
 
     }
