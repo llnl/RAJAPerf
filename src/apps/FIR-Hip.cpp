@@ -59,6 +59,19 @@ __global__ void fir_param(Real_ptr out, Real_ptr in,
 
 template < size_t block_size >
 __launch_bounds__(block_size)
+__global__ void fir_param_reorder(Real_ptr out, Real_ptr in,
+                                  FIR_Array coeff_param,
+                                  const Index_type coefflen,
+                                  Index_type iend)
+{
+   Index_type i = (blockIdx.y + blockIdx.x * gridDim.y) * block_size + threadIdx.x;
+   if (i < iend) {
+     FIR_BODY(coeff_param.array);
+   }
+}
+
+template < size_t block_size >
+__launch_bounds__(block_size)
 __global__ void fir_const(Real_ptr out, Real_ptr in,
                           const Index_type coefflen,
                           Index_type iend)
@@ -143,6 +156,46 @@ void FIR::runHipVariantParam(VariantID vid)
          RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
          FIR_BODY(coeff_array);
        });
+
+    }
+    stopTimer();
+
+  } else {
+    getCout() << "\n  FIR : Unknown Hip variant id = " << vid << std::endl;
+  }
+}
+
+template < size_t block_size >
+void FIR::runHipVariantParamReorder(size_t reorder_num, VariantID vid)
+{
+  const Index_type run_reps = getRunReps();
+  const Index_type ibegin = 0;
+  const Index_type iend = getActualProblemSize();
+
+  auto res{getHipResource()};
+
+  FIR_DATA_SETUP;
+  FIR_COEFF;
+
+  if ( vid == Base_HIP ) {
+
+    FIR_Array coeff_param = coeff_array;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const dim3 nblocks(reorder_num,
+                         static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(grid_size, reorder_num)));
+      constexpr size_t shmem = 0;
+
+      RPlaunchHipKernel( (fir_param_reorder<block_size>),
+                         nblocks, block_size,
+                         shmem, res.get_stream(),
+                         out, in,
+                         coeff_param,
+                         coefflen,
+                         iend );
 
     }
     stopTimer();
@@ -327,6 +380,54 @@ void FIR::runHipVariant(VariantID vid, size_t tune_idx)
 
         t += 1;
 
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(1, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(2, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(3, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(4, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(6, vid);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runHipVariantParamReorder<block_size>(8, vid);
+
+        }
+
+        t += 1;
+
       }
 
     }
@@ -351,6 +452,12 @@ void FIR::setHipTuningDefinitions(VariantID vid)
         addVariantTuningName(vid, "shared_pinned_"+std::to_string(block_size));
         addVariantTuningName(vid, "device_"+std::to_string(block_size));
         addVariantTuningName(vid, "pinned_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder1_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder2_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder3_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder4_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder6_"+std::to_string(block_size));
+        addVariantTuningName(vid, "paramReorder8_"+std::to_string(block_size));
       }
 
     }

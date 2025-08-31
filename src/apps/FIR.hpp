@@ -100,6 +100,8 @@ public:
   void runHipVariantShared(DataSpace dataSpace, VariantID vid);
   template < size_t block_size >
   void runHipVariantMemory(DataSpace dataSpace, VariantID vid);
+  template < size_t block_size >
+  void runHipVariantParamReorder(size_t reorder_num, VariantID vid);
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 
