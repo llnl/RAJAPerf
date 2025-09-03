@@ -51,6 +51,23 @@
   } \
   out[i] = sum;
 
+#define FIR_BODY_IN(coeff, in) \
+  Real_type sum = 0.0; \
+\
+  for (Index_type j = 0; j < coefflen; ++j ) { \
+    sum += (coeff)[j]*(in)[j]; \
+  } \
+  out[i] = sum;
+
+#define FIR_BODY_UNROLL(coeff, unroll_num) \
+  Real_type sum = 0.0; \
+\
+  RAJA_UNROLL_COUNT(unroll_num) \
+  for (Index_type j = 0; j < coefflen; ++j ) { \
+    sum += (coeff)[j]*in[i+j]; \
+  } \
+  out[i] = sum;
+
 
 #include "common/KernelBase.hpp"
 
@@ -87,23 +104,43 @@ public:
   template < size_t block_size >
   void runCudaVariantParam(VariantID vid);
   template < size_t block_size >
+  void runCudaVariantParamDataShared(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantParamGridConst(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantParamGridConstDataShared(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantParamGridConstReorder(size_t reorder_num, VariantID vid);
+  template < size_t block_size, size_t unroll_num >
+  void runCudaVariantParamUnroll(VariantID vid);
+  template < size_t block_size, size_t unroll_num >
+  void runCudaVariantParamGridConstUnroll(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantParamGridConstReorderUnroll(size_t reorder_num, VariantID vid);
+  template < size_t block_size >
   void runCudaVariantConst(VariantID vid);
   template < size_t block_size >
   void runCudaVariantShared(DataSpace dataSpace, VariantID vid);
   template < size_t block_size >
   void runCudaVariantMemory(DataSpace dataSpace, VariantID vid);
   template < size_t block_size >
-  void runCudaVariantParamGridConst(VariantID vid);
-  template < size_t block_size >
   void runHipVariantParam(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantParamDataShared(VariantID vid);
+  template < size_t block_size >
+  void runHipVariantParamReorder(size_t reorder_num, VariantID vid);
+  template < size_t block_size, size_t unroll_num >
+  void runHipVariantParamUnroll(VariantID vid);
+  template < size_t block_size, size_t unroll_num >
+  void runHipVariantParamReorderUnroll(size_t reorder_num, VariantID vid);
   template < size_t block_size >
   void runHipVariantConst(VariantID vid);
   template < size_t block_size >
   void runHipVariantShared(DataSpace dataSpace, VariantID vid);
   template < size_t block_size >
-  void runHipVariantMemory(DataSpace dataSpace, VariantID vid);
+  void runHipVariantSharedDataShared(DataSpace dataSpace, VariantID vid);
   template < size_t block_size >
-  void runHipVariantParamReorder(size_t reorder_num, VariantID vid);
+  void runHipVariantMemory(DataSpace dataSpace, VariantID vid);
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 

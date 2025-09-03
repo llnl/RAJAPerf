@@ -19,6 +19,9 @@
 
 #if defined(RAJA_ENABLE_HIP)
 
+#include <set>
+#include <string_view>
+
 #include "common/RAJAPerfSuite.hpp"
 #include "common/GPUUtils.hpp"
 
@@ -280,6 +283,21 @@ inline void deallocHipPinnedData(void* pptr)
 }
 
 }  // closing brace for detail namespace
+
+/*!
+ * \brief Get set of numbers to try for reordering tunings.
+ */
+inline std::set<size_t> getHipReorderNumbers()
+{
+  std::set<size_t> reorder_numbers;
+  reorder_numbers.emplace(1);
+  size_t num_procs = detail::getHipDeviceProp().multiProcessorCount;
+  for (size_t reorder_num = 1; reorder_num <= num_procs; ++reorder_num) {
+    if ((num_procs % reorder_num) == 0)
+    reorder_numbers.emplace(reorder_num);
+  }
+  return reorder_numbers;
+}
 
 }  // closing brace for rajaperf namespace
 

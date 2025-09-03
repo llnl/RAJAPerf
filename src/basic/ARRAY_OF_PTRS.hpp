@@ -81,6 +81,8 @@ public:
   template < size_t block_size >
   void runCudaVariantParam(VariantID vid);
   template < size_t block_size >
+  void runCudaVariantParamGridConst(VariantID vid);
+  template < size_t block_size >
   void runCudaVariantConst(VariantID vid);
   template < size_t block_size >
   void runCudaVariantShared(DataSpace dataSpace, VariantID vid);

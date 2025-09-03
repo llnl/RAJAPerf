@@ -32,6 +32,10 @@
 
 #if defined(RAJA_ENABLE_CUDA)
 #define RAJA_PERFSUITE_TUNING_CUDA_ARCH @RAJA_PERFSUITE_TUNING_CUDA_ARCH@
+#if __CUDACC_VER_MAJOR__ >= 11 && __CUDACC_VER_MINOR__ >= 7
+#define RAJAPERF_CUDA_HAVE_GRID_CONSTANT 1
+// Note: also requires __CUDA__ARCH__ >= 700
+#endif
 #endif
 
 #if defined(RAJA_ENABLE_HIP)
