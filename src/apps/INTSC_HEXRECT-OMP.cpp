@@ -21,8 +21,16 @@ namespace apps
 
 void INTSC_HEXRECT::intscHexRectOMP
     ( Index_type i,
-      Index_type iend )  // number of standard intersections
+      Index_type nrecords )  // number of intersections
 {
+  INTSC_HEXRECT_DATA_SETUP ;
+
+  long irec = i ;
+  int const max_polygon_pts = 10 ;
+  double xd_work[ 3*max_polygon_pts+1 ] ;
+  double *my_qx = xd_work ;
+
+  INTSC_HEXRECT_BODY ;
 }
 
 
@@ -35,7 +43,7 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   //  standard intersections among threads, iend is getActualProblemSize.
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type iend = getActualProblemSize() ;
+  const Index_type iend = m_nrecords ;
 
 
   auto intsc_hexrect_lam =
