@@ -65,6 +65,13 @@ blt_add_library(
           INTSC_HEXHEX-OMP.cpp
           INTSC_HEXHEX-OMPTarget.cpp
           INTSC_HEXHEX-Sycl.cpp
+          INTSC_HEXRECT.cpp
+          INTSC_HEXRECT-Cuda.cpp
+          INTSC_HEXRECT-Hip.cpp
+          INTSC_HEXRECT-Seq.cpp
+          INTSC_HEXRECT-OMP.cpp
+          INTSC_HEXRECT-OMPTarget.cpp
+          INTSC_HEXRECT-Sycl.cpp
           LTIMES.cpp
           LTIMES-Seq.cpp
           LTIMES-Hip.cpp
