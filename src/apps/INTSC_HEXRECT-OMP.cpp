@@ -21,7 +21,7 @@ namespace apps
 
 void INTSC_HEXRECT::intscHexRectOMP
     ( Index_type i,
-      Index_type nrecords )  // number of intersections
+      Index_type )
 {
   INTSC_HEXRECT_DATA_SETUP ;
 

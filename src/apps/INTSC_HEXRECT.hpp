@@ -594,13 +594,12 @@ RAJA_INLINE int intsc24_hex
   int const *znlist = (int const*) m_znlist ; \
   int const *intsc_d = (int const*) m_intsc_d ; \
   int const *intsc_t = (int const*) m_intsc_t ; \
-
-//  int const max_polygon_pts = 10 ;
-//   __shared__ double xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+  long const nrecords = m_nrecords ; \
+  double *records = (double *)m_records ;
 
 #define INTSC_HEXRECT_BODY \
   if ( irec < nrecords ) { \
-    double *record = ((double*)m_records) + 4 * irec ; \
+    double *record = ((double*)records) + 4 * irec ; \
     double xd[24] ; \
     double *yd = xd + 8 ; \
     double *zd = yd + 8 ; \

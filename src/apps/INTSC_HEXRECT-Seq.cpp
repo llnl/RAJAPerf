@@ -22,7 +22,7 @@ namespace apps
 {
 
 void INTSC_HEXRECT::intscHexRectSeq
-    ( Index_type i, Index_type nrecords )
+    ( Index_type i, Index_type )
 {
   INTSC_HEXRECT_DATA_SETUP ;
 

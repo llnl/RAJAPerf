@@ -28,11 +28,27 @@ namespace apps
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void intsc_hexrect
-  ( Real_ptr const dsubz,
-    Real_ptr const tsubz,
-    Size_type  const nisc_stage,
-    Real_ptr vv_int )
+    ( Real_ptr xdnode,     // [ndnodes] x coordinates for donor
+      Real_ptr ydnode,     // [ndnodes] y coordinates for donor
+      Real_ptr zdnode,     // [ndnodes] z coordinates for donor
+      Int_ptr znlist,      // [donor zones][8] donor zone node list
+      char *ncord_gpu,     //  target dimensions and coordinates
+      Int_ptr intsc_d,   // [nrecords] donor zones to intersect
+      Int_ptr intsc_t,   // [nrecords] target zones to intersect
+      long const nrecords,  // Number of threads (one thread per record)
+      Real_ptr records )  // output volumes, moments
 {
+  long blksize = block_size ;        // blocksize = 64  must <= nth_per_isc
+  long blk     = blockIdx.x ;
+  long irec    = blk*blksize + threadIdx.x ;   // which thread with offset
+
+  int const max_polygon_pts = 10 ;
+  __shared__ double xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+
+  // polygons (an odd number of doubles per thread to reduce bank conflicts)
+  double *my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
+
+  INTSC_HEXRECT_BODY ;
 }
 
 
@@ -42,16 +58,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin   = 0 ;
-  const Index_type iend     = m_tri_per_intsc * getActualProblemSize() ;
-
-  const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
-  const Size_type  nisc_stage   = n_subz_intsc ;
-
-  const Size_type  n_szgrp     = ( n_subz_intsc + 7 ) / 8 ;
-  const size_t     gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, block_size) ;
-  const Index_type iend_fixup  = gsize_fixup * block_size ;
-
-  const Size_type  n_szpairs   = n_subz_intsc ;
+  const Index_type iend     = m_nrecords ;
 
   auto res{getCudaResource()};
 
@@ -68,14 +75,9 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       RPlaunchCudaKernel( (intsc_hexrect<block_size>),
                           grid_size, block_size,
                           shmem, res.get_stream(),
-                          m_dsubz, m_tsubz,
-                          n_subz_intsc, m_vv_int ) ;
-
-      RPlaunchCudaKernel( (intsc_hexrect_fixup_vv_64to72<block_size>),
-                          gsize_fixup, block_size,
-                          shmem, res.get_stream(),
-                          m_vv_int, n_subz_intsc, m_vv_out ) ;
-
+                          m_xdnode, m_ydnode, m_zdnode, m_znlist,
+                          m_ncord, m_intsc_d, m_intsc_t,
+                          m_nrecords, m_records ) ;
 
     }
     stopTimer();
@@ -90,19 +92,17 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
          {
-           __shared__ double vv_reduce[16] ;
+           long blksize = block_size ;
+           long blk     = blockIdx.x ;
+           long irec    = blk*blksize + threadIdx.x ;
 
-           long blksize   = blockDim.x ;
-           long blk       = blockIdx.x ;
-           long ith       = blk*blksize + threadIdx.x ;
-           double *vv_out = (double *) vv_int + 8*blk ;
-           INTSC_HEXRECT_BODY; };
+           int const max_polygon_pts = 10 ;
+           __shared__ double xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
-      auto intsc_hexrect_fixup_lambda = [=] __device__
-          ( Index_type i )
-         {
-           int ith = blockIdx.x*block_size + threadIdx.x;
-           FIXUP_VV_BODY ; } ;
+           double *my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
+
+           INTSC_HEXRECT_BODY;
+         };
 
       constexpr size_t shmem = 0;
 
@@ -112,14 +112,6 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
                           shmem, res.get_stream(),
                           ibegin, iend,
                           intsc_hexrect_lambda );
-
-      RPlaunchCudaKernel( (lambda_cuda_forall<block_size,
-                           decltype(intsc_hexrect_fixup_lambda)>),
-                          gsize_fixup, block_size,
-                          shmem, res.get_stream(),
-                          ibegin, iend_fixup,
-                          intsc_hexrect_fixup_lambda );
-
 
     }
     stopTimer();
@@ -132,21 +124,16 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            __shared__ double vv_reduce[16] ;
+            long blksize = block_size ;
+            long blk     = blockIdx.x ;
+            long irec    = blk*blksize + threadIdx.x ;
 
-            long blksize   = blockDim.x ;
-            long blk       = blockIdx.x ;
-            long ith       = blk*blksize + threadIdx.x ;
-            double *vv_out = (double *) vv_int + 8*blk ;
+            int const max_polygon_pts = 10 ;
+            __shared__ double xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+
+            double *my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
+
             INTSC_HEXRECT_BODY;
-          }
-      ) ;
-
-      RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend_fixup), [=] __device__ (Index_type i)
-          {
-            int ith = blockIdx.x*block_size + threadIdx.x;
-            FIXUP_VV_BODY ;
           }
       ) ;
 
