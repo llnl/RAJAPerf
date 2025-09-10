@@ -539,12 +539,12 @@ void INTSC_HEXRECT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;
 
   checkMoments
-      ( m_records, m_nrecords,
+      ( m_records_h, m_nrecords,
         m_ndx, m_ndy, m_ndz, m_xd0, m_yd0, m_zd0,
         m_x0, m_y0, m_z0, m_sep, m_sep1x, m_sep1y, m_sep1z ) ;
 
   checkScaledVolumes
-      ( m_records,
+      ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep ) ;
 
   detail::deallocHostData ( m_records_h ) ;
