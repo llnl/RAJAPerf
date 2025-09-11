@@ -171,16 +171,24 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
     // Do the check.
     double tolsq = 1.0e-24 ;
+    double tolsqv = tolsq * v0*v0 ;
+    double tolsqx = tolsq * v0*v0 *
+        ( fabs(xmax) + fabs(xmin) ) *  ( fabs(xmax) + fabs(xmin) ) ;
+    double tolsqy = tolsq * v0*v0 *
+        ( fabs(ymax) + fabs(ymin) ) *  ( fabs(ymax) + fabs(ymin) ) ;
+    double tolsqz = tolsq * v0*v0 *
+        ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
+    printf ( "tolsqv = %13.5e\ntolsqx = %13.5e\ntolsqy = %13.5e\ntolsqz = %13.5e\n", tolsqv, tolsqx, tolsqy, tolsqz ) ;
     bool correct = true ;
     for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
       double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
       double dxm = vv[ 4*k + 1 ] - vx ;
       double dym = vv[ 4*k + 2 ] - vy ;
       double dzm = vv[ 4*k + 3 ] - vz ;
-      if ( ( dv*dv > tolsq * v0*v0 ) or
-           ( dxm*dxm > tolsq * v0*v0 * ( fabs(xmax) + fabs(xmin) ) ) or
-           ( dym*dym > tolsq * v0*v0 * ( fabs(ymax) + fabs(ymin) ) ) or
-           ( dzm*dzm > tolsq * v0*v0 * ( fabs(zmax) + fabs(zmin) ) ) ) {
+      if ( ( dv*dv   > tolsqv ) or
+           ( dxm*dxm > tolsqx ) or
+           ( dym*dym > tolsqy ) or
+           ( dzm*dzm > tolsqz ) ) {
         correct = false ;
         fprintf ( f, "k = %ld    vv = %19.11e\n"
                   "k = %ld    vx = %19.11e\n"
@@ -188,6 +196,13 @@ void INTSC_HEXHEX::check_intsc_volume_moments
                   "k = %ld    vz = %19.11e\n", k, vv[4*k],
                   k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
         break ;
+      }
+      if ( k % (n_subz_intsc-1) == 0 ) {
+        fprintf ( f, "k = %9ld    vv = %24.16e\n"
+                  "k = %9ld    vx = %24.16e\n"
+                  "k = %9ld    vy = %24.16e\n"
+                  "k = %9ld    vz = %24.16e\n", k, vv[4*k],
+                  k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
       }
     }
     if ( correct ) {
@@ -223,10 +238,6 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
   setFLOPsPerRep(num_std_intsc * flops_per_intsc);
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
@@ -258,18 +269,13 @@ INTSC_HEXHEX::~INTSC_HEXHEX()
 {
 }
 
-
+// put setup here
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  // checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, m_checksum_scale_factor, vid  );
-  (void)(vid+0) ;
-  (void)(tune_idx+0) ;
-}
-
-void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
-{
-  long n_subz_intsc = 8L*getActualProblemSize() ;
+  // One standard intersection is 8 subzone intersections.
+  long n_std_intsc  = getActualProblemSize() ;
+  long n_subz_intsc = 8L * n_std_intsc ;
 
   copyData ( DataSpace::Host, m_vv,
              getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;
@@ -278,6 +284,12 @@ void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       ( stdout, n_subz_intsc, m_vv ) ;
 
   detail::deallocHostData ( m_vv ) ;
+
+  checksum[vid][tune_idx] += calcChecksum(m_vv_out, 4L*n_subz_intsc, vid  );
+}
+
+void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+{
   deallocData ( m_dsubz, vid ) ;
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
