@@ -6,28 +6,35 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 ##############################################################################
 
+variables:
+  PERF_ARTIFACT_DIR: "performance-results"
+  PERF_RESULTS_FILE: "*_*-*.cali"
+  PERF_PROCESSED_FILE: "processed_results.json"
+  PERF_PROCESSING_CMD: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
+  PERFORMANCE_TESTS: "true"
+
 # TODO: Should I run with +omptask ?
 clang_14_0_6_caliper:
   variables:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
+    KERNELS: "Basic_PI_ATOMIC Basic_DAXPY"
+    VARIANTS: "RAJA_Seq RAJA_OpenMP"
   extends: .perf_on_dane
 
 rocmcc_6_4_1_hip_openmp_caliper:
   variables:
-    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"
+    KERNELS: "Basic_PI_ATOMIC Basic_DAXPY"
+    VARIANTS: "RAJA_HIP"
   extends: .perf_on_tuolumne
 
 process_results:
-  extends: .results_processing
-  script:
-    - ls -l ${PERF_ARTIFACTS_DIR}
+  extends: .caliper_to_gh_benchmark
   dependencies:
     - clang_14_0_6_caliper
     - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
-  extends: .results_reporting
-  script:
-    - echo "No results to report, this is a demo pipeline."
+  extends: .report_to_gh_benchmark
   dependencies:
     - process_results
