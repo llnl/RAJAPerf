@@ -26,14 +26,6 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;    // Remember variant to deallocate data.
 
-  //   Run a smaller problem in sequential because it's slow.
-  long factor = 1L ;
-  if ( ( vid == Base_Seq ) or ( vid == Lambda_Seq ) or ( vid == RAJA_Seq ) ) {
-    factor = 8L ;
-  }
-
-  setActualProblemSize( getDefaultProblemSize() / factor );
-
   // One standard intersection is 8 subzone intersections.
   long n_std_intsc  = getActualProblemSize() ;
   long n_subz_intsc = 8L * n_std_intsc ;
@@ -220,12 +212,24 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   //  one standard intersection = eight subzone intersections.
   //  Set number of standard intersections here.
   //
-  constexpr size_t num_std_intsc = 100*100*100 ;
-  setDefaultProblemSize(num_std_intsc);
-  setDefaultReps(1);
+  //  Default number of standard intersections = 25 cubed, so as to
+  //  finish the "sequential" test in one second.  The gpu tests will
+  //  take only a few milliseconds for the same problem.
+  //
+  constexpr size_t a3_def = 25 ;
+  constexpr size_t n_std_intsc_def = a3_def*a3_def*a3_def ;
+  setDefaultProblemSize(n_std_intsc_def);
 
-  setItsPerRep( num_std_intsc );
+  setDefaultReps  (1);
   setKernelsPerRep(1);
+
+  // Number of standard intersections, by convention a cube number.
+  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
+  a3 = std::max(1UL,a3) ;
+  size_t n_std_intsc = a3*a3*a3 ;
+
+  setActualProblemSize( n_std_intsc ) ;
+  setItsPerRep        ( n_std_intsc );
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
@@ -236,7 +240,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   constexpr size_t flops_per_tri = 700 ;
   constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
-  setFLOPsPerRep(num_std_intsc * flops_per_intsc);
+  setFLOPsPerRep(n_std_intsc * flops_per_intsc);
 
   setComplexity(Complexity::N);
 
