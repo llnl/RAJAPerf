@@ -77,6 +77,26 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
 
   INTSC_HEXHEX_DATA_SETUP;
 
+  //  Insert a warmup call to the kernel in order to remove the
+  //  time of initialization that affects the first call to the kernel.
+  //   The warmup calls send n_subz_intsc=0 and hence return immediately.
+  bool const do_warmup = true ;
+  if ( do_warmup ) {
+    const size_t grid_size1 = 1 ;
+    constexpr size_t shmem = 0;
+
+    RPlaunchHipKernel( (intsc_hexhex_hip<block_size>),
+                       grid_size1, block_size,
+                       shmem, res.get_stream(),
+                       m_dsubz, m_tsubz,
+                       0UL, m_vv_int ) ;
+    RPlaunchHipKernel( (intsc_hexhex_hip_fixup_vv_64to72<block_size>),
+                       grid_size1, block_size,
+                       shmem, res.get_stream(),
+                       m_vv_int, 0UL, m_vv_out ) ;
+  }
+
+
   if ( vid == Base_HIP ) {
 
     startTimer();
