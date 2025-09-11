@@ -1,0 +1,71 @@
+name: Process Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      benchmark_data:
+        description: 'Base64 encoded benchmark data'
+        required: true
+      benchmark_name:
+        description: 'Name for benchmark group on the dashboard'
+        required: false
+        default: 'RAJAPerf benchmarks'
+
+permissions:
+  checks: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  store-and-visualize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Find associated PR
+        id: findpr
+        run: |
+          PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number -q '.[0].number')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Decode benchmark data
+        run: echo "${{ github.event.inputs.benchmark_data }}" | base64 -d > benchmark.json
+
+      - name: Store benchmark result
+        id: benchmark
+        continue-on-error: true
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: ${{ github.event.inputs.benchmark_name }}
+          tool: 'customSmallerIsBetter'
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true # TODO remove later, for testing
+          # auto-push: ${{ github.ref == 'refs/heads/main' }}
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          comment-always: true
+          fail-on-alert: true
+          alert-threshold: '120%'
+          max-items-in-chart: 100
+
+      - name: Create Check for PRs
+        if: steps.findpr.outputs.pr_number != ''
+        uses: LouisBrunner/checks-action@v1.6.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Performance Benchmark
+          sha: ${{ github.sha }}
+          conclusion: ${{ steps.benchmark.outcome == 'success' && 'success' || 'failure' }}
+          output: |
+            {"summary": "${{ steps.benchmark.outcome == 'success' && 'Performance check passed' || 'Performance regression detected!' }}"}
+
+      - name: Final status
+        if: steps.benchmark.outcome != 'success'
+        run: exit 1
