@@ -185,17 +185,12 @@ void INTSC_HEXRECT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;
 
-  //   Run a smaller problem in sequential because it's slow.
-  long factor = 1L ;
-  if ( ( vid == Base_Seq ) or ( vid == Lambda_Seq ) or ( vid == RAJA_Seq ) ) {
-    factor = 8L ;
-  }
+  //  m_nrecords = number of intersections = 8 * number of donor zones
+  m_nrecords = getActualProblemSize() ;
 
-  setActualProblemSize( getDefaultProblemSize() / factor );
-  m_nrecords = 8 * getActualProblemSize() ;
+  size_t ndzones = m_ndzones ;    // number of donor zones
 
-  m_ndx = (Int_type)
-      ( cbrt( (double) getActualProblemSize() + 0.5 ) ) ;
+  m_ndx = (Int_type) ( cbrt( ndzones + 0.5 ) ) ;
   m_ndy = m_ndx ;
   m_ndz = m_ndx ;
   int const ndx = m_ndx ;
@@ -261,7 +256,6 @@ void INTSC_HEXRECT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
   copyTargetToDevice ( planes_c, ncord ) ;
 
-  int ndzones = ndx * ndy * ndz ;
   int ndnodes = (ndx+1) * (ndy+1) * (ndz+1) ;
 
   allocAndCopyHostData ( m_xdnode, xdnode, ndnodes, vid ) ;
@@ -468,12 +462,32 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 {
   //  Each donor zone intersects eight "target zones"
   //
-  long side = 100 ;
-  m_ndzones = side * side * side ;
+  //  Default problem size is 50 cubed "donor zones", one million intersections
+  //   Problem size is specified as number of intersections, which is
+  //     8 * number of donor zones.
+  //   Number of donor zones is a cube number, "side" is the length
+  //   of a side of the cube (cube root of number of donor zones)
+  //
+  constexpr size_t a3_def = 50 ;
+  size_t n_intsc_def = 8L * a3_def * a3_def * a3_def ;
+  setDefaultProblemSize(n_intsc_def);
+
+  //  Command line --size specifies requested number of intersections.
+  //  Requested number of intersections will be converted to an even cube
+  //  number of intersections.
+  //
+  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
+
+  // number of donor zones on a side of the cube
+  size_t side = a3 / 2 ;
+  side = std::max(1UL,side) ;
+
+  m_ndzones = side * side * side ;   // number of "donor zones" on a side
   size_t n_intsc = 8L*m_ndzones ;   // number of intersections to compute
   m_ntzones = n_intsc ;          // one "target zone" per intersection
-  setDefaultProblemSize(n_intsc);
   setDefaultReps(1);
+
+  setActualProblemSize( n_intsc );
 
   setItsPerRep( n_intsc );
   setKernelsPerRep(1);
@@ -488,10 +502,6 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
-
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
 
   setComplexity(Complexity::N);
 
