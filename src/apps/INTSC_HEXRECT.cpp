@@ -538,13 +538,6 @@ INTSC_HEXRECT::~INTSC_HEXRECT()
 
 void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  // checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, m_checksum_scale_factor, vid  );
-  (void)(vid+0) ;
-  (void)(tune_idx+0) ;
-}
-
-void INTSC_HEXRECT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
-{
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;
 
@@ -558,6 +551,12 @@ void INTSC_HEXRECT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep ) ;
 
   detail::deallocHostData ( m_records_h ) ;
+
+  checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
+}
+
+void INTSC_HEXRECT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+{
   deallocData ( m_records, vid ) ;
   deallocData ( m_intsc_t, vid ) ;
   deallocData ( m_intsc_d, vid ) ;
