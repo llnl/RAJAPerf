@@ -119,9 +119,9 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
   // Check on rank 0, other ranks are identical.
   if ( rank == 0 ) {
+    char const *tst = "INTSC_HEXHEX:" ;
 
     long n_std_intsc = getActualProblemSize() ;
-    printf ( "\n\nnumber of standard intersections = %ld\n", n_std_intsc ) ;
 
     //   Determine the correct volume and moments.
     double v0, vx, vy, vz ;
@@ -148,11 +148,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
       vz = v0 * zc ;
     }
 
-    fprintf ( f, " correct   volume = %19.11e\n"
-              " correct x moment = %19.11e\n"
-              " correct y moment = %19.11e\n"
-              " correct z moment = %19.11e\n", v0, vx, vy, vz ) ;
-
     // Do the check.
     double tolsq = 1.0e-24 ;
     double tolsqv = tolsq * v0*v0 ;
@@ -162,37 +157,36 @@ void INTSC_HEXHEX::check_intsc_volume_moments
         ( fabs(ymax) + fabs(ymin) ) *  ( fabs(ymax) + fabs(ymin) ) ;
     double tolsqz = tolsq * v0*v0 *
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
-    printf ( "tolsqv = %13.5e\ntolsqx = %13.5e\ntolsqy = %13.5e\ntolsqz = %13.5e\n", tolsqv, tolsqx, tolsqy, tolsqz ) ;
     bool correct = true ;
     for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
       double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
       double dxm = vv[ 4*k + 1 ] - vx ;
       double dym = vv[ 4*k + 2 ] - vy ;
       double dzm = vv[ 4*k + 3 ] - vz ;
+
+      // Print an error message if a volume or moment is incorrect.
       if ( ( dv*dv   > tolsqv ) or
            ( dxm*dxm > tolsqx ) or
            ( dym*dym > tolsqy ) or
            ( dzm*dzm > tolsqz ) ) {
-        correct = false ;
-        fprintf ( f, "k = %ld    vv = %19.11e\n"
-                  "k = %ld    vx = %19.11e\n"
-                  "k = %ld    vy = %19.11e\n"
-                  "k = %ld    vz = %19.11e\n", k, vv[4*k],
-                  k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
+
+        printf ( "%s %s %s.\n", tst,
+                 "Calculated Volumes and/or moments are INCORRECT for ",
+                 getVariantName(m_vid).c_str() ) ;
+        printf ( "%s %s", tst, "First error encountered:\n" ) ;
+
+        printf
+          ( "%s k = %ld    vv = %23.15e  expected %23.15e   tolerance %11.3e\n"
+            "%s k = %ld    vx = %23.15e  expected %23.15e   tolerance %11.3e\n"
+            "%s k = %ld    vy = %23.15e  expected %23.15e   tolerance %11.3e\n"
+            "%s k = %ld    vz = %23.15e  expected %23.15e   tolerance %11.3e\n"
+            "\n",
+            tst, k, vv[4*k+0], v0, sqrt(tolsqv),
+            tst, k, vv[4*k+1], vx, sqrt(tolsqx),
+            tst, k, vv[4*k+2], vy, sqrt(tolsqy),
+            tst, k, vv[4*k+3], vz, sqrt(tolsqz) ) ;
         break ;
       }
-      if ( k % (n_subz_intsc-1) == 0 ) {
-        fprintf ( f, "k = %9ld    vv = %24.16e\n"
-                  "k = %9ld    vx = %24.16e\n"
-                  "k = %9ld    vy = %24.16e\n"
-                  "k = %9ld    vz = %24.16e\n", k, vv[4*k],
-                  k, vv[4*k+1], k, vv[4*k+2], k, vv[4*k+3] ) ;
-      }
-    }
-    if ( correct ) {
-      fprintf ( f, "%s", "Volumes and moments are correct.\n" ) ;
-    } else {
-      fprintf ( f, "%s", "Volumes and moments are INCORRECT.\n" ) ;
     }
   }
 }
