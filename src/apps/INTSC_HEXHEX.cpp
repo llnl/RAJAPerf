@@ -47,8 +47,6 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     ztzone[i] = zdzone[i] + m_shift ;
   }
 
-  FILE *f = fopen ( "geomsubz.out", "w" ) ;
-
   Real_ptr dcoord ;   // donor  coordinates [24]
   Real_ptr tcoord ;   // target coordinates [24]
 
@@ -100,16 +98,10 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_nthreads = 72L * n_subz_intsc ;
   m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
-  fprintf ( f, "workgroup size                   = %d\n" , block_size );
-  fprintf ( f, "number of workgroups             = %ld\n", m_gsize ) ;
-  fprintf ( f, "number of threads                = %ld\n", m_nthreads ) ;
-
   // intermediate volumes, moments
   allocData ( m_vv_int, 8L*m_gsize, vid ) ;
 
   allocAndInitDataConst ( m_vv_out, 4L*n_subz_intsc, 0.0, vid ) ;
-
-  m_f_geomsubz = f ;
 }
 
 
@@ -298,8 +290,6 @@ void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
   deallocData ( m_vv_out, vid ) ;
-
-  fclose ( m_f_geomsubz ) ;
 }
 
 } // end namespace apps

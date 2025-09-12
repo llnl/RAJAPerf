@@ -567,8 +567,6 @@ private:
 
   Real_ptr m_vv ;       // [4*n_intsc] computed volumes, moments on host
 
-  FILE *m_f_geomsubz ;  // output file
-
   static constexpr double m_xmin = -0.2 ;  // coordinates of hex corners
   static constexpr double m_xmax = -0.1 ;
   static constexpr double m_ymin =  0.1 ;
