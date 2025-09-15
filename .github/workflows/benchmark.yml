@@ -57,7 +57,7 @@ jobs:
         uses: LouisBrunner/checks-action@v1.6.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: Performance Benchmark
+          name: Performance Benchmark (${{ github.event.inputs.benchmark_name }})
           sha: ${{ github.sha }}
           conclusion: ${{ steps.benchmark.outcome == 'success' && 'success' || 'failure' }}
           output: |
