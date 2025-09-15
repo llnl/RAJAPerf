@@ -46,7 +46,7 @@ jobs:
           # auto-push: ${{ github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
-          comment-always: true
+          comment-always: false
           summary-always: true
           fail-on-alert: true
           alert-threshold: '120%'
