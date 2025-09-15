@@ -43,7 +43,7 @@ jobs:
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true # TODO remove later, for testing
-          # auto-push: ${{ github.ref == 'refs/heads/main' }}
+          # auto-push: ${{ github.ref == 'refs/heads/develop' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           comment-always: false
