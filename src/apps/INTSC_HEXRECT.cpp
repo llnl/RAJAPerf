@@ -351,11 +351,18 @@ void INTSC_HEXRECT::checkMoments
     do {
       int rec0 = 0 ;
       double maxerr = 0.0 ;
+
+      int loc_jx=0, loc_jy=0, loc_jz=0, loc_irec=0 ;
+      double expect_xc=0.0, expect_yc=0.0, expect_zc=0.0 ;
+      double calc_xc=0.0, calc_yc=0.0, calc_zc=0.0 ;
+
       for ( int jz = 0 ; jz < ndz ; ++jz ) {
         for ( int jy = 0 ; jy < ndy ; ++jy ) {
           for ( int jx = 0 ; jx < ndx ; ++jx ) {
 
             for ( int irec = rec0 ; irec < rec0+8 ; ++irec ) {
+
+              bool is_max=false ;
 
               double z_cen =  ( ( irec & 4 ) != 0 ) ? zcb[jz] : zca[jz] ;
               double y_cen =  ( ( irec & 2 ) != 0 ) ? ycb[jy] : yca[jy] ;
@@ -363,18 +370,46 @@ void INTSC_HEXRECT::checkMoments
 
               double error ;
               error = fabs ( x_cen - records[4*irec+1] ) ;
-              if ( error > maxerr) { maxerr = error ; }
+              if ( error > maxerr) { maxerr = error ; is_max = true ; }
 
               error = fabs ( y_cen - records[4*irec+2] ) ;
-              if ( error > maxerr) { maxerr = error ; }
+              if ( error > maxerr) { maxerr = error ; is_max = true ; }
 
               error = fabs ( z_cen - records[4*irec+3] ) ;
-              if ( error > maxerr) { maxerr = error ; }
+              if ( error > maxerr) { maxerr = error ; is_max = true ; }
+
+              if ( is_max ) {    // found new maximum error
+                loc_jx = jx ;
+                loc_jy = jy ;
+                loc_jz = jz ;
+                loc_irec = irec ;
+                expect_xc = x_cen ;
+                expect_yc = y_cen ;
+                expect_zc = z_cen ;
+                calc_xc = records[4*irec+1] ;
+                calc_yc = records[4*irec+2] ;
+                calc_zc = records[4*irec+3] ;
+              }
             }
             rec0 += 8 ;
           }}}
 
-      printf ( "Max centroid error = %16.8e\n", maxerr ) ;
+      double const tol = 1.0e-12 * sep * (double)ndx ;
+      if ( maxerr > tol ) {
+        char const *tst = "INTSC_HEXRECT:" ;
+
+        printf ( "%s %s %s.\n", tst,
+                 "Centroid error exceeds tolerance for ",
+                 getVariantName(m_vid).c_str() ) ;
+        printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) irec=%d"
+                 "  tolerance =%10.2e\n",
+                 tst, loc_jx, loc_jy, loc_jz, loc_irec, tol ) ;
+        printf ( "%s Maximum error = %16.8e\n", tst, maxerr ) ;
+        printf ( "%s Computed (%23.15e,%23.15e,%23.15e)\n",
+                 tst, calc_xc, calc_yc, calc_zc ) ;
+        printf ( "%s Expected (%23.15e,%23.15e,%23.15e)\n",
+                 tst, expect_xc, expect_yc, expect_zc ) ;
+      }
 
     } while ( false ) ;
 
@@ -407,6 +442,9 @@ void INTSC_HEXRECT::checkScaledVolumes
     int ndz = m_ndz ;
 
     double scale = 8.0 * (double)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
+
+    int loc_jx=0, loc_jy=0, loc_jz=0, loc_krec=0 ;  // error checking
+    double expect_v=0.0, calc_v=0.0 ;
 
     int rec0 = 0 ;
     double maxerr = 0.0 ;
@@ -446,13 +484,35 @@ void INTSC_HEXRECT::checkScaledVolumes
             int irec = rec0 + krec ;   // intersection record index
             double error ;
             error = fabs ( (double)vol - records[4*irec] ) ;
-            if ( error > maxerr) { maxerr = error ; }
+
+            if ( error > maxerr) { // found new maximum error
+              maxerr = error ;
+              loc_jx = jx ;
+              loc_jy = jy ;
+              loc_jz = jz ;
+              loc_krec = krec ;
+              expect_v = vol ;
+              calc_v = records[4*irec] ;
+            }
           }
 
           rec0 += 8 ;
         }}}
-    maxerr /= scale ;   // Print the unscaled volume error.
-    printf ( "Max volume error  = %16.8e\n", maxerr ) ;
+    maxerr /= scale ;   // Compare the unscaled volume error.
+
+    double const tol = 1.0e-12 * sep*sep*sep ;
+    if ( maxerr > tol ) {
+      char const *tst = "INTSC_HEXRECT:" ;
+      printf ( "%s %s %s.\n", tst,
+               "Volume exceeds tolerance for ",
+               getVariantName(m_vid).c_str() ) ;
+      printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) krec=%d"
+               "  tolerance =%10.2e\n",
+               tst, loc_jx, loc_jy, loc_jz, loc_krec, tol ) ;
+      printf ( "%s Maximum error = %16.8e\n", tst, maxerr ) ;
+      printf ( "%s Computed %23.15e\n", tst, calc_v / scale ) ;
+      printf ( "%s Expected %23.15e\n", tst, expect_v / scale ) ;
+    }
   }
 }
 
