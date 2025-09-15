@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#ifndef RAJAPerf_Apps_INTSC_HEXHEX_HELPER_HPP
-#define RAJAPerf_Apps_INTSC_HEXHEX_HELPER_HPP
+#ifndef RAJAPerf_Apps_INTSC_HEXHEX_BODY_HPP
+#define RAJAPerf_Apps_INTSC_HEXHEX_BODY_HPP
 
 
 RAJA_HOST_DEVICE
@@ -396,4 +396,91 @@ RAJA_INLINE void hex_intsc_subz
 }
 
 
-#endif // close include guard RAJAPerf_Apps_INTSC_HEXHEX_HELPER_HPP
+#define INTSC_HEXHEX_BODY_SEQ \
+  long const n_dsz_tris = 12 ; \
+  long const n_tsz_tets = 6 ; \
+  long const nth_per_isc = n_dsz_tris * n_tsz_tets ; \
+  long ipair   = ith / nth_per_isc ; \
+  int dfacet  = ( ith / n_tsz_tets ) % n_dsz_tris ; \
+  int ttet    = ith % n_tsz_tets ; \
+  long pair_base_thr = ipair * nth_per_isc ; \
+  long blk_base = blk * blksize ; \
+  double vv_lo=0.0, vx_lo=0.0, vy_lo=0.0, vz_lo=0.0 ; \
+  double vv_hi=0.0, vx_hi=0.0, vy_hi=0.0, vz_hi=0.0 ; \
+  if ( ipair < nisc_stage ) { \
+    double const *xds = dsubz + 24*ipair ; \
+    double const *xts = tsubz + 24*ipair ; \
+    hex_intsc_subz \
+        ( xds, xts, dfacet, ttet, vv_lo, vx_lo, vy_lo, vz_lo ) ; \
+  } \
+  if ( pair_base_thr > blk_base ) { \
+    vv_hi = vv_lo ; \
+    vx_hi = vx_lo ; \
+    vy_hi = vy_lo ; \
+    vz_hi = vz_lo ; \
+    vv_lo = 0.0 ; \
+    vx_lo = 0.0 ; \
+    vy_lo = 0.0 ; \
+    vz_lo = 0.0 ; \
+  }
+
+
+
+#define INTSC_HEXHEX_BODY \
+  INTSC_HEXHEX_BODY_SEQ \
+  \
+  __syncthreads() ; \
+  for ( int k = 1 ; k < WARPSIZE ; k *= 2 ) { \
+    vv_hi += __shfl_xor_sync ( 0xffffffff, vv_hi, k ) ; \
+    vx_hi += __shfl_xor_sync ( 0xffffffff, vx_hi, k ) ; \
+    vy_hi += __shfl_xor_sync ( 0xffffffff, vy_hi, k ) ; \
+    vz_hi += __shfl_xor_sync ( 0xffffffff, vz_hi, k ) ; \
+    vv_lo += __shfl_xor_sync ( 0xffffffff, vv_lo, k ) ; \
+    vx_lo += __shfl_xor_sync ( 0xffffffff, vx_lo, k ) ; \
+    vy_lo += __shfl_xor_sync ( 0xffffffff, vy_lo, k ) ; \
+    vz_lo += __shfl_xor_sync ( 0xffffffff, vz_lo, k ) ; \
+  } \
+  int const nwarps = blksize / WARPSIZE ; \
+  int k = threadIdx.x / WARPSIZE ; \
+  if ( threadIdx.x == k*WARPSIZE ) { \
+    vv_reduce[k+ 0] = vv_lo ; \
+    vv_reduce[k+ 2] = vx_lo ; \
+    vv_reduce[k+ 4] = vy_lo ; \
+    vv_reduce[k+ 6] = vz_lo ; \
+    vv_reduce[k+ 8] = vv_hi ; \
+    vv_reduce[k+10] = vx_hi ; \
+    vv_reduce[k+12] = vy_hi ; \
+    vv_reduce[k+14] = vz_hi ; \
+  } \
+  __syncthreads() ; \
+  if ( threadIdx.x < 8 ) { \
+    for ( int k = 1 ; k < nwarps ; ++k ) { \
+      vv_reduce[ 2*threadIdx.x ] += vv_reduce[ 2*threadIdx.x + 1 ] ; \
+    } \
+    vv_out[threadIdx.x] = vv_reduce[ 2 * threadIdx.x ] ; \
+  }
+
+//  This is not needed on Seq and OMP CPU variants.
+//
+#define FIXUP_VV_BODY \
+  double *vv          = vv_pair + 32*ith ; \
+  double const *vv_in = vv_int  + 72*ith ; \
+  int k=0 ; \
+  if ( 8*ith + k < n_szpairs ) { \
+    vv[4*k+0] = vv_in[8*k+0] + vv_in[8*k+8] ; \
+    vv[4*k+1] = vv_in[8*k+1] + vv_in[8*k+9] ; \
+    vv[4*k+2] = vv_in[8*k+2] + vv_in[8*k+10] ; \
+    vv[4*k+3] = vv_in[8*k+3] + vv_in[8*k+11] ; \
+  } \
+  for ( int k=1 ; k<8 ; ++k ) { \
+    if ( 8*ith + k < n_szpairs ) { \
+      vv[4*k+0] = vv_in[8*k+4] + vv_in[8*k+8] ; \
+      vv[4*k+1] = vv_in[8*k+5] + vv_in[8*k+9] ; \
+      vv[4*k+2] = vv_in[8*k+6] + vv_in[8*k+10] ; \
+      vv[4*k+3] = vv_in[8*k+7] + vv_in[8*k+11] ; \
+    } \
+  }
+
+
+
+#endif // close include guard RAJAPerf_Apps_INTSC_HEXHEX_BODY_HPP

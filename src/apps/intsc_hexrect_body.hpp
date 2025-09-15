@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#ifndef RAJAPerf_Apps_INTSC_HEXRECT_HELPER_HPP
-#define RAJAPerf_Apps_INTSC_HEXRECT_HELPER_HPP
+#ifndef RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP
+#define RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP
 
 // Helper functions for the INTSC_HEXRECT kernel
 
@@ -572,4 +572,54 @@ RAJA_INLINE int intsc24_hex
 }
 
 
-#endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_HELPER_HPP
+#define INTSC_HEXRECT_BODY \
+  if ( irec < nrecords ) { \
+    double *record = ((double*)records) + 4 * irec ; \
+    double xd[24] ; \
+    double *yd = xd + 8 ; \
+    double *zd = yd + 8 ; \
+    do { \
+      int dzone = intsc_d[irec] ; \
+      for (int j=0 ; j<8 ; j++) { \
+        int node = znlist[ 8*dzone + j ] ; \
+        xd[j] = xdnode[node] ; \
+        yd[j] = ydnode[node] ; \
+        zd[j] = zdnode[node] ; } \
+    } while ( false ) ; \
+    do { \
+      double sum0, sumx, sumy, sumz ; \
+      double const *zplane ; \
+      double const *yplane ; \
+      double const *xplane ; \
+      int jz, jy, jx ; \
+      do { \
+        int *ncord = (int*) ncord_gpu ; \
+        double const **planes = ( double const** ) ( ncord + 4 ) ; \
+        zplane = ( double const* ) ( planes + 3 ) ; \
+        yplane = zplane + ncord[0] + 1 ; \
+        xplane = yplane + ncord[1] + 1 ; \
+        int const nyzones = ncord[1] ; \
+        int const nxzones = ncord[2] ; \
+        int tz = intsc_t[irec] ; \
+        jz = tz / ( nxzones * nyzones ) ; \
+        jy = ( tz / nxzones ) % nyzones ; \
+        jx = tz % nxzones ; \
+      } while ( false ) ; \
+      intsc24_hex \
+          ( xd, my_qx, \
+            xplane[jx], xplane[jx+1], yplane[jy], yplane[jy+1], \
+            zplane[jz], zplane[jz+1], \
+            sum0, sumx, sumy, sumz ) ; \
+      do { \
+        double vf   = 1.0 ; \
+        record[0] = vf * sum0 ; \
+        record[1] = vf * sumx ; \
+        record[2] = vf * sumy ; \
+        record[3] = vf * sumz ; \
+      } while ( false ) ; \
+    } while ( false ) ; \
+  }
+
+
+
+#endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP
