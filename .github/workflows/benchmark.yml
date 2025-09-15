@@ -61,7 +61,11 @@ jobs:
           sha: ${{ github.sha }}
           conclusion: ${{ steps.benchmark.outcome == 'success' && 'success' || 'failure' }}
           output: |
-            {"summary": "${{ steps.benchmark.outcome == 'success' && 'Performance check passed' || 'Performance regression detected!' }}"}
+            {
+              "title": "Performance Results",
+              "summary": "${{ steps.benchmark.outcome == 'success' && 'Performance check passed' || 'Performance regression detected!' }}",
+              "text_description": "See job summary for detailed benchmark results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
 
       - name: Final status
         if: steps.benchmark.outcome != 'success'
