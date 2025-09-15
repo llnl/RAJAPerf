@@ -15,15 +15,6 @@
 #include "common/RPTypes.hpp"
 
 
-RAJA_HOST_DEVICE
-RAJA_INLINE void intsc_hexrect_stub(
-)
-{
-}
-
-
-
-
 //   Clip a polygon returning polygon with active coordinate ain >= cut
 //     Return number of vertices after clipping (might be zero).
 //
