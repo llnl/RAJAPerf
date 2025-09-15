@@ -22,6 +22,74 @@ namespace apps
 {
 
 
+INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
+  : KernelBase(rajaperf::Apps_INTSC_HEXHEX, params)
+{
+  //  one standard intersection = eight subzone intersections.
+  //  Set number of standard intersections here.
+  //
+  //  Default number of standard intersections = 25 cubed, so as to
+  //  finish the "sequential" test in one second.  The gpu tests will
+  //  take only a few milliseconds for the same problem.
+  //
+  constexpr size_t a3_def = 25 ;
+  constexpr size_t n_std_intsc_def = a3_def*a3_def*a3_def ;
+  setDefaultProblemSize(n_std_intsc_def);
+
+  setDefaultReps  (1);
+  setKernelsPerRep(1);
+
+  // Number of standard intersections, by convention a cube number.
+  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
+  a3 = std::max(1UL,a3) ;
+  size_t n_std_intsc = a3*a3*a3 ;
+
+  setActualProblemSize( n_std_intsc ) ;
+  setItsPerRep        ( n_std_intsc );
+
+  // touched data size, not actual number of stores and loads
+  // see VOL3D.cpp
+  setBytesReadPerRep( 48*sizeof(Real_type) * getItsPerRep() );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+
+  constexpr size_t flops_per_tri = 700 ;
+  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
+
+  setFLOPsPerRep(n_std_intsc * flops_per_intsc);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  setVariantDefined( Base_Seq );
+  setVariantDefined( Lambda_Seq );
+  setVariantDefined( RAJA_Seq );
+
+  setVariantDefined( Base_OpenMP );
+  setVariantDefined( Lambda_OpenMP );
+  setVariantDefined( RAJA_OpenMP );
+
+  setVariantDefined( Base_OpenMPTarget );
+  setVariantDefined( RAJA_OpenMPTarget );
+
+  setVariantDefined( Base_CUDA );
+  setVariantDefined( Lambda_CUDA );
+  setVariantDefined( RAJA_CUDA );
+
+  setVariantDefined( Base_HIP );
+  setVariantDefined( Lambda_HIP );
+  setVariantDefined( RAJA_HIP );
+
+  setVariantDefined( Base_SYCL );
+  setVariantDefined( RAJA_SYCL );
+}
+
+INTSC_HEXHEX::~INTSC_HEXHEX()
+{
+}
+
+
 void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;    // Remember variant to deallocate data.
@@ -191,75 +259,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
   }
 }
 
-
-INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
-  : KernelBase(rajaperf::Apps_INTSC_HEXHEX, params)
-{
-  //  one standard intersection = eight subzone intersections.
-  //  Set number of standard intersections here.
-  //
-  //  Default number of standard intersections = 25 cubed, so as to
-  //  finish the "sequential" test in one second.  The gpu tests will
-  //  take only a few milliseconds for the same problem.
-  //
-  constexpr size_t a3_def = 25 ;
-  constexpr size_t n_std_intsc_def = a3_def*a3_def*a3_def ;
-  setDefaultProblemSize(n_std_intsc_def);
-
-  setDefaultReps  (1);
-  setKernelsPerRep(1);
-
-  // Number of standard intersections, by convention a cube number.
-  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
-  a3 = std::max(1UL,a3) ;
-  size_t n_std_intsc = a3*a3*a3 ;
-
-  setActualProblemSize( n_std_intsc ) ;
-  setItsPerRep        ( n_std_intsc );
-
-  // touched data size, not actual number of stores and loads
-  // see VOL3D.cpp
-  setBytesReadPerRep( 48*sizeof(Real_type) * getItsPerRep() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-
-  constexpr size_t flops_per_tri = 700 ;
-  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
-
-  setFLOPsPerRep(n_std_intsc * flops_per_intsc);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-}
-
-INTSC_HEXHEX::~INTSC_HEXHEX()
-{
-}
-
-// put setup here
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 {

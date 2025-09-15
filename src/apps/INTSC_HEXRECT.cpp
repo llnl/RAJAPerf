@@ -22,6 +22,87 @@ namespace apps
 {
 
 
+
+
+INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
+  : KernelBase(rajaperf::Apps_INTSC_HEXRECT, params)
+{
+  //  Each donor zone intersects eight "target zones"
+  //
+  //  Default problem size is 50 cubed "donor zones", one million intersections
+  //   Problem size is specified as number of intersections, which is
+  //     8 * number of donor zones.
+  //   Number of donor zones is a cube number, "side" is the length
+  //   of a side of the cube (cube root of number of donor zones)
+  //
+  constexpr size_t a3_def = 50 ;
+  size_t n_intsc_def = 8L * a3_def * a3_def * a3_def ;
+  setDefaultProblemSize(n_intsc_def);
+
+  //  Command line --size specifies requested number of intersections.
+  //  Requested number of intersections will be converted to an even cube
+  //  number of intersections.
+  //
+  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
+
+  // number of donor zones on a side of the cube
+  size_t side = a3 / 2 ;
+  side = std::max(1UL,side) ;
+
+  m_ndzones = side * side * side ;   // number of "donor zones" on a side
+  size_t n_intsc = 8L*m_ndzones ;   // number of intersections to compute
+  m_ntzones = n_intsc ;          // one "target zone" per intersection
+  setDefaultReps(1);
+
+  setActualProblemSize( n_intsc );
+
+  setItsPerRep( n_intsc );
+  setKernelsPerRep(1);
+
+  // touched data size, not actual number of stores and loads
+  // see VOL3D.cpp
+  setBytesReadPerRep( 48*sizeof(Real_type) * getItsPerRep() );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+
+  constexpr size_t flops_per_tri = 700 ;
+  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
+
+  setFLOPsPerRep(n_intsc * flops_per_intsc);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  setVariantDefined( Base_Seq );
+  setVariantDefined( Lambda_Seq );
+  setVariantDefined( RAJA_Seq );
+
+  setVariantDefined( Base_OpenMP );
+  setVariantDefined( Lambda_OpenMP );
+  setVariantDefined( RAJA_OpenMP );
+
+  setVariantDefined( Base_OpenMPTarget );
+  setVariantDefined( RAJA_OpenMPTarget );
+
+  setVariantDefined( Base_CUDA );
+  setVariantDefined( Lambda_CUDA );
+  setVariantDefined( RAJA_CUDA );
+
+  setVariantDefined( Base_HIP );
+  setVariantDefined( Lambda_HIP );
+  setVariantDefined( RAJA_HIP );
+
+  setVariantDefined( Base_SYCL );
+  setVariantDefined( RAJA_SYCL );
+}
+
+INTSC_HEXRECT::~INTSC_HEXRECT()
+{
+}
+
+
+
 void INTSC_HEXRECT::copyTargetToDevice
     ( double const **planes, // [3] Target mesh planes in (z,y,x)
       int const* ncord )     // [3] number of target zones in (z,y,x)
@@ -514,84 +595,6 @@ void INTSC_HEXRECT::checkScaledVolumes
       printf ( "%s Expected %23.15e\n", tst, expect_v / scale ) ;
     }
   }
-}
-
-
-INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
-  : KernelBase(rajaperf::Apps_INTSC_HEXRECT, params)
-{
-  //  Each donor zone intersects eight "target zones"
-  //
-  //  Default problem size is 50 cubed "donor zones", one million intersections
-  //   Problem size is specified as number of intersections, which is
-  //     8 * number of donor zones.
-  //   Number of donor zones is a cube number, "side" is the length
-  //   of a side of the cube (cube root of number of donor zones)
-  //
-  constexpr size_t a3_def = 50 ;
-  size_t n_intsc_def = 8L * a3_def * a3_def * a3_def ;
-  setDefaultProblemSize(n_intsc_def);
-
-  //  Command line --size specifies requested number of intersections.
-  //  Requested number of intersections will be converted to an even cube
-  //  number of intersections.
-  //
-  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
-
-  // number of donor zones on a side of the cube
-  size_t side = a3 / 2 ;
-  side = std::max(1UL,side) ;
-
-  m_ndzones = side * side * side ;   // number of "donor zones" on a side
-  size_t n_intsc = 8L*m_ndzones ;   // number of intersections to compute
-  m_ntzones = n_intsc ;          // one "target zone" per intersection
-  setDefaultReps(1);
-
-  setActualProblemSize( n_intsc );
-
-  setItsPerRep( n_intsc );
-  setKernelsPerRep(1);
-
-  // touched data size, not actual number of stores and loads
-  // see VOL3D.cpp
-  setBytesReadPerRep( 48*sizeof(Real_type) * getItsPerRep() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-
-  constexpr size_t flops_per_tri = 700 ;
-  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
-
-  setFLOPsPerRep(n_intsc * flops_per_intsc);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-}
-
-INTSC_HEXRECT::~INTSC_HEXRECT()
-{
 }
 
 
