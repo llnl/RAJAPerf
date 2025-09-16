@@ -35,6 +35,11 @@ COPY8::COPY8(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setMaxLoopDimensions(1);
+  setMaxArrayDimensions(1);
+  setNumArrays(16);
+
   setUsesFeature(Forall);
 
   setVariantDefined( Base_Seq );

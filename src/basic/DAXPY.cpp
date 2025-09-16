@@ -35,6 +35,11 @@ DAXPY::DAXPY(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setMaxLoopDimensions(1);
+  setMaxArrayDimensions(1);
+  setNumArrays(2);
+
   setUsesFeature(Forall);
 
   setVariantDefined( Base_Seq );

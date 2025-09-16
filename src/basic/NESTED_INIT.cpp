@@ -46,6 +46,11 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setMaxLoopDimensions(3);
+  setMaxArrayDimensions(1);
+  setNumArrays(1);
+
   setUsesFeature(Kernel);
 
   setVariantDefined( Base_Seq );
