@@ -47,6 +47,7 @@ jobs:
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           comment-always: false
+          comment-on-alert: true
           summary-always: true
           fail-on-alert: true
           alert-threshold: '120%'
