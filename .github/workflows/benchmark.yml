@@ -25,7 +25,10 @@ jobs:
       - name: Find associated PR
         id: findpr
         run: |
+          echo "Looking for PR with head branch: ${{ github.ref_name }}"
+          gh pr list --head ${{ github.ref_name }} --json number,title
           PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number -q '.[0].number')
+          echo "Found PR number: $PR_NUMBER"
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,7 +58,7 @@ jobs:
 
       - name: Create Check for PRs
         if: steps.findpr.outputs.pr_number != ''
-        uses: LouisBrunner/checks-action@v1.6.1
+        uses: LouisBrunner/checks-action@v2.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: Performance Benchmark (${{ github.event.inputs.benchmark_name }})
