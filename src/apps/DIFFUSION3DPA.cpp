@@ -57,7 +57,7 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
   setMaxPerfectLoopDimensions(3);
   setMaxLoopDimensions(5);
   setMaxArrayDimensions(3);
-  setNumArrays(22);
+  setNumArrays(10); // m_B, m_Bt, m_G, m_Gt, m_D, m_X, m_Y, sBG, sm0, sm1
   setBatchSize(8);
 
   setUsesFeature(Launch);

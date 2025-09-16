@@ -48,7 +48,7 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
   setMaxPerfectLoopDimensions(1);
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(2);
-  setNumArrays(18); // x1-4, y1-4, fx1-4, fy1-4, real_zones, div
+  setNumArrays(5); // m_x, m_y, m_xdot, m_ydot, m_div
 
   setUsesFeature(Forall);
 

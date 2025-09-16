@@ -55,6 +55,11 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(4);
+  setMaxLoopDimensions(4);
+  setMaxArrayDimensions(1);
+  setNumArrays(3); 
+
   setUsesFeature(Kernel);
   setUsesFeature(Launch);
 

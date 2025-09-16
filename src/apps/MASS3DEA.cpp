@@ -46,6 +46,11 @@ MASS3DEA::MASS3DEA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setMaxLoopDimensions(10);
+  setMaxArrayDimensions(3); // s_D
+  setNumArrays(6); // s_B, s_D, m_B, m_Bt, m_D, m_M 
+
   setUsesFeature(Launch);
 
   setVariantDefined( Base_Seq );
