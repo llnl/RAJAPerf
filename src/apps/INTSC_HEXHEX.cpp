@@ -53,7 +53,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  constexpr size_t flops_per_tri = 700 ;
+  constexpr size_t flops_per_tri = 336 ;
   constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
