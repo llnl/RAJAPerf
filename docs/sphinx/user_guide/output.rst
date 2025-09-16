@@ -81,6 +81,11 @@ Information reported in the file for each kernel is:
     currently count operations like abs and comparisons (<, >, etc.) in the 
     FLOP count. So these numbers are rough estimates. For actual FLOP counts, 
     a performance analysis tool should be used.
+  * **Complexity** -- Kernel algorithmic complexity in Big O notation.
+  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly nested loop.
+  * **MaxLoopDimensions** --  Number of levels in the largest nested loop.
+  * **MaxArrayDimensions** -- Number of dimensions in the highest-dimensionality array.
+  * **NumArrays** -- Total number of arrays initialized in the kernel.
 
 .. _output_probsize-label:
 
