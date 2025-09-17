@@ -723,7 +723,7 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
         kernel->execute(vid, tune_idx); // Execute kernel
 
         if ( run_params.showProgress() ) {
-          getCout() << " -- " << kernel->getLastTime() << " sec.";
+          getCout() << " -- " << kernel->getLastTime() / kernel->getRunReps() << " sec. x " << kernel->getRunReps() << " rep.";
 
           size_t prec = 20;
           const auto default_precision = getCout().precision();
