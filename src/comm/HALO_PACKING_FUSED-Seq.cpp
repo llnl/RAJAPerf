@@ -31,7 +31,7 @@ void HALO_PACKING_FUSED::runSeqVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Index_type pack_index = 0;
 
@@ -105,7 +105,7 @@ void HALO_PACKING_FUSED::runSeqVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_LAMBDA_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Index_type pack_index = 0;
 
@@ -231,7 +231,7 @@ void HALO_PACKING_FUSED::runSeqVariantWorkGroup(VariantID vid)
       pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];

@@ -153,7 +153,7 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (t = 0; t < tsteps; ++t) {
 
@@ -195,7 +195,7 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (t = 0; t < tsteps; ++t) {
 
@@ -275,7 +275,7 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (t = 0; t < tsteps; ++t) {
 

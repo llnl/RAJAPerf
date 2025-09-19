@@ -116,7 +116,7 @@ void HISTOGRAM::runCudaVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
       cudaErrchk(::cub::DeviceHistogram::HistogramEven(d_temp_storage,
@@ -183,7 +183,7 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(Data_ptr, counts, hcounts, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_CUDA_REDUCER_INITIALIZE(counts_init, counts, hcounts, num_bins, global_replication);
 
@@ -233,7 +233,7 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       HISTOGRAM_INIT_COUNTS_RAJA(multi_reduce_policy);
 

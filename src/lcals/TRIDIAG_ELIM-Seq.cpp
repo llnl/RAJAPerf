@@ -37,7 +37,7 @@ void TRIDIAG_ELIM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           TRIDIAG_ELIM_BODY;
@@ -53,7 +53,7 @@ void TRIDIAG_ELIM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           tridiag_elim_lam(i);
@@ -70,7 +70,7 @@ void TRIDIAG_ELIM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), tridiag_elim_lam);

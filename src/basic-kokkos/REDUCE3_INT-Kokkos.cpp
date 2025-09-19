@@ -34,7 +34,7 @@ void REDUCE3_INT::runKokkosVariant(VariantID vid,
 
     Kokkos::fence();
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Int_type max_value = m_vmax_init;
       Int_type min_value = m_vmin_init;

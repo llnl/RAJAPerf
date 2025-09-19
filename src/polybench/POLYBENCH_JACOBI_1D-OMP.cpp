@@ -39,7 +39,7 @@ void POLYBENCH_JACOBI_1D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type t = 0; t < tsteps; ++t) {
 
@@ -63,7 +63,7 @@ void POLYBENCH_JACOBI_1D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type t = 0; t < tsteps; ++t) {
 
@@ -89,7 +89,7 @@ void POLYBENCH_JACOBI_1D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type t = 0; t < tsteps; ++t) {
 

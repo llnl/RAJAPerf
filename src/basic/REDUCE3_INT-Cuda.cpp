@@ -87,7 +87,7 @@ void REDUCE3_INT::runCudaVariantBase(VariantID vid)
         MappingHelper, (reduce3int<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Int_type ivmem[3] {m_vsum_init, m_vmin_init, m_vmax_init};
       RAJAPERF_CUDA_REDUCER_INITIALIZE(ivmem, vmem, hvmem, 3, 1);
@@ -141,7 +141,7 @@ void REDUCE3_INT::runCudaVariantRAJA(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::ReduceSum<reduction_policy, Int_type> vsum(m_vsum_init);
       RAJA::ReduceMin<reduction_policy, Int_type> vmin(m_vmin_init);
@@ -182,7 +182,7 @@ void REDUCE3_INT::runCudaVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Int_type tvsum = m_vsum_init;
       Int_type tvmin = m_vmin_init;

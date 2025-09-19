@@ -34,7 +34,7 @@ void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(N, work_group_size);
 
@@ -70,7 +70,7 @@ void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
        RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
          RAJA::RangeSegment(0, N), [=] (Index_type k) {
