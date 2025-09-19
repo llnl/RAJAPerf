@@ -110,7 +110,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(Data_ptr, values, hvalues, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_CUDA_REDUCER_INITIALIZE(values_init, values, hvalues, num_bins, global_replication);
 
@@ -161,7 +161,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       MULTI_REDUCE_INIT_VALUES_RAJA(multi_reduce_policy);
 

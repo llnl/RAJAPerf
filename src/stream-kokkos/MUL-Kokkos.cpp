@@ -32,7 +32,7 @@ void MUL::runKokkosVariant(VariantID vid,
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Kokkos::parallel_for(
           "MUL_Kokkos Kokkos_Lambda",

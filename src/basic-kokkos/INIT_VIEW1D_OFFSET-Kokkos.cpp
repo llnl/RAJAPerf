@@ -31,7 +31,7 @@ void INIT_VIEW1D_OFFSET::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Kokkos::parallel_for(
           "INIT_VIEW1D_OFFSET_Kokkos Kokkos_Lambda",

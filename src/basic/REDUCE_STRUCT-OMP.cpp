@@ -34,7 +34,7 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -74,7 +74,7 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
                                  };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -115,7 +115,7 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
       if (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
  
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> xsum(m_init_sum);
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> ysum(m_init_sum);
@@ -143,7 +143,7 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
       } else if (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           Real_type txsum = m_init_sum;
           Real_type tysum = m_init_sum;

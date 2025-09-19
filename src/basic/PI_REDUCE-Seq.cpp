@@ -34,7 +34,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type pi = m_pi_init;
 
@@ -59,7 +59,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type pi = m_pi_init;
 
@@ -82,7 +82,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
       if (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> pi(m_pi_init);
   
@@ -100,7 +100,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
       } else if (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           Real_type tpi = m_pi_init;
  

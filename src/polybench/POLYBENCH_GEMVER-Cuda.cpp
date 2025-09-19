@@ -134,7 +134,7 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       GEMVER_THREADS_PER_BLOCK_CUDA;
       GEMVER_NBLOCKS_CUDA;
@@ -169,7 +169,7 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       GEMVER_THREADS_PER_BLOCK_CUDA;
       GEMVER_NBLOCKS_CUDA;
@@ -260,7 +260,7 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
     using EXEC_POL3 = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL1>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},

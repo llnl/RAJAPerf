@@ -35,7 +35,7 @@ void SORTPAIRS::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::sort_pairs< RAJA::cuda_exec<default_gpu_block_size, true /*async*/> >(res, RAJA_SORTPAIRS_ARGS);
 

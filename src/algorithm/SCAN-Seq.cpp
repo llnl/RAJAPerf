@@ -31,7 +31,7 @@ void SCAN::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         SCAN_PROLOGUE;
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -48,7 +48,7 @@ void SCAN::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         SCAN_PROLOGUE;
         auto scan_lam = [=, &scan_var](Index_type i) {
@@ -69,7 +69,7 @@ void SCAN::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::exclusive_scan<RAJA::seq_exec>(res, RAJA_SCAN_ARGS);
 

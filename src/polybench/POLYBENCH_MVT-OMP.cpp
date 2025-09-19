@@ -32,7 +32,7 @@ void POLYBENCH_MVT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel
         {
@@ -83,7 +83,7 @@ void POLYBENCH_MVT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel
         {
@@ -151,7 +151,7 @@ void POLYBENCH_MVT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::region<RAJA::omp_parallel_region>( [=]() {
 

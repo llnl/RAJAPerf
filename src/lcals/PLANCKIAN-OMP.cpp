@@ -38,7 +38,7 @@ void PLANCKIAN::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -54,7 +54,7 @@ void PLANCKIAN::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -72,7 +72,7 @@ void PLANCKIAN::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), planckian_lam);
