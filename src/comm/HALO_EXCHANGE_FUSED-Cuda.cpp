@@ -102,7 +102,7 @@ void HALO_EXCHANGE_FUSED::runCudaVariantDirect(VariantID vid)
     HALO_EXCHANGE_FUSED_MANUAL_FUSER_SETUP_CUDA;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       constexpr size_t shmem = 0;
 
@@ -254,7 +254,7 @@ void HALO_EXCHANGE_FUSED::runCudaVariantWorkGroup(VariantID vid)
     pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];

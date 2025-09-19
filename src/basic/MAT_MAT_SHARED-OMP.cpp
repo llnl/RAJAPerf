@@ -31,7 +31,7 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   case Base_OpenMP: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
 #pragma omp parallel
       {
@@ -83,7 +83,7 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   case Lambda_OpenMP: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto outer_y = [&](Index_type by) {
         auto outer_x = [&](Index_type bx) {
@@ -173,7 +173,7 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     using inner_y = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       //Grid is empty as the host does not need a compute grid to be specified
       RAJA::launch<launch_policy>( res,

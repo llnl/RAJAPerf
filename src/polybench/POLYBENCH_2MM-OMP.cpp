@@ -39,7 +39,7 @@ void POLYBENCH_2MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
 #if defined(USE_OMP_COLLAPSE)
         #pragma omp parallel for collapse(2)
@@ -97,7 +97,7 @@ void POLYBENCH_2MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
 #if defined(USE_OMP_COLLAPSE)
         #pragma omp parallel for collapse(2)
@@ -192,7 +192,7 @@ void POLYBENCH_2MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, ni},

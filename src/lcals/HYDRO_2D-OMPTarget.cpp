@@ -34,7 +34,7 @@ void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       #pragma omp target is_device_ptr(zadat, zbdat, zpdat, \
                                        zqdat, zrdat, zmdat) device( did )
@@ -81,7 +81,7 @@ void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),

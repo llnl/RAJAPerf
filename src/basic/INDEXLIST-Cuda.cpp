@@ -103,7 +103,7 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
     allocData(DataSpace::CudaDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       cudaErrchk( cudaMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size, 
                                   res.get_stream()) );

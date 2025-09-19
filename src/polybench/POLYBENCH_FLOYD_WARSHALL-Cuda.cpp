@@ -77,7 +77,7 @@ void POLYBENCH_FLOYD_WARSHALL::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type k = 0; k < N; ++k) {
 
@@ -99,7 +99,7 @@ void POLYBENCH_FLOYD_WARSHALL::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type k = 0; k < N; ++k) {
 
@@ -142,7 +142,7 @@ void POLYBENCH_FLOYD_WARSHALL::runCudaVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{0, N},

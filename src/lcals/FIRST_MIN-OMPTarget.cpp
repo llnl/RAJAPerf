@@ -38,7 +38,7 @@ void FIRST_MIN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       #pragma omp declare reduction(minloc : MyMinLoc : \
                                     omp_out = MinLoc_compare(omp_out, omp_in))\
@@ -63,7 +63,7 @@ void FIRST_MIN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                         m_initloc);

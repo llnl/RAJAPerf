@@ -40,7 +40,7 @@ void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Kokkos::parallel_for(
           "DAXPY_ATOMIC_Kokkos Kokkos_Lambda",

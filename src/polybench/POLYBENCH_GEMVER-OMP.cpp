@@ -33,7 +33,7 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (Index_type i = 0; i < n; i++ ) {
@@ -95,7 +95,7 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (Index_type i = 0; i < n; i++ ) {
@@ -187,7 +187,7 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       using EXEC_POL3 = RAJA::seq_exec;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXEC_POL1>(
           RAJA::make_tuple(RAJA::RangeSegment{0, n},

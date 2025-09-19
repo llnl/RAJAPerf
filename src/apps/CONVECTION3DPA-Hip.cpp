@@ -139,7 +139,7 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
   case Base_HIP: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(CPA_Q1D, CPA_Q1D, CPA_Q1D);
       constexpr size_t shmem = 0;
@@ -174,7 +174,7 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<CPA_Q1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),

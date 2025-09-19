@@ -53,7 +53,7 @@ void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUS
       INDEXLIST_3LOOP_DATA_SETUP_OMP_TARGET;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
 

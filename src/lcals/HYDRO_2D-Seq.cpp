@@ -36,7 +36,7 @@ void HYDRO_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type k = kbeg; k < kend; ++k ) {
           for (Index_type j = jbeg; j < jend; ++j ) {
@@ -76,7 +76,7 @@ void HYDRO_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type k = kbeg; k < kend; ++k ) {
           for (Index_type j = jbeg; j < jend; ++j ) {
@@ -128,7 +128,7 @@ void HYDRO_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXECPOL>(
                      RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),

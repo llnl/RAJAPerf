@@ -31,7 +31,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];
@@ -78,7 +78,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];
@@ -135,7 +135,7 @@ void HALO_PACKING::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       using EXEC_POL = RAJA::omp_parallel_for_exec;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];

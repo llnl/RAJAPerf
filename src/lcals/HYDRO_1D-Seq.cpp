@@ -37,7 +37,7 @@ void HYDRO_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           HYDRO_1D_BODY;
@@ -53,7 +53,7 @@ void HYDRO_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           hydro1d_lam(i);
@@ -70,7 +70,7 @@ void HYDRO_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), hydro1d_lam);

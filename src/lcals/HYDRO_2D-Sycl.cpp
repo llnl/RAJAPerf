@@ -49,7 +49,7 @@ void HYDRO_2D::runSyclVariantImpl(VariantID vid) {
     sycl::range<3> wkgroup_dim(1, k_wg_sz, j_wg_sz);
  
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       qu->submit([&] (sycl::handler& h) { 
 
@@ -113,7 +113,7 @@ void HYDRO_2D::runSyclVariantImpl(VariantID vid) {
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),

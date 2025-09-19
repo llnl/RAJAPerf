@@ -32,7 +32,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
@@ -59,7 +59,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
                              };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         #pragma omp parallel for
         for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
@@ -103,7 +103,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
           >;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
                                                             IZRange(0, *num_z),
@@ -129,7 +129,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
         using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           RAJA::launch<launch_policy>( res,
               RAJA::LaunchParams(),

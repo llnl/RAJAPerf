@@ -37,7 +37,7 @@ void ARRAY_OF_PTRS::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
@@ -59,7 +59,7 @@ void ARRAY_OF_PTRS::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {

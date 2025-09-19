@@ -109,7 +109,7 @@ void REDUCE_SUM::runHipVariantRocprim(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
 #if defined(__HIPCC__)
@@ -169,7 +169,7 @@ void REDUCE_SUM::runHipVariantBase(VariantID vid)
         MappingHelper, (reduce_sum<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_sum_init, sum, hsum, 1, 1);
 
@@ -219,7 +219,7 @@ void REDUCE_SUM::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> sum(m_sum_init);
 
@@ -259,7 +259,7 @@ void REDUCE_SUM::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type tsum = m_sum_init;
 

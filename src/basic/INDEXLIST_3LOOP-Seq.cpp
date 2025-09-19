@@ -40,7 +40,7 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       INDEXLIST_3LOOP_DATA_SETUP_Seq;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           counts[i] = (INDEXLIST_3LOOP_CONDITIONAL) ? 1 : 0;
@@ -82,7 +82,7 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           indexlist_conditional_lam(i);
@@ -117,7 +117,7 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       INDEXLIST_3LOOP_DATA_SETUP_Seq;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),

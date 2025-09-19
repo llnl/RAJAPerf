@@ -35,7 +35,7 @@ void NESTED_INIT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type k = 0; k < nk; ++k ) {
           for (Index_type j = 0; j < nj; ++j ) {
@@ -55,7 +55,7 @@ void NESTED_INIT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
           for (Index_type k = 0; k < nk; ++k ) {
             for (Index_type j = 0; j < nj; ++j ) {
@@ -87,7 +87,7 @@ void NESTED_INIT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, ni),
                                                           RAJA::RangeSegment(0, nj),

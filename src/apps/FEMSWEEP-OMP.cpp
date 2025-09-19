@@ -31,7 +31,7 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
          #pragma omp parallel for
          for (int ag = 0; ag < na * ng; ++ag)
@@ -56,7 +56,7 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
           RAJA::LoopPolicy<RAJA::omp_for_exec>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
          RAJA::launch<launch_policy>( res,
              RAJA::LaunchParams(),

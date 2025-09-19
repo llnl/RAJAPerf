@@ -40,7 +40,7 @@ void PRESSURE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           PRESSURE_BODY1;
@@ -60,7 +60,7 @@ void PRESSURE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
        for (Index_type i = ibegin; i < iend; ++i ) {
          pressure_lam1(i);
@@ -81,7 +81,7 @@ void PRESSURE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::region<RAJA::seq_region>( [=]() {
 
