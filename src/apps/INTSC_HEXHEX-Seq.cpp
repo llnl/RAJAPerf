@@ -29,6 +29,14 @@ void INTSC_HEXHEX::intscHexHexSeq
   long ith = i ;
   long blk = ith / blksize ;   // which "block" for gpu compatibility
 
+  if ( i == 0 ) {   // initialize the accumulation
+    Index_type n_std_intsc = m_nthreads / m_tri_per_intsc ;
+    Index_type vv_len = 32L * n_std_intsc ;
+    for ( Index_type k = 0 ; k < vv_len ; ++k ) {
+      m_vv_out[k] = 0.0 ;
+    }
+  }
+
   Real_ptr tsubz = m_tsubz ;
   Real_ptr dsubz = m_dsubz ;
 

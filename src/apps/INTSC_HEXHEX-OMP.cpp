@@ -25,6 +25,15 @@ void INTSC_HEXHEX::intscHexHexOMP
 {
   long nisc_stage = iend * m_tri_per_intsc ;
 
+  //  A "standard intersection" is eight subzones.
+  unsigned long nsubzones_per_std_intsc = 8 ;
+  unsigned long ipair0 = i * nsubzones_per_std_intsc ;
+
+  // Initialize the accumulation.
+  for ( size_t j=0L ; j < 4L*nsubzones_per_std_intsc ; ++j ) {
+    m_vv_out[ 4L*ipair0 + j ] = 0.0 ;
+  }
+
   for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
 
     long blksize = default_gpu_block_size ;  // for compatibility with gpu code
