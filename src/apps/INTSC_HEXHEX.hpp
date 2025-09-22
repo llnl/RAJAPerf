@@ -77,8 +77,7 @@ private:
   void intscHexHexOMP        ( Index_type i, Index_type iend ) ;
   void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
 
-  void check_intsc_volume_moments
-      ( FILE* f, long const n_intsc, double const *vv ) ;
+  void check_intsc_volume_moments ( long const n_intsc, double const *vv ) ;
 
   static constexpr size_t m_tri_per_intsc = 576 ;
   static const size_t default_gpu_block_size = 64;

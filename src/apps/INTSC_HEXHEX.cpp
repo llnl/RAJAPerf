@@ -176,8 +176,7 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 //   Number of subzone intersections = 8 * number of standard intersections.
 //
 void INTSC_HEXHEX::check_intsc_volume_moments
-    ( FILE* f,
-      long const n_subz_intsc,  // number of subzone intersections
+    ( long const n_subz_intsc,  // number of subzone intersections
       double const *vv )   // computed volumes, moments on the host
 {
   int rank = 0;
@@ -188,8 +187,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
   // Check on rank 0, other ranks are identical.
   if ( rank == 0 ) {
     char const *tst = "INTSC_HEXHEX:" ;
-
-    long n_std_intsc = getActualProblemSize() ;
 
     //   Determine the correct volume and moments.
     double v0, vx, vy, vz ;
@@ -225,7 +222,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
         ( fabs(ymax) + fabs(ymin) ) *  ( fabs(ymax) + fabs(ymin) ) ;
     double tolsqz = tolsq * v0*v0 *
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
-    bool correct = true ;
+
     for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
       double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
       double dxm = vv[ 4*k + 1 ] - vx ;
@@ -269,8 +266,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
   copyData ( DataSpace::Host, m_vv,
              getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;
 
-  check_intsc_volume_moments
-      ( stdout, n_subz_intsc, m_vv ) ;
+  check_intsc_volume_moments ( n_subz_intsc, m_vv ) ;
 
   detail::deallocHostData ( m_vv ) ;
 
