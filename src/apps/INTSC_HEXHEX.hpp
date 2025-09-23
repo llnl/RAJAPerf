@@ -6,6 +6,49 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
+/// Intersection between two 24-sided hexahedrons, volume and moments.
+///
+///  for ( itri=0 ; itri < 576*n_std_intsc ; ++itri ) {
+///   long const n_dsz_tris = 12 ;
+///   long const n_tsz_tets = 6 ;
+///   long const nth_per_isc = n_dsz_tris * n_tsz_tets ;
+///   long ipair   = itri / nth_per_isc ;
+///   int dfacet  = ( itri / n_tsz_tets ) % n_dsz_tris ;
+///   int ttet    = itri % n_tsz_tets ;
+///   long pair_base_thr = ipair * nth_per_isc ;
+///   long blk_base = blk * blksize ;
+///   double vv=0.0, vx=0.0, vy=0.0, vz=0.0 ;
+///
+///   double const *xds = dsubz + 24*ipair ;
+///   double const *xts = tsubz + 24*ipair ;
+///   hex_intsc_subz ( xds, xts, dfacet, ttet, vv, vx, vy, vz ) ;
+///
+///   vv_out[4*ipair+0]  = vv ;
+///   vv_out[4*ipair+1]  = vx ;
+///   vv_out[4*ipair+2]  = vy ;
+///   vv_out[4*ipair+3]  = vz ;
+///  }
+///
+/// void hex_intsc_subz
+///     ( double const *xds, double const *xts,
+///       int const dfacet, int const ttet,
+///       double &vv, double &vx, double &vy, double &vz )
+///    {
+///      double const *yds = xds + 8 ;
+///      double const *zds = yds + 8 ;
+///      double const *yts = xts + 8 ;
+///      double const *zts = yts + 8 ;
+///
+///      double xdt[3], ydt[3], zdt[3] ;
+///      copy_donor_triangle ( xdt, ydt, zdt, xds, yds, zds ) ;
+///      double xtt[4], ytt[4], ztt[4] ;
+///      copy_target_tet ( xtt, ytt, ztt, xts, yts, zts ) ;
+///
+///      cuda_intsc_tri_tet
+///       ( xdt, ydt, zdt, xtt, ytt, ztt, vv, vx, vy, vz ) ;
+///    }
+
+
 #ifndef RAJAPerf_Apps_INTSC_HEXHEX_HPP
 #define RAJAPerf_Apps_INTSC_HEXHEX_HPP
 
