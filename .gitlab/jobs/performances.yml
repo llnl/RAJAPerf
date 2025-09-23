@@ -13,7 +13,6 @@ variables:
   PERF_PROCESSING_CMD: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
   PERFORMANCE_TESTS: "true"
 
-# TODO: Should I run with +omptask ?
 clang_14_0_6_caliper:
   variables:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
