@@ -61,11 +61,12 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
-  //  Bytes Read : donor zone coords (24 doubles), target plane
-  //  coords (30 doubles), intsc_d and intsc_t (2 ints), and
-  //  zone node list (8 ints) for each intersection.
-  setBytesReadPerRep( ( 30*sizeof(Real_type) + 10*sizeof(Int_type) )
-                      * getItsPerRep() );
+  //  Bytes Read : donor node coords (3 doubles), target plane
+  //  coords (negligible); donor zone list (8 * m_ndzones) and
+  //  intersection lists intsc_d and intsc_t each 1 integer per intersection.
+  setBytesReadPerRep( 3*(side+1)*(side+1)*(side+1)*sizeof(Real_type) +
+                      8*m_ndzones*sizeof(Int_type) +
+                      2*sizeof(Int_type) * getItsPerRep() );
 
   // Bytes written : 4 for each intersection.
   setBytesWrittenPerRep( 4*sizeof(Real_type) * getItsPerRep() );
