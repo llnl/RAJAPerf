@@ -75,8 +75,6 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
 
-          Index_type i = item.get_global_id(0) + ibegin;
-
           long irec     = i ;
           long blksize = work_group_size ;
           long blk     = i / blksize ;
