@@ -18,7 +18,7 @@ clang_14_0_6_caliper:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
     KERNELS: "Basic_PI_ATOMIC Basic_DAXPY"
     VARIANTS: "RAJA_Seq RAJA_OpenMP"
-    OMP_NUM_THREADS: 16"
+    OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
 rocmcc_6_4_1_hip_openmp_caliper:
