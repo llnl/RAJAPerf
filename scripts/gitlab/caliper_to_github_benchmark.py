@@ -23,8 +23,7 @@ def caliper_to_benchmark_json(input_file):
         List of benchmark dictionaries
     """
 
-    filename = Path(input_file).stem
-    variant = filename.split('-')[0]
+    variant = Path(input_file).stem
 
     reader = cr.CaliperReader()
     reader.read(input_file)
