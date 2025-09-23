@@ -52,6 +52,8 @@ process_results:
   extends: .caliper_to_gh_benchmark
   dependencies:
     - clang_14_0_6_openmp_caliper
+    - gcc_10_3_1_openmp_caliper
+    - clang_14_0_6_mpi_caliper
     - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
