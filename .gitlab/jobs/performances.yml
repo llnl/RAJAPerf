@@ -18,6 +18,7 @@ clang_14_0_6_openmp_caliper:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
     KERNELS: "Basic"
     VARIANTS: "RAJA_Seq RAJA_OpenMP"
+    PERF_RUN_OPTS: "--repfact 10.0"
     OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
@@ -26,6 +27,7 @@ gcc_10_3_1_openmp_caliper:
     SPEC: "~shared +openmp +caliper %gcc@=10.3.1 ^blt@develop"
     KERNELS: "Basic"
     VARIANTS: "RAJA_Seq RAJA_OpenMP"
+    PERF_RUN_OPTS: "--repfact 10.0"
     OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
@@ -34,6 +36,7 @@ clang_14_0_6_mpi_caliper:
     SPEC: "~shared +mpi +caliper %clang@=14.0.6 ^blt@develop"
     KERNELS: "Basic"
     VARIANTS: "RAJA_Seq"
+    PERF_RUN_OPTS: "--repfact 10.0"
     PERF_MPI_EXEC: "srun --overlap -n 16"
   extends: .perf_on_dane
 
@@ -42,6 +45,7 @@ rocmcc_6_4_1_hip_openmp_caliper:
     SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"
     KERNELS: "Basic"
     VARIANTS: "RAJA_HIP"
+    PERF_RUN_OPTS: "--repfact 10.0"
   extends: .perf_on_tuolumne
 
 process_results:
