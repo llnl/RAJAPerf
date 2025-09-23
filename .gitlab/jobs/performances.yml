@@ -29,6 +29,14 @@ gcc_10_3_1_openmp_caliper:
     OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
+clang_14_0_6_mpi_caliper:
+  variables:
+    SPEC: "~shared +mpi +caliper %clang@=14.0.6 ^blt@develop"
+    KERNELS: "Basic"
+    VARIANTS: "RAJA_Seq"
+    PERF_MPI_EXEC: "srun --overlap -n 16"
+  extends: .perf_on_dane
+
 rocmcc_6_4_1_hip_openmp_caliper:
   variables:
     SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"

@@ -34,6 +34,7 @@ performance_tests=${PERFORMANCE_TESTS:-false}
 kernels=${KERNELS:-""}
 variants=${VARIANTS:-""}
 perf_run_opts=${PERF_RUN_OPTS:-""}
+perf_mpi_exec=${PERF_MPI_EXEC:-""}
 
 raja_version=${UPDATE_RAJA:-""}
 sys_type=${SYS_TYPE:-""}
@@ -301,7 +302,15 @@ then
 
     timed_message "Performance tests for RAJA Perf Suite"
 
-    ${build_dir}/bin/raja-perf.exe --kernels ${kernels} --variants ${variants} --outdir ${perf_artifact_dir} ${perf_run_opts}
+    raja_perf_command="${build_dir}/bin/raja-perf.exe --kernels ${kernels} --variants ${variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
+
+    if [[ -n ${perf_mpi_exec} ]]
+    then
+        raja_perf_command="${perf_mpi_exec} ${raja_perf_command}"
+    fi
+
+    echo "Running: ${raja_perf_command}"
+    ${raja_perf_command}
 
     timed_message "Performance tests for RAJA Perf Suite completed"
 fi
