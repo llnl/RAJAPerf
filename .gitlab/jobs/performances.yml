@@ -13,9 +13,17 @@ variables:
   PERF_PROCESSING_CMD: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
   PERFORMANCE_TESTS: "true"
 
-clang_14_0_6_caliper:
+clang_14_0_6_openmp_caliper:
   variables:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
+    KERNELS: "Basic"
+    VARIANTS: "RAJA_Seq RAJA_OpenMP"
+    OMP_NUM_THREADS: "16"
+  extends: .perf_on_dane
+
+gcc_10_3_1_openmp_caliper:
+  variables:
+    SPEC: "~shared +openmp +caliper %gcc@=10.3.1 ^blt@develop"
     KERNELS: "Basic"
     VARIANTS: "RAJA_Seq RAJA_OpenMP"
     OMP_NUM_THREADS: "16"
@@ -31,7 +39,7 @@ rocmcc_6_4_1_hip_openmp_caliper:
 process_results:
   extends: .caliper_to_gh_benchmark
   dependencies:
-    - clang_14_0_6_caliper
+    - clang_14_0_6_openmp_caliper
     - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
