@@ -33,6 +33,7 @@ perf_artifact_dir=${PERF_ARTIFACT_DIR:-""}
 performance_tests=${PERFORMANCE_TESTS:-false}
 kernels=${KERNELS:-""}
 variants=${VARIANTS:-""}
+perf_run_opts=${PERF_RUN_OPTS:-""}
 
 raja_version=${UPDATE_RAJA:-""}
 sys_type=${SYS_TYPE:-""}
@@ -300,7 +301,7 @@ then
 
     timed_message "Performance tests for RAJA Perf Suite"
 
-    ${build_dir}/bin/raja-perf.exe --kernels ${kernels} --variants ${variants} --outdir ${perf_artifact_dir}
+    ${build_dir}/bin/raja-perf.exe --kernels ${kernels} --variants ${variants} --outdir ${perf_artifact_dir} ${perf_run_opts}
 
     timed_message "Performance tests for RAJA Perf Suite completed"
 fi
