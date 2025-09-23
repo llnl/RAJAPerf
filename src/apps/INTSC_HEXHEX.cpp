@@ -37,7 +37,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setDefaultProblemSize(n_std_intsc_def);
 
   setDefaultReps  (1);
-  setKernelsPerRep(1);
+  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
   // Number of standard intersections, by convention a cube number.
   size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
@@ -49,8 +49,18 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
-  setBytesReadPerRep( 48*sizeof(Real_type) * getItsPerRep() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+
+  //  Donor and target each 24 doubles (subzone coordinates)
+  //  Fixup kernel reads 72 doubles per standard intersection,
+  //    or 9 doubles per subzone intersection.
+  setBytesReadPerRep( (24+24+9)*8*sizeof(Real_type) * getItsPerRep() );
+
+  // Bytes written = 9 doubles per subzone intersection includes
+  //   vv_lo and vv_hi (intermediate) + 4 doubles per subzone
+  //   intersection (final) = 13 doubles for a subzone intersection.
+  //   A standard intersection is 8 subzone intersections.
+  //
+  setBytesWrittenPerRep( 13*8*sizeof(Real_type) * getItsPerRep() );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr size_t flops_per_tri = 336 ;
