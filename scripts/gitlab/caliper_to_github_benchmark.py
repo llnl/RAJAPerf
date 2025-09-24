@@ -33,9 +33,11 @@ def caliper_to_benchmark_json(input_file):
 
     for record in reader.records:
         path = record['path'] if 'path' in record else 'UNKNOWN'
-        total_time_s = float(record[METRIC]) if METRIC in record else 0.0
+
+        total_time_s = float(record.get(METRIC, '0'))
+        reps = int(record.get(REPS_METRIC, '1'))
+
         total_time_ms = total_time_s * 1000
-        reps = int(record[REPS_METRIC]) if REPS_METRIC in record else 1
 
         # Calculate average time per rep
         avg_time_per_rep_ms = total_time_ms / reps if reps > 0 else total_time_ms
