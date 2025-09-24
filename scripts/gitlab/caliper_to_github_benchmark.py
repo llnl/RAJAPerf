@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 METRIC = 'avg#inclusive#sum#time.duration'
+REPS_METRIC = 'any#any#max#Reps'
 
 
 def caliper_to_benchmark_json(input_file):
@@ -32,15 +33,19 @@ def caliper_to_benchmark_json(input_file):
 
     for record in reader.records:
         path = record['path'] if 'path' in record else 'UNKNOWN'
-        time_s = record[METRIC] if METRIC in record else '0'
+        total_time_s = float(record[METRIC]) if METRIC in record else 0.0
+        reps = int(record[REPS_METRIC]) if REPS_METRIC in record else 1
+
+        # Calculate average time per rep
+        avg_time_per_rep_s = total_time_s / reps if reps > 0 else total_time_s
 
         # Gather leaf-level kernel paths like "RAJAPerf/Group/KernelName"
         if isinstance(path, list) and len(path) >= 3:
             kernel_name = path[-1]
             benchmark = {
                 "name": f"{variant}_{kernel_name}",
-                "unit": "s",
-                "value": time_s
+                "unit": "s/rep",
+                "value": avg_time_per_rep_s
             }
             benchmarks.append(benchmark)
 
