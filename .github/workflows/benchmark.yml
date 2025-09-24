@@ -58,7 +58,7 @@ jobs:
 
       - name: Create Check for PRs
         if: steps.findpr.outputs.pr_number != ''
-        uses: LouisBrunner/checks-action@v2.0.0
+        uses: LouisBrunner/checks-action@6b626ffbad7cc56fd58627f774b9067e6118af23
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: Performance Benchmark (${{ github.event.inputs.benchmark_name }})
