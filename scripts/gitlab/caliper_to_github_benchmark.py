@@ -7,7 +7,7 @@ Usage: python caliper_to_github_benchmark.py "pattern" output.json
        python caliper_to_github_benchmark.py "/path/to/*_*-*.cali" output.json
 """
 import caliperreader as cr
-import glob
+from pathlib import Path
 import json
 import sys
 from pathlib import Path
@@ -24,10 +24,10 @@ def caliper_to_benchmark_json(input_file):
         List of benchmark dictionaries
     """
 
-    variant = Path(input_file).stem
+    variant = input_file.stem
 
     reader = cr.CaliperReader()
-    reader.read(input_file)
+    reader.read(str(input_file))
 
     benchmarks = []
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     pattern = sys.argv[1]
     output_file = sys.argv[2]
 
-    cali_files = glob.glob(pattern)
+    cali_files = list(Path('.').glob(pattern))
 
     if not cali_files:
         sys.exit(f"Error: No .cali files found matching pattern: {pattern}")
