@@ -13,8 +13,7 @@ on:
 
 permissions:
   checks: write
-  contents: write
-  pull-requests: write
+  contents: ${{ github.ref == 'refs/heads/develop' && 'write' || 'read' }}
 
 jobs:
   store-and-visualize:
