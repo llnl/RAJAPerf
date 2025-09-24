@@ -19,7 +19,7 @@ jobs:
       contents: write # TODO for test, later make it read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Find associated PR
         id: findpr
@@ -79,7 +79,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
 
       - name: Decode benchmark data
         run: echo "${{ github.event.inputs.benchmark_data }}" | base64 -d > benchmark.json
