@@ -15,8 +15,11 @@ jobs:
   check-performance:
     if: github.ref != 'refs/heads/develop'
     permissions:
+      # Needed to write PR check status
       checks: write
-      contents: write # TODO for test, later make it read
+      # Need write if you turn on comments
+      pull-requests: read
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -35,7 +38,7 @@ jobs:
       - name: Decode benchmark data
         run: echo "${{ github.event.inputs.benchmark_data }}" | base64 -d > benchmark.json
 
-      - name: Store benchmark result
+      - name: Compare benchmark result
         id: benchmark
         continue-on-error: true
         uses: benchmark-action/github-action-benchmark@v1
@@ -44,11 +47,12 @@ jobs:
           tool: 'customSmallerIsBetter'
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true # TODO for testing, later make it false
+          auto-push: false
+          save-data-file: false
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           comment-always: false
-          comment-on-alert: true
+          comment-on-alert: false
           summary-always: true
           fail-on-alert: true
           alert-threshold: '120%'
@@ -74,8 +78,9 @@ jobs:
         run: exit 1
 
   store-and-visualize-on-develop:
-    if: github.ref == 'refs/heads/develop'
+    # if: github.ref == 'refs/heads/develop' # TODO uncomment before merging
     permissions:
+      # Needed to push to gh-pages branch
       contents: write
     runs-on: ubuntu-latest
     steps:
