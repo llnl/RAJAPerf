@@ -11,12 +11,12 @@ on:
         required: false
         default: 'RAJAPerf benchmarks'
 
-permissions:
-  checks: write
-  contents: ${{ github.ref == 'refs/heads/develop' && 'write' || 'read' }}
-
 jobs:
-  store-and-visualize:
+  check-performance:
+    if: github.ref != 'refs/heads/develop'
+    permissions:
+      checks: write
+      contents: write # TODO for test, later make it read
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -44,8 +44,7 @@ jobs:
           tool: 'customSmallerIsBetter'
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true # TODO remove later, for testing
-          # auto-push: ${{ github.ref == 'refs/heads/develop' }}
+          auto-push: true # TODO for testing, later make it false
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: dev/bench
           comment-always: false
@@ -73,3 +72,32 @@ jobs:
       - name: Final status
         if: steps.benchmark.outcome != 'success'
         run: exit 1
+
+  store-and-visualize-on-develop:
+    if: github.ref == 'refs/heads/develop'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Decode benchmark data
+        run: echo "${{ github.event.inputs.benchmark_data }}" | base64 -d > benchmark.json
+
+      - name: Store benchmark result
+        id: benchmark
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: ${{ github.event.inputs.benchmark_name }}
+          tool: 'customSmallerIsBetter'
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          gh-pages-branch: gh-pages
+          benchmark-data-dir-path: dev/bench
+          comment-always: false
+          comment-on-alert: false
+          summary-always: true
+          fail-on-alert: true
+          alert-threshold: '120%'
+          max-items-in-chart: 100
