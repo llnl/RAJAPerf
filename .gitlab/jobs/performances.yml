@@ -45,6 +45,7 @@ rocmcc_6_4_1_hip_openmp_caliper:
     SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"
     KERNELS: "Basic"
     VARIANTS: "RAJA_HIP"
+    MODULE_LIST: "rocm/6.4.1"
   extends: .perf_on_tuolumne
 
 process_results:
