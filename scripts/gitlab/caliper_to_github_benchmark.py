@@ -65,6 +65,7 @@ if __name__ == "__main__":
     cali_files = list(Path('.').glob(pattern))
 
     if not cali_files:
+        print("Usage: caliper_to_github_benchmark.py \"input_file_glob_pattern\" output.json")
         sys.exit(f"Error: No .cali files found matching pattern: {pattern}")
 
     print(f"Found {len(cali_files)} Caliper files to process")
