@@ -44,6 +44,12 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_three_halves);
 
+  setMaxPerfectLoopDimensions(3);
+  setMaxLoopDimensions(3);
+  setMaxArrayDimensions(2);
+  setNumArrays(2);
+
+
   setUsesFeature(Kernel);
 
   setVariantDefined( Base_Seq );

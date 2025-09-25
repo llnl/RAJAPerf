@@ -51,6 +51,11 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setMaxLoopDimensions(3);
+  setMaxArrayDimensions(3);
+  setNumArrays(2);
+
   setUsesFeature(Kernel);
 
   setVariantDefined( Base_Seq );

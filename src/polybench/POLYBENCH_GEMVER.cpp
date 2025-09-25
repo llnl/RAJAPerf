@@ -68,6 +68,12 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(2);
+  setMaxLoopDimensions(2);
+  setMaxArrayDimensions(2);
+  setNumArrays(9);
+
+
   setUsesFeature(Forall);
   setUsesFeature(Kernel);
 
