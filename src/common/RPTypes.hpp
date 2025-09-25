@@ -86,6 +86,9 @@ using Int_ptr = Int_type*;
 ///
 using Int_ptr_ptr = Int_type**;
 
+using Int64_type = std::int64_t ;
+///
+using Int64_ptr = Int64_type*;
 
 /*!
  ******************************************************************************

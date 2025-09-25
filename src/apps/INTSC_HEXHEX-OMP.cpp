@@ -23,11 +23,11 @@ void INTSC_HEXHEX::intscHexHexOMP
     ( Index_type i,
       Index_type iend )  // number of standard intersections
 {
-  long nisc_stage = iend * m_tri_per_intsc ;
+  Int64_type nisc_stage = iend * m_tri_per_intsc ;
 
   //  A "standard intersection" is eight subzones.
-  unsigned long nsubzones_per_std_intsc = 8 ;
-  unsigned long ipair0 = i * nsubzones_per_std_intsc ;
+  Size_type nsubzones_per_std_intsc = 8 ;
+  Size_type ipair0 = i * nsubzones_per_std_intsc ;
 
   // Initialize the accumulation.
   for ( size_t j=0L ; j < 4L*nsubzones_per_std_intsc ; ++j ) {
@@ -36,9 +36,10 @@ void INTSC_HEXHEX::intscHexHexOMP
 
   for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
 
-    long blksize = default_gpu_block_size ;  // for compatibility with gpu code
-    long ith = i * m_tri_per_intsc + j ;    // which triangle contribution
-    long blk = ith / blksize ;   // which "block" for gpu compatibility
+    // for compatibility with gpu code
+    Int64_type blksize = default_gpu_block_size ;
+    Int64_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
+    Int64_type blk = ith / blksize ;   // which "block" for gpu compatibility
 
     Real_ptr tsubz = m_tsubz ;
     Real_ptr dsubz = m_dsubz ;

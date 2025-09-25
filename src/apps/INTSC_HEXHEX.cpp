@@ -105,8 +105,8 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_vid = vid ;    // Remember variant to deallocate data.
 
   // One standard intersection is 8 subzone intersections.
-  long n_std_intsc  = getActualProblemSize() ;
-  long n_subz_intsc = 8L * n_std_intsc ;
+  Int64_type n_std_intsc  = getActualProblemSize() ;
+  Int64_type n_subz_intsc = 8L * n_std_intsc ;
 
   // coordinates for donor zone
   Real_type xdzone[8] =
@@ -188,7 +188,7 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 //   Number of subzone intersections = 8 * number of standard intersections.
 //
 void INTSC_HEXHEX::check_intsc_volume_moments
-    ( long const n_subz_intsc,  // number of subzone intersections
+    ( Int64_type const n_subz_intsc,  // number of subzone intersections
       Real_const_ptr vv )   // computed volumes, moments on the host
 {
   int rank = 0;
@@ -235,7 +235,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     Real_type tolsqz = tolsq * v0*v0 *
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
 
-    for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
+    for ( Index_type k = 0 ; k < n_subz_intsc ; ++k ) {
       Real_type dv  = vv[ 4*k + 0 ] - v0 ;   // diff computed and correct
       Real_type dxm = vv[ 4*k + 1 ] - vx ;
       Real_type dym = vv[ 4*k + 2 ] - vy ;
@@ -272,8 +272,8 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
 {
   // One standard intersection is 8 subzone intersections.
-  long n_std_intsc  = getActualProblemSize() ;
-  long n_subz_intsc = 8L * n_std_intsc ;
+  Int64_type n_std_intsc  = getActualProblemSize() ;
+  Int64_type n_subz_intsc = 8L * n_std_intsc ;
 
   copyData ( DataSpace::Host, m_vv,
              getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;

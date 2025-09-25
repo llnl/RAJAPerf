@@ -35,12 +35,12 @@ __global__ void intsc_hexrect
       char *ncord_gpu,     //  target dimensions and coordinates
       Int_ptr intsc_d,   // [nrecords] donor zones to intersect
       Int_ptr intsc_t,   // [nrecords] target zones to intersect
-      long const nrecords,  // Number of threads (one thread per record)
+      Int64_type const nrecords,  // Number of threads (one thread per record)
       Real_ptr records )  // output volumes, moments
 {
-  long blksize = block_size ;        // blocksize = 64  must <= nth_per_isc
-  long blk     = blockIdx.x ;
-  long irec    = blk*blksize + threadIdx.x ;   // which thread with offset
+  Int64_type blksize = block_size ;    // blocksize = 64  must <= nth_per_isc
+  Int64_type blk     = blockIdx.x ;
+  Int64_type irec    = blk*blksize + threadIdx.x ;   // which thread with offset
 
   int const max_polygon_pts = 10 ;
   __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
@@ -92,9 +92,9 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
          {
-           long blksize = block_size ;
-           long blk     = blockIdx.x ;
-           long irec    = blk*blksize + threadIdx.x ;
+           Int64_type blksize = block_size ;
+           Int64_type blk     = blockIdx.x ;
+           Int64_type irec    = blk*blksize + threadIdx.x ;
 
            int const max_polygon_pts = 10 ;
            __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
@@ -124,9 +124,9 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            long blksize = block_size ;
-            long blk     = blockIdx.x ;
-            long irec    = blk*blksize + threadIdx.x ;
+            Int64_type blksize = block_size ;
+            Int64_type blk     = blockIdx.x ;
+            Int64_type irec    = blk*blksize + threadIdx.x ;
 
             int const max_polygon_pts = 10 ;
             __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;

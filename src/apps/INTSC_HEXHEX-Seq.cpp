@@ -25,9 +25,11 @@ void INTSC_HEXHEX::intscHexHexSeq
     ( Index_type i,
       Index_type nisc_stage )   // is iend, for compatibility with the macro
 {
-  long blksize = default_gpu_block_size ;  // for compatibility with gpu code
-  long ith = i ;
-  long blk = ith / blksize ;   // which "block" for gpu compatibility
+  // for compatibility with gpu code
+  Int64_type blksize = default_gpu_block_size ;
+
+  Int64_type ith = i ;
+  Int64_type blk = ith / blksize ;   // which "block" for gpu compatibility
 
   if ( i == 0 ) {   // initialize the accumulation
     Index_type n_std_intsc = m_nthreads / m_tri_per_intsc ;

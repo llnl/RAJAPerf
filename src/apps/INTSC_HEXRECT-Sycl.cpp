@@ -52,9 +52,9 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
 
           Index_type i = item.get_global_id(0) + ibegin;
 
-          long irec     = i ;
-          long blksize = work_group_size ;
-          long blk     = i / blksize ;
+          Int64_type irec     = i ;
+          Int64_type blksize = work_group_size ;
+          Int64_type blk     = i / blksize ;
 
           int const max_polygon_pts = 10 ;
           Real_type xd_work[ (3 * max_polygon_pts+1) ] ;
@@ -75,9 +75,9 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
 
-          long irec     = i ;
-          long blksize = work_group_size ;
-          long blk     = i / blksize ;
+          Int64_type irec     = i ;
+          Int64_type blksize = work_group_size ;
+          Int64_type blk     = i / blksize ;
 
           int const max_polygon_pts = 10 ;
           Real_type xd_work[ (3 * max_polygon_pts+1) ] ;

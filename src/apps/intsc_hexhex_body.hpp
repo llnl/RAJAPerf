@@ -402,14 +402,14 @@ RAJA_INLINE void hex_intsc_subz
 
 
 #define INTSC_HEXHEX_BODY_SEQ \
-  long const n_dsz_tris = 12 ; \
-  long const n_tsz_tets = 6 ; \
-  long const nth_per_isc = n_dsz_tris * n_tsz_tets ; \
-  long ipair   = ith / nth_per_isc ; \
+  Int64_type const n_dsz_tris = 12 ; \
+  Int64_type const n_tsz_tets = 6 ; \
+  Int64_type const nth_per_isc = n_dsz_tris * n_tsz_tets ; \
+  Int64_type ipair   = ith / nth_per_isc ; \
   int dfacet  = ( ith / n_tsz_tets ) % n_dsz_tris ; \
   int ttet    = ith % n_tsz_tets ; \
-  long pair_base_thr = ipair * nth_per_isc ; \
-  long blk_base = blk * blksize ; \
+  Int64_type pair_base_thr = ipair * nth_per_isc ; \
+  Int64_type blk_base = blk * blksize ; \
   Real_type vv_lo=0.0, vx_lo=0.0, vy_lo=0.0, vz_lo=0.0 ; \
   Real_type vv_hi=0.0, vx_hi=0.0, vy_hi=0.0, vz_hi=0.0 ; \
   if ( ipair < nisc_stage ) { \

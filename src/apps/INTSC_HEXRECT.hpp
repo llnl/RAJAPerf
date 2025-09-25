@@ -73,7 +73,7 @@
   int const *znlist = (int const*) m_znlist ; \
   int const *intsc_d = (int const*) m_intsc_d ; \
   int const *intsc_t = (int const*) m_intsc_t ; \
-  long const nrecords = m_nrecords ; \
+  Int64_type const nrecords = m_nrecords ; \
   Real_ptr records = (Real_ptr )m_records ;
 
 #include "common/KernelBase.hpp"
@@ -158,7 +158,7 @@ private:
   void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
 
   void check_intsc_volume_moments
-      ( FILE* f, long const n_intsc, Real_const_ptr vv ) ;
+      ( FILE* f, Int64_type const n_intsc, Real_const_ptr vv ) ;
 
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
@@ -166,8 +166,8 @@ private:
   static const size_t m_tri_per_intsc = 24 ;
 
   VariantID m_vid ;
-  long m_gsize ;        // grid size (number of blocks)
-  long m_nthreads ;     // total number of gpu threads (=64*m_gsize)
+  Int64_type m_gsize ;        // grid size (number of blocks)
+  Int64_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
 
   size_t m_ndzones ;    // number of "donor zones"
   size_t m_ntzones ;    // number of "target zones"
@@ -179,7 +179,7 @@ private:
   char *m_ncord ;              //  target dimensions and coordinates
   Int_ptr m_intsc_d ;          // [nrecords] donor zones to intersect
   Int_ptr m_intsc_t ;          // [nrecords] target zones to intersect
-  long m_nrecords ;            // Number of threads (one thread per record)
+  Int64_type m_nrecords ;            // Number of threads (one thread per record)
   Real_ptr m_records ;         // output volumes, moments
   Real_ptr m_records_h ;       // volumes, moments on the host
 
