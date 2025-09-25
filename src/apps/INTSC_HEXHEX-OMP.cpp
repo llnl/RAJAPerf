@@ -30,11 +30,11 @@ void INTSC_HEXHEX::intscHexHexOMP
   Size_type ipair0 = i * nsubzones_per_std_intsc ;
 
   // Initialize the accumulation.
-  for ( size_t j=0L ; j < 4L*nsubzones_per_std_intsc ; ++j ) {
+  for ( Index_type j=0 ; j < 4*nsubzones_per_std_intsc ; ++j ) {
     m_vv_out[ 4L*ipair0 + j ] = 0.0 ;
   }
 
-  for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
+  for ( Index_type j = 0 ; j < m_tri_per_intsc ; ++j ) {
 
     // for compatibility with gpu code
     Int64_type blksize = default_gpu_block_size ;
@@ -58,7 +58,8 @@ void INTSC_HEXHEX::intscHexHexOMP
 }
 
 
-void INTSC_HEXHEX::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
+                                    Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 

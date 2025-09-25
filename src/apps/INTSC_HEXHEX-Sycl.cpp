@@ -27,7 +27,7 @@ namespace apps
 {
 
 
-template < size_t work_group_size >
+template < Size_type work_group_size >
 void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -38,7 +38,10 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
   const Size_type  nisc_stage   = n_subz_intsc ;
 
   const Size_type  n_szgrp     = ( n_subz_intsc + 7 ) / 8 ;
-  const size_t     gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, work_group_size) ;
+
+  const Size_type  gsize_fixup =
+      RAJA_DIVIDE_CEILING_INT(n_szgrp, work_group_size) ;
+
   const Index_type iend_fixup  = gsize_fixup * work_group_size ;
 
   const Size_type  n_szpairs   = n_subz_intsc ;
@@ -53,7 +56,8 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
+      const Size_type global_size =
+          work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1>(global_size, work_group_size),

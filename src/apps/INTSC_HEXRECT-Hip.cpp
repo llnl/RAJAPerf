@@ -26,7 +26,7 @@ namespace rajaperf
 namespace apps
 {
 
-template < size_t block_size >
+template < Size_type block_size >
 __launch_bounds__(block_size,3)
 __global__ void intsc_hexrect_hip
     ( Real_ptr xdnode,     // [ndnodes] x coordinates for donor
@@ -54,7 +54,7 @@ __global__ void intsc_hexrect_hip
 
 
 
-template < size_t block_size >
+template < Size_type block_size >
 void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -70,8 +70,8 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
   //
   bool const do_warmup = true ;
   if ( do_warmup ) {
-    const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-    constexpr size_t shmem = 0;
+    const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+    constexpr Size_type shmem = 0;
 
     RPlaunchHipKernel( (intsc_hexrect_hip<block_size>),
                        grid_size, block_size,
@@ -86,8 +86,8 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      constexpr size_t shmem = 0;
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr Size_type shmem = 0;
 
       RPlaunchHipKernel( (intsc_hexrect_hip<block_size>),
                          grid_size, block_size,
@@ -103,7 +103,7 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
@@ -120,7 +120,7 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
            INTSC_HEXRECT_BODY;
          };
 
-      constexpr size_t shmem = 0;
+      constexpr Size_type shmem = 0;
 
       RPlaunchHipKernel( (lambda_hip_forall<block_size,
                           decltype(intsc_hexrect_lambda)>),

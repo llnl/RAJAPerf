@@ -26,7 +26,7 @@ namespace apps
   //
   // Define threads per team for target execution (workgroup size)
   //
-  const size_t threads_per_team = 64;
+  const Size_type threads_per_team = 64;
 
 
 void INTSC_HEXRECT::intscHexHexOMP_Target
@@ -35,7 +35,7 @@ void INTSC_HEXRECT::intscHexHexOMP_Target
 {
   Int64_type nisc_stage = iend * m_tri_per_intsc ;
 
-  for ( size_t j = 0L ; j < m_tri_per_intsc ; ++j ) {
+  for ( Size_type j = 0L ; j < m_tri_per_intsc ; ++j ) {
 
     Int64_type blksize = threads_per_team ;
     Int64_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
@@ -59,7 +59,8 @@ void INTSC_HEXRECT::intscHexHexOMP_Target
 
 
 
-void INTSC_HEXRECT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::runOpenMPTargetVariant(VariantID vid,
+                                           Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin   = 0 ;

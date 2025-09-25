@@ -26,7 +26,7 @@ namespace rajaperf
 namespace apps
 {
 
-template < size_t block_size >
+template < Size_type block_size >
 __launch_bounds__(block_size,3)
 __global__ void intsc_hexhex_hip
   ( Real_ptr const dsubz,
@@ -46,7 +46,7 @@ __global__ void intsc_hexhex_hip
 }
 
 
-template < size_t block_size >
+template < Size_type block_size >
 __global__ void intsc_hexhex_hip_fixup_vv_64to72
     ( Real_ptr const vv_int,   // [8*intsc blks] blocked volumes, moments
       Size_type const n_szpairs,  // number of subzone pairs
@@ -57,7 +57,7 @@ __global__ void intsc_hexhex_hip_fixup_vv_64to72
 }
 
 
-template < size_t block_size >
+template < Size_type block_size >
 void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -68,7 +68,7 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
   const Size_type  nisc_stage   = n_subz_intsc ;
 
   const Size_type  n_szgrp     = ( n_subz_intsc + 7 ) / 8 ;
-  const size_t     gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, block_size) ;
+  const Size_type  gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, block_size) ;
   const Index_type iend_fixup  = gsize_fixup * block_size ;
 
   const Size_type  n_szpairs   = n_subz_intsc ;
@@ -82,8 +82,8 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
   //   The warmup calls send n_subz_intsc=0 and hence return immediately.
   bool const do_warmup = true ;
   if ( do_warmup ) {
-    const size_t grid_size1 = 1 ;
-    constexpr size_t shmem = 0;
+    const Size_type grid_size1 = 1 ;
+    constexpr Size_type shmem = 0;
 
     RPlaunchHipKernel( (intsc_hexhex_hip<block_size>),
                        grid_size1, block_size,
@@ -102,8 +102,8 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      constexpr size_t shmem = 0;
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr Size_type shmem = 0;
 
       RPlaunchHipKernel( (intsc_hexhex_hip<block_size>),
                          grid_size, block_size,
@@ -125,7 +125,7 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
       auto intsc_hexhex_lambda = [=] __device__
           ( Index_type i )
@@ -144,7 +144,7 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
            int ith = blockIdx.x*block_size + threadIdx.x;
            FIXUP_VV_BODY ; } ;
 
-      constexpr size_t shmem = 0;
+      constexpr Size_type shmem = 0;
 
       RPlaunchHipKernel( (lambda_hip_forall<block_size,
                           decltype(intsc_hexhex_lambda)>),

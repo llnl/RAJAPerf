@@ -36,7 +36,8 @@ void INTSC_HEXRECT::intscHexRectSeq
 }
 
 
-void INTSC_HEXRECT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::runSeqVariant(VariantID vid,
+                                  Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;

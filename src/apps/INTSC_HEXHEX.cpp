@@ -32,17 +32,19 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   //  finish the "sequential" test in one second.  The gpu tests will
   //  take only a few milliseconds for the same problem.
   //
-  constexpr size_t a3_def = 25 ;
-  constexpr size_t n_std_intsc_def = a3_def*a3_def*a3_def ;
+  constexpr Size_type a3_def = 25 ;
+  constexpr Size_type n_std_intsc_def = a3_def*a3_def*a3_def ;
   setDefaultProblemSize(n_std_intsc_def);
 
   setDefaultReps  (1);
   setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
   // Number of standard intersections, by convention a cube number.
-  size_t a3 = (size_t) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+  Size_type a3 =
+      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+
   a3 = std::max(1UL,a3) ;
-  size_t n_std_intsc = a3*a3*a3 ;
+  Size_type n_std_intsc = a3*a3*a3 ;
 
   setActualProblemSize( n_std_intsc ) ;
   setItsPerRep        ( n_std_intsc );
@@ -63,8 +65,8 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setBytesWrittenPerRep( 13*8*sizeof(Real_type) * getItsPerRep() );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  constexpr size_t flops_per_tri = 336 ;
-  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
+  constexpr Size_type flops_per_tri = 336 ;
+  constexpr Size_type flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
 
@@ -100,7 +102,8 @@ INTSC_HEXHEX::~INTSC_HEXHEX()
 }
 
 
-void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::setUp(VariantID vid,
+                         Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;    // Remember variant to deallocate data.
 
@@ -269,7 +272,8 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 }
 
 
-void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
+void INTSC_HEXHEX::updateChecksum(VariantID vid,
+                                  Size_type tune_idx)
 {
   // One standard intersection is 8 subzone intersections.
   Int64_type n_std_intsc  = getActualProblemSize() ;
@@ -285,7 +289,8 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid, size_t tune_idx)
   checksum[vid][tune_idx] += calcChecksum(m_vv_out, 4L*n_subz_intsc, vid  );
 }
 
-void INTSC_HEXHEX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::tearDown(VariantID vid,
+                            Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   deallocData ( m_dsubz, vid ) ;
   deallocData ( m_tsubz, vid ) ;

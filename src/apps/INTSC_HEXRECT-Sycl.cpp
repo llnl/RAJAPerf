@@ -27,7 +27,7 @@ namespace apps
 {
 
 
-template < size_t work_group_size >
+template < Size_type work_group_size >
 void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -44,7 +44,8 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
+      const Size_type global_size =
+          work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1>(global_size, work_group_size),

@@ -35,22 +35,23 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   //   Number of donor zones is a cube number, "side" is the length
   //   of a side of the cube (cube root of number of donor zones)
   //
-  constexpr size_t a3_def = 50 ;
-  size_t n_intsc_def = 8L * a3_def * a3_def * a3_def ;
+  constexpr Size_type a3_def = 50 ;
+  Size_type n_intsc_def = 8L * a3_def * a3_def * a3_def ;
   setDefaultProblemSize(n_intsc_def);
 
   //  Command line --size specifies requested number of intersections.
   //  Requested number of intersections will be converted to an even cube
   //  number of intersections.
   //
-  size_t a3 = (size_t) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+  Size_type a3 =
+      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
 
   // number of donor zones on a side of the cube
-  size_t side = a3 / 2 ;
+  Size_type side = a3 / 2 ;
   side = std::max(1UL,side) ;
 
   m_ndzones = side * side * side ;   // number of "donor zones" on a side
-  size_t n_intsc = 8L*m_ndzones ;   // number of intersections to compute
+  Size_type n_intsc = 8L*m_ndzones ;   // number of intersections to compute
   m_ntzones = n_intsc ;          // one "target zone" per intersection
   setDefaultReps(1);
 
@@ -72,8 +73,8 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   setBytesWrittenPerRep( 4*sizeof(Real_type) * getItsPerRep() );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  constexpr size_t flops_per_tri = 150 ;
-  constexpr size_t flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
+  constexpr Size_type flops_per_tri = 150 ;
+  constexpr Size_type flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
 
@@ -270,14 +271,15 @@ void INTSC_HEXRECT::setupIntscPairs
 }
 
 
-void INTSC_HEXRECT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::setUp(VariantID vid,
+                          Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   m_vid = vid ;
 
   //  m_nrecords = number of intersections = 8 * number of donor zones
   m_nrecords = getActualProblemSize() ;
 
-  size_t ndzones = m_ndzones ;    // number of donor zones
+  Size_type ndzones = m_ndzones ;    // number of donor zones
 
   m_ndx = (Int_type) ( cbrt( ndzones + 0.5 ) ) ;
   m_ndy = m_ndx ;
@@ -607,7 +609,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 
 
-void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
+void INTSC_HEXRECT::updateChecksum(VariantID vid, Size_type tune_idx)
 {
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;
@@ -626,7 +628,8 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
   checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
 }
 
-void INTSC_HEXRECT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::tearDown(VariantID vid,
+                             Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
   deallocData ( m_records, vid ) ;
   deallocData ( m_intsc_t, vid ) ;

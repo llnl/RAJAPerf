@@ -94,26 +94,26 @@ public:
 
   ~INTSC_HEXRECT();
 
-  void setUp(VariantID vid, size_t tune_idx);
-  void updateChecksum(VariantID vid, size_t tune_idx);
-  void tearDown(VariantID vid, size_t tune_idx);
+  void setUp(VariantID vid, Size_type tune_idx);
+  void updateChecksum(VariantID vid, Size_type tune_idx);
+  void tearDown(VariantID vid, Size_type tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void runSeqVariant(VariantID vid, Size_type tune_idx);
+  void runOpenMPVariant(VariantID vid, Size_type tune_idx);
+  void runCudaVariant(VariantID vid, Size_type tune_idx);
+  void runHipVariant(VariantID vid, Size_type tune_idx);
+  void runOpenMPTargetVariant(VariantID vid, Size_type tune_idx);
+  void runSyclVariant(VariantID vid, Size_type tune_idx);
 
   void setCudaTuningDefinitions(VariantID vid);
   void setHipTuningDefinitions(VariantID vid);
   void setSyclTuningDefinitions(VariantID vid);
 
-  template < size_t block_size >
+  template < Size_type block_size >
   void runCudaVariantImpl(VariantID vid);
-  template < size_t block_size >
+  template < Size_type block_size >
   void runHipVariantImpl(VariantID vid);
-  template < size_t work_group_size >
+  template < Size_type work_group_size >
   void runSyclVariantImpl(VariantID vid);
 
 private:
@@ -160,17 +160,18 @@ private:
   void check_intsc_volume_moments
       ( FILE* f, Int64_type const n_intsc, Real_const_ptr vv ) ;
 
-  static const size_t default_gpu_block_size = 64;
-  using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
+  static const Size_type default_gpu_block_size = 64;
+  using gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
-  static const size_t m_tri_per_intsc = 24 ;
+  static const Size_type m_tri_per_intsc = 24 ;
 
   VariantID m_vid ;
   Int64_type m_gsize ;        // grid size (number of blocks)
   Int64_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
 
-  size_t m_ndzones ;    // number of "donor zones"
-  size_t m_ntzones ;    // number of "target zones"
+  Size_type m_ndzones ;    // number of "donor zones"
+  Size_type m_ntzones ;    // number of "target zones"
 
   Real_ptr m_xdnode ;          // [ndnodes] x coordinates for donor
   Real_ptr m_ydnode ;          // [ndnodes] y coordinates for donor
@@ -179,7 +180,7 @@ private:
   char *m_ncord ;              //  target dimensions and coordinates
   Int_ptr m_intsc_d ;          // [nrecords] donor zones to intersect
   Int_ptr m_intsc_t ;          // [nrecords] target zones to intersect
-  Int64_type m_nrecords ;            // Number of threads (one thread per record)
+  Int64_type m_nrecords ;      // Number of threads (one thread per record)
   Real_ptr m_records ;         // output volumes, moments
   Real_ptr m_records_h ;       // volumes, moments on the host
 

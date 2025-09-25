@@ -25,7 +25,7 @@ namespace apps
 
 #define WARPSIZE 32
 
-template < size_t block_size >
+template < Size_type block_size >
 __launch_bounds__(block_size)
 __global__ void intsc_hexrect
     ( Real_ptr xdnode,     // [ndnodes] x coordinates for donor
@@ -53,7 +53,7 @@ __global__ void intsc_hexrect
 
 
 
-template < size_t block_size >
+template < Size_type block_size >
 void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -69,8 +69,8 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      constexpr size_t shmem = 0;
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      constexpr Size_type shmem = 0;
 
       RPlaunchCudaKernel( (intsc_hexrect<block_size>),
                           grid_size, block_size,
@@ -87,7 +87,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
@@ -104,7 +104,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
            INTSC_HEXRECT_BODY;
          };
 
-      constexpr size_t shmem = 0;
+      constexpr Size_type shmem = 0;
 
       RPlaunchCudaKernel( (lambda_cuda_forall<block_size,
                            decltype(intsc_hexrect_lambda)>),
