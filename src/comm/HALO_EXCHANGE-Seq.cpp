@@ -31,7 +31,7 @@ void HALO_EXCHANGE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];
@@ -91,7 +91,7 @@ void HALO_EXCHANGE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];
@@ -160,7 +160,7 @@ void HALO_EXCHANGE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
       using EXEC_POL = RAJA::seq_exec;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];

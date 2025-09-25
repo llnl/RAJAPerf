@@ -39,7 +39,7 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
   case Base_SYCL: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       qu->submit([&](::sycl::handler& h) {
 
@@ -159,7 +159,7 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
     }
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

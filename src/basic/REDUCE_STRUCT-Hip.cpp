@@ -117,7 +117,7 @@ void REDUCE_STRUCT::runHipVariantBase(VariantID vid)
         MappingHelper, (reduce_struct<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type imem[6] {m_init_sum, m_init_min, m_init_max, m_init_sum, m_init_min, m_init_max};
       RAJAPERF_HIP_REDUCER_INITIALIZE(imem, mem, hmem, 6, 1);
@@ -175,7 +175,7 @@ void REDUCE_STRUCT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> xsum(m_init_sum);
       RAJA::ReduceSum<reduction_policy, Real_type> ysum(m_init_sum);
@@ -224,7 +224,7 @@ void REDUCE_STRUCT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type txsum = m_init_sum;
       Real_type tysum = m_init_sum;

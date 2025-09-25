@@ -46,7 +46,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
     sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
@@ -88,7 +88,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -124,7 +124,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_wg_sz);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),

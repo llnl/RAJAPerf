@@ -31,7 +31,7 @@ void POLYBENCH_3MM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = 0; i < ni; i++ ) {
           for (Index_type j = 0; j < nj; j++) {
@@ -98,7 +98,7 @@ void POLYBENCH_3MM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = 0; i < ni; i++ )  {
           for (Index_type j = 0; j < nj; j++) {
@@ -190,7 +190,7 @@ void POLYBENCH_3MM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, ni},

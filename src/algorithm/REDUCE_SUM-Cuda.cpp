@@ -93,7 +93,7 @@ void REDUCE_SUM::runCudaVariantCub(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
       cudaErrchk(::cub::DeviceReduce::Reduce(d_temp_storage,
@@ -142,7 +142,7 @@ void REDUCE_SUM::runCudaVariantBase(VariantID vid)
         MappingHelper, (reduce_sum<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_CUDA_REDUCER_INITIALIZE(&m_sum_init, sum, hsum, 1, 1);
 
@@ -192,7 +192,7 @@ void REDUCE_SUM::runCudaVariantRAJA(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> sum(m_sum_init);
 
@@ -232,7 +232,7 @@ void REDUCE_SUM::runCudaVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type tsum = m_sum_init;
 

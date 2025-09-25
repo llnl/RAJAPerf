@@ -86,7 +86,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       LTIMES_THREADS_PER_BLOCK_CUDA;
       LTIMES_NBLOCKS_CUDA;
@@ -105,7 +105,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto ltimes_lambda = [=] __device__ (IZ z, IG g, IM m) {
         for (ID d(0); d < num_d; ++d ) {
@@ -148,7 +148,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(IDRange(0, *num_d),
@@ -185,7 +185,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),

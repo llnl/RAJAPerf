@@ -36,7 +36,7 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     const ::sycl::range<3> gridSize(MEA_Q1D,MEA_Q1D,MEA_Q1D*NE);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       constexpr size_t shmem = 0;
       qu->submit([&](::sycl::handler& h) {
@@ -105,7 +105,7 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     constexpr size_t shmem = (MEA_Q1D*MEA_D1D + MEA_Q1D*MEA_Q1D*MEA_Q1D)*sizeof(double);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

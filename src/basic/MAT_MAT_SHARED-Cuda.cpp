@@ -71,7 +71,7 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
   if (vid == Base_CUDA) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RPlaunchCudaKernel( (mat_mat_shared<tile_size>),
                           gridDim, blockDim,
@@ -83,7 +83,7 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
   } else if (vid == Lambda_CUDA) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto mat_mat_shared_lambda = [=] __device__() {
 
@@ -198,7 +198,7 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
     using threads_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_direct<tile_size>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(Nx, Ny),

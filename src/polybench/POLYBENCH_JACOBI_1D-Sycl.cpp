@@ -34,7 +34,7 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
@@ -74,7 +74,7 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::sycl_exec<work_group_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
