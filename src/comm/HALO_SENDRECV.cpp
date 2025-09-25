@@ -38,6 +38,11 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
+  setMaxPerfectLoopDimensions(1);
+  setMaxLoopDimensions(3);
+  setMaxArrayDimensions(1);
+  setNumArrays(7);
+
   setUsesFeature(Forall);
   setUsesFeature(MPI);
 

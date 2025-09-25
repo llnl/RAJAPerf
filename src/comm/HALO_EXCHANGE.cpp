@@ -48,6 +48,11 @@ HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
+  setMaxPerfectLoopDimensions(1);
+  setMaxLoopDimensions(3);
+  setMaxArrayDimensions(1);
+  setNumArrays(5); // vars, pack_buffers, unpack_buffers, pack_index_lists, unpack_index_lists
+
   setUsesFeature(Forall);
   setUsesFeature(MPI);
 
