@@ -30,6 +30,11 @@ spack_debug=${SPACK_DEBUG:-false}
 debug_mode=${DEBUG_MODE:-false}
 push_to_registry=${PUSH_TO_REGISTRY:-true}
 perf_artifact_dir=${PERF_ARTIFACT_DIR:-""}
+perf_tests=${PERF_TESTS:-false}
+perf_kernels=${PERF_KERNELS:-""}
+perf_variants=${PERF_VARIANTS:-""}
+perf_run_opts=${PERF_RUN_OPTS:-""}
+perf_mpi_exec=${PERF_MPI_EXEC:-""}
 
 raja_version=${UPDATE_RAJA:-""}
 sys_type=${SYS_TYPE:-""}
@@ -257,7 +262,7 @@ then
 fi
 
 # Test
-if [[ "${option}" != "--build-only" ]] && grep -q -i "ENABLE_TESTS.*ON" ${hostconfig_path}
+if [[ "${option}" != "--build-only" && "${perf_tests}" != "true" ]] && grep -q -i "ENABLE_TESTS.*ON" ${hostconfig_path}
 then
     if [[ ! -d ${build_dir} ]]
     then
@@ -288,21 +293,30 @@ then
     timed_message "RAJA Perf Suite tests completed"
 fi
 
-# Export performance data
-# This is CI specific, see RADIUSS Shared CI performance pipeline.
-if [[ "${option}" != "--build-only" && -d "${perf_artifact_dir}" ]]
+# Performance tests
+if [[ "${option}" != "--build-only" && "${perf_tests}" == "true" ]]
 then
-    timed_message "Exporting performance data"
-    if [[ -d "${build_dir}/bin" ]]
+
+    cd ${project_dir}
+    mkdir -p ${perf_artifact_dir}
+
+    timed_message "Performance tests for RAJA Perf Suite"
+
+    raja_perf_command="${build_dir}/bin/raja-perf.exe --kernels ${perf_kernels} --variants ${perf_variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
+
+    if [[ -n ${perf_mpi_exec} ]]
     then
-        cp ${build_dir}/bin/*.cali ${perf_artifact_dir}
-        cp ${build_dir}/bin/*.csv ${perf_artifact_dir}
-    else
-        echo "[Warning]: No bin directory found in build directory." && exit 1
+        raja_perf_command="${perf_mpi_exec} ${raja_perf_command}"
     fi
+
+    echo "Running: ${raja_perf_command}"
+    ${raja_perf_command}
+
+    timed_message "Performance tests for RAJA Perf Suite completed"
 fi
 
 timed_message "Cleaning up"
+cd ${build_dir}
 make clean
 
 timed_message "Build and test completed"
