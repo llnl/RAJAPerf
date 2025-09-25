@@ -9,11 +9,14 @@
 #ifndef RAJAPerf_Apps_INTSC_HEXHEX_BODY_HPP
 #define RAJAPerf_Apps_INTSC_HEXHEX_BODY_HPP
 
+namespace rajaperf {
+
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void clip_polygon_ge_0
-    ( double *cin,   // the cut coordinate, can be xin, yin, or zin.
-      double *xin, double *yin, double *zin, double *hin, // input coordinates
+    ( Real_ptr cin,   // the cut coordinate, can be xin, yin, or zin.
+      Real_ptr xin, Real_ptr yin,
+      Real_ptr zin, Real_ptr hin, // input coordinates
       int &first, int &avail, int *next )   // linked list
 {
   int j  = first ;
@@ -22,16 +25,16 @@ RAJA_INLINE void clip_polygon_ge_0
   int j1 = -1, j2 = -1 ;
   int jj1 = -1, jj2 = -1 ;
 
-  double c0 = ( j >= 0 ) ? cin[j] : 0.0 ;
-  double c00 = c0 ;
-  double clast = c0 ;
+  Real_type c0 = ( j >= 0 ) ? cin[j] : 0.0 ;
+  Real_type c00 = c0 ;
+  Real_type clast = c0 ;
 
   while ( j >= 0 ) {
     int jj = next[j] ;
     int jp = jj ;       // advancing, jp is -1 at end.
     if ( jj < 0 ) { jj = first0 ; }   // last edge of polygon
 
-    double c1 = cin[jj] ;
+    Real_type c1 = cin[jj] ;
     if ( ( c0 >= 0 ) and ( c1 < 0 ) ) {
       j1 = j ;
       jj1 = jj ;
@@ -51,7 +54,7 @@ RAJA_INLINE void clip_polygon_ge_0
 
     jr1 = avail ;
     avail = next[avail] ;
-    double eta = ( 0.0 - cin[jj1] ) / ( cin[j1] - cin[jj1] ) ;
+    Real_type eta = ( 0.0 - cin[jj1] ) / ( cin[j1] - cin[jj1] ) ;
     xin[jr1] = xin[j1] * eta + xin[jj1] * ( 1.0 - eta ) ;
     yin[jr1] = yin[j1] * eta + yin[jj1] * ( 1.0 - eta ) ;
     zin[jr1] = zin[j1] * eta + zin[jj1] * ( 1.0 - eta ) ;
@@ -97,42 +100,42 @@ RAJA_INLINE void clip_polygon_ge_0
 //   Compute volume, moments between polygon and the z=0 plane.
 RAJA_HOST_DEVICE
 RAJA_INLINE void cuda_hex_volpolyh_1poly
-    ( double *x, double *y, double *z,
+    ( Real_ptr x, Real_ptr y, Real_ptr z,
       int const first,
       int const *next,
-      double &vv,
-      double &vx,
-      double &vy,
-      double &vz )
+      Real_type &vv,
+      Real_type &vx,
+      Real_type &vy,
+      Real_type &vz )
 {
   if ( first < 0 ) { return ; }   // No polygon remains after clipping.
 
   int j0 = first ;
 
-  double x0  = x[j0] ;
-  double y0  = y[j0] ;
-  double z0  = z[j0] ;
+  Real_type x0  = x[j0] ;
+  Real_type y0  = y[j0] ;
+  Real_type z0  = z[j0] ;
 
   int j1 = next[j0] ;
 
-  double x1  = x[j1] ;
-  double y1  = y[j1] ;
-  double z1  = z[j1] ;
-  double dx1 = x1 - x0 ;
-  double dy1 = y1 - y0 ;
+  Real_type x1  = x[j1] ;
+  Real_type y1  = y[j1] ;
+  Real_type z1  = z[j1] ;
+  Real_type dx1 = x1 - x0 ;
+  Real_type dy1 = y1 - y0 ;
 
   int j2 = next[j1] ;
 
   while ( j2 >= 0 ) {   // Vertices
 
-    double x2  = x[j2] ;
-    double y2  = y[j2] ;
-    double z2  = z[j2] ;
-    double dx2 = x2 - x0 ;
-    double dy2 = y2 - y0 ;
+    Real_type x2  = x[j2] ;
+    Real_type y2  = y[j2] ;
+    Real_type z2  = z[j2] ;
+    Real_type dx2 = x2 - x0 ;
+    Real_type dy2 = y2 - y0 ;
 
-    double area2 = (dx1 * dy2 - dx2 * dy1) ;
-    double v0 = ( z0 + z1 + z2 ) * area2 ;
+    Real_type area2 = (dx1 * dy2 - dx2 * dy1) ;
+    Real_type v0 = ( z0 + z1 + z2 ) * area2 ;
     vv += v0 ;
     vx += v0 * ( x0 + x1 + x2 ) + area2 * ( x0 * z0 + x1 * z1 + x2 * z2 );
     vy += v0 * ( y0 + y1 + y2 ) + area2 * ( y0 * z0 + y1 * z1 + y2 * z2 );
@@ -150,25 +153,25 @@ RAJA_INLINE void cuda_hex_volpolyh_1poly
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void cuda_intsc_tri_tet
-    ( double const xdt[3],    // donor triangle coordinates
-      double const ydt[3],
-      double const zdt[3],
-      double xtt[4],    // target tet coordinates (modified here)
-      double ytt[4],
-      double ztt[4],
-      double &vv_thr,     // volume contribution for this triangle-tet
-      double &vx_thr,     // x moment contribution for this triangle-tet
-      double &vy_thr,     // y moment contribution for this triangle-tet
-      double &vz_thr )    // z moment contribution for this triangle-tet
+    ( Real_type const xdt[3],    // donor triangle coordinates
+      Real_type const ydt[3],
+      Real_type const zdt[3],
+      Real_type xtt[4],    // target tet coordinates (modified here)
+      Real_type ytt[4],
+      Real_type ztt[4],
+      Real_type &vv_thr,     // volume contribution for this triangle-tet
+      Real_type &vx_thr,     // x moment contribution for this triangle-tet
+      Real_type &vy_thr,     // y moment contribution for this triangle-tet
+      Real_type &vz_thr )    // z moment contribution for this triangle-tet
 {
-  double det, deti ;
-  double ha[9] ;      // 1 - x - y - z
+  Real_type det, deti ;
+  Real_type ha[9] ;      // 1 - x - y - z
 
-  double xa[9], ya[9], za[9], h2[10] ;
+  Real_type xa[9], ya[9], za[9], h2[10] ;
   int *next1 = (int*) h2 ;
   int *next  = next1 + 10 ;
 
-  double vv = 0.0, vx = 0.0, vy = 0.0, vz = 0.0 ;  // volume, moments.
+  Real_type vv = 0.0, vx = 0.0, vy = 0.0, vz = 0.0 ;  // volume, moments.
 
   xtt[1] -= xtt[0] ;
   xtt[2] -= xtt[0] ;
@@ -187,9 +190,9 @@ RAJA_INLINE void cuda_intsc_tri_tet
   deti = det / ( det*det + 1.0e-100 ) ;
 
   // Cross products.
-  double cyz = ytt[2] * ztt[3] - ztt[2] * ytt[3] ;
-  double czx = ztt[2] * xtt[3] - xtt[2] * ztt[3] ;
-  double cxy = xtt[2] * ytt[3] - ytt[2] * xtt[3] ;
+  Real_type cyz = ytt[2] * ztt[3] - ztt[2] * ytt[3] ;
+  Real_type czx = ztt[2] * xtt[3] - xtt[2] * ztt[3] ;
+  Real_type cxy = xtt[2] * ytt[3] - ytt[2] * xtt[3] ;
 
   //   Coordinates of the facet in the transformed frame.
   xa[0] = (xdt[0] - xtt[0]) * cyz + (ydt[0] - ytt[0]) * czx +
@@ -312,20 +315,20 @@ RAJA_INLINE void cuda_intsc_tri_tet
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE void hex_intsc_subz
-    ( double const *xds,    //  [24] donor subzone coords
-      double const *xts,    //  [24] target subzone coords
+    ( Real_const_ptr xds,    //  [24] donor subzone coords
+      Real_const_ptr xts,    //  [24] target subzone coords
       int const dfacet,     // which donor facet
       int const ttet,       // which target tet
-      double &vv_thr,     // volume contribution for this triangle-tet
-      double &vx_thr,     // x moment contribution for this triangle-tet
-      double &vy_thr,     // y moment contribution for this triangle-tet
-      double &vz_thr )    // z moment contribution for this triangle-tet
+      Real_type &vv_thr,     // volume contribution for this triangle-tet
+      Real_type &vx_thr,     // x moment contribution for this triangle-tet
+      Real_type &vy_thr,     // y moment contribution for this triangle-tet
+      Real_type &vz_thr )    // z moment contribution for this triangle-tet
 {
-  double const *yds = xds + 8 ;
-  double const *zds = yds + 8 ;
+  Real_const_ptr yds = xds + 8 ;
+  Real_const_ptr zds = yds + 8 ;
 
-  double const *yts = xts + 8 ;
-  double const *zts = yts + 8 ;
+  Real_const_ptr yts = xts + 8 ;
+  Real_const_ptr zts = yts + 8 ;
 
   vv_thr = 0.0 ;
   vx_thr = 0.0 ;
@@ -336,7 +339,7 @@ RAJA_INLINE void hex_intsc_subz
   int const len_cycnod = n_dfacets / 2 + 1 ;
 
   //  coordinates of the donor triangle
-  double xdt[3], ydt[3], zdt[3] ;
+  Real_type xdt[3], ydt[3], zdt[3] ;
 
   do {
     //  cyclic nodes to form facets with node 0.
@@ -369,7 +372,7 @@ RAJA_INLINE void hex_intsc_subz
 
   //   Set up the target tet and do the intersections.
 
-  double xtt[4], ytt[4], ztt[4] ;
+  Real_type xtt[4], ytt[4], ztt[4] ;
 
   xtt[0] = xts[0] ;
   ytt[0] = yts[0] ;
@@ -395,6 +398,8 @@ RAJA_INLINE void hex_intsc_subz
         vv_thr, vx_thr, vy_thr, vz_thr ) ;
 }
 
+}  // closing brace for rajaperf namespace
+
 
 #define INTSC_HEXHEX_BODY_SEQ \
   long const n_dsz_tris = 12 ; \
@@ -405,11 +410,11 @@ RAJA_INLINE void hex_intsc_subz
   int ttet    = ith % n_tsz_tets ; \
   long pair_base_thr = ipair * nth_per_isc ; \
   long blk_base = blk * blksize ; \
-  double vv_lo=0.0, vx_lo=0.0, vy_lo=0.0, vz_lo=0.0 ; \
-  double vv_hi=0.0, vx_hi=0.0, vy_hi=0.0, vz_hi=0.0 ; \
+  Real_type vv_lo=0.0, vx_lo=0.0, vy_lo=0.0, vz_lo=0.0 ; \
+  Real_type vv_hi=0.0, vx_hi=0.0, vy_hi=0.0, vz_hi=0.0 ; \
   if ( ipair < nisc_stage ) { \
-    double const *xds = dsubz + 24*ipair ; \
-    double const *xts = tsubz + 24*ipair ; \
+    Real_const_ptr xds = dsubz + 24*ipair ; \
+    Real_const_ptr xts = tsubz + 24*ipair ; \
     hex_intsc_subz \
         ( xds, xts, dfacet, ttet, vv_lo, vx_lo, vy_lo, vz_lo ) ; \
   } \
@@ -463,8 +468,8 @@ RAJA_INLINE void hex_intsc_subz
 //  This is not needed on Seq and OMP CPU variants.
 //
 #define FIXUP_VV_BODY \
-  double *vv          = vv_pair + 32*ith ; \
-  double const *vv_in = vv_int  + 72*ith ; \
+  Real_ptr vv          = vv_pair + 32*ith ; \
+  Real_const_ptr vv_in = vv_int  + 72*ith ; \
   int k=0 ; \
   if ( 8*ith + k < n_szpairs ) { \
     vv[4*k+0] = vv_in[8*k+0] + vv_in[8*k+8] ; \

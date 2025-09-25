@@ -120,7 +120,7 @@ private:
   void intscHexHexOMP        ( Index_type i, Index_type iend ) ;
   void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
 
-  void check_intsc_volume_moments ( long const n_intsc, double const *vv ) ;
+  void check_intsc_volume_moments ( long const n_intsc, Real_const_ptr vv ) ;
 
   static constexpr size_t m_tri_per_intsc = 576 ;
   static const size_t default_gpu_block_size = 64;
@@ -138,13 +138,13 @@ private:
 
   Real_ptr m_vv ;       // [4*n_intsc] computed volumes, moments on host
 
-  static constexpr double m_xmin = -0.2 ;  // coordinates of hex corners
-  static constexpr double m_xmax = -0.1 ;
-  static constexpr double m_ymin =  0.1 ;
-  static constexpr double m_ymax =  0.2 ;
-  static constexpr double m_zmin = -0.8 ;
-  static constexpr double m_zmax = -0.7 ;
-  static constexpr double m_shift = 0.01 ; // shift of target relative to donor
+  static constexpr Real_type m_xmin = -0.2 ;  // coordinates of hex corners
+  static constexpr Real_type m_xmax = -0.1 ;
+  static constexpr Real_type m_ymin =  0.1 ;
+  static constexpr Real_type m_ymax =  0.2 ;
+  static constexpr Real_type m_zmin = -0.8 ;
+  static constexpr Real_type m_zmax = -0.7 ;
+  static constexpr Real_type m_shift = 0.01 ; // shift target relative to donor
 };
 
 } // end namespace apps

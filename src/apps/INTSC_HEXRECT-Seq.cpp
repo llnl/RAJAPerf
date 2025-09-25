@@ -28,8 +28,8 @@ void INTSC_HEXRECT::intscHexRectSeq
 
   long irec = i ;
   int const max_polygon_pts = 10 ;
-  double xd_work[ 3*max_polygon_pts+1 ] ;
-  double *my_qx = xd_work ;
+  Real_type xd_work[ 3*max_polygon_pts+1 ] ;
+  Real_ptr my_qx = xd_work ;
 
   INTSC_HEXRECT_BODY ;
 

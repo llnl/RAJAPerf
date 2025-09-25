@@ -9,6 +9,8 @@
 #ifndef RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP
 #define RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP
 
+namespace rajaperf {
+
 // Helper functions for the INTSC_HEXRECT kernel
 
 //   Clip a polygon returning polygon with active coordinate ain >= cut
@@ -16,10 +18,10 @@
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE int clip_polygon_ge
-    ( double *ain,              // input active coordinates
-      double *bin, double *cin,  // input passive coordinates
+    ( Real_ptr ain,              // input active coordinates
+      Real_ptr bin, Real_ptr cin,  // input passive coordinates
       bool const etob,   // Whether to clip from end to begin of ain
-      double const cut,         // cut value of active coordinate
+      Real_type const cut,         // cut value of active coordinate
       int nv_in )       // number of sides in
 {
   int const max_polygon_pts = 10 ;
@@ -48,16 +50,16 @@ RAJA_INLINE int clip_polygon_ge
       ain[jr] = ain[j] ; bin[jr] = bin[j] ; cin[jr] = cin[j] ;
       jr += inc ;
       if ( ain[jj] < cut ) {
-        double den =  ain[j] - ain[jj] ;
-        double eta = ( cut - ain[jj] ) / den ;
+        Real_type den =  ain[j] - ain[jj] ;
+        Real_type eta = ( cut - ain[jj] ) / den ;
         ain[jr] = cut ;
         bin[jr] = bin[jj] + ( bin[j] - bin[jj] ) * eta ;
         cin[jr] = cin[jj] + ( cin[j] - cin[jj] ) * eta ;
         jr += inc ;
       }
     } else if ( ain[jj] >= cut ) {
-      double den = ain[jj] - ain[j] ;
-      double eta = ( cut - ain[j] ) / den ;
+      Real_type den = ain[jj] - ain[j] ;
+      Real_type eta = ( cut - ain[j] ) / den ;
       ain[jr] = cut ;
       bin[jr] = bin[j] + ( bin[jj] - bin[j] ) * eta ;
       cin[jr] = cin[j] + ( cin[jj] - cin[j] ) * eta ;
@@ -78,9 +80,9 @@ RAJA_INLINE int clip_polygon_ge
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE int clip_polygon_lt
-    ( double *ain,              // input active coordinates
-      double *bin, double *cin,  // input passive coordinates
-      double const cut,         // cut value of active coordinate
+    ( Real_ptr ain,              // input active coordinates
+      Real_ptr bin, Real_ptr cin,  // input passive coordinates
+      Real_type const cut,         // cut value of active coordinate
       int nv_in )       // number of sides in
 {
   int const max_polygon_pts = 10 ;
@@ -98,16 +100,16 @@ RAJA_INLINE int clip_polygon_lt
       ain[jr] = ain[j] ; bin[jr] = bin[j] ; cin[jr] = cin[j] ;
       jr += inc ;
       if ( ain[jj] >= cut ) {
-        double den =  ain[jj] - ain[j] ;
-        double eta = ( cut - ain[j] ) / den ;
+        Real_type den =  ain[jj] - ain[j] ;
+        Real_type eta = ( cut - ain[j] ) / den ;
         ain[jr] = cut ;
         bin[jr] = bin[j] + ( bin[jj] - bin[j] ) * eta ;
         cin[jr] = cin[j] + ( cin[jj] - cin[j] ) * eta ;
         jr += inc ;
       }
     } else if ( ain[jj] < cut ) {
-      double den = ain[j] - ain[jj] ;
-      double eta = ( cut - ain[jj] ) / den ;
+      Real_type den = ain[j] - ain[jj] ;
+      Real_type eta = ( cut - ain[jj] ) / den ;
       ain[jr] = cut ;
       bin[jr] = bin[jj] + ( bin[j] - bin[jj] ) * eta ;
       cin[jr] = cin[jj] + ( cin[j] - cin[jj] ) * eta ;
@@ -127,35 +129,35 @@ RAJA_INLINE int clip_polygon_lt
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE int intsc24_shxf1
-      ( double const dtx,    // target zone x length
-        double const dty,    // target zone y length
-        double const x0,     // target zone lower x coordinate
-        double const y0,     // target zone lower y coordinate
-        double const z0,     // target zone lower z coordinate, for moment
-        double *qx,          // clipped donor polygon (circular order)
+      ( Real_type const dtx,    // target zone x length
+        Real_type const dty,    // target zone y length
+        Real_type const x0,     // target zone lower x coordinate
+        Real_type const y0,     // target zone lower y coordinate
+        Real_type const z0,     // target zone lower z coordinate, for moment
+        Real_ptr qx,          // clipped donor polygon (circular order)
         int const shn,       // Number of vertices in donor polygon max 5
-        double & sum0,       // output area or volume
-        double & sumx,       // output x moment
-        double & sumy,       // output y moment
-        double & sumz )      // output z moment
+        Real_type & sum0,       // output area or volume
+        Real_type & sumx,       // output x moment
+        Real_type & sumy,       // output y moment
+        Real_type & sumz )      // output z moment
 {
   int const max_polygon_pts = 10 ;
-  double const one3   = 0.33333333333333333 ;
+  Real_type const one3   = 0.33333333333333333 ;
 
-  double const *qy = qx + max_polygon_pts ;
-  double const *qz = qy + max_polygon_pts ;
+  Real_type const *qy = qx + max_polygon_pts ;
+  Real_type const *qz = qy + max_polygon_pts ;
 
-  double xc0 = qx[0], xc1 = qx[1] ;
-  double yc0 = qy[0], yc1 = qy[1] ;
-  double zc0 = qz[0], zc1 = qz[1] ;
+  Real_type xc0 = qx[0], xc1 = qx[1] ;
+  Real_type yc0 = qy[0], yc1 = qy[1] ;
+  Real_type zc0 = qz[0], zc1 = qz[1] ;
   for ( int kk = 2 ; kk < shn ; kk++ ) {
 
-    double xc2 = qx[kk] ;
-    double yc2 = qy[kk] ;
-    double zc2 = qz[kk] ;
+    Real_type xc2 = qx[kk] ;
+    Real_type yc2 = qy[kk] ;
+    Real_type zc2 = qz[kk] ;
 
-    double s0tri = 0.0, sxtri = 0.0, sytri = 0.0, sztri = 0.0 ;
-    double metfac ;
+    Real_type s0tri = 0.0, sxtri = 0.0, sytri = 0.0, sztri = 0.0 ;
+    Real_type metfac ;
 
     // Edge Midpoint quadrature each triangle
     //  For the z moment we have an additional 0.5 factor because
@@ -179,7 +181,7 @@ RAJA_INLINE int intsc24_shxf1
     sztri += metfac * ( z0 + 0.5 * metfac ) ;
 
     //   area is positive for counterclockwise triangle (standard)
-    double area = 0.5 *
+    Real_type area = 0.5 *
         ( (xc0-xc1) * (yc0+yc1) + (xc1-xc2) * (yc1+yc2) +
           (xc2-xc0) * (yc2+yc0) ) ;
 
@@ -221,19 +223,19 @@ RAJA_INLINE int intsc24_hex_mask_to_list
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE void intsc24_hex_get_tri
-    ( double const *xd,    // [8] donor x coordinates
-      double const *yd,    // [8] donor y coordinates
-      double const *zd,    // [8] donor z coordinates
-      double const xt0,    // target zone lower x boundary
-      double const yt0,    // target zone lower y boundary
-      double const zt0,    // target zone lower z boundary
-      double const a11,    // x multiplier
-      double const a22,    // y multiplier
+    ( Real_type const *xd,    // [8] donor x coordinates
+      Real_type const *yd,    // [8] donor y coordinates
+      Real_type const *zd,    // [8] donor z coordinates
+      Real_type const xt0,    // target zone lower x boundary
+      Real_type const yt0,    // target zone lower y boundary
+      Real_type const zt0,    // target zone lower z boundary
+      Real_type const a11,    // x multiplier
+      Real_type const a22,    // y multiplier
       int const f,         // which of six faces
       int const k0,        // which of four facets of face
-      double xf[3],        // transformed facet x
-      double yf[3],        // transformed facet y
-      double zf[3] )       // transformed facet z
+      Real_type xf[3],        // transformed facet x
+      Real_type yf[3],        // transformed facet y
+      Real_type zf[3] )       // transformed facet z
 {
   int v0, v1, v2, v3 ;
 
@@ -277,15 +279,15 @@ RAJA_INLINE void intsc24_hex_get_tri
 //      4) outside
 RAJA_HOST_DEVICE
 RAJA_INLINE int intsc24_hex_filter
-    ( double const *xd,    // [8] donor x coordinates
-      double const *yd,    // [8] donor y coordinates
-      double const *zd,    // [8] donor z coordinates
-      double const xt0,    // target zone lower x boundary
-      double const xt1,    // target zone upper x boundary
-      double const yt0,    // target zone lower y boundary
-      double const yt1,    // target zone upper y boundary
-      double const zt0,    // target zone lower z boundary
-      double const zt1,    // target zone upper z boundary
+    ( Real_type const *xd,    // [8] donor x coordinates
+      Real_type const *yd,    // [8] donor y coordinates
+      Real_type const *zd,    // [8] donor z coordinates
+      Real_type const xt0,    // target zone lower x boundary
+      Real_type const xt1,    // target zone upper x boundary
+      Real_type const yt0,    // target zone lower y boundary
+      Real_type const yt1,    // target zone upper y boundary
+      Real_type const zt0,    // target zone lower z boundary
+      Real_type const zt1,    // target zone upper z boundary
       int &inside,
       int &abovez,
       int &clip )          // clip - 12 out of 24 triangles is common
@@ -293,16 +295,16 @@ RAJA_INLINE int intsc24_hex_filter
   inside = abovez = clip = 0 ;   // initialize masks.
 
   //  target z spacing
-  double const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
+  Real_type const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
 
-  double a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
+  Real_type a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
   do {
 
-    double dtx = xt1 - xt0, dty = yt1 - yt0 ;
-    double det  = dtx * dty ;    // area of the target zone (determinant)
+    Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
+    Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
     //   Transformation to the unit target frame 0<(x,y)<1.
-    double deti = det / (det*det + 1.0e-80);
+    Real_type deti = det / (det*det + 1.0e-80);
 
     a11 =  dty * deti;
     a22 =  dtx * deti;
@@ -314,7 +316,7 @@ RAJA_INLINE int intsc24_hex_filter
     for ( int k0 = 0 ; k0 < 4 ; ++k0 ) {   // four triangles of the face
 
       // transformed facet coordinates
-      double xf[3], yf[3], zf[3] ;
+      Real_type xf[3], yf[3], zf[3] ;
 
       intsc24_hex_get_tri
           ( xd, yd, zd, xt0, yt0, zt0, a11, a22, f, k0, xf, yf, zf ) ;
@@ -369,18 +371,18 @@ RAJA_INLINE int intsc24_hex_filter
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE int intsc24_hex
-      ( double *xd,    // [24] donor x coordinates, workspace
-        double *qx_work,   // [3*max_polygon_pts] workspace for polygons
-        double const xt0,    // target zone lower x boundary
-        double const xt1,    // target zone upper x boundary
-        double const yt0,    // target zone lower y boundary
-        double const yt1,    // target zone upper y boundary
-        double const zt0,    // target zone lower z boundary
-        double const zt1,    // target zone upper z boundary
-        double & sum0,       // output area or volume
-        double & sumx,       // output x moment
-        double & sumy,       // output y moment
-        double & sumz )      // output z moment
+      ( Real_ptr xd,    // [24] donor x coordinates, workspace
+        Real_ptr qx_work,   // [3*max_polygon_pts] workspace for polygons
+        Real_type const xt0,    // target zone lower x boundary
+        Real_type const xt1,    // target zone upper x boundary
+        Real_type const yt0,    // target zone lower y boundary
+        Real_type const yt1,    // target zone upper y boundary
+        Real_type const zt0,    // target zone lower z boundary
+        Real_type const zt1,    // target zone upper z boundary
+        Real_type & sum0,       // output area or volume
+        Real_type & sumx,       // output x moment
+        Real_type & sumy,       // output y moment
+        Real_type & sumz )      // output z moment
 {
   int const max_polygon_pts = 10 ;
 
@@ -392,24 +394,24 @@ RAJA_INLINE int intsc24_hex
   //  {0, 2, 6, 4, 1, 5, 7, 3, 0, 4, 5, 1, 2, 3, 7, 6, 0, 1, 3, 2, 4, 6, 7, 5} ;
 
   // polygon for overlay
-  double *yd = xd + 8 ;
-  double *zd = yd + 8 ;
+  Real_ptr yd = xd + 8 ;
+  Real_ptr zd = yd + 8 ;
 
-  double *rx = qx_work ;
-  double *ry = rx + max_polygon_pts ;
-  double *rz = ry + max_polygon_pts ;
+  Real_ptr rx = qx_work ;
+  Real_ptr ry = rx + max_polygon_pts ;
+  Real_ptr rz = ry + max_polygon_pts ;
 
   //  target z spacing
-  double const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
+  Real_type const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
 
-  double a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
+  Real_type a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
   do {
 
-    double dtx = xt1 - xt0, dty = yt1 - yt0 ;
-    double det  = dtx * dty ;    // area of the target zone (determinant)
+    Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
+    Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
     //   Transformation to the unit target frame 0<(x,y)<1.
-    double deti = det / (det*det + 1.0e-80);
+    Real_type deti = det / (det*det + 1.0e-80);
 
     a11 =  dty * deti;
     a22 =  dtx * deti;
@@ -447,9 +449,9 @@ RAJA_INLINE int intsc24_hex
     int shn4 = clip_polygon_ge
         ( rx, ry, rz, true, 0.0, shn3 ) ;
 
-    double sx[24] ;
-    double *sy = sx + 8 ;
-    double *sz = sy + 8 ;
+    Real_type sx[24] ;
+    Real_ptr sy = sx + 8 ;
+    Real_ptr sz = sy + 8 ;
     for ( int jj = 0 ; jj < shn4 ; ++jj ) {
       sx[jj] = rx[jj] ;   sy[jj] = ry[jj] ;  sz[jj] = rz[jj] ;
     }
@@ -464,14 +466,14 @@ RAJA_INLINE int intsc24_hex
         rz[jj + max_polygon_pts - shn] = dzt ;   // project to upper face
       }
 
-      double asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
-      double dtx = xt1 - xt0, dty = yt1 - yt0 ;
+      Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
+      Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
 
       vtxcnt += intsc24_shxf1
           ( dtx, dty, xt0, yt0, zt0, rx + max_polygon_pts - shn, shn,
             asum0, asumx, asumy, asumz ) ;
 
-      double det  = dtx * dty ;    // area of the target zone (determinant)
+      Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
       sum0 += asum0 * det ;
       sumx += asumx * det ;
@@ -493,15 +495,15 @@ RAJA_INLINE int intsc24_hex
 
     if ( shn >= 3 ) {     //  There is an intersecting polygon
 
-      double asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
+      Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
 
-      double dtx = xt1 - xt0, dty = yt1 - yt0 ;
+      Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
 
       vtxcnt += intsc24_shxf1
           ( dtx, dty, xt0, yt0, zt0, rx, shn,
             asum0, asumx, asumy, asumz ) ;
 
-      double det  = dtx * dty ;    // area of the target zone (determinant)
+      Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
       sum0 += asum0 * det ;
       sumx += asumx * det ;
@@ -525,14 +527,14 @@ RAJA_INLINE int intsc24_hex
 
     int shn = 3 ;
 
-    double asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
-    double dtx = xt1 - xt0, dty = yt1 - yt0 ;
+    Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
+    Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
 
     vtxcnt += intsc24_shxf1
         ( dtx, dty, xt0, yt0, zt0, rx, shn,
           asum0, asumx, asumy, asumz ) ;
 
-    double det  = dtx * dty ;    // area of the target zone (determinant)
+    Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
     sum0 += asum0 * det ;
     sumx += asumx * det ;
@@ -553,14 +555,14 @@ RAJA_INLINE int intsc24_hex
 
     int shn = 3 ;
 
-    double asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
-    double dtx = xt1 - xt0, dty = yt1 - yt0 ;
+    Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
+    Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
 
     vtxcnt += intsc24_shxf1
         ( dtx, dty, xt0, yt0, zt0, rx, shn,
           asum0, asumx, asumy, asumz ) ;
 
-    double det  = dtx * dty ;    // area of the target zone (determinant)
+    Real_type det  = dtx * dty ;    // area of the target zone (determinant)
 
     sum0 += asum0 * det ;
     sumx += asumx * det ;
@@ -571,13 +573,15 @@ RAJA_INLINE int intsc24_hex
   return vtxcnt ;
 }
 
+}  // closing brace for rajaperf namespace
+
 
 #define INTSC_HEXRECT_BODY \
   if ( irec < nrecords ) { \
-    double *record = ((double*)records) + 4 * irec ; \
-    double xd[24] ; \
-    double *yd = xd + 8 ; \
-    double *zd = yd + 8 ; \
+    Real_ptr record = ((Real_type*)records) + 4 * irec ; \
+    Real_type xd[24] ; \
+    Real_ptr yd = xd + 8 ; \
+    Real_ptr zd = yd + 8 ; \
     do { \
       int dzone = intsc_d[irec] ; \
       for (int j=0 ; j<8 ; j++) { \
@@ -587,15 +591,15 @@ RAJA_INLINE int intsc24_hex
         zd[j] = zdnode[node] ; } \
     } while ( false ) ; \
     do { \
-      double sum0, sumx, sumy, sumz ; \
-      double const *zplane ; \
-      double const *yplane ; \
-      double const *xplane ; \
+      Real_type sum0, sumx, sumy, sumz ; \
+      Real_type const *zplane ; \
+      Real_type const *yplane ; \
+      Real_type const *xplane ; \
       int jz, jy, jx ; \
       do { \
         int *ncord = (int*) ncord_gpu ; \
-        double const **planes = ( double const** ) ( ncord + 4 ) ; \
-        zplane = ( double const* ) ( planes + 3 ) ; \
+        Real_type const **planes = ( Real_type const** ) ( ncord + 4 ) ; \
+        zplane = ( Real_type const* ) ( planes + 3 ) ; \
         yplane = zplane + ncord[0] + 1 ; \
         xplane = yplane + ncord[1] + 1 ; \
         int const nyzones = ncord[1] ; \
@@ -611,7 +615,7 @@ RAJA_INLINE int intsc24_hex
             zplane[jz], zplane[jz+1], \
             sum0, sumx, sumy, sumz ) ; \
       do { \
-        double vf   = 1.0 ; \
+        Real_type vf   = 1.0 ; \
         record[0] = vf * sum0 ; \
         record[1] = vf * sumx ; \
         record[2] = vf * sumy ; \
@@ -619,7 +623,5 @@ RAJA_INLINE int intsc24_hex
       } while ( false ) ; \
     } while ( false ) ; \
   }
-
-
 
 #endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP

@@ -40,7 +40,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
   // Number of standard intersections, by convention a cube number.
-  size_t a3 = (size_t) ( std::cbrt((double) getTargetProblemSize() + 0.5) );
+  size_t a3 = (size_t) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
   a3 = std::max(1UL,a3) ;
   size_t n_std_intsc = a3*a3*a3 ;
 
@@ -109,16 +109,16 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   long n_subz_intsc = 8L * n_std_intsc ;
 
   // coordinates for donor zone
-  double xdzone[8] =
+  Real_type xdzone[8] =
       { m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax } ;
 
-  double ydzone[8] =
+  Real_type ydzone[8] =
       { m_ymin, m_ymin, m_ymax, m_ymax, m_ymin, m_ymin, m_ymax, m_ymax } ;
 
-  double zdzone[8] =
+  Real_type zdzone[8] =
       { m_zmin, m_zmin, m_zmin, m_zmin, m_zmax, m_zmax, m_zmax, m_zmax } ;
 
-  double xtzone[8], ytzone[8], ztzone[8] ;
+  Real_type xtzone[8], ytzone[8], ztzone[8] ;
   for ( int i=0 ; i<8 ; ++i ) {
     xtzone[i] = xdzone[i] + m_shift ;
     ytzone[i] = ydzone[i] + m_shift ;
@@ -134,31 +134,33 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   do {
     using namespace detail ;
 
-    dcoord = (Real_ptr) allocHostData ( 24*sizeof(double), getDataAlignment() );
-    memcpy ( dcoord   , xdzone, 8*sizeof(double) ) ;
-    memcpy ( dcoord+ 8, ydzone, 8*sizeof(double) ) ;
-    memcpy ( dcoord+16, zdzone, 8*sizeof(double) ) ;
+    dcoord = (Real_ptr) allocHostData
+        ( 24*sizeof(Real_type), getDataAlignment() );
+    memcpy ( dcoord   , xdzone, 8*sizeof(Real_type) ) ;
+    memcpy ( dcoord+ 8, ydzone, 8*sizeof(Real_type) ) ;
+    memcpy ( dcoord+16, zdzone, 8*sizeof(Real_type) ) ;
 
-    tcoord = (Real_ptr) allocHostData ( 24*sizeof(double), getDataAlignment() );
-    memcpy ( tcoord   , xtzone, 8*sizeof(double) ) ;
-    memcpy ( tcoord+ 8, ytzone, 8*sizeof(double) ) ;
-    memcpy ( tcoord+16, ztzone, 8*sizeof(double) ) ;
+    tcoord = (Real_ptr) allocHostData
+        ( 24*sizeof(Real_type), getDataAlignment() );
+    memcpy ( tcoord   , xtzone, 8*sizeof(Real_type) ) ;
+    memcpy ( tcoord+ 8, ytzone, 8*sizeof(Real_type) ) ;
+    memcpy ( tcoord+16, ztzone, 8*sizeof(Real_type) ) ;
 
     m_vv = (Real_ptr) allocHostData
-        ( 4L*n_subz_intsc*sizeof(double), getDataAlignment() ) ;
+        ( 4L*n_subz_intsc*sizeof(Real_type), getDataAlignment() ) ;
 
     ds_h = (Real_ptr) allocHostData
-        ( 24L*n_subz_intsc*sizeof(double) , getDataAlignment() ) ;
+        ( 24L*n_subz_intsc*sizeof(Real_type) , getDataAlignment() ) ;
     ts_h = (Real_ptr) allocHostData
-        ( 24L*n_subz_intsc*sizeof(double) , getDataAlignment() ) ;
+        ( 24L*n_subz_intsc*sizeof(Real_type) , getDataAlignment() ) ;
 
   } while ( false ) ;
 
   //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
   for ( int k=0 ; k < n_subz_intsc ; ++k ) {
-    memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(double) ) ;
-    memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(double) ) ;
+    memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(Real_type) ) ;
+    memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(Real_type) ) ;
   }
 
   allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_subz_intsc, vid ) ;
@@ -187,7 +189,7 @@ void INTSC_HEXHEX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 //
 void INTSC_HEXHEX::check_intsc_volume_moments
     ( long const n_subz_intsc,  // number of subzone intersections
-      double const *vv )   // computed volumes, moments on the host
+      Real_const_ptr vv )   // computed volumes, moments on the host
 {
   int rank = 0;
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -199,23 +201,23 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     char const *tst = "INTSC_HEXHEX:" ;
 
     //   Determine the correct volume and moments.
-    double v0, vx, vy, vz ;
+    Real_type v0, vx, vy, vz ;
 
-    double xmin = m_xmin, ymin = m_ymin, zmin = m_zmin ;
-    double xmax = m_xmax, ymax = m_ymax, zmax = m_zmax ;
+    Real_type xmin = m_xmin, ymin = m_ymin, zmin = m_zmin ;
+    Real_type xmax = m_xmax, ymax = m_ymax, zmax = m_zmax ;
 
     if ( m_shift > 0.0 ) {
       xmin += m_shift ;   ymin += m_shift ;   zmin += m_shift ;
     } else {
       xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
     }
-    double dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
+    Real_type dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
     if ( dx <= 0.0 or dy <= 0.0 or dz <= 0.0 ) {
       v0 = vx = vy = vz = 0.0 ;
     } else {
-      double xc = 0.5 * ( xmax + xmin ) ;
-      double yc = 0.5 * ( ymax + ymin ) ;
-      double zc = 0.5 * ( zmax + zmin ) ;
+      Real_type xc = 0.5 * ( xmax + xmin ) ;
+      Real_type yc = 0.5 * ( ymax + ymin ) ;
+      Real_type zc = 0.5 * ( zmax + zmin ) ;
 
       v0 = dx * dy * dz ;
       vx = v0 * xc ;
@@ -224,20 +226,20 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     }
 
     // Do the check.
-    double tolsq = 1.0e-24 ;
-    double tolsqv = tolsq * v0*v0 ;
-    double tolsqx = tolsq * v0*v0 *
+    Real_type tolsq = 1.0e-24 ;
+    Real_type tolsqv = tolsq * v0*v0 ;
+    Real_type tolsqx = tolsq * v0*v0 *
         ( fabs(xmax) + fabs(xmin) ) *  ( fabs(xmax) + fabs(xmin) ) ;
-    double tolsqy = tolsq * v0*v0 *
+    Real_type tolsqy = tolsq * v0*v0 *
         ( fabs(ymax) + fabs(ymin) ) *  ( fabs(ymax) + fabs(ymin) ) ;
-    double tolsqz = tolsq * v0*v0 *
+    Real_type tolsqz = tolsq * v0*v0 *
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
 
     for ( long k = 0 ; k < n_subz_intsc ; ++k ) {
-      double dv  = vv[ 4*k + 0 ] - v0 ;   // diff between computed and correct
-      double dxm = vv[ 4*k + 1 ] - vx ;
-      double dym = vv[ 4*k + 2 ] - vy ;
-      double dzm = vv[ 4*k + 3 ] - vz ;
+      Real_type dv  = vv[ 4*k + 0 ] - v0 ;   // diff computed and correct
+      Real_type dxm = vv[ 4*k + 1 ] - vx ;
+      Real_type dym = vv[ 4*k + 2 ] - vy ;
+      Real_type dzm = vv[ 4*k + 3 ] - vz ;
 
       // Print an error message if a volume or moment is incorrect.
       if ( ( dv*dv   > tolsqv ) or

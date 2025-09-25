@@ -33,13 +33,13 @@ __global__ void intsc_hexhex
     Size_type  const nisc_stage,
     Real_ptr vv_int )
 {
-  __shared__ double vv_reduce[16] ;
+  __shared__ Real_type vv_reduce[16] ;
 
   long blksize = block_size ;        // blocksize = 64  must <= nth_per_isc
   long blk     = blockIdx.x ;
   long ith     = blk*blksize + threadIdx.x ;   // which thread with offset
 
-  double *vv_out = (double *) vv_int + 8*blk ;
+  Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
 
   INTSC_HEXHEX_BODY;
 }
@@ -110,12 +110,12 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       auto intsc_hexhex_lambda = [=] __device__
           ( Index_type i )
          {
-           __shared__ double vv_reduce[16] ;
+           __shared__ Real_type vv_reduce[16] ;
 
            long blksize   = blockDim.x ;
            long blk       = blockIdx.x ;
            long ith       = blk*blksize + threadIdx.x ;
-           double *vv_out = (double *) vv_int + 8*blk ;
+           Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
            INTSC_HEXHEX_BODY; };
 
       auto intsc_hexhex_fixup_lambda = [=] __device__
@@ -152,12 +152,12 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            __shared__ double vv_reduce[16] ;
+            __shared__ Real_type vv_reduce[16] ;
 
             long blksize   = blockDim.x ;
             long blk       = blockIdx.x ;
             long ith       = blk*blksize + threadIdx.x ;
-            double *vv_out = (double *) vv_int + 8*blk ;
+            Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
             INTSC_HEXHEX_BODY;
           }
       ) ;

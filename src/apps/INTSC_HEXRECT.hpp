@@ -67,14 +67,14 @@
 
 #define  INTSC_HEXRECT_DATA_SETUP \
   char *ncord_gpu = m_ncord ; \
-  double const *xdnode = (double const*) m_xdnode ; \
-  double const *ydnode = (double const*) m_ydnode ; \
-  double const *zdnode = (double const*) m_zdnode ; \
+  Real_const_ptr xdnode = (Real_const_ptr) m_xdnode ; \
+  Real_const_ptr ydnode = (Real_const_ptr) m_ydnode ; \
+  Real_const_ptr zdnode = (Real_const_ptr) m_zdnode ; \
   int const *znlist = (int const*) m_znlist ; \
   int const *intsc_d = (int const*) m_intsc_d ; \
   int const *intsc_t = (int const*) m_intsc_t ; \
   long const nrecords = m_nrecords ; \
-  double *records = (double *)m_records ;
+  Real_ptr records = (Real_ptr )m_records ;
 
 #include "common/KernelBase.hpp"
 
@@ -118,16 +118,16 @@ public:
 
 private:
   void setupTargetPlanes
-      ( double **planes, int *ncord,
+      ( Real_ptr2 planes, int *ncord,
         int const ndx, int const ndy, int const ndz,
-        double const x0, double const y0, double const z0,
-        double const sep ) ;
+        Real_type const x0, Real_type const y0, Real_type const z0,
+        Real_type const sep ) ;
 
   void setupDonorMesh
-      ( double const sep,
-        double const xd0, double const yd0, double const zd0,
+      ( Real_type const sep,
+        Real_type const xd0, Real_type const yd0, Real_type const zd0,
         int const ndx, int const ndy, int const ndz,
-        double *x, double *y, double *z,
+        Real_ptr x, Real_ptr y, Real_ptr z,
         int *znlist ) ;
 
   void setupIntscPairs
@@ -137,28 +137,28 @@ private:
         int *intsc_t ) ;
 
   void copyTargetToDevice
-      ( double const **planes,
+      ( Real_const_ptr2 planes,
         int const* ncord ) ;
 
   void checkMoments
-      ( double *records, int const n_intsc,
+      ( Real_ptr records, int const n_intsc,
         int const ndx, int const ndy, int const ndz,
-        double const xd0, double const yd0, double const zd0,
-        double const x0, double const y0, double const z0,
-        double const sep,
-        double const sep1x, double const sep1y, double const sep1z ) ;
+        Real_type const xd0, Real_type const yd0, Real_type const zd0,
+        Real_type const x0, Real_type const y0, Real_type const z0,
+        Real_type const sep,
+        Real_type const sep1x, Real_type const sep1y, Real_type const sep1z ) ;
 
   void checkScaledVolumes
-      ( double const *records,
+      ( Real_const_ptr records,
         int const x_scl_offs, int const y_scl_offs, int const z_scl_offs,
-        double const sep ) ;
+        Real_type const sep ) ;
 
   void intscHexRectSeq        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
 
   void check_intsc_volume_moments
-      ( FILE* f, long const n_intsc, double const *vv ) ;
+      ( FILE* f, long const n_intsc, Real_const_ptr vv ) ;
 
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
