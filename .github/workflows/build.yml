@@ -84,5 +84,5 @@ jobs:
         timeout-minutes: 45
         run: | 
           cd build
-          ctest -C Debug -T Tests --output-on-failure -V
+          ctest -C Debug -T Test --output-on-failure -V
         shell: pwsh
