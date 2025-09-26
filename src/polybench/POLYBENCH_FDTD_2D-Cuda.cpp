@@ -155,40 +155,37 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (t = 0; t < tsteps; ++t) {
+      constexpr size_t shmem = 0;
 
-        constexpr size_t shmem = 0;
+      const size_t grid_size1 = RAJA_DIVIDE_CEILING_INT(ny, block_size);
 
-        const size_t grid_size1 = RAJA_DIVIDE_CEILING_INT(ny, block_size);
+      RPlaunchCudaKernel( (poly_fdtd2d_1<block_size>),
+                          grid_size1, block_size,
+                          shmem, res.get_stream(),
+                          ey, fict, ny, t );
 
-        RPlaunchCudaKernel( (poly_fdtd2d_1<block_size>),
-                            grid_size1, block_size,
-                            shmem, res.get_stream(),
-                            ey, fict, ny, t );
+      FDTD_2D_THREADS_PER_BLOCK_CUDA;
+      FDTD_2D_NBLOCKS_CUDA;
 
-        FDTD_2D_THREADS_PER_BLOCK_CUDA;
-        FDTD_2D_NBLOCKS_CUDA;
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_2<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        ey, hz, nx, ny );
 
-        RPlaunchCudaKernel(
-          (poly_fdtd2d_2<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          ey, hz, nx, ny );
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_3<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        ex, hz, nx, ny );
 
-        RPlaunchCudaKernel( 
-          (poly_fdtd2d_3<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          ex, hz, nx, ny );
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_4<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        hz, ex, ey, nx, ny );
 
-        RPlaunchCudaKernel(
-          (poly_fdtd2d_4<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          hz, ex, ey, nx, ny );
-
-      } // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
@@ -197,63 +194,60 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (t = 0; t < tsteps; ++t) {
+      constexpr size_t shmem = 0;
 
-        constexpr size_t shmem = 0;
+      const size_t grid_size1 = RAJA_DIVIDE_CEILING_INT(ny, block_size);
 
-        const size_t grid_size1 = RAJA_DIVIDE_CEILING_INT(ny, block_size);
+      auto poly_fdtd2d_1_lambda = [=] __device__ (Index_type j) {
+        POLYBENCH_FDTD_2D_BODY1;
+      };
 
-        auto poly_fdtd2d_1_lambda = [=] __device__ (Index_type j) {
-          POLYBENCH_FDTD_2D_BODY1;
-        };
+      RPlaunchCudaKernel( (poly_fdtd2d_1_lam<block_size,
+                                             decltype(poly_fdtd2d_1_lambda)>),
+                          grid_size1, block_size,
+                          shmem, res.get_stream(),
+                          ny, poly_fdtd2d_1_lambda );
 
-        RPlaunchCudaKernel( (poly_fdtd2d_1_lam<block_size,
-                                               decltype(poly_fdtd2d_1_lambda)>),
-                            grid_size1, block_size,
-                            shmem, res.get_stream(),
-                            ny, poly_fdtd2d_1_lambda );
+      FDTD_2D_THREADS_PER_BLOCK_CUDA;
+      FDTD_2D_NBLOCKS_CUDA;
 
-        FDTD_2D_THREADS_PER_BLOCK_CUDA;
-        FDTD_2D_NBLOCKS_CUDA;
+      auto poly_fdtd2d_2_lambda = [=] __device__ (Index_type i,
+                                                  Index_type j) {
+        POLYBENCH_FDTD_2D_BODY2;
+      };
 
-        auto poly_fdtd2d_2_lambda = [=] __device__ (Index_type i, 
-                                                    Index_type j) {
-          POLYBENCH_FDTD_2D_BODY2;
-        };
-        
-        RPlaunchCudaKernel( 
-          (poly_fdtd2d_2_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                             decltype(poly_fdtd2d_2_lambda)>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          nx, ny, poly_fdtd2d_2_lambda );
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_2_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
+                           decltype(poly_fdtd2d_2_lambda)>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        nx, ny, poly_fdtd2d_2_lambda );
 
-        auto poly_fdtd2d_3_lambda = [=] __device__ (Index_type i, 
-                                                    Index_type j) {
-          POLYBENCH_FDTD_2D_BODY3;
-        };
+      auto poly_fdtd2d_3_lambda = [=] __device__ (Index_type i,
+                                                  Index_type j) {
+        POLYBENCH_FDTD_2D_BODY3;
+      };
 
-        RPlaunchCudaKernel( 
-          (poly_fdtd2d_3_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                             decltype(poly_fdtd2d_3_lambda)>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          nx, ny, poly_fdtd2d_3_lambda );
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_3_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
+                           decltype(poly_fdtd2d_3_lambda)>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        nx, ny, poly_fdtd2d_3_lambda );
 
-        auto poly_fdtd2d_4_lambda = [=] __device__ (Index_type i,
-                                                    Index_type j) {
-          POLYBENCH_FDTD_2D_BODY4;
-        };
+      auto poly_fdtd2d_4_lambda = [=] __device__ (Index_type i,
+                                                  Index_type j) {
+        POLYBENCH_FDTD_2D_BODY4;
+      };
 
-        RPlaunchCudaKernel(
-          (poly_fdtd2d_4_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                             decltype(poly_fdtd2d_4_lambda)>),
-          nblocks234, nthreads_per_block234,
-          shmem, res.get_stream(),
-          nx, ny, poly_fdtd2d_4_lambda );
+      RPlaunchCudaKernel(
+        (poly_fdtd2d_4_lam<FDTD_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
+                           decltype(poly_fdtd2d_4_lambda)>),
+        nblocks234, nthreads_per_block234,
+        shmem, res.get_stream(),
+        nx, ny, poly_fdtd2d_4_lambda );
 
-      } // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
@@ -277,42 +271,39 @@ void POLYBENCH_FDTD_2D::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (t = 0; t < tsteps; ++t) {
+      RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
+      [=] __device__ (Index_type j) {
+        POLYBENCH_FDTD_2D_BODY1_RAJA;
+      });
 
-        RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
-        [=] __device__ (Index_type j) {
-          POLYBENCH_FDTD_2D_BODY1_RAJA;
-        });
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, nx},
+                         RAJA::RangeSegment{0, ny}),
+        res,
+        [=] __device__ (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY2_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, nx},
-                           RAJA::RangeSegment{0, ny}),
-          res,
-          [=] __device__ (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY2_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx},
+                         RAJA::RangeSegment{1, ny}),
+        res,
+        [=] __device__ (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY3_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx},
-                           RAJA::RangeSegment{1, ny}),
-          res,
-          [=] __device__ (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY3_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
+                         RAJA::RangeSegment{0, ny-1}),
+        res,
+        [=] __device__ (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY4_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
-                           RAJA::RangeSegment{0, ny-1}),
-          res,
-          [=] __device__ (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY4_RAJA;
-          }
-        );
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
