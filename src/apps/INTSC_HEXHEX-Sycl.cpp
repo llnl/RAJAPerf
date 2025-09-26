@@ -37,7 +37,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
   const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
   const Size_type  nisc_stage   = n_subz_intsc ;
 
-  const Size_type  n_szgrp     = ( n_subz_intsc + 7 ) / 8 ;
+  const Size_type  n_szgrp     = n_subz_intsc / 8 ;
 
   const Size_type  gsize_fixup =
       RAJA_DIVIDE_CEILING_INT(n_szgrp, work_group_size) ;
