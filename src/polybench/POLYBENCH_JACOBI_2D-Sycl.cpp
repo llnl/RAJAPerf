@@ -43,43 +43,39 @@ void POLYBENCH_JACOBI_2D::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      sycl::range<3> global_dim(1,
+                                i_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, i_wg_sz),
+                                j_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, j_wg_sz));
 
-        sycl::range<3> global_dim(1,
-                                  i_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, i_wg_sz),
-                                  j_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, j_wg_sz));
+      sycl::range<3> wkgroup_dim(1, i_wg_sz, j_wg_sz);
 
-        sycl::range<3> wkgroup_dim(1, i_wg_sz, j_wg_sz);
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
+                       [=] (sycl::nd_item<3> item) {
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
-                         [=] (sycl::nd_item<3> item) {
+          Index_type i = item.get_global_id(1) + 1;
+          Index_type j = item.get_global_id(2) + 1;
 
-            Index_type i = item.get_global_id(1) + 1;
-            Index_type j = item.get_global_id(2) + 1;
+          if ( i < N-1 && j < N-1 ) {
+            POLYBENCH_JACOBI_2D_BODY1;
+          }
 
-            if ( i < N-1 && j < N-1 ) {
-              POLYBENCH_JACOBI_2D_BODY1;
-            }
-
-          });
         });
+      });
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
-                         [=] (sycl::nd_item<3> item) {
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
+                       [=] (sycl::nd_item<3> item) {
 
-            Index_type i = item.get_global_id(1) + 1;
-            Index_type j = item.get_global_id(2) + 1;
+          Index_type i = item.get_global_id(1) + 1;
+          Index_type j = item.get_global_id(2) + 1;
 
-            if ( i < N-1 && j < N-1 ) {
-              POLYBENCH_JACOBI_2D_BODY2;
-            }
+          if ( i < N-1 && j < N-1 ) {
+            POLYBENCH_JACOBI_2D_BODY2;
+          }
 
-          });
         });
-
-      }
+      });
 
     }
     stopTimer();
@@ -102,27 +98,23 @@ void POLYBENCH_JACOBI_2D::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_JACOBI_2D_BODY1_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_JACOBI_2D_BODY1_RAJA;
-          }
-        );
-
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_JACOBI_2D_BODY2_RAJA;
-          }
-        );
-
-      }
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_JACOBI_2D_BODY2_RAJA;
+        }
+      );
 
     }
     stopTimer();

@@ -32,19 +32,15 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              POLYBENCH_JACOBI_2D_BODY1;
-            }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            POLYBENCH_JACOBI_2D_BODY1;
           }
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              POLYBENCH_JACOBI_2D_BODY2;
-            }
+        }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            POLYBENCH_JACOBI_2D_BODY2;
           }
-
         }
 
       }
@@ -67,20 +63,16 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              poly_jacobi2d_base_lam1(i, j);
-            }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            poly_jacobi2d_base_lam1(i, j);
           }
+        }
 
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              poly_jacobi2d_base_lam2(i, j);
-            }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            poly_jacobi2d_base_lam2(i, j);
           }
-
         }
 
       }
@@ -119,18 +111,14 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1}),
-            res,
-
-            poly_jacobi2d_lam1,
-            poly_jacobi2d_lam2
-          );
-
-        }
+          poly_jacobi2d_lam1,
+          poly_jacobi2d_lam2
+        );
 
       }
       stopTimer();
