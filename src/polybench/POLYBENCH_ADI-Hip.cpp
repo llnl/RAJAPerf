@@ -87,28 +87,24 @@ void POLYBENCH_ADI::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(n-2, block_size);
+      constexpr size_t shmem = 0;
 
-        const size_t grid_size = RAJA_DIVIDE_CEILING_INT(n-2, block_size);
-        constexpr size_t shmem = 0;
+      RPlaunchHipKernel( (poly_adi1<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         n,
+                         a, b, c,
+                         d, f,
+                         P, Q, U, V );
 
-        RPlaunchHipKernel( (poly_adi1<block_size>),
-                           grid_size, block_size,
-                           shmem, res.get_stream(),
-                           n,
-                           a, b, c,
-                           d, f,
-                           P, Q, U, V );
-
-        RPlaunchHipKernel( (poly_adi2<block_size>),
-                           grid_size, block_size,
-                           shmem, res.get_stream(),
-                           n,
-                           a, c, d,
-                           e, f,
-                           P, Q, U, V );
-
-      }  // tstep loop
+      RPlaunchHipKernel( (poly_adi2<block_size>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         n,
+                         a, c, d,
+                         e, f,
+                         P, Q, U, V );
 
     }
     stopTimer();
@@ -118,46 +114,42 @@ void POLYBENCH_ADI::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(n-2, block_size);
+      constexpr size_t shmem = 0;
 
-        const size_t grid_size = RAJA_DIVIDE_CEILING_INT(n-2, block_size);
-        constexpr size_t shmem = 0;
+      auto poly_adi1_lambda = [=] __device__ (Index_type i) {
+        POLYBENCH_ADI_BODY2;
+        for (Index_type j = 1; j < n-1; ++j) {
+           POLYBENCH_ADI_BODY3;
+        }
+        POLYBENCH_ADI_BODY4;
+        for (Index_type k = n-2; k >= 1; --k) {
+           POLYBENCH_ADI_BODY5;
+        }
+      };
 
-        auto poly_adi1_lambda = [=] __device__ (Index_type i) {
-          POLYBENCH_ADI_BODY2;
-          for (Index_type j = 1; j < n-1; ++j) {
-             POLYBENCH_ADI_BODY3;
-          }
-          POLYBENCH_ADI_BODY4;
-          for (Index_type k = n-2; k >= 1; --k) {
-             POLYBENCH_ADI_BODY5;
-          }
-        };
+      RPlaunchHipKernel( (poly_adi_lam<block_size,
+                                       decltype(poly_adi1_lambda)>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         n, poly_adi1_lambda );
 
-        RPlaunchHipKernel( (poly_adi_lam<block_size,
-                                         decltype(poly_adi1_lambda)>),
-                           grid_size, block_size,
-                           shmem, res.get_stream(),
-                           n, poly_adi1_lambda );
+      auto poly_adi2_lambda = [=] __device__ (Index_type i) {
+        POLYBENCH_ADI_BODY6;
+        for (Index_type j = 1; j < n-1; ++j) {
+          POLYBENCH_ADI_BODY7;
+        }
+        POLYBENCH_ADI_BODY8;
+        for (Index_type k = n-2; k >= 1; --k) {
+          POLYBENCH_ADI_BODY9;
+        }
+      };
 
-        auto poly_adi2_lambda = [=] __device__ (Index_type i) {
-          POLYBENCH_ADI_BODY6;
-          for (Index_type j = 1; j < n-1; ++j) {
-            POLYBENCH_ADI_BODY7;
-          }
-          POLYBENCH_ADI_BODY8;
-          for (Index_type k = n-2; k >= 1; --k) {
-            POLYBENCH_ADI_BODY9;
-          }
-        };
-
-        RPlaunchHipKernel( (poly_adi_lam<block_size,
-                                         decltype(poly_adi2_lambda)>),
-                           grid_size, block_size,
-                           shmem, res.get_stream(),
-                           n, poly_adi2_lambda );
-
-      }  // tstep loop
+      RPlaunchHipKernel( (poly_adi_lam<block_size,
+                                       decltype(poly_adi2_lambda)>),
+                         grid_size, block_size,
+                         shmem, res.get_stream(),
+                         n, poly_adi2_lambda );
 
     }
     stopTimer();
@@ -185,49 +177,45 @@ void POLYBENCH_ADI::runHipVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
+        [=] __device__ (Index_type i) {
+          POLYBENCH_ADI_BODY2_RAJA;
+        },
+        [=] __device__ (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY3_RAJA;
+        },
+        [=] __device__ (Index_type i) {
+          POLYBENCH_ADI_BODY4_RAJA;
+        },
+        [=] __device__ (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY5_RAJA;
+        }
+      );
 
-          [=] __device__ (Index_type i) {
-            POLYBENCH_ADI_BODY2_RAJA;
-          },
-          [=] __device__ (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY3_RAJA;
-          },
-          [=] __device__ (Index_type i) {
-            POLYBENCH_ADI_BODY4_RAJA;
-          },
-          [=] __device__ (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY5_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
-
-          [=] __device__ (Index_type i) {
-            POLYBENCH_ADI_BODY6_RAJA;
-          },
-          [=] __device__ (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY7_RAJA;
-          },
-          [=] __device__ (Index_type i) {
-            POLYBENCH_ADI_BODY8_RAJA;
-          },
-          [=] __device__ (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY9_RAJA;
-          }
-        );
-
-      }  // tstep loop
+        [=] __device__ (Index_type i) {
+          POLYBENCH_ADI_BODY6_RAJA;
+        },
+        [=] __device__ (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY7_RAJA;
+        },
+        [=] __device__ (Index_type i) {
+          POLYBENCH_ADI_BODY8_RAJA;
+        },
+        [=] __device__ (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY9_RAJA;
+        }
+      );
 
     } // run_reps
     stopTimer();
