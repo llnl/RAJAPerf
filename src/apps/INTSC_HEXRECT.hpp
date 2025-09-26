@@ -66,7 +66,7 @@
 #include "intsc_hexrect_body.hpp"
 
 #define  INTSC_HEXRECT_DATA_SETUP \
-  char *ncord_gpu = m_ncord ; \
+  Char_ptr ncord_gpu = m_ncord ; \
   Real_const_ptr xdnode = (Real_const_ptr) m_xdnode ; \
   Real_const_ptr ydnode = (Real_const_ptr) m_ydnode ; \
   Real_const_ptr zdnode = (Real_const_ptr) m_zdnode ; \
@@ -177,7 +177,7 @@ private:
   Real_ptr m_ydnode ;          // [ndnodes] y coordinates for donor
   Real_ptr m_zdnode ;          // [ndnodes] z coordinates for donor
   Int_ptr m_znlist ;           // [donor zones][8] donor zone node list
-  char *m_ncord ;              //  target dimensions and coordinates
+  Char_ptr m_ncord ;           //  target dimensions and coordinates
   Int_ptr m_intsc_d ;          // [nrecords] donor zones to intersect
   Int_ptr m_intsc_t ;          // [nrecords] target zones to intersect
   Int64_type m_nrecords ;      // Number of threads (one thread per record)

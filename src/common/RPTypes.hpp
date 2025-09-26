@@ -87,6 +87,15 @@ using Int_const_ptr = Int_type const*;
 ///
 using Int_ptr_ptr = Int_type**;
 
+using Char_type = char;
+///
+using Char_ptr = Char_type*;
+using Char_const_ptr = Char_type const*;
+
+using Uchar_type = unsigned char;
+///
+using Uchar_ptr = Uchar_type*;
+
 using Int64_type = std::int64_t ;
 ///
 using Int64_ptr = Int64_type*;

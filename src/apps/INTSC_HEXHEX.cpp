@@ -201,7 +201,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
   // Check on rank 0, other ranks are identical.
   if ( rank == 0 ) {
-    char const *tst = "INTSC_HEXHEX:" ;
+    Char_const_ptr tst = "INTSC_HEXHEX:" ;
 
     //   Determine the correct volume and moments.
     Real_type v0, vx, vy, vz ;

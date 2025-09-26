@@ -32,7 +32,7 @@ __global__ void intsc_hexrect
       Real_ptr ydnode,     // [ndnodes] y coordinates for donor
       Real_ptr zdnode,     // [ndnodes] z coordinates for donor
       Int_ptr znlist,      // [donor zones][8] donor zone node list
-      char *ncord_gpu,     //  target dimensions and coordinates
+      Char_ptr ncord_gpu,     //  target dimensions and coordinates
       Int_ptr intsc_d,   // [nrecords] donor zones to intersect
       Int_ptr intsc_t,   // [nrecords] target zones to intersect
       Int64_type const nrecords,  // Number of threads (one thread per record)

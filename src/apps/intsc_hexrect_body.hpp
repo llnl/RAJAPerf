@@ -206,7 +206,7 @@ RAJA_INLINE Int_type intsc24_shxf1
 RAJA_HOST_DEVICE
 RAJA_INLINE Int_type intsc24_hex_mask_to_list
     ( Int_type const mask,            // mask (used bits 0 to 23)
-      unsigned char mylist[24] ) //  list of which mask bits are set
+      Uchar_type mylist[24] ) //  list of which mask bits are set
 {
   Int_type count=0 ;
   for ( Index_type bit = 0 ; bit < 24 ; ++bit ) {
@@ -422,7 +422,7 @@ RAJA_INLINE Int_type intsc24_hex
   intsc24_hex_filter
       ( xd, yd, zd, xt0, xt1, yt0, yt1, zt0, zt1, inside, abovez, clip ) ;
 
-  unsigned char facet_list[24] ;
+  Uchar_type facet_list[24] ;
   Int_type nclip = intsc24_hex_mask_to_list ( clip, facet_list ) ;
 
   for ( Index_type fi = 0 ; fi < nclip ; fi++ ) {  // facet index in facet_list

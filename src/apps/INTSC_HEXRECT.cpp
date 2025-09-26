@@ -128,7 +128,7 @@ void INTSC_HEXRECT::copyTargetToDevice
   Size_type planes_size =
       4 * sizeof(int) + nplanes * sizeof(Real_type) + 3 * sizeof(void*) ;
 
-  char *ncord_host = new char [ planes_size ] ;  // host buffer
+  Char_ptr ncord_host = new Char_type [ planes_size ] ;  // host buffer
   memset ( ncord_host, 0, planes_size ) ;
 
   //  Build the buffer on the host in order to reduce the number
@@ -487,7 +487,7 @@ void INTSC_HEXRECT::checkMoments
 
       Real_type const tol = 1.0e-12 * sep * (Real_type)ndx ;
       if ( maxerr > tol ) {
-        char const *tst = "INTSC_HEXRECT:" ;
+        Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
         printf ( "%s %s %s.\n", tst,
                  "Centroid error exceeds tolerance for ",
@@ -593,7 +593,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
     Real_type const tol = 1.0e-12 * sep*sep*sep ;
     if ( maxerr > tol ) {
-      char const *tst = "INTSC_HEXRECT:" ;
+      Char_const_ptr tst = "INTSC_HEXRECT:" ;
       printf ( "%s %s %s.\n", tst,
                "Volume exceeds tolerance for ",
                getVariantName(m_vid).c_str() ) ;
