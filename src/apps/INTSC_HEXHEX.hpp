@@ -121,7 +121,7 @@ private:
   void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
 
   void check_intsc_volume_moments
-      ( Int64_type const n_intsc, Real_const_ptr vv ) ;
+      ( Index_type const n_intsc, Real_const_ptr vv ) ;
 
   static constexpr size_t m_tri_per_intsc = 576 ;
   static const size_t default_gpu_block_size = 64;
@@ -132,8 +132,8 @@ private:
   Real_ptr m_dsubz ;    // donor subzone coordinates
   Real_ptr m_tsubz ;    // target subzone coordinates
 
-  Int64_type m_gsize ;        // grid size (number of blocks)
-  Int64_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
+  Index_type m_gsize ;        // grid size (number of blocks)
+  Index_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
   Real_ptr m_vv_int ;   // intermediate volumes and moments
   Real_ptr m_vv_out ;   // [4*n_nitsc] computed volumes, moments on device
 

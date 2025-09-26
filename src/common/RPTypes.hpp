@@ -96,10 +96,6 @@ using Uchar_type = unsigned char;
 ///
 using Uchar_ptr = Uchar_type*;
 
-using Int64_type = std::int64_t ;
-///
-using Int64_ptr = Int64_type*;
-
 /*!
  ******************************************************************************
  *

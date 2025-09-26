@@ -75,7 +75,7 @@ inline constexpr int max_polygon_pts = 10 ;
   Int_const_ptr znlist  = (Int_const_ptr) m_znlist  ; \
   Int_const_ptr intsc_d = (Int_const_ptr) m_intsc_d ; \
   Int_const_ptr intsc_t = (Int_const_ptr) m_intsc_t ; \
-  Int64_type const nrecords = m_nrecords ; \
+  Index_type const nrecords = m_nrecords ; \
   Real_ptr records = (Real_ptr )m_records ;
 
 #include "common/KernelBase.hpp"
@@ -160,7 +160,7 @@ private:
   void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
 
   void check_intsc_volume_moments
-      ( FILE* f, Int64_type const n_intsc, Real_const_ptr vv ) ;
+      ( FILE* f, Index_type const n_intsc, Real_const_ptr vv ) ;
 
   static const Size_type default_gpu_block_size = 64;
   using gpu_block_sizes_type =
@@ -169,8 +169,8 @@ private:
   static const Size_type m_tri_per_intsc = 24 ;
 
   VariantID m_vid ;
-  Int64_type m_gsize ;        // grid size (number of blocks)
-  Int64_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
+  Index_type m_gsize ;        // grid size (number of blocks)
+  Index_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
 
   Size_type m_ndzones ;    // number of "donor zones"
   Size_type m_ntzones ;    // number of "target zones"
@@ -182,7 +182,7 @@ private:
   Char_ptr m_ncord ;           //  target dimensions and coordinates
   Int_ptr m_intsc_d ;          // [nrecords] donor zones to intersect
   Int_ptr m_intsc_t ;          // [nrecords] target zones to intersect
-  Int64_type m_nrecords ;      // Number of threads (one thread per record)
+  Index_type m_nrecords ;      // Number of threads (one thread per record)
   Real_ptr m_records ;         // output volumes, moments
   Real_ptr m_records_h ;       // volumes, moments on the host
 

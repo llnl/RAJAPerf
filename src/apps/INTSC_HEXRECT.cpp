@@ -121,7 +121,7 @@ void INTSC_HEXRECT::copyTargetToDevice
   my_ncord[0] = ncord[0] ;    // z
 
   // ncord is the number of zones in each direction.
-  Int64_type nplanes = my_ncord[2] + my_ncord[1] + my_ncord[0] + 3 ;
+  Index_type nplanes = my_ncord[2] + my_ncord[1] + my_ncord[0] + 3 ;
 
   // Pack the coordinates together, on the GPU.
   //  Allocate 3 spots for pointers to planes arrays, to set on GPU.
@@ -135,11 +135,11 @@ void INTSC_HEXRECT::copyTargetToDevice
   //  of cudaMemcpy calls which are slow.
   memcpy ( ncord_host, my_ncord, 4*sizeof(Int_type) ) ;
 
-  Int64_type pos = 4 * sizeof(Int_type) ;
+  Index_type pos = 4 * sizeof(Int_type) ;
   pos += 3 * sizeof(void*) ;    // pointers to planes arrays
   for ( Index_type dir = 0 ; dir < 3 ; ++dir ) {   // Loop over directions.
     if ( my_ncord[dir] > 0 ) {
-      Int64_type n = (my_ncord[dir]+1)*sizeof(Real_type) ;   // copy bytes
+      Index_type n = (my_ncord[dir]+1)*sizeof(Real_type) ;   // copy bytes
       memcpy ( ncord_host + pos, planes[dir], n ) ;
       pos   += n ;
     }

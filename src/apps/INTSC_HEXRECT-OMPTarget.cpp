@@ -33,13 +33,13 @@ void INTSC_HEXRECT::intscHexHexOMP_Target
     ( Index_type i,
       Index_type iend )  // number of standard intersections
 {
-  Int64_type nisc_stage = iend * m_tri_per_intsc ;
+  Index_type nisc_stage = iend * m_tri_per_intsc ;
 
   for ( Size_type j = 0L ; j < m_tri_per_intsc ; ++j ) {
 
-    Int64_type blksize = threads_per_team ;
-    Int64_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
-    Int64_type blk = ith / blksize ;   // which "block" for gpu compatibility
+    Index_type blksize = threads_per_team ;
+    Index_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
+    Index_type blk = ith / blksize ;   // which "block" for gpu compatibility
 
     Real_ptr tsubz = m_tsubz ;
     Real_ptr dsubz = m_dsubz ;

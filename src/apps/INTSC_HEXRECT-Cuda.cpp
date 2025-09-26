@@ -35,12 +35,12 @@ __global__ void intsc_hexrect
       Char_ptr ncord_gpu,     //  target dimensions and coordinates
       Int_ptr intsc_d,   // [nrecords] donor zones to intersect
       Int_ptr intsc_t,   // [nrecords] target zones to intersect
-      Int64_type const nrecords,  // Number of threads (one thread per record)
+      Index_type const nrecords,  // Number of threads (one thread per record)
       Real_ptr records )  // output volumes, moments
 {
-  Int64_type blksize = block_size ;    // blocksize = 64  must <= nth_per_isc
-  Int64_type blk     = blockIdx.x ;
-  Int64_type irec    = blk*blksize + threadIdx.x ;   // which thread with offset
+  Index_type blksize = block_size ;    // blocksize = 64  must <= nth_per_isc
+  Index_type blk     = blockIdx.x ;
+  Index_type irec    = blk*blksize + threadIdx.x ;   // which thread with offset
 
   __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * block_size ] ;
 
@@ -91,8 +91,8 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
          {
-           Int64_type irec    = i ;
-           Int64_type thridx  = i % block_size ;
+           Index_type irec    = i ;
+           Index_type thridx  = i % block_size ;
 
            __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size] ;
 
@@ -121,8 +121,8 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            Int64_type irec    = i ;
-            Int64_type thridx  = i % block_size ;
+            Index_type irec    = i ;
+            Index_type thridx  = i % block_size ;
 
             __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size];
 

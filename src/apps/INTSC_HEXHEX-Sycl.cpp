@@ -65,9 +65,9 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 
           Index_type i = item.get_global_id(0) + ibegin;
 
-          Int64_type ith     = i ;
-          Int64_type blksize = work_group_size ;
-          Int64_type blk     = i / blksize ;
+          Index_type ith     = i ;
+          Index_type blksize = work_group_size ;
+          Index_type blk     = i / blksize ;
           Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
           INTSC_HEXHEX_BODY;
         });
@@ -94,9 +94,9 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
 
-        Int64_type ith     = i ;
-        Int64_type blksize = work_group_size ;
-        Int64_type blk     = i / blksize ;
+        Index_type ith     = i ;
+        Index_type blksize = work_group_size ;
+        Index_type blk     = i / blksize ;
         Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
         INTSC_HEXHEX_BODY;
       });

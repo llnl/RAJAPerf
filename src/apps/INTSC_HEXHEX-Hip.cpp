@@ -36,10 +36,10 @@ __global__ void intsc_hexhex_hip
 {
   __shared__ Real_type vv_reduce[16] ;
 
-  Int64_type blksize = block_size ;   // blocksize = 64  must <= nth_per_isc
-  Int64_type blk     = blockIdx.x ;
-  Int64_type ith     = blk*blksize + threadIdx.x ;   // which thread with offset
-  Int64_type thridx  = threadIdx.x ;
+  Index_type blksize = block_size ;   // blocksize = 64  must <= nth_per_isc
+  Index_type blk     = blockIdx.x ;
+  Index_type ith     = blk*blksize + threadIdx.x ;   // which thread with offset
+  Index_type thridx  = threadIdx.x ;
 
   Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
 
@@ -133,10 +133,10 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
          {
            __shared__ Real_type vv_reduce[16] ;
 
-           Int64_type blksize   = block_size ;
-           Int64_type blk       = i / block_size ;
-           Int64_type ith       = i ;
-           Int64_type thridx    = i % block_size ;
+           Index_type blksize   = block_size ;
+           Index_type blk       = i / block_size ;
+           Index_type ith       = i ;
+           Index_type thridx    = i % block_size ;
 
            Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
            INTSC_HEXHEX_BODY; };
@@ -177,10 +177,10 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
           {
             __shared__ Real_type vv_reduce[16] ;
 
-            Int64_type blksize   = block_size ;
-            Int64_type blk       = i / block_size ;
-            Int64_type ith       = i ;
-            Int64_type thridx    = i % block_size ;
+            Index_type blksize   = block_size ;
+            Index_type blk       = i / block_size ;
+            Index_type ith       = i ;
+            Index_type thridx    = i % block_size ;
 
             Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
             INTSC_HEXHEX_BODY;
