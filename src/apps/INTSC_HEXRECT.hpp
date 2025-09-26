@@ -63,6 +63,8 @@
 
 #include "common/RPTypes.hpp"
 
+inline constexpr int max_polygon_pts = 10 ;
+
 #include "intsc_hexrect_body.hpp"
 
 #define  INTSC_HEXRECT_DATA_SETUP \

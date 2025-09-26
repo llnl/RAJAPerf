@@ -57,7 +57,6 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
           Int64_type blksize = work_group_size ;
           Int64_type blk     = i / blksize ;
 
-          Int_type const max_polygon_pts = 10 ;
           Real_type xd_work[ (3 * max_polygon_pts+1) ] ;
           Real_ptr my_qx = xd_work ;
 
@@ -80,7 +79,6 @@ void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
           Int64_type blksize = work_group_size ;
           Int64_type blk     = i / blksize ;
 
-          Int_type const max_polygon_pts = 10 ;
           Real_type xd_work[ (3 * max_polygon_pts+1) ] ;
           Real_ptr my_qx = xd_work ;
 

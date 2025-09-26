@@ -24,8 +24,7 @@ RAJA_INLINE Int_type clip_polygon_ge
       Real_type const cut,         // cut value of active coordinate
       Int_type nv_in )       // number of sides in
 {
-  Int_type const max_polygon_pts = 10 ;
-  Int_type const max = max_polygon_pts ;
+  Int_type const max = max_polygon_pts ;   // max_polygon_pts = 10
   Int_type j, jbeg, jend, jr, inc ;
 
   if ( etob ) {    // source at end of ain, destination at beginning
@@ -85,10 +84,8 @@ RAJA_INLINE Int_type clip_polygon_lt
       Real_type const cut,         // cut value of active coordinate
       Int_type nv_in )       // number of sides in
 {
-  Int_type const max_polygon_pts = 10 ;
-
   //     See comments in clip_polygon_ge.
-  Int_type const max = max_polygon_pts ;
+  Int_type const max = max_polygon_pts ;   // max_polygon_pts = 10
   Int_type j, jbeg, jend, jr, inc ;
 
   // etob is false : source at beginning of ain, destination at end
@@ -141,10 +138,9 @@ RAJA_INLINE Int_type intsc24_shxf1
         Real_type & sumy,       // output y moment
         Real_type & sumz )      // output z moment
 {
-  Int_type const max_polygon_pts = 10 ;
   Real_type const one3   = 0.33333333333333333 ;
 
-  Real_const_ptr qy = qx + max_polygon_pts ;
+  Real_const_ptr qy = qx + max_polygon_pts ;  //  max_polygon_pts is 10
   Real_const_ptr qz = qy + max_polygon_pts ;
 
   Real_type xc0 = qx[0], xc1 = qx[1] ;
@@ -369,6 +365,7 @@ RAJA_INLINE Int_type intsc24_hex_filter
 //  Map a hexahedral donor zone (24 triangular facets) onto
 //  a Cartesian zone.
 //
+//
 RAJA_HOST_DEVICE
 RAJA_INLINE Int_type intsc24_hex
       ( Real_ptr xd,    // [24] donor x coordinates, workspace
@@ -384,8 +381,6 @@ RAJA_INLINE Int_type intsc24_hex
         Real_type & sumy,       // output y moment
         Real_type & sumz )      // output z moment
 {
-  Int_type const max_polygon_pts = 10 ;
-
   sum0 = sumx = sumy = sumz = 0.0 ;
   Int_type vtxcnt = 0 ;
 
@@ -398,7 +393,7 @@ RAJA_INLINE Int_type intsc24_hex
   Real_ptr zd = yd + 8 ;
 
   Real_ptr rx = qx_work ;
-  Real_ptr ry = rx + max_polygon_pts ;
+  Real_ptr ry = rx + max_polygon_pts ;    // max_polygon_pts is 10
   Real_ptr rz = ry + max_polygon_pts ;
 
   //  target z spacing
