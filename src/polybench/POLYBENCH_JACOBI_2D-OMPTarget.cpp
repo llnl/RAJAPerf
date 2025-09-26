@@ -32,24 +32,20 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
-
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
-            POLYBENCH_JACOBI_2D_BODY1;
-          }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        for (Index_type j = 1; j < N-1; ++j ) {
+          POLYBENCH_JACOBI_2D_BODY1;
         }
+      }
 
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
-            POLYBENCH_JACOBI_2D_BODY2;
-          }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        for (Index_type j = 1; j < N-1; ++j ) {
+          POLYBENCH_JACOBI_2D_BODY2;
         }
-
       }
 
     }
@@ -76,21 +72,17 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
-
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res, 
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_JACOBI_2D_BODY1_RAJA;
-          },
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_JACOBI_2D_BODY2_RAJA;
-          }
-        );
-
-      }
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_JACOBI_2D_BODY1_RAJA;
+        },
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_JACOBI_2D_BODY2_RAJA;
+        }
+      );
 
     }
     stopTimer();
