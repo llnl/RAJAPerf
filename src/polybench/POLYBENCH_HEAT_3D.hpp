@@ -9,31 +9,26 @@
 ///
 /// POLYBENCH_HEAT_3D kernel reference implementation:
 ///
-/// for (t = 0; t < TSTEPS; t++)
-/// {
-///
-///   for (i = 1; i < N-1; i++) {
-///     for (j = 1; j < N-1; j++) {
-///       for (k = 1; k < N-1; k++) {
-///         B[i][j][k] = 0.125*(A[i+1][j][k] - 2.0*A[i][j][k] + A[i-1][j][k]) +
-///                      0.125*(A[i][j+1][k] - 2.0*A[i][j][k] + A[i][j-1][k]) +
-///                      0.125*(A[i][j][k+1] - 2.0*A[i][j][k] + A[i][j][k-1]) +
-///                      A[i][j][k];
-///       }
+/// for (i = 1; i < N-1; i++) {
+///   for (j = 1; j < N-1; j++) {
+///     for (k = 1; k < N-1; k++) {
+///       B[i][j][k] = 0.125*(A[i+1][j][k] - 2.0*A[i][j][k] + A[i-1][j][k]) +
+///                    0.125*(A[i][j+1][k] - 2.0*A[i][j][k] + A[i][j-1][k]) +
+///                    0.125*(A[i][j][k+1] - 2.0*A[i][j][k] + A[i][j][k-1]) +
+///                    A[i][j][k];
 ///     }
 ///   }
+/// }
 ///
-///   for (i = 1; i < N-1; i++) {
-///     for (j = 1; j < N-1; j++) {
-///       for (k = 1; k < N-1; k++) {
-///         A[i][j][k] = 0.125*(B[i+1][j][k] - 2.0*B[i][j][k] + B[i-1][j][k]) +
-///                      0.125*(B[i][j+1][k] - 2.0*B[i][j][k] + B[i][j-1][k]) +
-///                      0.125*(B[i][j][k+1] - 2.0*B[i][j][k] + B[i][j][k-1]) +
-///                      B[i][j][k];
-///       }
+/// for (i = 1; i < N-1; i++) {
+///   for (j = 1; j < N-1; j++) {
+///     for (k = 1; k < N-1; k++) {
+///       A[i][j][k] = 0.125*(B[i+1][j][k] - 2.0*B[i][j][k] + B[i-1][j][k]) +
+///                    0.125*(B[i][j+1][k] - 2.0*B[i][j][k] + B[i][j-1][k]) +
+///                    0.125*(B[i][j][k+1] - 2.0*B[i][j][k] + B[i][j][k-1]) +
+///                    B[i][j][k];
 ///     }
 ///   }
-///
 /// }
 
 
@@ -47,8 +42,7 @@
   copyData(getDataSpace(vid), A, getDataSpace(vid), m_Ainit, m_N*m_N*m_N); \
   copyData(getDataSpace(vid), B, getDataSpace(vid), m_Binit, m_N*m_N*m_N); \
   \
-  const Index_type N = m_N; \
-  const Index_type tsteps = m_tsteps;
+  const Index_type N = m_N;
 
 
 #define POLYBENCH_HEAT_3D_BODY1 \
@@ -141,7 +135,6 @@ private:
                                                          integer::MultipleOf<32>>;
 
   Index_type m_N;
-  Index_type m_tsteps;
 
   Real_ptr m_A;
   Real_ptr m_B;

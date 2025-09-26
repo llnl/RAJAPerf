@@ -32,24 +32,20 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              for (Index_type k = 1; k < N-1; ++k ) {
-                POLYBENCH_HEAT_3D_BODY1;
-              }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            for (Index_type k = 1; k < N-1; ++k ) {
+              POLYBENCH_HEAT_3D_BODY1;
             }
           }
+        }
 
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              for (Index_type k = 1; k < N-1; ++k ) {
-                POLYBENCH_HEAT_3D_BODY2;
-              }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            for (Index_type k = 1; k < N-1; ++k ) {
+              POLYBENCH_HEAT_3D_BODY2;
             }
           }
-
         }
 
       }
@@ -73,24 +69,20 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              for (Index_type k = 1; k < N-1; ++k ) {
-                poly_heat3d_base_lam1(i, j, k);
-              }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            for (Index_type k = 1; k < N-1; ++k ) {
+              poly_heat3d_base_lam1(i, j, k);
             }
           }
+        }
 
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              for (Index_type k = 1; k < N-1; ++k ) {
-                poly_heat3d_base_lam2(i, j, k);
-              }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            for (Index_type k = 1; k < N-1; ++k ) {
+              poly_heat3d_base_lam2(i, j, k);
             }
           }
-
         }
 
       }
@@ -119,33 +111,29 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1}),
-            res,
+          [=](Index_type i, Index_type j, Index_type k) {
+            POLYBENCH_HEAT_3D_BODY1_RAJA;
+          }
 
-            [=](Index_type i, Index_type j, Index_type k) {
-              POLYBENCH_HEAT_3D_BODY1_RAJA;
-            }
+        );
 
-          );
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1}),
-            res,
+          [=](Index_type i, Index_type j, Index_type k) {
+            POLYBENCH_HEAT_3D_BODY2_RAJA;
+          }
 
-            [=](Index_type i, Index_type j, Index_type k) {
-              POLYBENCH_HEAT_3D_BODY2_RAJA;
-            }
-
-          );
-
-        }
+        );
 
       }
       stopTimer();
