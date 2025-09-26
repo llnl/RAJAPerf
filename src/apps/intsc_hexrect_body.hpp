@@ -20,7 +20,7 @@ RAJA_HOST_DEVICE
 RAJA_INLINE Int_type clip_polygon_ge
     ( Real_ptr ain,              // input active coordinates
       Real_ptr bin, Real_ptr cin,  // input passive coordinates
-      bool const etob,   // Whether to clip from end to begin of ain
+      Bool_type const etob,   // Whether to clip from end to begin of ain
       Real_type const cut,         // cut value of active coordinate
       Int_type nv_in )       // number of sides in
 {

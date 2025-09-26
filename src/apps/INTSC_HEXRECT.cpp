@@ -453,7 +453,7 @@ void INTSC_HEXRECT::checkMoments
 
             for ( int irec = rec0 ; irec < rec0+8 ; ++irec ) {
 
-              bool is_max=false ;
+              Bool_type is_max=false ;
 
               Real_type z_cen =  ( ( irec & 4 ) != 0 ) ? zcb[jz] : zca[jz] ;
               Real_type y_cen =  ( ( irec & 2 ) != 0 ) ? ycb[jy] : yca[jy] ;

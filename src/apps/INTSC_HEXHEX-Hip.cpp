@@ -80,7 +80,7 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
   //  Insert a warmup call to the kernel in order to remove the
   //  time of initialization that affects the first call to the kernel.
   //   The warmup calls send n_subz_intsc=0 and hence return immediately.
-  bool const do_warmup = true ;
+  Bool_type const do_warmup = true ;
   if ( do_warmup ) {
     const Size_type grid_size1 = 1 ;
     constexpr Size_type shmem = 0;

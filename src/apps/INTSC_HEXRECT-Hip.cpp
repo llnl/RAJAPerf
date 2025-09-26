@@ -68,7 +68,7 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
   //  Insert a warmup call to the kernel in order to remove the
   //  time of initialization that affects the first call to the kernel.
   //
-  bool const do_warmup = true ;
+  Bool_type const do_warmup = true ;
   if ( do_warmup ) {
     const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
     constexpr Size_type shmem = 0;
