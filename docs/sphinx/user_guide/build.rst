@@ -132,13 +132,12 @@ compile the code after CMake completes, enter the build directory and type
 processor cores, or all available processor cores on a node, respectively). 
 For example::
 
-  $ ./scripts/lc-builds/blueos_nvcc_clang.sh 10.2.89 70 10.0.1
-  $ cd build_blueos_nvcc10.2.89-70-clang10.0.1
+  $ ./scripts/lc-builds/toss4_amdclang.sh 6.4.1 gfx942
+  $ cd build_lc_toss4-amdclang-6.4.1-gfx942
   $ make -j 
 
-will build the code for CPU-GPU execution using the clang 10.0.1 compiler for
-the CPU and CUDA 10.2.89 for the GPU. The GPU executable code will target
-the CUDA compute architecture ``sm_70``.
+will build the code for CPU-GPU execution using the 6.4.1 version of the AMD
+clang compiler targeting the GPU compute architecture ``gfx942``.
 
 .. note:: The scripts in the ``scripts/lc-builds`` directory contain
           helpful examples of running CMake to generate a variety of 
@@ -174,12 +173,13 @@ Earlier, we mentioned that the Suite can be built with MPI enabled and
 described why this is useful. Some configuration scripts we provide will 
 configure a build with MPI support enabled. For example::
 
-  $ ./scripts/lc-builds/lc-blueos_spectrum_nvcc_clang.sh rolling-release 10.2.89 70 10.0.1
-  $ cd build_lc_blueos-spectrumrolling-release-nvcc10.2.89-70-clang10.0.1
-  $  make -j
+  $ ./scripts/lc-builds/toss4_cray-mpich_amdclang.sh 9.0.1 6.4.2 gfx942
+  $ cd build_lc_toss4-cray-mpich-9.0.1-amdclang-6.4.2-gfx942
+  $ make -j
 
-This will configure a build to use the *rolling release* of the Spectrum MPI
-implementation for an appropriate Livermore Computing system.
+This will configure a build to use the 6.4.2 version of the AMD clang compiler
+targeting GPU compute architecture gfx942 and using Cray MPICH MPI version
+9.0.1.
 
 In general, MPI support can be enabled by passing the `-DENABLE_MPI=On` option
 to CMake and providing a MPI compiler wrapper via the
