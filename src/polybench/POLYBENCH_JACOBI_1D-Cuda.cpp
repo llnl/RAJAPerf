@@ -58,22 +58,18 @@ void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(N, block_size);
+      constexpr size_t shmem = 0;
 
-        const size_t grid_size = RAJA_DIVIDE_CEILING_INT(N, block_size);
-        constexpr size_t shmem = 0;
+      RPlaunchCudaKernel( (poly_jacobi_1D_1<block_size>),
+                          grid_size, block_size,
+                          shmem, res.get_stream(),
+                          A, B, N );
 
-        RPlaunchCudaKernel( (poly_jacobi_1D_1<block_size>),
-                            grid_size, block_size,
-                            shmem, res.get_stream(),
-                            A, B, N );
-
-        RPlaunchCudaKernel( (poly_jacobi_1D_2<block_size>),
-                            grid_size, block_size,
-                            shmem, res.get_stream(),
-                            A, B, N );
-
-      }
+      RPlaunchCudaKernel( (poly_jacobi_1D_2<block_size>),
+                          grid_size, block_size,
+                          shmem, res.get_stream(),
+                          A, B, N );
 
     }
     stopTimer();
@@ -85,19 +81,15 @@ void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::forall<EXEC_POL> ( res, RAJA::RangeSegment{1, N-1},
+        [=] __device__ (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY1;
+      });
 
-        RAJA::forall<EXEC_POL> ( res, RAJA::RangeSegment{1, N-1},
-          [=] __device__ (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY1;
-        });
-
-        RAJA::forall<EXEC_POL> ( res, RAJA::RangeSegment{1, N-1},
-          [=] __device__ (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY2;
-        });
-
-      }
+      RAJA::forall<EXEC_POL> ( res, RAJA::RangeSegment{1, N-1},
+        [=] __device__ (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY2;
+      });
 
     }
     stopTimer();

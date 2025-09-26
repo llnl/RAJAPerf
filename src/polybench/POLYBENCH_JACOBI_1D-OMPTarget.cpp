@@ -37,19 +37,16 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        POLYBENCH_JACOBI_1D_BODY1;
+      }
 
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          POLYBENCH_JACOBI_1D_BODY1;
-        }
-
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          POLYBENCH_JACOBI_1D_BODY2;
-        }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        POLYBENCH_JACOBI_1D_BODY2;
       }
 
     }
@@ -62,19 +59,15 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
+        RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY1;
+      });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
-          RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY1;
-        });
-
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
-          RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY2;
-        });
-
-      }
+      RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
+        RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY2;
+      });
 
     }
     stopTimer();
