@@ -26,15 +26,17 @@ void INTSC_HEXHEX::intscHexHexOMP
   Int64_type nisc_stage = iend * m_tri_per_intsc ;
 
   //  A "standard intersection" is eight subzones.
-  Size_type nsubzones_per_std_intsc = 8 ;
-  Size_type ipair0 = i * nsubzones_per_std_intsc ;
+  Index_type nsubzones_per_std_intsc = 8 ;
+  Index_type ipair0 = i * nsubzones_per_std_intsc ;
 
   // Initialize the accumulation.
-  for ( Index_type j=0 ; j < 4*nsubzones_per_std_intsc ; ++j ) {
+  for ( Index_type j=0 ; j < 4L*nsubzones_per_std_intsc ; ++j ) {
     m_vv_out[ 4L*ipair0 + j ] = 0.0 ;
   }
 
-  for ( Index_type j = 0 ; j < m_tri_per_intsc ; ++j ) {
+  Index_type const tri_per_intsc = (Index_type) m_tri_per_intsc ;
+
+  for ( Index_type j = 0 ; j < tri_per_intsc ; ++j ) {
 
     // for compatibility with gpu code
     Int64_type blksize = default_gpu_block_size ;
