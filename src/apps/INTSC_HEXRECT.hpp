@@ -70,9 +70,9 @@
   Real_const_ptr xdnode = (Real_const_ptr) m_xdnode ; \
   Real_const_ptr ydnode = (Real_const_ptr) m_ydnode ; \
   Real_const_ptr zdnode = (Real_const_ptr) m_zdnode ; \
-  int const *znlist = (int const*) m_znlist ; \
-  int const *intsc_d = (int const*) m_intsc_d ; \
-  int const *intsc_t = (int const*) m_intsc_t ; \
+  Int_const_ptr znlist  = (Int_const_ptr) m_znlist  ; \
+  Int_const_ptr intsc_d = (Int_const_ptr) m_intsc_d ; \
+  Int_const_ptr intsc_t = (Int_const_ptr) m_intsc_t ; \
   Int64_type const nrecords = m_nrecords ; \
   Real_ptr records = (Real_ptr )m_records ;
 
@@ -118,31 +118,31 @@ public:
 
 private:
   void setupTargetPlanes
-      ( Real_ptr2 planes, int *ncord,
-        int const ndx, int const ndy, int const ndz,
+      ( Real_ptr2 planes, Int_ptr ncord,
+        Int_type const ndx, Int_type const ndy, Int_type const ndz,
         Real_type const x0, Real_type const y0, Real_type const z0,
         Real_type const sep ) ;
 
   void setupDonorMesh
       ( Real_type const sep,
         Real_type const xd0, Real_type const yd0, Real_type const zd0,
-        int const ndx, int const ndy, int const ndz,
+        Int_type const ndx, Int_type const ndy, Int_type const ndz,
         Real_ptr x, Real_ptr y, Real_ptr z,
-        int *znlist ) ;
+        Int_ptr znlist ) ;
 
   void setupIntscPairs
-      ( int const *ncord,
-        int const ndx, int const ndy, int const ndz,
-        int *intsc_d,
-        int *intsc_t ) ;
+      ( Int_const_ptr ncord,
+        Int_type const ndx, Int_type const ndy, Int_type const ndz,
+        Int_ptr intsc_d,
+        Int_ptr intsc_t ) ;
 
   void copyTargetToDevice
       ( Real_const_ptr2 planes,
-        int const* ncord ) ;
+        Int_const_ptr ncord ) ;
 
   void checkMoments
-      ( Real_ptr records, int const n_intsc,
-        int const ndx, int const ndy, int const ndz,
+      ( Real_ptr records, Int_type const n_intsc,
+        Int_type const ndx, Int_type const ndy, Int_type const ndz,
         Real_type const xd0, Real_type const yd0, Real_type const zd0,
         Real_type const x0, Real_type const y0, Real_type const z0,
         Real_type const sep,
@@ -150,7 +150,7 @@ private:
 
   void checkScaledVolumes
       ( Real_const_ptr records,
-        int const x_scl_offs, int const y_scl_offs, int const z_scl_offs,
+        Int_type const x_scl_offs, Int_type const y_scl_offs, Int_type const z_scl_offs,
         Real_type const sep ) ;
 
   void intscHexRectSeq        ( Index_type i, Index_type iend ) ;

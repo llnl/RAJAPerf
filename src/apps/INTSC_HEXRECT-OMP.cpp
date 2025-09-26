@@ -26,7 +26,7 @@ void INTSC_HEXRECT::intscHexRectOMP
   INTSC_HEXRECT_DATA_SETUP ;
 
   Int64_type irec = i ;
-  int const max_polygon_pts = 10 ;
+  Int_type const max_polygon_pts = 10 ;
   Real_type xd_work[ 3*max_polygon_pts+1 ] ;
   Real_ptr my_qx = xd_work ;
 

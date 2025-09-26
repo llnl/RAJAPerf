@@ -17,16 +17,16 @@ namespace rajaperf {
 //     Return number of vertices after clipping (might be zero).
 //
 RAJA_HOST_DEVICE
-RAJA_INLINE int clip_polygon_ge
+RAJA_INLINE Int_type clip_polygon_ge
     ( Real_ptr ain,              // input active coordinates
       Real_ptr bin, Real_ptr cin,  // input passive coordinates
       bool const etob,   // Whether to clip from end to begin of ain
       Real_type const cut,         // cut value of active coordinate
-      int nv_in )       // number of sides in
+      Int_type nv_in )       // number of sides in
 {
-  int const max_polygon_pts = 10 ;
-  int const max = max_polygon_pts ;
-  int j, jbeg, jend, jr, inc ;
+  Int_type const max_polygon_pts = 10 ;
+  Int_type const max = max_polygon_pts ;
+  Int_type j, jbeg, jend, jr, inc ;
 
   if ( etob ) {    // source at end of ain, destination at beginning
     jbeg = max - nv_in ;    jend = max ;
@@ -45,7 +45,7 @@ RAJA_INLINE int clip_polygon_ge
   //  are called for the same source polygon (ain), so that the
   //  _ge and _lt output are correctly complementary to each other.
   //
-  for ( int jj = jbeg ; jj != jend ; jj += inc ) {
+  for ( Index_type jj = jbeg ; jj != jend ; jj += inc ) {
     if ( ain[j] >= cut ) {
       ain[jr] = ain[j] ; bin[jr] = bin[j] ; cin[jr] = cin[j] ;
       jr += inc ;
@@ -67,7 +67,7 @@ RAJA_INLINE int clip_polygon_ge
     }
     j = jj ;
   }
-  int ret = ( etob ) ? jr : ( max - 1 - jr ) ;
+  Int_type ret = ( etob ) ? jr : ( max - 1 - jr ) ;
   return ret ;
 }
 
@@ -79,23 +79,23 @@ RAJA_INLINE int clip_polygon_ge
 //     Return number of vertices after clipping (might be zero).
 //
 RAJA_HOST_DEVICE
-RAJA_INLINE int clip_polygon_lt
+RAJA_INLINE Int_type clip_polygon_lt
     ( Real_ptr ain,              // input active coordinates
       Real_ptr bin, Real_ptr cin,  // input passive coordinates
       Real_type const cut,         // cut value of active coordinate
-      int nv_in )       // number of sides in
+      Int_type nv_in )       // number of sides in
 {
-  int const max_polygon_pts = 10 ;
+  Int_type const max_polygon_pts = 10 ;
 
   //     See comments in clip_polygon_ge.
-  int const max = max_polygon_pts ;
-  int j, jbeg, jend, jr, inc ;
+  Int_type const max = max_polygon_pts ;
+  Int_type j, jbeg, jend, jr, inc ;
 
   // etob is false : source at beginning of ain, destination at end
   jbeg = nv_in - 1 ;      jend = -1 ;
   j    = 0 ;               inc = -1 ;         jr = max - 1 ;
 
-  for ( int jj = jbeg ; jj != jend ; jj += inc ) {
+  for ( Index_type jj = jbeg ; jj != jend ; jj += inc ) {
     if ( ain[j] < cut ) {
       ain[jr] = ain[j] ; bin[jr] = bin[j] ; cin[jr] = cin[j] ;
       jr += inc ;
@@ -117,7 +117,7 @@ RAJA_INLINE int clip_polygon_lt
     }
     j = jj ;
   }
-  int ret = max - 1 - jr ;   // ret = number of vertices after clipping
+  Int_type ret = max - 1 - jr ;   // ret = number of vertices after clipping
   return ret ;
 }
 
@@ -128,29 +128,29 @@ RAJA_INLINE int clip_polygon_lt
 //   3D : metric factor is z values of donor polygon
 //
 RAJA_HOST_DEVICE
-RAJA_INLINE int intsc24_shxf1
+RAJA_INLINE Int_type intsc24_shxf1
       ( Real_type const dtx,    // target zone x length
         Real_type const dty,    // target zone y length
         Real_type const x0,     // target zone lower x coordinate
         Real_type const y0,     // target zone lower y coordinate
         Real_type const z0,     // target zone lower z coordinate, for moment
         Real_ptr qx,          // clipped donor polygon (circular order)
-        int const shn,       // Number of vertices in donor polygon max 5
+        Int_type const shn,       // Number of vertices in donor polygon max 5
         Real_type & sum0,       // output area or volume
         Real_type & sumx,       // output x moment
         Real_type & sumy,       // output y moment
         Real_type & sumz )      // output z moment
 {
-  int const max_polygon_pts = 10 ;
+  Int_type const max_polygon_pts = 10 ;
   Real_type const one3   = 0.33333333333333333 ;
 
-  Real_type const *qy = qx + max_polygon_pts ;
-  Real_type const *qz = qy + max_polygon_pts ;
+  Real_const_ptr qy = qx + max_polygon_pts ;
+  Real_const_ptr qz = qy + max_polygon_pts ;
 
   Real_type xc0 = qx[0], xc1 = qx[1] ;
   Real_type yc0 = qy[0], yc1 = qy[1] ;
   Real_type zc0 = qz[0], zc1 = qz[1] ;
-  for ( int kk = 2 ; kk < shn ; kk++ ) {
+  for ( Index_type kk = 2 ; kk < shn ; kk++ ) {
 
     Real_type xc2 = qx[kk] ;
     Real_type yc2 = qy[kk] ;
@@ -204,12 +204,12 @@ RAJA_INLINE int intsc24_shxf1
 //   Compactifying mask to list might reduce branch divergence.
 //
 RAJA_HOST_DEVICE
-RAJA_INLINE int intsc24_hex_mask_to_list
-    ( int const mask,            // mask (used bits 0 to 23)
+RAJA_INLINE Int_type intsc24_hex_mask_to_list
+    ( Int_type const mask,            // mask (used bits 0 to 23)
       unsigned char mylist[24] ) //  list of which mask bits are set
 {
-  int count=0 ;
-  for ( int bit = 0 ; bit < 24 ; ++bit ) {
+  Int_type count=0 ;
+  for ( Index_type bit = 0 ; bit < 24 ; ++bit ) {
     if ( 0 != ( mask & (1<<bit) ) ) { mylist[count++] = bit ; }
   }
   return count ;
@@ -223,21 +223,21 @@ RAJA_INLINE int intsc24_hex_mask_to_list
 //
 RAJA_HOST_DEVICE
 RAJA_INLINE void intsc24_hex_get_tri
-    ( Real_type const *xd,    // [8] donor x coordinates
-      Real_type const *yd,    // [8] donor y coordinates
-      Real_type const *zd,    // [8] donor z coordinates
+    ( Real_const_ptr xd,    // [8] donor x coordinates
+      Real_const_ptr yd,    // [8] donor y coordinates
+      Real_const_ptr zd,    // [8] donor z coordinates
       Real_type const xt0,    // target zone lower x boundary
       Real_type const yt0,    // target zone lower y boundary
       Real_type const zt0,    // target zone lower z boundary
       Real_type const a11,    // x multiplier
       Real_type const a22,    // y multiplier
-      int const f,         // which of six faces
-      int const k0,        // which of four facets of face
+      Int_type const f,         // which of six faces
+      Int_type const k0,        // which of four facets of face
       Real_type xf[3],        // transformed facet x
       Real_type yf[3],        // transformed facet y
       Real_type zf[3] )       // transformed facet z
 {
-  int v0, v1, v2, v3 ;
+  Int_type v0, v1, v2, v3 ;
 
   switch (f) {
   case 0:  v0 = 0 ; v1 = 2 ; v2 = 6 ; v3 = 4 ; break ;
@@ -255,7 +255,7 @@ RAJA_INLINE void intsc24_hex_get_tri
   zf[1] =   0.25 * (zd[v0] + zd[v1] + zd[v2] + zd[v3]) - zt0 ;
 
   // triangle vertices
-  int vv0, vv2 ;
+  Int_type vv0, vv2 ;
 
   switch (k0) {
   case 0:   vv0 = v0 ;   vv2 = v1 ;  break ;
@@ -278,19 +278,19 @@ RAJA_INLINE void intsc24_hex_get_tri
 //      3) needs clip
 //      4) outside
 RAJA_HOST_DEVICE
-RAJA_INLINE int intsc24_hex_filter
-    ( Real_type const *xd,    // [8] donor x coordinates
-      Real_type const *yd,    // [8] donor y coordinates
-      Real_type const *zd,    // [8] donor z coordinates
+RAJA_INLINE Int_type intsc24_hex_filter
+    ( Real_const_ptr xd,    // [8] donor x coordinates
+      Real_const_ptr yd,    // [8] donor y coordinates
+      Real_const_ptr zd,    // [8] donor z coordinates
       Real_type const xt0,    // target zone lower x boundary
       Real_type const xt1,    // target zone upper x boundary
       Real_type const yt0,    // target zone lower y boundary
       Real_type const yt1,    // target zone upper y boundary
       Real_type const zt0,    // target zone lower z boundary
       Real_type const zt1,    // target zone upper z boundary
-      int &inside,
-      int &abovez,
-      int &clip )          // clip - 12 out of 24 triangles is common
+      Int_type &inside,
+      Int_type &abovez,
+      Int_type &clip )          // clip - 12 out of 24 triangles is common
 {
   inside = abovez = clip = 0 ;   // initialize masks.
 
@@ -310,10 +310,10 @@ RAJA_INLINE int intsc24_hex_filter
     a22 =  dtx * deti;
   } while ( false ) ;
 
-  int count = 0 ;
-  for ( int f = 0 ; f < 6 ; ++f ) {   // six faces of the hexahedron
+  Int_type count = 0 ;
+  for ( Index_type f = 0 ; f < 6 ; ++f ) {   // six faces of the hexahedron
 
-    for ( int k0 = 0 ; k0 < 4 ; ++k0 ) {   // four triangles of the face
+    for ( Index_type k0 = 0 ; k0 < 4 ; ++k0 ) {   // four triangles of the face
 
       // transformed facet coordinates
       Real_type xf[3], yf[3], zf[3] ;
@@ -328,7 +328,7 @@ RAJA_INLINE int intsc24_hex_filter
                ( ( yf[0] >= 1.0 ) && ( yf[1] >= 1.0 ) && ( yf[2] >= 1.0 ) ) ||
                ( ( zf[0] <  0.0 ) && ( zf[1] <  0.0 ) && ( zf[2] <  0.0 ) ) )) {
 
-        int mask = 1 << count ;
+        Int_type mask = 1 << count ;
 
         // test whether interior to x and y ranges
         if  (not(( xf[0] >= 0.0 ) && ( xf[1] >= 0.0 ) && ( xf[2] >= 0.0 ) &&
@@ -370,7 +370,7 @@ RAJA_INLINE int intsc24_hex_filter
 //  a Cartesian zone.
 //
 RAJA_HOST_DEVICE
-RAJA_INLINE int intsc24_hex
+RAJA_INLINE Int_type intsc24_hex
       ( Real_ptr xd,    // [24] donor x coordinates, workspace
         Real_ptr qx_work,   // [3*max_polygon_pts] workspace for polygons
         Real_type const xt0,    // target zone lower x boundary
@@ -384,13 +384,13 @@ RAJA_INLINE int intsc24_hex
         Real_type & sumy,       // output y moment
         Real_type & sumz )      // output z moment
 {
-  int const max_polygon_pts = 10 ;
+  Int_type const max_polygon_pts = 10 ;
 
   sum0 = sumx = sumy = sumz = 0.0 ;
-  int vtxcnt = 0 ;
+  Int_type vtxcnt = 0 ;
 
   //  Points oriented so that (v0, face center, v2) points out of positive zone
-  //  static int const vface[24] =
+  //  static Int_type const vface[24] =
   //  {0, 2, 6, 4, 1, 5, 7, 3, 0, 4, 5, 1, 2, 3, 7, 6, 0, 1, 3, 2, 4, 6, 7, 5} ;
 
   // polygon for overlay
@@ -417,52 +417,52 @@ RAJA_INLINE int intsc24_hex
     a22 =  dtx * deti;
   } while ( false ) ;
 
-  int inside, abovez, clip ;   // which facets interior, above, or clipped.
+  Int_type inside, abovez, clip ;   // which facets interior, above, or clipped.
 
   intsc24_hex_filter
       ( xd, yd, zd, xt0, xt1, yt0, yt1, zt0, zt1, inside, abovez, clip ) ;
 
   unsigned char facet_list[24] ;
-  int nclip = intsc24_hex_mask_to_list ( clip, facet_list ) ;
+  Int_type nclip = intsc24_hex_mask_to_list ( clip, facet_list ) ;
 
-  for ( int fi = 0 ; fi < nclip ; fi++ ) {    // facet index in facet_list
+  for ( Index_type fi = 0 ; fi < nclip ; fi++ ) {  // facet index in facet_list
 
-    int f  = facet_list[fi] >> 2 ;        //  which face is facet/4
-    int k0 = facet_list[fi] & 3 ;         //  which facet within face
+    Int_type f  = facet_list[fi] >> 2 ;        //  which face is facet/4
+    Int_type k0 = facet_list[fi] & 3 ;         //  which facet within face
 
     intsc24_hex_get_tri
         ( xd, yd, zd, xt0, yt0, zt0, a11, a22, f, k0, rx, ry, rz ) ;
 
     //   Clip on y=1
-    int shn1 = clip_polygon_lt
+    Int_type shn1 = clip_polygon_lt
         ( ry, rx, rz, 1.0, 3 ) ;
 
     //   Clip on y=0, the x axis.
-    int shn2 = clip_polygon_ge
+    Int_type shn2 = clip_polygon_ge
         ( ry, rx, rz, true, 0.0, shn1 ) ;
 
     //   Clip on x=1
-    int shn3 = clip_polygon_lt
+    Int_type shn3 = clip_polygon_lt
         ( rx, ry, rz, 1.0, shn2 ) ;
 
     //   Clip on x=0, the y axis.
-    int shn4 = clip_polygon_ge
+    Int_type shn4 = clip_polygon_ge
         ( rx, ry, rz, true, 0.0, shn3 ) ;
 
     Real_type sx[24] ;
     Real_ptr sy = sx + 8 ;
     Real_ptr sz = sy + 8 ;
-    for ( int jj = 0 ; jj < shn4 ; ++jj ) {
+    for ( Index_type jj = 0 ; jj < shn4 ; ++jj ) {
       sx[jj] = rx[jj] ;   sy[jj] = ry[jj] ;  sz[jj] = rz[jj] ;
     }
 
     //  Upper polygon - clip above z=dzt
-    int shn = clip_polygon_ge
+    Int_type shn = clip_polygon_ge
         ( rz, rx, ry, false, dzt, shn4 ) ;
 
     if ( shn >= 3 ) {     //  There is an upper polygon
 
-      for ( int jj = 0 ; jj < shn ; ++jj ) {
+      for ( Index_type jj = 0 ; jj < shn ; ++jj ) {
         rz[jj + max_polygon_pts - shn] = dzt ;   // project to upper face
       }
 
@@ -481,7 +481,7 @@ RAJA_INLINE int intsc24_hex
       sumz += asumz * det ;
     }
 
-    for ( int jj = 0 ; jj < shn4 ; ++jj ) {
+    for ( Index_type jj = 0 ; jj < shn4 ; ++jj ) {
       rx[jj] = sx[jj] ;   ry[jj] = sy[jj] ;  rz[jj] = sz[jj] ;
     }
 
@@ -515,17 +515,17 @@ RAJA_INLINE int intsc24_hex
   // abovez (contribution from facet above the target zone).
   nclip = intsc24_hex_mask_to_list ( abovez, facet_list ) ;
 
-  for ( int fi = 0 ; fi < nclip ; fi++ ) {    // facet index in facet_list
+  for ( Index_type fi = 0 ; fi < nclip ; fi++ ) {  // facet index in facet_list
 
-    int f  = facet_list[fi] >> 2 ;        //  which face is facet/4
-    int k0 = facet_list[fi] & 3 ;         //  which facet within face
+    Int_type f  = facet_list[fi] >> 2 ;        //  which face is facet/4
+    Int_type k0 = facet_list[fi] & 3 ;         //  which facet within face
 
     intsc24_hex_get_tri
         ( xd, yd, zd, xt0, yt0, zt0, a11, a22, f, k0, rx, ry, rz ) ;
 
     rz[0] = rz[1] = rz[2] = dzt ;     // project Z to upper face.
 
-    int shn = 3 ;
+    Int_type shn = 3 ;
 
     Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
     Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
@@ -545,15 +545,15 @@ RAJA_INLINE int intsc24_hex
   // inside (contribution from facets inside the target zone)
   nclip = intsc24_hex_mask_to_list ( inside, facet_list ) ;
 
-  for ( int fi = 0 ; fi < nclip ; fi++ ) {    // facet index in facet_list
+  for ( Index_type fi = 0 ; fi < nclip ; fi++ ) {  // facet index in facet_list
 
-    int f  = facet_list[fi] >> 2 ;        //  which face is facet/4
-    int k0 = facet_list[fi] & 3 ;         //  which facet within face
+    Int_type f  = facet_list[fi] >> 2 ;        //  which face is facet/4
+    Int_type k0 = facet_list[fi] & 3 ;         //  which facet within face
 
     intsc24_hex_get_tri
         ( xd, yd, zd, xt0, yt0, zt0, a11, a22, f, k0, rx, ry, rz ) ;
 
-    int shn = 3 ;
+    Int_type shn = 3 ;
 
     Real_type asum0 = 0.0, asumx = 0.0, asumy = 0.0, asumz = 0.0 ;
     Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
@@ -583,28 +583,28 @@ RAJA_INLINE int intsc24_hex
     Real_ptr yd = xd + 8 ; \
     Real_ptr zd = yd + 8 ; \
     do { \
-      int dzone = intsc_d[irec] ; \
-      for (int j=0 ; j<8 ; j++) { \
-        int node = znlist[ 8*dzone + j ] ; \
+      Int_type dzone = intsc_d[irec] ; \
+      for ( Index_type j=0 ; j<8 ; j++) { \
+        Int_type node = znlist[ 8*dzone + j ] ; \
         xd[j] = xdnode[node] ; \
         yd[j] = ydnode[node] ; \
         zd[j] = zdnode[node] ; } \
     } while ( false ) ; \
     do { \
       Real_type sum0, sumx, sumy, sumz ; \
-      Real_type const *zplane ; \
-      Real_type const *yplane ; \
-      Real_type const *xplane ; \
-      int jz, jy, jx ; \
+      Real_const_ptr zplane ; \
+      Real_const_ptr yplane ; \
+      Real_const_ptr xplane ; \
+      Int_type jz, jy, jx ; \
       do { \
-        int *ncord = (int*) ncord_gpu ; \
-        Real_type const **planes = ( Real_type const** ) ( ncord + 4 ) ; \
-        zplane = ( Real_type const* ) ( planes + 3 ) ; \
+        Int_ptr ncord = (Int_ptr) ncord_gpu ; \
+        Real_const_ptr2 planes = ( Real_const_ptr2 ) ( ncord + 4 ) ; \
+        zplane = ( Real_const_ptr ) ( planes + 3 ) ; \
         yplane = zplane + ncord[0] + 1 ; \
         xplane = yplane + ncord[1] + 1 ; \
-        int const nyzones = ncord[1] ; \
-        int const nxzones = ncord[2] ; \
-        int tz = intsc_t[irec] ; \
+        Int_type const nyzones = ncord[1] ; \
+        Int_type const nxzones = ncord[2] ; \
+        Int_type tz = intsc_t[irec] ; \
         jz = tz / ( nxzones * nyzones ) ; \
         jy = ( tz / nxzones ) % nyzones ; \
         jx = tz % nxzones ; \

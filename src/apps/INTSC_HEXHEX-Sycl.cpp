@@ -78,7 +78,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
                        [=] (sycl::nd_item<1> item ) {
 
           Index_type i = item.get_global_id(0) + ibegin;
-          int ith     = i ;
+          Int_type ith     = i ;
           FIXUP_VV_BODY ;
         });
       });
@@ -103,7 +103,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend_fixup), [=] (Index_type i) {
-        int ith     = i ;
+        Int_type ith     = i ;
         FIXUP_VV_BODY ;
         }
 

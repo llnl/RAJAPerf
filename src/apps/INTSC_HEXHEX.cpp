@@ -122,7 +122,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
       { m_zmin, m_zmin, m_zmin, m_zmin, m_zmax, m_zmax, m_zmax, m_zmax } ;
 
   Real_type xtzone[8], ytzone[8], ztzone[8] ;
-  for ( int i=0 ; i<8 ; ++i ) {
+  for ( Index_type i=0 ; i<8 ; ++i ) {
     xtzone[i] = xdzone[i] + m_shift ;
     ytzone[i] = ydzone[i] + m_shift ;
     ztzone[i] = zdzone[i] + m_shift ;
@@ -161,7 +161,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
 
   //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
-  for ( int k=0 ; k < n_subz_intsc ; ++k ) {
+  for ( Index_type k=0 ; k < n_subz_intsc ; ++k ) {
     memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(Real_type) ) ;
     memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(Real_type) ) ;
   }
@@ -177,7 +177,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
     deallocHostData ( tcoord ) ;
   } while ( false ) ;
 
-  const int block_size = default_gpu_block_size ;
+  const Int_type block_size = default_gpu_block_size ;
   m_nthreads = 72L * n_subz_intsc ;
   m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
@@ -194,7 +194,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     ( Int64_type const n_subz_intsc,  // number of subzone intersections
       Real_const_ptr vv )   // computed volumes, moments on the host
 {
-  int rank = 0;
+  Int_type rank = 0;
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif // RAJA_PERFSUITE_ENABLE_MPI

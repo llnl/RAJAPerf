@@ -42,7 +42,7 @@ __global__ void intsc_hexrect
   Int64_type blk     = blockIdx.x ;
   Int64_type irec    = blk*blksize + threadIdx.x ;   // which thread with offset
 
-  int const max_polygon_pts = 10 ;
+  Int_type const max_polygon_pts = 10 ;
   __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
   // polygons (an odd number of doubles per thread to reduce bank conflicts)
@@ -96,7 +96,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
            Int64_type blk     = blockIdx.x ;
            Int64_type irec    = blk*blksize + threadIdx.x ;
 
-           int const max_polygon_pts = 10 ;
+           Int_type const max_polygon_pts = 10 ;
            __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
            Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
@@ -128,7 +128,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
             Int64_type blk     = blockIdx.x ;
             Int64_type irec    = blk*blksize + threadIdx.x ;
 
-            int const max_polygon_pts = 10 ;
+            Int_type const max_polygon_pts = 10 ;
             __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
             Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;

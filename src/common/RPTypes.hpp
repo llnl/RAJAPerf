@@ -83,6 +83,7 @@ using Size_type = size_t;
 using Int_type = int;
 ///
 using Int_ptr = Int_type*;
+using Int_const_ptr = Int_type const*;
 ///
 using Int_ptr_ptr = Int_type**;
 
