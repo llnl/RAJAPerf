@@ -31,29 +31,26 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (t = 0; t < tsteps; ++t) {
-
+        for (Index_type j = 0; j < ny; j++) {
+          POLYBENCH_FDTD_2D_BODY1;
+        }
+        for (Index_type i = 1; i < nx; i++) {
           for (Index_type j = 0; j < ny; j++) {
-            POLYBENCH_FDTD_2D_BODY1;
+            POLYBENCH_FDTD_2D_BODY2;
           }
-          for (Index_type i = 1; i < nx; i++) {
-            for (Index_type j = 0; j < ny; j++) {
-              POLYBENCH_FDTD_2D_BODY2;
-            }
+        }
+        for (Index_type i = 0; i < nx; i++) {
+          for (Index_type j = 1; j < ny; j++) {
+            POLYBENCH_FDTD_2D_BODY3;
           }
-          for (Index_type i = 0; i < nx; i++) {
-            for (Index_type j = 1; j < ny; j++) {
-              POLYBENCH_FDTD_2D_BODY3;
-            }
+        }
+        for (Index_type i = 0; i < nx - 1; i++) {
+          for (Index_type j = 0; j < ny - 1; j++) {
+            POLYBENCH_FDTD_2D_BODY4;
           }
-          for (Index_type i = 0; i < nx - 1; i++) {
-            for (Index_type j = 0; j < ny - 1; j++) {
-              POLYBENCH_FDTD_2D_BODY4;
-            }
-          }
+        }
 
-        }  // tstep loop
-
+        t = (t+1) % m_tsteps;
       }
       stopTimer();
 
@@ -84,29 +81,26 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (t = 0; t < tsteps; ++t) {
-
+        for (Index_type j = 0; j < ny; j++) {
+          poly_fdtd2d_base_lam1(j);
+        }
+        for (Index_type i = 1; i < nx; i++) {
           for (Index_type j = 0; j < ny; j++) {
-            poly_fdtd2d_base_lam1(j);
+            poly_fdtd2d_base_lam2(i, j);
           }
-          for (Index_type i = 1; i < nx; i++) {
-            for (Index_type j = 0; j < ny; j++) {
-              poly_fdtd2d_base_lam2(i, j);
-            }
+        }
+        for (Index_type i = 0; i < nx; i++) {
+          for (Index_type j = 1; j < ny; j++) {
+            poly_fdtd2d_base_lam3(i, j);
           }
-          for (Index_type i = 0; i < nx; i++) {
-            for (Index_type j = 1; j < ny; j++) {
-              poly_fdtd2d_base_lam3(i, j);
-            }
+        }
+        for (Index_type i = 0; i < nx - 1; i++) {
+          for (Index_type j = 0; j < ny - 1; j++) {
+            poly_fdtd2d_base_lam4(i, j);
           }
-          for (Index_type i = 0; i < nx - 1; i++) {
-            for (Index_type j = 0; j < ny - 1; j++) {
-              poly_fdtd2d_base_lam4(i, j);
-            }
-          }
+        }
 
-        }  // tstep loop
-
+        t = (t+1) % m_tsteps;
       }  // run_reps
       stopTimer();
 
@@ -151,36 +145,33 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (t = 0; t < tsteps; ++t) {
+        RAJA::forall<EXEC_POL1>(res,
+           RAJA::RangeSegment(0, ny),
+          poly_fdtd2d_lam1
+        );
 
-          RAJA::forall<EXEC_POL1>(res,
-             RAJA::RangeSegment(0, ny),
-            poly_fdtd2d_lam1
-          );
+        RAJA::kernel_resource<EXEC_POL234>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, nx},
+                           RAJA::RangeSegment{0, ny}),
+          res,
+          poly_fdtd2d_lam2
+        );
 
-          RAJA::kernel_resource<EXEC_POL234>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, nx},
-                             RAJA::RangeSegment{0, ny}),
-            res,
-            poly_fdtd2d_lam2
-          );
+        RAJA::kernel_resource<EXEC_POL234>(
+          RAJA::make_tuple(RAJA::RangeSegment{0, nx},
+                           RAJA::RangeSegment{1, ny}),
+          res,
+          poly_fdtd2d_lam3
+        );
 
-          RAJA::kernel_resource<EXEC_POL234>(
-            RAJA::make_tuple(RAJA::RangeSegment{0, nx},
-                             RAJA::RangeSegment{1, ny}),
-            res, 
-            poly_fdtd2d_lam3
-          );
+        RAJA::kernel_resource<EXEC_POL234>(
+          RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
+                           RAJA::RangeSegment{0, ny-1}),
+          res,
+          poly_fdtd2d_lam4
+        );
 
-          RAJA::kernel_resource<EXEC_POL234>(
-            RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
-                             RAJA::RangeSegment{0, ny-1}),
-            res,
-            poly_fdtd2d_lam4
-          );
-
-        }  // tstep loop
-
+        t = (t+1) % m_tsteps;
       } // run_reps
       stopTimer();
 

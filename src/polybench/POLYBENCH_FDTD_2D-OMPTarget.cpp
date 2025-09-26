@@ -37,40 +37,37 @@ void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (t = 0; t < tsteps; ++t) {
+      #pragma omp target is_device_ptr(ey,fict) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type j = 0; j < ny; j++) {
+        POLYBENCH_FDTD_2D_BODY1;
+      }
 
-        #pragma omp target is_device_ptr(ey,fict) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      #pragma omp target is_device_ptr(ey,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 1; i < nx; i++) {
         for (Index_type j = 0; j < ny; j++) {
-          POLYBENCH_FDTD_2D_BODY1;
+          POLYBENCH_FDTD_2D_BODY2;
         }
+      }
 
-        #pragma omp target is_device_ptr(ey,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 1; i < nx; i++) {
-          for (Index_type j = 0; j < ny; j++) {
-            POLYBENCH_FDTD_2D_BODY2;
-          }
+      #pragma omp target is_device_ptr(ex,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 0; i < nx; i++) {
+        for (Index_type j = 1; j < ny; j++) {
+          POLYBENCH_FDTD_2D_BODY3;
         }
+      }
 
-        #pragma omp target is_device_ptr(ex,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 0; i < nx; i++) {
-          for (Index_type j = 1; j < ny; j++) {
-            POLYBENCH_FDTD_2D_BODY3;
-          }
+      #pragma omp target is_device_ptr(ex,ey,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 0; i < nx - 1; i++) {
+        for (Index_type j = 0; j < ny - 1; j++) {
+          POLYBENCH_FDTD_2D_BODY4;
         }
+      }
 
-        #pragma omp target is_device_ptr(ex,ey,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 0; i < nx - 1; i++) {
-          for (Index_type j = 0; j < ny - 1; j++) {
-            POLYBENCH_FDTD_2D_BODY4;
-          }
-        }
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     }
     stopTimer();
 
@@ -93,42 +90,39 @@ void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (t = 0; t < tsteps; ++t) {
+      RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
+       [=] (Index_type j) {
+         POLYBENCH_FDTD_2D_BODY1_RAJA;
+      });
 
-        RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
-         [=] (Index_type j) {
-           POLYBENCH_FDTD_2D_BODY1_RAJA;
-        });
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, nx},
+                         RAJA::RangeSegment{0, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY2_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, nx},
-                           RAJA::RangeSegment{0, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY2_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx},
+                         RAJA::RangeSegment{1, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY3_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx},
-                           RAJA::RangeSegment{1, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY3_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
+                         RAJA::RangeSegment{0, ny-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY4_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
-                           RAJA::RangeSegment{0, ny-1}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY4_RAJA;
-          }
-        );
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
