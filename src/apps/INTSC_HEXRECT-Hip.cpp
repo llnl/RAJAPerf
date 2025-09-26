@@ -108,12 +108,13 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
           ( Index_type i )
          {
            Int64_type blksize = block_size ;
-           Int64_type blk     = blockIdx.x ;
-           Int64_type irec    = blk*blksize + threadIdx.x ;
+           Int64_type blk     = i / block_size ;
+           Int64_type irec    = i ;
+           Int64_type thridx  = i % block_size ;
 
            __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
-           Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
+           Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
 
            INTSC_HEXRECT_BODY;
          };
@@ -139,12 +140,13 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
             Int64_type blksize = block_size ;
-            Int64_type blk     = blockIdx.x ;
-            Int64_type irec    = blk*blksize + threadIdx.x ;
+            Int64_type blk     = i / block_size ;
+            Int64_type irec    = i ;
+            Int64_type thridx  = i % block_size ;
 
             __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
 
-            Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
+            Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
 
             INTSC_HEXRECT_BODY;
           }

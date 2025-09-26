@@ -430,6 +430,7 @@ RAJA_INLINE void hex_intsc_subz
   }
 
 
+// thridx is threadIdx.x
 
 #define INTSC_HEXHEX_BODY \
   INTSC_HEXHEX_BODY_SEQ \
@@ -446,8 +447,8 @@ RAJA_INLINE void hex_intsc_subz
     vz_lo += __shfl_xor_sync ( 0xffffffff, vz_lo, k ) ; \
   } \
   Int_type const nwarps = blksize / WARPSIZE ; \
-  Int_type k = threadIdx.x / WARPSIZE ; \
-  if ( threadIdx.x == k*WARPSIZE ) { \
+  Int_type k = thridx / WARPSIZE ; \
+  if ( thridx == k*WARPSIZE ) { \
     vv_reduce[k+ 0] = vv_lo ; \
     vv_reduce[k+ 2] = vx_lo ; \
     vv_reduce[k+ 4] = vy_lo ; \
@@ -458,11 +459,11 @@ RAJA_INLINE void hex_intsc_subz
     vv_reduce[k+14] = vz_hi ; \
   } \
   __syncthreads() ; \
-  if ( threadIdx.x < 8 ) { \
+  if ( thridx < 8 ) { \
     for ( Index_type k = 1 ; k < nwarps ; ++k ) { \
-      vv_reduce[ 2*threadIdx.x ] += vv_reduce[ 2*threadIdx.x + 1 ] ; \
+      vv_reduce[ 2*thridx ] += vv_reduce[ 2*thridx + 1 ] ; \
     } \
-    vv_out[threadIdx.x] = vv_reduce[ 2 * threadIdx.x ] ; \
+    vv_out[thridx] = vv_reduce[ 2 * thridx ] ; \
   }
 
 //  This is not needed on Seq and OMP CPU variants.
