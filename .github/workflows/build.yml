@@ -1,7 +1,7 @@
 on: push
 name: Build
 jobs:
-  build_docker:
+  docker_build_and_test:
     strategy:
       matrix:
         target: [gcc12, gcc13, clang13, clang15, rocm6, rocm6_desul, intel2024, intel2024_debug, intel2024_sycl]
@@ -20,7 +20,7 @@ jobs:
     - uses: docker/build-push-action@v6
       with:
         target: ${{ matrix.target }}
-  build_mac:
+  mac_build_and_test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,8 +36,11 @@ jobs:
           run-build: true
           build-args: '--parallel 16'
       - uses: threeal/ctest-action@v1.1.0
-  build_windows:
+  windows_build_and_test:
+    runs-on: windows-latest
     strategy:
+      # If any of check fails, allow other jobs to continue running.
+      fail-fast: false
       matrix:
         shared: 
 ## ====================================
@@ -48,14 +51,15 @@ jobs:
 ##          CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=On
         - args: BUILD_SHARED_LIBS=Off
           
-    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout RAJA Perf
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 ## ====================================
 ## Config and build action
-      - uses: threeal/cmake-action@v1.3.0
+      - name: Windows CMake and Build
+        uses: threeal/cmake-action@v1.3.0
         with:
           build-dir: build
           options:
@@ -72,6 +76,13 @@ jobs:
 ##        dir -r D:\a\RAJA\RAJA\build\test
 ## ====================================
 ## Run tests action
-      - uses: threeal/ctest-action@v1.1.0
-        with:
-          build-config: Debug
+#     - name: Run tests
+#       uses: threeal/ctest-action@v1.1.0
+#       with:
+#         build-config: Debug
+      - name: Run tests
+        timeout-minutes: 45
+        run: | 
+          cd build
+          ctest -C Debug -T Tests --output-on-failure -V
+        shell: pwsh
