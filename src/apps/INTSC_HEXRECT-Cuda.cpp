@@ -91,8 +91,6 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       auto intsc_hexrect_lambda = [=] __device__
           ( Index_type i )
          {
-           Int64_type blksize = block_size ;
-           Int64_type blk     = i / block_size ;
            Int64_type irec    = i ;
            Int64_type thridx  = i % block_size ;
 
@@ -123,8 +121,6 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            Int64_type blksize = block_size ;
-            Int64_type blk     = i / block_size ;
             Int64_type irec    = i ;
             Int64_type thridx  = i % block_size ;
 
