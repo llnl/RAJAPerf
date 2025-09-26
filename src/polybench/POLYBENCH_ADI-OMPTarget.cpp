@@ -37,35 +37,31 @@ void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
-
-        #pragma omp target is_device_ptr(P,Q,U,V) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < n-1; ++i) {
-          POLYBENCH_ADI_BODY2;
-          for (Index_type j = 1; j < n-1; ++j) {
-            POLYBENCH_ADI_BODY3;
-          }
-          POLYBENCH_ADI_BODY4;
-          for (Index_type k = n-2; k >= 1; --k) {
-            POLYBENCH_ADI_BODY5;
-          }
+      #pragma omp target is_device_ptr(P,Q,U,V) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < n-1; ++i) {
+        POLYBENCH_ADI_BODY2;
+        for (Index_type j = 1; j < n-1; ++j) {
+          POLYBENCH_ADI_BODY3;
         }
-
-        #pragma omp target is_device_ptr(P,Q,U,V) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < n-1; ++i) {
-          POLYBENCH_ADI_BODY6;
-          for (Index_type j = 1; j < n-1; ++j) {
-            POLYBENCH_ADI_BODY7;
-          }
-          POLYBENCH_ADI_BODY8;
-          for (Index_type k = n-2; k >= 1; --k) {
-            POLYBENCH_ADI_BODY9;
-          }
+        POLYBENCH_ADI_BODY4;
+        for (Index_type k = n-2; k >= 1; --k) {
+          POLYBENCH_ADI_BODY5;
         }
+      }
 
-      } // tsteps
+      #pragma omp target is_device_ptr(P,Q,U,V) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < n-1; ++i) {
+        POLYBENCH_ADI_BODY6;
+        for (Index_type j = 1; j < n-1; ++j) {
+          POLYBENCH_ADI_BODY7;
+        }
+        POLYBENCH_ADI_BODY8;
+        for (Index_type k = n-2; k >= 1; --k) {
+          POLYBENCH_ADI_BODY9;
+        }
+      }
 
     } // run_reps
     stopTimer();
@@ -93,49 +89,45 @@ void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY2_RAJA;
+        },
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY3_RAJA;
+        },
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY4_RAJA;
+        },
+        [=] (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY5_RAJA;
+        }
+      );
 
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY2_RAJA;
-          },
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY3_RAJA;
-          },
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY4_RAJA;
-          },
-          [=] (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY5_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
-
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY6_RAJA;
-          },
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY7_RAJA;
-          },
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY8_RAJA;
-          },
-          [=] (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY9_RAJA;
-          }
-        );
-
-      } // tsteps
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY6_RAJA;
+        },
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY7_RAJA;
+        },
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY8_RAJA;
+        },
+        [=] (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY9_RAJA;
+        }
+      );
 
     } // run_reps
     stopTimer();

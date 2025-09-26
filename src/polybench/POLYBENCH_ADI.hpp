@@ -24,39 +24,39 @@
 ///  e = 1.0 + mul2;
 ///  f = d;
 ///
-/// for (t=1; t<=TSTEPS; t++) {
-///    //Column Sweep
-///    for (i=1; i<N-1; i++) {
-///      v[0][i] = 1.0;
-///      p[i][0] = 0.0;
-///      q[i][0] = v[0][i];
-///      for (j=1; j<N-1; j++) {
-///        p[i][j] = -c / (a*p[i][j-1]+b);
-///        q[i][j] = (-d*u[j][i-1]+(1.0+2.0*d)*u[j][i] -
-///                   f*u[j][i+1]-a*q[i][j-1]) / (a*p[i][j-1]+b);
-///      }
-///
-///      v[N-1][i] = 1.0;
-///      for (k=N-2; k>=1; k--) {
-///        v[k][i] = p[i][k] * v[k+1][i] + q[i][k];
-///      }
+///  // removed loop [1, TSTEPS]
+///  //Column Sweep
+///  for (i=1; i<N-1; i++) {
+///    v[0][i] = 1.0;
+///    p[i][0] = 0.0;
+///    q[i][0] = v[0][i];
+///    for (j=1; j<N-1; j++) {
+///      p[i][j] = -c / (a*p[i][j-1]+b);
+///      q[i][j] = (-d*u[j][i-1]+(1.0+2.0*d)*u[j][i] -
+///                 f*u[j][i+1]-a*q[i][j-1]) / (a*p[i][j-1]+b);
 ///    }
-///    //Row Sweep
-///    for (i=1; i<N-1; i++) {
-///      u[i][0] = 1.0;
-///      p[i][0] = 0.0;
-///      q[i][0] = u[i][0];
-///      for (j=1; j<N-1; j++) {
-///        p[i][j] = -f / (d*p[i][j-1]+e);
-///        q[i][j] = (-a*v[i-1][j]+(1.0+2.0*a)*v[i][j] -
-///                  c*v[i+1][j]-d*q[i][j-1]) / (d*p[i][j-1]+e);
-///      }
-///      u[i][N-1] = 1.0;
-///      for (k=N-2; k>=1; k--) {
-///        u[i][k] = p[i][k] * u[i][k+1] + q[i][k];
-///      }
+///
+///    v[N-1][i] = 1.0;
+///    for (k=N-2; k>=1; k--) {
+///      v[k][i] = p[i][k] * v[k+1][i] + q[i][k];
 ///    }
 ///  }
+///  //Row Sweep
+///  for (i=1; i<N-1; i++) {
+///    u[i][0] = 1.0;
+///    p[i][0] = 0.0;
+///    q[i][0] = u[i][0];
+///    for (j=1; j<N-1; j++) {
+///      p[i][j] = -f / (d*p[i][j-1]+e);
+///      q[i][j] = (-a*v[i-1][j]+(1.0+2.0*a)*v[i][j] -
+///                c*v[i+1][j]-d*q[i][j-1]) / (d*p[i][j-1]+e);
+///    }
+///    u[i][N-1] = 1.0;
+///    for (k=N-2; k>=1; k--) {
+///      u[i][k] = p[i][k] * u[i][k+1] + q[i][k];
+///    }
+///  }
+///  // removed end loop
 
 
 
@@ -66,11 +66,10 @@
 
 #define POLYBENCH_ADI_DATA_SETUP \
   const Index_type n = m_n; \
-  const Index_type tsteps = m_tsteps; \
 \
   Real_type DX = 1.0/(Real_type)n; \
   Real_type DY = 1.0/(Real_type)n; \
-  Real_type DT = 1.0/(Real_type)tsteps; \
+  Real_type DT = 1.0/(Real_type)m_tsteps; \
   Real_type B1 = 2.0; \
   Real_type B2 = 1.0; \
   Real_type mul1 = B1 * DT / (DX * DX); \
