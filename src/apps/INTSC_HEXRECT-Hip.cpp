@@ -43,7 +43,7 @@ __global__ void intsc_hexrect_hip
   Int64_type blk     = blockIdx.x ;
   Int64_type irec    = blk*blksize + threadIdx.x ;   // which thread with offset
 
-  __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+  __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * block_size ] ;
 
   // polygons (an odd number of doubles per thread to reduce bank conflicts)
   Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * threadIdx.x ;
@@ -112,7 +112,7 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
            Int64_type irec    = i ;
            Int64_type thridx  = i % block_size ;
 
-           __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+           __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size] ;
 
            Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
 
@@ -144,7 +144,7 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
             Int64_type irec    = i ;
             Int64_type thridx  = i % block_size ;
 
-            __shared__ Real_type xd_work[ (3 * max_polygon_pts+1) * 64 ] ;
+            __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size];
 
             Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
 
