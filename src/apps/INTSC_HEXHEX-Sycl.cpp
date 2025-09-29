@@ -19,7 +19,9 @@
 #include <iostream>
 
 #define WARPSIZE 32
-#define __shfl_xor_sync(mask,val,n) __shfl_xor(val,n)
+#define __shfl_xor_sync(mask,val,n) \
+  sycl::permute_group_by_xor(item.get_sub_group(),val,n)
+#define __syncthreads sycl::group_barrier ( item.get_group() )
 
 namespace rajaperf
 {
@@ -63,11 +65,14 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
         h.parallel_for(sycl::nd_range<1>(global_size, work_group_size),
                        [=] (sycl::nd_item<1> item ) {
 
+          sycl::local_accessor<Real_type,1> vv_reduce(sycl::range<1>(16), h ) ;
+
           Index_type i = item.get_global_id(0) + ibegin;
 
           Index_type ith     = i ;
           Index_type blksize = work_group_size ;
           Index_type blk     = i / blksize ;
+          Index_type thridx    = i % work_group_size ;
           Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
           INTSC_HEXHEX_BODY;
         });
@@ -94,9 +99,12 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
       RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
 
+        sycl::local_accessor<Real_type,1> vv_reduce(sycl::range<1>(16), h ) ;
+
         Index_type ith     = i ;
         Index_type blksize = work_group_size ;
         Index_type blk     = i / blksize ;
+        Index_type thridx  = i % work_group_size ;
         Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
         INTSC_HEXHEX_BODY;
       });
