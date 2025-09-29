@@ -129,15 +129,6 @@
   yps = y74 + y30 ; \
   zps = z74 + z30 ; \
  \
-  cyz = y74 * z60 - z74 * y60 ; \
-  czx = z74 * x60 - x74 * z60 ; \
-  cxy = x74 * y60 - y74 * x60 ; \
-  vol[i] += xps * cyz + yps * czx + zps * cxy ; \
- \
-  xps = x74 + x30 ; \
-  yps = y74 + y30 ; \
-  zps = z74 + z30 ; \
- \
   cyz = y71 * z50 - z71 * y50 ; \
   czx = z71 * x50 - x71 * z50 ; \
   cxy = x71 * y50 - y71 * x50 ; \

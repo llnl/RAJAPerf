@@ -38,7 +38,7 @@ void REDUCE_SUM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type sum = m_sum_init;
 
@@ -59,7 +59,7 @@ void REDUCE_SUM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type tsum = m_sum_init;
 

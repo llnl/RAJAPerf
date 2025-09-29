@@ -58,7 +58,7 @@ void HALO_PACKING::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];
@@ -117,7 +117,7 @@ void HALO_PACKING::runCudaVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];

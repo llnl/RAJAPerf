@@ -35,7 +35,7 @@ void SORTPAIRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::sort_pairs<RAJA::omp_parallel_for_exec>(res, RAJA_SORTPAIRS_ARGS);
 

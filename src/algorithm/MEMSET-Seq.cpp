@@ -32,7 +32,7 @@ void MEMSET::runSeqVariantLibrary(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         std::memset(MEMSET_STD_ARGS);
 
@@ -48,7 +48,7 @@ void MEMSET::runSeqVariantLibrary(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         res.memset(MEMSET_STD_ARGS);
 
@@ -80,7 +80,7 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           MEMSET_BODY;
@@ -100,7 +100,7 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
                            };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           memset_lambda(i);
@@ -117,7 +117,7 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),

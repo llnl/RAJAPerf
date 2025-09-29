@@ -36,7 +36,7 @@ void HALO_PACKING::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];
@@ -90,7 +90,7 @@ void HALO_PACKING::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
     using EXEC_POL = RAJA::omp_target_parallel_for_exec<threads_per_team>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];

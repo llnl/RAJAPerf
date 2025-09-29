@@ -35,7 +35,7 @@ void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
       Kokkos::parallel_for(
           "ARRAY_OF_PTRS-Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),

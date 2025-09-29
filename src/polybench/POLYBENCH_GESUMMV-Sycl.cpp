@@ -35,7 +35,7 @@ void POLYBENCH_GESUMMV::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(N, work_group_size);
 
@@ -77,7 +77,7 @@ void POLYBENCH_GESUMMV::runSyclVariantImpl(VariantID vid)
       >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple( RAJA::RangeSegment{0, N},

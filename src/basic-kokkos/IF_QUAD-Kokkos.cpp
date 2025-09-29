@@ -36,7 +36,7 @@ void IF_QUAD::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Kokkos::parallel_for(
           "IF_QUAD_Kokkos Kokkos_Lambda",

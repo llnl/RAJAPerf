@@ -123,7 +123,7 @@ void SCAN::runHipVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
 #if defined(__HIPCC__)
@@ -155,7 +155,7 @@ void SCAN::runHipVariantLibrary(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::exclusive_scan< RAJA::hip_exec<0, true /*async*/> >(res, RAJA_SCAN_ARGS);
 
@@ -191,7 +191,7 @@ void SCAN::runHipVariantCustom(VariantID vid)
     allocData(DataSpace::HipDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
                                 res.get_stream()) );

@@ -122,7 +122,7 @@ set(RAJA_PERFSUITE_GPU_BLOCKSIZES "" CACHE STRING "Comma separated list of GPU b
 
 set(RAJA_PERFSUITE_ATOMIC_REPLICATIONS "" CACHE STRING "Comma separated list of atomic replications, ex '1,256,4096'")
 
-set(RAJA_PERFSUITE_GPU_ITEMS_PER_THREAD "" CACHE STRING "Comma separated list of atomic replications, ex '1,256,4096'")
+set(RAJA_PERFSUITE_GPU_ITEMS_PER_THREAD "" CACHE STRING "Comma separated list of items per thread for all GPU kernels, ex '1,2,4,8'")
 
 set(RAJA_RANGE_ALIGN 4)
 set(RAJA_RANGE_MIN_LENGTH 32)
@@ -247,13 +247,8 @@ set(RAJAPERF_BUILD_SYSTYPE $ENV{SYS_TYPE})
 set(RAJAPERF_BUILD_HOST $ENV{HOSTNAME})
 
 if (ENABLE_CUDA)
-  if (ENABLE_KOKKOS)
-    set(CMAKE_CUDA_STANDARD 17)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -restrict --extended-lambda --expt-relaxed-constexpr")
-  else()
-    set(CMAKE_CUDA_STANDARD 14)
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -restrict --expt-extended-lambda --expt-relaxed-constexpr")
-  endif()
+  set(CMAKE_CUDA_STANDARD 17)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -restrict --extended-lambda --expt-relaxed-constexpr")
 
   set(RAJAPERF_COMPILER "${CUDA_NVCC_EXECUTABLE}")
   list(APPEND RAJAPERF_COMPILER ${CMAKE_CXX_COMPILER})

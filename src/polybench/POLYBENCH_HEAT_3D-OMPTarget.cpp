@@ -30,7 +30,7 @@ void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
@@ -74,7 +74,7 @@ void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 

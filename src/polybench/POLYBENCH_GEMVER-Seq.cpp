@@ -31,7 +31,7 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = 0; i < n; i++ ) {
           for (Index_type j = 0; j < n; j++) {
@@ -90,7 +90,7 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = 0; i < n; i++ ) {
           for (Index_type j = 0; j < n; j++) {
@@ -178,7 +178,7 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       using EXEC_POL3 = RAJA::seq_exec;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::kernel_resource<EXEC_POL1>(
           RAJA::make_tuple(RAJA::RangeSegment{0, n},

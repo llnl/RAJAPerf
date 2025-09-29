@@ -32,7 +32,7 @@ void FIRST_MIN::runKokkosVariant(VariantID vid,
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // The third template argument, `Kokkos::HostSpace`, is the memory space
       // where the result will be stored; the result will be stored in the same
