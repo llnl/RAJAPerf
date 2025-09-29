@@ -76,7 +76,7 @@ stages:
     include:
       - local: '.gitlab/custom-jobs-and-variables.yml'
       - project: 'radiuss/radiuss-shared-ci'
-        ref: 'woptim/caliper-ci'
+        ref: 'v2025.09.0'
         file: 'pipelines/${CI_MACHINE}.yml'
       - artifact: '${CI_MACHINE}-jobs.yml'
         job: 'generate-job-lists'
@@ -90,7 +90,7 @@ performance-measurements:
     include:
       - local: '.gitlab/custom-jobs-and-variables.yml'
       - project: 'radiuss/radiuss-shared-ci'
-        ref: 'woptim/caliper-ci'
+        ref: 'v2025.09.0'
         file: 'pipelines/performances.yml'
       - local: '.gitlab/jobs/performances.yml'
     strategy: depend
