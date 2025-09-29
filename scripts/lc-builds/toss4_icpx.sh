@@ -40,8 +40,8 @@ source /usr/tce/packages/intel/intel-${COMP_VER}/setvars.sh
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_COMPILER=icpx \
-  -DCMAKE_C_COMPILER=icx \
+  -DCMAKE_CXX_COMPILER=/usr/tce/packages/intel/intel-${COMP_VER}/bin/icpx \
+  -DCMAKE_C_COMPILER=/usr/tce/packages/intel/intel-${COMP_VER}/bin/icx \
   -DBLT_CXX_STD=c++17 \
   -C ${RAJA_HOSTCONFIG} \
   -DRAJA_ENABLE_FORCEINLINE_RECURSIVE=Off \
