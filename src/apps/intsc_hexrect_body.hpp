@@ -318,7 +318,7 @@ RAJA_INLINE Int_type intsc24_hex_filter
           ( xd, yd, zd, xt0, yt0, zt0, a11, a22, f, k0, xf, yf, zf ) ;
 
       //  Rule out facet if it is definitely outside a plane.
-      if (not( ( ( xf[0] <  0.0 ) && ( xf[1] <  0.0 ) && ( xf[2] <  0.0 ) ) ||
+      if ( ! ( ( ( xf[0] <  0.0 ) && ( xf[1] <  0.0 ) && ( xf[2] <  0.0 ) ) ||
                ( ( xf[0] >= 1.0 ) && ( xf[1] >= 1.0 ) && ( xf[2] >= 1.0 ) ) ||
                ( ( yf[0] <  0.0 ) && ( yf[1] <  0.0 ) && ( yf[2] <  0.0 ) ) ||
                ( ( yf[0] >= 1.0 ) && ( yf[1] >= 1.0 ) && ( yf[2] >= 1.0 ) ) ||
@@ -327,7 +327,7 @@ RAJA_INLINE Int_type intsc24_hex_filter
         Int_type mask = 1 << count ;
 
         // test whether interior to x and y ranges
-        if  (not(( xf[0] >= 0.0 ) && ( xf[1] >= 0.0 ) && ( xf[2] >= 0.0 ) &&
+        if  ( ! (( xf[0] >= 0.0 ) && ( xf[1] >= 0.0 ) && ( xf[2] >= 0.0 ) &&
                  ( xf[0] <  1.0 ) && ( xf[1] <  1.0 ) && ( xf[2] <  1.0 ) &&
                  ( yf[0] >= 0.0 ) && ( yf[1] >= 0.0 ) && ( yf[2] >= 0.0 ) &&
                  ( yf[0] <  1.0 ) && ( yf[1] <  1.0 ) && ( yf[2] <  1.0 )) ) {

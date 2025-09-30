@@ -35,11 +35,11 @@ RAJA_INLINE void clip_polygon_ge_0
     if ( jj < 0 ) { jj = first0 ; }   // last edge of polygon
 
     Real_type c1 = cin[jj] ;
-    if ( ( c0 >= 0 ) and ( c1 < 0 ) ) {
+    if ( ( c0 >= 0 ) && ( c1 < 0 ) ) {
       j1 = j ;
       jj1 = jj ;
     }
-    if ( ( c0 < 0 ) and ( c1 >= 0 ) ) {
+    if ( ( c0 < 0 ) && ( c1 >= 0 ) ) {
       j2 = j ;
       jj2 = jj ;
     }
@@ -87,7 +87,7 @@ RAJA_INLINE void clip_polygon_ge_0
   if ( j1 >= 0 ) {     // Set linked list for crossover points.
     next[j1] = jr1 ;
     next[jr1] = jr2 ;
-    next[jr2] = ( ( clast < 0 ) or ( c00 < 0 ) ) ? -1 : jj2 ;
+    next[jr2] = ( ( clast < 0 ) || ( c00 < 0 ) ) ? -1 : jj2 ;
   }
   return ;
 }
