@@ -36,7 +36,7 @@ void HALO_SENDRECV::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];

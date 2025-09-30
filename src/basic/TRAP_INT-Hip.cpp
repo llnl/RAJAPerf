@@ -80,7 +80,7 @@ void TRAP_INT::runHipVariantBase(VariantID vid)
         MappingHelper, (trapint<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_sumx_init, sumx, hsumx, 1, 1);
 
@@ -131,7 +131,7 @@ void TRAP_INT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> sumx(m_sumx_init);
 
@@ -168,7 +168,7 @@ void TRAP_INT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       Real_type tsumx = m_sumx_init;
 

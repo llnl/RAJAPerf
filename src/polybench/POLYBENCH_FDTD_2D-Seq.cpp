@@ -29,7 +29,7 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (t = 0; t < tsteps; ++t) {
 
@@ -82,7 +82,7 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (t = 0; t < tsteps; ++t) {
 
@@ -149,7 +149,7 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (t = 0; t < tsteps; ++t) {
 

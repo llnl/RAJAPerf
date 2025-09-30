@@ -56,7 +56,7 @@ void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 
@@ -83,7 +83,7 @@ void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type t = 0; t < tsteps; ++t) {
 

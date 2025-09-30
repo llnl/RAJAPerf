@@ -31,7 +31,7 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       #pragma omp target is_device_ptr(phidat, elldat, psidat) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
@@ -63,7 +63,7 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -81,6 +81,17 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   } else {
      getCout() << "\n LTIMES_NOVIEW : Unknown OMP Target variant id = " << vid << std::endl;
   }
+}
+
+void LTIMES_NOVIEW::setOpenMPTargetTuningDefinitions(VariantID vid)
+{
+
+  if (vid == RAJA_OpenMPTarget) {
+    addVariantTuningName(vid, "kernel");
+  } else {
+    addVariantTuningName(vid, "default");
+  }
+
 }
 
 } // end namespace apps

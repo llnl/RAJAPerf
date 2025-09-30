@@ -21,6 +21,7 @@ namespace rajaperf
 namespace apps
 {
 
+using namespace ltimes_idx;
 
 void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
@@ -31,14 +32,17 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      #pragma omp target is_device_ptr(phidat, elldat, psidat) device( did )
+      #pragma omp target firstprivate(psi, ell, phi, num_z, num_g, num_m, num_d) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
-      for (Index_type z = 0; z < num_z; ++z ) {
-        for (Index_type g = 0; g < num_g; ++g ) {
-          for (Index_type m = 0; m < num_m; ++m ) {
-            for (Index_type d = 0; d < num_d; ++d ) {
+      for (RAJA::Index_type iz = 0; iz < *num_z; ++iz ) {
+        for (RAJA::Index_type ig = 0; ig < *num_g; ++ig ) {
+          for (RAJA::Index_type im = 0; im < *num_m; ++im ) {
+            IZ z(iz);
+            IG g(ig);
+            IM m(im);
+            for (ID d(0); d < num_d; ++d ) {
               LTIMES_BODY;
             }
           }
@@ -52,8 +56,6 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
     auto res{getOmpTargetResource()};
 
-    LTIMES_VIEWS_RANGES_RAJA;
-
     using EXEC_POL =
       RAJA::KernelPolicy<
         RAJA::statement::Collapse<RAJA::omp_target_parallel_collapse_exec,
@@ -65,15 +67,15 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, num_d),
-                                                        IZRange(0, num_z),
-                                                        IGRange(0, num_g),
-                                                        IMRange(0, num_m)),
+      RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
+                                                        IZRange(0, *num_z),
+                                                        IGRange(0, *num_g),
+                                                        IMRange(0, *num_m)),
         res,
         [=] (ID d, IZ z, IG g, IM m) {
-        LTIMES_BODY_RAJA;
+        LTIMES_BODY;
       });
 
     }
@@ -82,6 +84,17 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   } else {
      getCout() << "\n LTIMES : Unknown OMP Target variant id = " << vid << std::endl;
   }
+}
+
+void LTIMES::setOpenMPTargetTuningDefinitions(VariantID vid)
+{
+
+  if (vid == RAJA_OpenMPTarget) {
+    addVariantTuningName(vid, "kernel");
+  } else {
+    addVariantTuningName(vid, "default");
+  }
+
 }
 
 } // end namespace apps

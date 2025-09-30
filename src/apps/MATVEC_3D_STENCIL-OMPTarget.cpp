@@ -40,7 +40,7 @@ void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       #pragma omp target is_device_ptr(b, \
                                        dbl, dbc, dbr, dcl, dcc, dcr, dfl, dfc, dfr, \
@@ -67,7 +67,7 @@ void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         zones, [=](Index_type i) {

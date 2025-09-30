@@ -56,6 +56,7 @@ LTIMES::LTIMES(const RunParams& params)
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
+  setUsesFeature(Launch);
   setUsesFeature(View);
 
   setVariantDefined( Base_Seq );

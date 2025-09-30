@@ -15,7 +15,7 @@ RAJA Performance Suite
 [![Documentation Status](https://readthedocs.org/projects/rajaperf/badge/?version=develop)](https://raja.readthedocs.io/en/develop/?badge=develop)
 
 The RAJA Performance Suite is a companion project to the [RAJA] C++ performance
-portability abstraction library. The Performance Suite designed to eplore
+portability abstraction library. The Performance Suite designed to explore
 performance of loop-based computational kernels found in HPC applications.
 Specifically, it is used to assess and monitor runtime performance of kernels 
 implemented using [RAJA] compare those to variants implemented using common 
@@ -35,6 +35,13 @@ The most recent version of these documents (develop branch) is available here: h
 To access docs for other branches or version versions: https://readthedocs.org/projects/rajaperf/
 
 Please see the [RAJA] project for more information about RAJA.
+
+To cite RAJA Performance Suite, please use the following references:
+
+* RAJA Performance Suite. https://github.com/LLNL/RAJAPerf
+
+* Olga Pearce, Jason Burmark, Rich Hornung, Befikir Bogale, Ian Lumsden, Michael McKinsey, Dewi Yokelson, David Boehme, Stephanie Brink, Michela Taufer, Tom Scogland, "RAJA Performance Suite: Performance Portability Analysis with Caliper and Thicket", in 2024 IEEE/ACM International Workshop on Performance, Portability and Productivity in HPC (P3HPC) at the International Conference on High Performance Computing, Network, Storage, and Analysis (SC-W 2024). [Download here](https://dl.acm.org/doi/pdf/10.1109/SCW63240.2024.00162)
+
 
 Communicate with Us
 -------------------

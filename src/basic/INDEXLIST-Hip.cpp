@@ -30,13 +30,13 @@ using hip_items_per_thread_type = integer::make_gpu_items_per_thread_list_type<
 
 template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
-__global__ void indexlist(Real_ptr x,
-                          Int_ptr list,
-                          Index_type* block_counts,
-                          Index_type* grid_counts,
-                          unsigned* block_readys,
-                          Index_type* len,
-                          Index_type iend)
+__global__ void indexlist_custom(Real_ptr x,
+                                 Int_ptr list,
+                                 Index_type* block_counts,
+                                 Index_type* grid_counts,
+                                 unsigned* block_readys,
+                                 Index_type* len,
+                                 Index_type iend)
 {
   // It looks like blocks do not start running in order in hip, so a block
   // with a higher index can't wait on a block with a lower index without
@@ -77,7 +77,7 @@ __global__ void indexlist(Real_ptr x,
 }
 
 template < size_t block_size, size_t items_per_thread >
-void INDEXLIST::runHipVariantImpl(VariantID vid)
+void INDEXLIST::runHipVariantCustom(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -102,12 +102,12 @@ void INDEXLIST::runHipVariantImpl(VariantID vid)
     allocData(DataSpace::HipDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
                                 res.get_stream()) );
 
-      RPlaunchHipKernel( (indexlist<block_size, items_per_thread>),
+      RPlaunchHipKernel( (indexlist_custom<block_size, items_per_thread>),
                          grid_size, block_size,
                          shmem_size, res.get_stream(),
                          x+ibegin, list+ibegin,
@@ -135,7 +135,7 @@ void INDEXLIST::runHipVariant(VariantID vid, size_t tune_idx)
 {
   size_t t = 0;
 
-  if ( vid == Base_HIP ) {
+  if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -148,7 +148,7 @@ void INDEXLIST::runHipVariant(VariantID vid, size_t tune_idx)
 
           if (tune_idx == t) {
 
-            runHipVariantImpl<decltype(block_size)::value,
+            runHipVariantCustom<decltype(block_size)::value,
                                detail::hip::grid_scan_default_items_per_thread<
                                   Real_type, block_size, RAJA_PERFSUITE_TUNING_HIP_ARCH>::value
                                >(vid);
@@ -166,7 +166,7 @@ void INDEXLIST::runHipVariant(VariantID vid, size_t tune_idx)
 
             if (tune_idx == t) {
 
-              runHipVariantImpl<block_size, items_per_thread>(vid);
+              runHipVariantCustom<block_size, items_per_thread>(vid);
 
             }
 
@@ -189,7 +189,7 @@ void INDEXLIST::runHipVariant(VariantID vid, size_t tune_idx)
 
 void INDEXLIST::setHipTuningDefinitions(VariantID vid)
 {
-  if ( vid == Base_HIP ) {
+  if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 

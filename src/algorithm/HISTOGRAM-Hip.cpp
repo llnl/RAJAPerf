@@ -29,7 +29,7 @@ namespace rajaperf
 namespace algorithm
 {
 
-constexpr Index_type warp_size = 64;
+constexpr Index_type warp_size = RAJA_HIP_WAVESIZE;
 
 template < Index_type block_size >
 __launch_bounds__(block_size)
@@ -133,7 +133,7 @@ void HISTOGRAM::runHipVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
 #if defined(__HIPCC__)
@@ -212,7 +212,7 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
     RAJAPERF_HIP_REDUCER_SETUP(Data_ptr, counts, hcounts, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(counts_init, counts, hcounts, num_bins, global_replication);
 
@@ -262,7 +262,7 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       HISTOGRAM_INIT_COUNTS_RAJA(multi_reduce_policy);
 

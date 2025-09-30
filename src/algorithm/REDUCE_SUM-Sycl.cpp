@@ -40,7 +40,7 @@ void REDUCE_SUM::runSyclVariantImpl(VariantID vid)
     allocAndInitSyclDeviceData(sum, &m_sum_init, 1, qu);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
@@ -73,7 +73,7 @@ void REDUCE_SUM::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
        Real_type tsum = m_sum_init;
 

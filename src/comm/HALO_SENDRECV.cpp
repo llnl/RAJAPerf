@@ -60,29 +60,7 @@ HALO_SENDRECV::~HALO_SENDRECV()
 
 void HALO_SENDRECV::setUp(VariantID vid, size_t tune_idx)
 {
-  setUp_base(m_my_mpi_rank, m_mpi_dims.data(), vid, tune_idx);
-
-  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
-
-  m_send_buffers.resize(s_num_neighbors, nullptr);
-  for (Index_type l = 0; l < s_num_neighbors; ++l) {
-    Index_type buffer_len = m_num_vars * m_pack_index_list_lengths[l];
-    if (separate_buffers) {
-      allocAndInitData(DataSpace::Host, m_send_buffers[l], buffer_len);
-    } else {
-      allocAndInitData(getMPIDataSpace(vid), m_send_buffers[l], buffer_len);
-    }
-  }
-
-  m_recv_buffers.resize(s_num_neighbors, nullptr);
-  for (Index_type l = 0; l < s_num_neighbors; ++l) {
-    Index_type buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
-    if (separate_buffers) {
-      allocAndInitData(DataSpace::Host, m_recv_buffers[l], buffer_len);
-    } else {
-      allocAndInitData(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len);
-    }
-  }
+  setUp_base(m_my_mpi_rank, m_mpi_dims.data(), m_num_vars, vid, tune_idx);
 }
 
 void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
@@ -101,26 +79,6 @@ void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
 
 void HALO_SENDRECV::tearDown(VariantID vid, size_t tune_idx)
 {
-  const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
-
-  for (int l = 0; l < s_num_neighbors; ++l) {
-    if (separate_buffers) {
-      deallocData(DataSpace::Host, m_recv_buffers[l]);
-    } else {
-      deallocData(getMPIDataSpace(vid), m_recv_buffers[l]);
-    }
-  }
-  m_recv_buffers.clear();
-
-  for (int l = 0; l < s_num_neighbors; ++l) {
-    if (separate_buffers) {
-      deallocData(DataSpace::Host, m_send_buffers[l]);
-    } else {
-      deallocData(getMPIDataSpace(vid), m_send_buffers[l]);
-    }
-  }
-  m_send_buffers.clear();
-
   tearDown_base(vid, tune_idx);
 }
 

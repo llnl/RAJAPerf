@@ -43,7 +43,7 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       Real_ptr ya = points.y;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -86,7 +86,7 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       auto res{getOmpTargetResource()}; 
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Real_type txsum = m_init_sum;
         Real_type tysum = m_init_sum;

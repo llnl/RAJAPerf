@@ -15,6 +15,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <regex>
 
 namespace rajaperf {
 
@@ -22,6 +23,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   , did(getOpenMPTargetDevice())
+  , hid(getOpenMPTargetHost())
 #endif
 {
   kernel_id = kid;
@@ -53,43 +55,43 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   // Init Caliper column metadata attributes
   // Aggregatable attributes need to be initialized before manager.start()
-  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_DOUBLE,
+  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_DOUBLE,
+  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_INT,
                                     CALI_ATTR_ASVALUE |
                                     CALI_ATTR_AGGREGATABLE |
                                     CALI_ATTR_SKIP_EVENTS);
-  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_DOUBLE,
+  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_DOUBLE,
+  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_INT,
                                               CALI_ATTR_ASVALUE |
                                               CALI_ATTR_AGGREGATABLE |
                                               CALI_ATTR_SKIP_EVENTS);
-  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_INT,
                                                  CALI_ATTR_ASVALUE |
                                                  CALI_ATTR_AGGREGATABLE |
                                                  CALI_ATTR_SKIP_EVENTS);
-  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_INT,
                                                              CALI_ATTR_ASVALUE |
                                                              CALI_ATTR_AGGREGATABLE |
                                                              CALI_ATTR_SKIP_EVENTS);
-  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_DOUBLE,
+  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_DOUBLE,
+  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
@@ -234,6 +236,15 @@ void KernelBase::setVariantDefined(VariantID vid)
 Size_type KernelBase::getDataAlignment() const
 {
   return run_params.getDataAlignment();
+}
+
+Size_type KernelBase::getSizePaddedToDataAlignment(Size_type size) const
+{
+  Size_type misalignment = size % run_params.getDataAlignment();
+  if (misalignment) {
+    size += run_params.getDataAlignment() - misalignment;
+  }
+  return size;
 }
 
 DataSpace KernelBase::getDataSpace(VariantID vid) const
@@ -563,22 +574,29 @@ void KernelBase::print(std::ostream& os) const
 void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
 {
   if(doCaliMetaOnce[vid].at(tune_idx)) {
-    // attributes are class variables initialized in ctor
-    cali_set_double(ProblemSize_attr,(double)getActualProblemSize());
-    cali_set_double(Reps_attr,(double)getRunReps());
-    cali_set_double(Iters_Rep_attr,(double)getItsPerRep());
-    cali_set_double(Kernels_Rep_attr,(double)getKernelsPerRep());
-    cali_set_double(Bytes_Rep_attr,(double)getBytesPerRep());
-    cali_set_double(Bytes_Read_Rep_attr,(double)getBytesReadPerRep());
-    cali_set_double(Bytes_Written_Rep_attr,(double)getBytesWrittenPerRep());
-    cali_set_double(Bytes_AtomicModifyWritten_Rep_attr,(double)getBytesAtomicModifyWrittenPerRep());
-    cali_set_double(Flops_Rep_attr,(double)getFLOPsPerRep());
-    cali_set_double(BlockSize_attr, getBlockSize());
+    // Set values for Index_type.
+    // Some of these may overflow if using "cali_set_int"
+    auto cali_set_helper = [](cali_id_t const& attr, Index_type val) {
+      cali_set(attr, &val, sizeof(Index_type));
+    };
+    cali_set_helper(ProblemSize_attr, getActualProblemSize());
+    cali_set_helper(Reps_attr, getRunReps());
+    cali_set_helper(Iters_Rep_attr, getItsPerRep());
+    cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
+    cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
+    cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
+    cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
+    cali_set_helper(BlockSize_attr, getBlockSize());
+
+    // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
         FeatureID fid = static_cast<FeatureID>(i);
         std::string feature = getFeatureName(fid);
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
+
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }
@@ -592,9 +610,10 @@ void KernelBase::doOnceCaliMetaEnd(VariantID vid, size_t tune_idx)
 
 void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
                                   std::string tstr,
-                                  const std::string& outdir,
+                                  const std::string& outfile,
                                   const std::string& addToSpotConfig,
-                                  const std::string& addToCaliConfig)
+                                  const std::string& addToCaliConfig,
+                                  const int num_variants_tunings)
 {
   static bool ran_spot_config_check = false;
   bool config_ok = true;
@@ -665,20 +684,64 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
   }
   )json";
 
-  // Skip check if both empty
-  if ((!addToSpotConfig.empty() || !addToCaliConfig.empty()) && !ran_spot_config_check) {
+  // Update these later if CALI_CONFIG present
+  std::string updatedSpotConfig = addToSpotConfig;
+  std::string updatedCaliConfig = addToCaliConfig;
+
+  // Parse CALI_CONFIG if provided
+  const char* cali_config_env = std::getenv("DISABLED_CALI_CONFIG");
+  if (cali_config_env) {
+    std::string cali_config(cali_config_env);
+    std::cout << "CALI_CONFIG: " << cali_config << std::endl;
+
+    // Match spot() config
+    std::regex pattern(R"(spot\(([^)]*)\))");
+    std::smatch match;
+    if (std::regex_search(cali_config, match, pattern)) {
+      std::string spot_config = match[1];
+      std::regex file_pattern(R"(\boutput=[^,)]*\.cali)");
+
+      // Remove cali file from config
+      std::string withoutFile = std::regex_replace(spot_config, file_pattern, "");
+      std::smatch file_match;
+      if (std::regex_search(spot_config, file_match, file_pattern)) {
+        std::cout << "WARNING: Removing requested output name from config: '"
+                  << file_match[0]
+                  << "'. Output cali file name will be automatically generated."
+                  << std::endl;
+      }
+
+      updatedSpotConfig += withoutFile;
+    }
+
+    // Parameters outside the spot config directly added to cali config
+    std::string remaining_config = std::regex_replace(cali_config, pattern, "");
+    updatedCaliConfig += remaining_config;
+
+    auto trimCommas = [](std::string &str) {
+      if (!str.empty() && str.front() == ',')
+        str.erase(0, 1);
+      if (!str.empty() && str.back() == ',')
+        str.pop_back();
+    };
+    trimCommas(updatedCaliConfig);
+    trimCommas(updatedSpotConfig);
+  }
+
+  // Caliper configuration check. Skip check if both empty
+  if ((!updatedSpotConfig.empty() || !updatedCaliConfig.empty()) && !ran_spot_config_check) {
     cali::ConfigManager cm;
     std::string check_profile;
     // If both not empty
-    if (!addToSpotConfig.empty() && !addToCaliConfig.empty()) {
-      check_profile = "spot(" + addToSpotConfig + ")," + addToCaliConfig;
+    if (!updatedSpotConfig.empty() && !updatedCaliConfig.empty()) {
+      check_profile = "spot(" + updatedSpotConfig + ")," + updatedCaliConfig;
     }
-    else if (!addToSpotConfig.empty()) {
-      check_profile = "spot(" + addToSpotConfig + ")";
+    else if (!updatedSpotConfig.empty()) {
+      check_profile = "spot(" + updatedSpotConfig + ")";
     }
-    // if !addToCaliConfig.empty()
+    // if !updatedCaliConfig.empty()
     else {
-      check_profile = addToCaliConfig;
+      check_profile = updatedCaliConfig;
     }
 
     std::string msg = cm.check(check_profile.c_str());
@@ -692,21 +755,28 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     std::cout << "Caliper ran Spot config check\n";
   }
 
+  // Setup variant/tuning caliper config if check passes
   if(config_ok) {
     cali::ConfigManager m;
     mgr[vid][tstr] = m;
-    std::string od("./");
-    if (outdir.size()) {
-      od = outdir + "/";
-    }
     std::string vstr = getVariantName(vid);
-    std::string profile = "spot(output=" + od + vstr + "-" + tstr + ".cali";
-    if(!addToSpotConfig.empty()) {
-      profile += "," + addToSpotConfig;
+    std::string profile;
+    // If --outfile not provided, give generic name
+    if (outfile == "RAJAPerf") {
+      profile = "spot(output=" + vstr + "-" + tstr + ".cali";
+    }
+    else {
+      // Ensure cali files for each variant/tuning are not same file name
+      if (num_variants_tunings > 1)
+        throw std::runtime_error("Error: Cannot use '--outfile' with Caliper if running multiple variants/tunings. Must be running single variant & tuning.");
+      profile = "spot(output=" + outfile + ".cali";
+    }
+    if(!updatedSpotConfig.empty()) {
+      profile += "," + updatedSpotConfig;
     }
     profile += ")";
-    if (!addToCaliConfig.empty()) {
-      profile += "," + addToCaliConfig;
+    if (!updatedCaliConfig.empty()) {
+      profile += "," + updatedCaliConfig;
     }
     std::cout << "Profile: " << profile << std::endl;
     mgr[vid][tstr].add_option_spec(kernel_info_spec);

@@ -35,7 +35,7 @@ void POLYBENCH_MVT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       #pragma omp target is_device_ptr(x1,A,y1) device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
@@ -78,7 +78,7 @@ void POLYBENCH_MVT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::region<RAJA::seq_region>( [=]() {
 

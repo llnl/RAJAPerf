@@ -83,7 +83,7 @@ void NESTED_INIT::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       NESTED_INIT_THREADS_PER_BLOCK_CUDA;
       NESTED_INIT_NBLOCKS_CUDA;
@@ -101,7 +101,7 @@ void NESTED_INIT::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto nested_init_lambda = [=] __device__ (Index_type i, 
                                                 Index_type j, 
@@ -141,7 +141,7 @@ void NESTED_INIT::runCudaVariantImpl(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, ni),

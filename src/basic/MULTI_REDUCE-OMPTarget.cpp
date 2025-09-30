@@ -40,7 +40,7 @@ void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
     MULTI_REDUCE_SETUP_VALUES;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       initOpenMPDeviceData(values, values_init.data(), num_bins);
 

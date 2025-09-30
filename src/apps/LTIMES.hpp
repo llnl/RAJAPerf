@@ -31,50 +31,23 @@
 #define RAJAPerf_Apps_LTIMES_HPP
 
 #define LTIMES_DATA_SETUP \
-  Real_ptr phidat = m_phidat; \
-  Real_ptr elldat = m_elldat; \
-  Real_ptr psidat = m_psidat; \
+  ID num_d(m_num_d); \
+  IZ num_z(m_num_z); \
+  IG num_g(m_num_g); \
+  IM num_m(m_num_m); \
 \
-  Index_type num_d = m_num_d; \
-  Index_type num_z = m_num_z; \
-  Index_type num_g = m_num_g; \
-  Index_type num_m = m_num_m;
+  PSI_VIEW psi(m_psidat, \
+               RAJA::make_permuted_layout( {{*num_z, *num_g, *num_d}}, \
+                     RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) ); \
+  ELL_VIEW ell(m_elldat, \
+               RAJA::make_permuted_layout( {{*num_m, *num_d}}, \
+                     RAJA::as_array<RAJA::Perm<0, 1> >::get() ) ); \
+  PHI_VIEW phi(m_phidat, \
+               RAJA::make_permuted_layout( {{*num_z, *num_g, *num_m}}, \
+                     RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) );
 
 #define LTIMES_BODY \
-  phidat[m+ (g * num_m) + (z * num_m * num_g)] += \
-    elldat[d+ (m * num_d)] * psidat[d+ (g * num_d) + (z * num_d * num_g)];
-
-#define LTIMES_BODY_RAJA \
   phi(z, g, m) +=  ell(m, d) * psi(z, g, d);
-
-
-#define LTIMES_VIEWS_RANGES_RAJA \
-  using namespace ltimes_idx; \
-\
-  using PSI_VIEW = RAJA::TypedView<Real_type, \
-                                   RAJA::Layout<3, Index_type, 2>, \
-                                   IZ, IG, ID>; \
-  using ELL_VIEW = RAJA::TypedView<Real_type, \
-                                   RAJA::Layout<2, Index_type, 1>, \
-                                   IM, ID>; \
-  using PHI_VIEW = RAJA::TypedView<Real_type, \
-                                   RAJA::Layout<3, Index_type, 2>, \
-                                   IZ, IG, IM>; \
-\
-  PSI_VIEW psi(psidat, \
-               RAJA::make_permuted_layout( {{num_z, num_g, num_d}}, \
-                     RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) ); \
-  ELL_VIEW ell(elldat, \
-               RAJA::make_permuted_layout( {{num_m, num_d}}, \
-                     RAJA::as_array<RAJA::Perm<0, 1> >::get() ) ); \
-  PHI_VIEW phi(phidat, \
-               RAJA::make_permuted_layout( {{num_z, num_g, num_m}}, \
-                     RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) ); \
-\
-      using IDRange = RAJA::TypedRangeSegment<ID>; \
-      using IZRange = RAJA::TypedRangeSegment<IZ>; \
-      using IGRange = RAJA::TypedRangeSegment<IG>; \
-      using IMRange = RAJA::TypedRangeSegment<IM>;
 
 
 #include "common/KernelBase.hpp"
@@ -97,6 +70,21 @@ namespace ltimes_idx {
   RAJA_INDEX_VALUE(IZ, "IZ");
   RAJA_INDEX_VALUE(IG, "IG");
   RAJA_INDEX_VALUE(IM, "IM");
+
+  using PSI_VIEW = RAJA::TypedView<Real_type,
+                                   RAJA::Layout<3, Index_type, 2>,
+                                   IZ, IG, ID>;
+  using ELL_VIEW = RAJA::TypedView<Real_type,
+                                   RAJA::Layout<2, Index_type, 1>,
+                                   IM, ID>;
+  using PHI_VIEW = RAJA::TypedView<Real_type,
+                                   RAJA::Layout<3, Index_type, 2>,
+                                   IZ, IG, IM>;
+
+  using IDRange = RAJA::TypedRangeSegment<ID>;
+  using IZRange = RAJA::TypedRangeSegment<IZ>;
+  using IGRange = RAJA::TypedRangeSegment<IG>;
+  using IMRange = RAJA::TypedRangeSegment<IM>;
 }
 
 class LTIMES : public KernelBase
@@ -118,16 +106,19 @@ public:
   void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
   void runSyclVariant(VariantID vid, size_t tune_idx);
 
+  void setSeqTuningDefinitions(VariantID vid);
+  void setOpenMPTuningDefinitions(VariantID vid);
   void setCudaTuningDefinitions(VariantID vid);
   void setHipTuningDefinitions(VariantID vid);
+  void setOpenMPTargetTuningDefinitions(VariantID vid);
   void setSyclTuningDefinitions(VariantID vid); 
 
   template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t block_size >
-  void runHipVariantImpl(VariantID vid);
+  void runHipVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t work_group_size >
-  void runSyclVariantImpl(VariantID vid);
+  void runSyclVariantImpl(VariantID vid, size_t tune_idx);
 
 private:
   static const size_t default_gpu_block_size = 256;

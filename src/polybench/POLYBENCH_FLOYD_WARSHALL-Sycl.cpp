@@ -45,7 +45,7 @@ void POLYBENCH_FLOYD_WARSHALL::runSyclVariantImpl(VariantID vid)
     sycl::range<3> wkgroup_dim(1, i_wg_sz, j_wg_sz);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type k = 0; k < N; ++k) {
 
@@ -86,7 +86,7 @@ void POLYBENCH_FLOYD_WARSHALL::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{0, N},

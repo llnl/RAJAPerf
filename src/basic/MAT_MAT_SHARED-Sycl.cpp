@@ -45,17 +45,17 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
   if (vid == Base_SYCL) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      qu->submit([&](cl::sycl::handler& h) {
+      qu->submit([&](::sycl::handler& h) {
 
        ::sycl::local_accessor<double, 2> As(::sycl::range<2>(tile_size, tile_size), h);
        ::sycl::local_accessor<double, 2> Bs(::sycl::range<2>(tile_size, tile_size), h);
        ::sycl::local_accessor<double, 2> Cs(::sycl::range<2>(tile_size, tile_size), h);
 
         h.parallel_for
-          (cl::sycl::nd_range<3>(gridSize, workGroupSize),
-           [=] (cl::sycl::nd_item<3> itm) {
+          (::sycl::nd_range<3>(gridSize, workGroupSize),
+           [=] (::sycl::nd_item<3> itm) {
 
              Index_type tx = itm.get_local_id(2);
              Index_type ty = itm.get_local_id(1);
@@ -103,7 +103,7 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
     using threads_y = RAJA::LoopPolicy<RAJA::sycl_local_1_direct>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(Nx, Ny),

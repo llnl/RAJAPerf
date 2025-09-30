@@ -211,7 +211,7 @@ then
     timed_message "Cleaning working directory"
 
     # Map CPU core allocations
-    declare -A core_counts=(["lassen"]=40 ["ruby"]=28 ["poodle"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32)
+    declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
 
     # If using Multi-project, set up the submodule
     if [[ -n ${raja_version} ]]
@@ -231,20 +231,16 @@ then
     rm -rf ${build_dir} 2>/dev/null
     mkdir -p ${build_dir} && cd ${build_dir}
 
+    timed_message "Building RAJAPerf"
     # We set the MPI tests command to allow overlapping.
     # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
     # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
     cmake_options=""
-    if [[ "${truehostname}" == "ruby" || "${truehostname}" == "poodle" ]]
+    if [[ "${truehostname}" == "poodle" || "${truehostname}" == "dane" ]]
     then
         cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
     fi
 
-    date
-    if [[ "${truehostname}" == "tioga" ]]
-    then
-        module unload rocm
-    fi
     $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \

@@ -48,9 +48,9 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DMPI_C_COMPILER="/usr/tce/packages/mvapich2/mvapich2-${MPI_VER}-intel-${COMP_VER}/bin/mpicc" \
   -DMPI_CXX_COMPILER="/usr/tce/packages/mvapich2/mvapich2-${MPI_VER}-intel-${COMP_VER}/bin/mpicxx" \
-  -DCMAKE_CXX_COMPILER=/usr/tce/packages/intel/intel-${COMP_VER}/compiler/${COMP_VER}/linux/bin/icpx \
-  -DCMAKE_C_COMPILER=/usr/tce/packages/intel/intel-${COMP_VER}/compiler/${COMP_VER}/linux/bin/icx \
-  -DBLT_CXX_STD=c++14 \
+  -DCMAKE_CXX_COMPILER=icpx \
+  -DCMAKE_C_COMPILER=icx \
+  -DBLT_CXX_STD=c++17 \
   -C ${RAJA_HOSTCONFIG} \
   -DENABLE_MPI=ON \
   -DRAJA_ENABLE_FORCEINLINE_RECURSIVE=Off \

@@ -38,9 +38,9 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
   case Base_SYCL: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      qu->submit([&](cl::sycl::handler& h) {
+      qu->submit([&](::sycl::handler& h) {
 
         constexpr int max_D1D = CPA_D1D;
         constexpr int max_Q1D = CPA_Q1D;
@@ -54,8 +54,8 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
         auto sm5_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
 
         h.parallel_for
-          (cl::sycl::nd_range<3>(gridSize, workGroupSize),
-           [=] (cl::sycl::nd_item<3> itm) {
+          (::sycl::nd_range<3>(gridSize, workGroupSize),
+           [=] (::sycl::nd_item<3> itm) {
 
              const Index_type e = itm.get_group(2);
 
@@ -215,7 +215,7 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
     }
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),

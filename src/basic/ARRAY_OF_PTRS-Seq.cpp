@@ -37,7 +37,7 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           ARRAY_OF_PTRS_BODY(x);
@@ -53,7 +53,7 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           array_of_ptrs_lam(i);
@@ -70,7 +70,7 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::simd_exec>( res,
           RAJA::RangeSegment(ibegin, iend), array_of_ptrs_lam);

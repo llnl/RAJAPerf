@@ -40,7 +40,7 @@ void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Index_type count = 0;
 
@@ -134,7 +134,7 @@ void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         Index_type count = 0;
 

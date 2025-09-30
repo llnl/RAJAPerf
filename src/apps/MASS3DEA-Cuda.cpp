@@ -70,7 +70,7 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid) {
   case Base_CUDA: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MEA_D1D, MEA_D1D, MEA_D1D);
       constexpr size_t shmem = 0;
@@ -100,7 +100,7 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid) {
     using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<MEA_D1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

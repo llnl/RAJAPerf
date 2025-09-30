@@ -67,8 +67,13 @@ else
   ROCM_PATH="/usr/tce/packages/rocmcc-tce/rocmcc-${COMP_VER}"
 fi
 
+COMP_HIP_VER="${COMP_VER%-magic}"
+COMP_CLANG_MAJOR_VER="$(ls /opt/rocm-${COMP_HIP_VER}/lib/llvm/lib/clang/)"
+
 cmake \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="${ROCM_PATH}/lib/cmake" \
+  -DHIP_PLATFORM=amd \
   -DROCM_ROOT_DIR="${ROCM_PATH}" \
   -DHIP_ROOT_DIR="${ROCM_PATH}/hip" \
   -DHIP_PATH=${ROCM_PATH}/llvm/bin \
@@ -77,9 +82,11 @@ cmake \
   -DCMAKE_HIP_ARCHITECTURES="${COMP_ARCH}:xnack+" \
   -DGPU_TARGETS="${COMP_ARCH}:xnack+" \
   -DAMDGPU_TARGETS="${COMP_ARCH}:xnack+" \
-  -DCMAKE_C_FLAGS="-fsanitize=address -shared-libsan" \
-  -DCMAKE_CXX_FLAGS="-fsanitize=address -shared-libsan" \
-  -DBLT_CXX_STD=c++14 \
+  -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan" \
+  -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan" \
+  -DCMAKE_HIP_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
+  -DCMAKE_EXE_LINKER_FLAGS="-L/opt/rocm-${COMP_HIP_VER}/lib/asan/ -L/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan -Wl,-rpath,/opt/rocm-${COMP_HIP_VER}/lib/asan/:/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan:/opt/rocm-${COMP_HIP_VER}/lib/llvm/lib/clang/${COMP_CLANG_MAJOR_VER}/lib/linux -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
+  -DBLT_CXX_STD=c++17 \
   -C ${RAJA_HOSTCONFIG} \
   -DENABLE_HIP=ON \
   -DENABLE_OPENMP=ON \

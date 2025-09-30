@@ -36,7 +36,7 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -59,9 +59,9 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
         }
 
         if (separate_buffers) {
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          omp_target_memcpy(send_buffers[l], pack_buffers[l],
+                            len*num_vars*sizeof(Real_type),
+                            0, 0, did, hid);
         }
 
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
@@ -76,9 +76,9 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          omp_target_memcpy(unpack_buffers[l], recv_buffers[l],
+                            len*num_vars*sizeof(Real_type),
+                            0, 0, hid, did);
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -104,7 +104,7 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
     using EXEC_POL = RAJA::omp_target_parallel_for_exec<threads_per_team>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -128,9 +128,7 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
         }
 
         if (separate_buffers) {
-          copyData(DataSpace::Host, send_buffers[l],
-                   dataSpace, pack_buffers[l],
-                   len*num_vars);
+          res.memcpy(send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type));
         }
 
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
@@ -145,9 +143,7 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          copyData(dataSpace, unpack_buffers[l],
-                   DataSpace::Host, recv_buffers[l],
-                   len*num_vars);
+          res.memcpy(unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type));
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {

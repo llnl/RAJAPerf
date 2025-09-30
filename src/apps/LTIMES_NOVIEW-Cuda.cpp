@@ -73,7 +73,7 @@ __global__ void ltimes_noview_lam(Index_type num_m, Index_type num_g, Index_type
 
 
 template < size_t block_size >
-void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
+void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid, size_t tune_idx)
 {
   const Index_type run_reps = getRunReps();
 
@@ -84,7 +84,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       LTIMES_NOVIEW_THREADS_PER_BLOCK_CUDA;
       LTIMES_NOVIEW_NBLOCKS_CUDA;
@@ -103,7 +103,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto ltimes_noview_lambda = 
         [=] __device__ (Index_type z, Index_type g, Index_type m) {
@@ -129,45 +129,162 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
 
   } else if ( vid == RAJA_CUDA ) {
 
-    using EXEC_POL =
-      RAJA::KernelPolicy<
-        RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
-          RAJA::statement::For<1, RAJA::cuda_global_size_z_direct<z_block_sz>,     //z
-            RAJA::statement::For<2, RAJA::cuda_global_size_y_direct<g_block_sz>,   //g
-              RAJA::statement::For<3, RAJA::cuda_global_size_x_direct<m_block_sz>, //m
-                RAJA::statement::For<0, RAJA::seq_exec,           //d
-                  RAJA::statement::Lambda<0>
+    if (tune_idx == 0) {
+
+      using EXEC_POL =
+        RAJA::KernelPolicy<
+          RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
+            RAJA::statement::For<1, RAJA::cuda_global_size_z_direct<z_block_sz>,     //z
+              RAJA::statement::For<2, RAJA::cuda_global_size_y_direct<g_block_sz>,   //g
+                RAJA::statement::For<3, RAJA::cuda_global_size_x_direct<m_block_sz>, //m
+                  RAJA::statement::For<0, RAJA::seq_exec,           //d
+                    RAJA::statement::Lambda<0>
+                  >
                 >
               >
             >
           >
-        >
-      >;
+        >;
 
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      RAJA::kernel_resource<EXEC_POL>(
-        RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
-                         RAJA::RangeSegment(0, num_z),
-                         RAJA::RangeSegment(0, num_g),
-                         RAJA::RangeSegment(0, num_m)),
-        res,
-        [=] __device__ (Index_type d, Index_type z,
-                        Index_type g, Index_type m) {
-          LTIMES_NOVIEW_BODY;
-        }
-      );
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
+                           RAJA::RangeSegment(0, num_z),
+                           RAJA::RangeSegment(0, num_g),
+                           RAJA::RangeSegment(0, num_m)),
+          res,
+          [=] __device__ (Index_type d, Index_type z,
+                          Index_type g, Index_type m) {
+            LTIMES_NOVIEW_BODY;
+          }
+        );
 
+      }
+      stopTimer();
+
+    } else if (tune_idx == 1) {
+
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, m_block_sz*g_block_sz*z_block_sz>>;
+
+      using z_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_z_loop<z_block_sz>>;
+
+      using g_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_y_loop<g_block_sz>>;
+
+      using m_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_x_loop<m_block_sz>>;
+
+      using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
+
+      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(num_z, z_block_sz);
+
+      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(num_g, g_block_sz);
+
+      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz);
+
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+
+        RAJA::launch<launch_policy>( res,
+            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
+                               RAJA::Threads(m_block_sz, g_block_sz, z_block_sz)),
+            [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+
+              RAJA::loop<z_policy>(ctx, RAJA::RangeSegment(0, num_z),
+                [&](Index_type z) {
+                  RAJA::loop<g_policy>(ctx, RAJA::RangeSegment(0, num_g),
+                    [&](Index_type g) {
+                      RAJA::loop<m_policy>(ctx, RAJA::RangeSegment(0, num_m),
+                        [&](Index_type m) {
+                          RAJA::loop<d_policy>(ctx, RAJA::RangeSegment(0, num_d),
+                            [&](Index_type d) {
+                              LTIMES_NOVIEW_BODY
+                            }
+                          ); // RAJA::loop<d_policy>
+                        }
+                      ); // RAJA::loop<m_policy>
+                    }
+                  ); // RAJA::loop<g_policy>
+                }
+              ); // RAJA::loop<z_policy>
+
+            } // outer lambda (ctx)
+        );    // RAJA::launch
+
+      } // loop over kernel reps
+      stopTimer();
     }
-    stopTimer();
 
   } else {
      getCout() << "\n LTIMES_NOVIEW : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(LTIMES_NOVIEW, Cuda)
+void LTIMES_NOVIEW::runCudaVariant(VariantID vid, size_t tune_idx)
+{
+  size_t t = 0;
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      if (vid == RAJA_CUDA) {
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantImpl<block_size>(vid, 0);
+
+        }
+
+        t += 1;
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantImpl<block_size>(vid, 1);
+
+        }
+
+        t += 1;
+
+      } else {
+
+        if (tune_idx == t) {
+          setBlockSize(block_size);
+          runCudaVariantImpl<block_size>(vid, 0);
+
+        }
+
+        t += 1;
+      }
+
+    }
+
+  });
+}
+
+void LTIMES_NOVIEW::setCudaTuningDefinitions(VariantID vid)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      if (vid == RAJA_CUDA) {
+        addVariantTuningName(vid, "kernel_"+std::to_string(block_size));
+        addVariantTuningName(vid, "launch_"+std::to_string(block_size));
+      } else {
+        addVariantTuningName(vid, "block_"+std::to_string(block_size));
+      }
+
+    }
+
+  });
+
+}
 
 } // end namespace apps
 } // end namespace rajaperf

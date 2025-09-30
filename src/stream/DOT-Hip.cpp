@@ -73,7 +73,7 @@ void DOT::runHipVariantBase(VariantID vid)
         MappingHelper, (dot<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_dot_init, dprod, hdprod, 1, 1);
 
@@ -120,7 +120,7 @@ void DOT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
        RAJA::ReduceSum<reduction_policy, Real_type> dot(m_dot_init);
 
@@ -157,7 +157,7 @@ void DOT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
        Real_type tdot = m_dot_init;
 

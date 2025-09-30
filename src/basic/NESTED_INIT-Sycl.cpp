@@ -46,9 +46,9 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
     sycl::range<3> wkgroup_dim(k_wg_sz, j_wg_sz, i_wg_sz);
   
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      qu->submit([&] (cl::sycl::handler& h) {
+      qu->submit([&] (::sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) { 
 
@@ -82,7 +82,7 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, ni),

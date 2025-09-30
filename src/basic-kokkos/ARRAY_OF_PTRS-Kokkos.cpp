@@ -22,7 +22,7 @@ void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   ARRAY_OF_PTRS_DATA_SETUP;
 
   using view_type = std::decay_t<decltype(getViewFromPointer(x[0], iend))>;
-  auto x_view[ARRAY_OF_PTRS_MAX_ARRAY_SIZE];
+  view_type x_view[ARRAY_OF_PTRS_MAX_ARRAY_SIZE];
   for (Index_type a = 0; a < array_size; ++a) {
     x_view[a] = getViewFromPointer(x[a], iend) ;
   }
@@ -35,7 +35,7 @@ void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
       Kokkos::parallel_for(
           "ARRAY_OF_PTRS-Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
