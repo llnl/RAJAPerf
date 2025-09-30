@@ -490,17 +490,38 @@ void INTSC_HEXRECT::checkMoments
       if ( maxerr > tol ) {
         Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
-        printf ( "%s %s %s.\n", tst,
-                 "Centroid error exceeds tolerance for ",
-                 getVariantName(vid).c_str() ) ;
-        printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) irec=%d"
-                 "  tolerance =%10.2e\n",
-                 tst, loc_jx, loc_jy, loc_jz, loc_irec, tol ) ;
-        printf ( "%s Maximum error = %16.8e\n", tst, maxerr ) ;
-        printf ( "%s Computed (%23.15e,%23.15e,%23.15e)\n",
-                 tst, calc_xc, calc_yc, calc_zc ) ;
-        printf ( "%s Expected (%23.15e,%23.15e,%23.15e)\n",
-                 tst, expect_xc, expect_yc, expect_zc ) ;
+        Size_type paragraph_max = 1000 ;
+
+        std::string sbuf  ;
+        Char_ptr buf = new Char_type [ paragraph_max ] ;
+
+        snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
+                   "Centroid error exceeds tolerance for ",
+                   getVariantName(vid).c_str() ) ;
+        sbuf += buf ;
+
+        snprintf ( buf, paragraph_max,
+                   "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) irec=%d"
+                   "  tolerance =%10.2e\n",
+                   tst, loc_jx, loc_jy, loc_jz, loc_irec, tol ) ;
+        sbuf += buf ;
+
+        snprintf ( buf, paragraph_max,
+                   "%s Maximum error = %16.8e\n", tst, maxerr ) ;
+        sbuf += buf ;
+
+        snprintf ( buf, paragraph_max,
+                   "%s Computed (%23.15e,%23.15e,%23.15e)\n",
+                   tst, calc_xc, calc_yc, calc_zc ) ;
+        sbuf += buf ;
+
+        snprintf ( buf, paragraph_max,
+                   "%s Expected (%23.15e,%23.15e,%23.15e)\n",
+                   tst, expect_xc, expect_yc, expect_zc ) ;
+        sbuf += buf ;
+
+        getCout() << sbuf.c_str() ;
+        delete[] ( buf ) ;
       }
 
     } while ( false ) ;
@@ -595,16 +616,38 @@ void INTSC_HEXRECT::checkScaledVolumes
 
     Real_type const tol = 1.0e-12 * sep*sep*sep ;
     if ( maxerr > tol ) {
+
+      Size_type paragraph_max = 1000 ;
+
+      std::string sbuf  ;
+      Char_ptr buf = new Char_type [ paragraph_max ] ;
+
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
-      printf ( "%s %s %s.\n", tst,
-               "Volume exceeds tolerance for ",
-               getVariantName(vid).c_str() ) ;
-      printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) krec=%d"
-               "  tolerance =%10.2e\n",
-               tst, loc_jx, loc_jy, loc_jz, loc_krec, tol ) ;
-      printf ( "%s Maximum error = %16.8e\n", tst, maxerr ) ;
-      printf ( "%s Computed %23.15e\n", tst, calc_v / scale ) ;
-      printf ( "%s Expected %23.15e\n", tst, expect_v / scale ) ;
+      snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
+                 "Volume error exceeds tolerance for ",
+                 getVariantName(vid).c_str() ) ;
+      sbuf += buf ;
+
+      snprintf ( buf, paragraph_max,
+                 "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) krec=%d"
+                 "  tolerance =%10.2e\n",
+                 tst, loc_jx, loc_jy, loc_jz, loc_krec, tol ) ;
+      sbuf += buf ;
+
+      snprintf ( buf, paragraph_max,
+                 "%s Maximum error = %16.8e\n", tst, maxerr ) ;
+      sbuf += buf ;
+
+      snprintf ( buf, paragraph_max,
+                 "%s Computed %23.15e\n", tst, calc_v / scale ) ;
+      sbuf += buf ;
+
+      snprintf ( buf, paragraph_max,
+                 "%s Expected %23.15e\n", tst, expect_v / scale ) ;
+      sbuf += buf ;
+
+      getCout() << sbuf.c_str() ;
+      delete[] ( buf ) ;
     }
   }
 }

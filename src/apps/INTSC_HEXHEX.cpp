@@ -250,13 +250,23 @@ void INTSC_HEXHEX::check_intsc_volume_moments
            ( dym*dym > tolsqy ) ||
            ( dzm*dzm > tolsqz ) ) {
 
-        printf ( "%s %s %s.\n", tst,
-                 "Calculated Volumes and/or moments are INCORRECT for ",
-                 getVariantName(vid).c_str() ) ;
-        printf ( "%s %s", tst, "First error encountered:\n" ) ;
+        Size_type paragraph_max = 1000 ;
 
-        printf
-          ( "%s k = %ld    vv = %23.15e  expected %23.15e   tolerance %11.3e\n"
+        std::string sbuf  ;
+        Char_ptr buf = new Char_type [ paragraph_max ] ;
+
+        snprintf ( buf, paragraph_max, "%s %s %s.\n",
+                   tst, "Calculated Volumes and/or moments are INCORRECT for ",
+                   getVariantName(vid).c_str() ) ;
+        sbuf += buf ;
+
+        snprintf ( buf, paragraph_max, "%s %s",
+                   tst, "First error encountered:\n" ) ;
+        sbuf += buf ;
+
+        snprintf
+          ( buf, paragraph_max,
+            "%s k = %ld    vv = %23.15e  expected %23.15e   tolerance %11.3e\n"
             "%s k = %ld    vx = %23.15e  expected %23.15e   tolerance %11.3e\n"
             "%s k = %ld    vy = %23.15e  expected %23.15e   tolerance %11.3e\n"
             "%s k = %ld    vz = %23.15e  expected %23.15e   tolerance %11.3e\n"
@@ -265,6 +275,11 @@ void INTSC_HEXHEX::check_intsc_volume_moments
             tst, k, vv[4*k+1], vx, sqrt(tolsqx),
             tst, k, vv[4*k+2], vy, sqrt(tolsqy),
             tst, k, vv[4*k+3], vz, sqrt(tolsqz) ) ;
+        sbuf += buf ;
+
+        getCout() << sbuf.c_str() ;
+
+        delete[] ( buf ) ;
         break ;
       }
     }

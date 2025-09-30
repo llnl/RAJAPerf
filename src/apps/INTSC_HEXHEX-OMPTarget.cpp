@@ -63,7 +63,6 @@ void INTSC_HEXHEX::runOpenMPTargetVariant
     (VariantID vid,
      Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  printf ( "Entered INTSC_HEXHEX::runOpenMPTargetVariant\n" ) ;
   const Index_type run_reps = getRunReps();
   const Index_type ibegin   = 0 ;
   const Index_type iend     = getActualProblemSize() ;
@@ -72,8 +71,6 @@ void INTSC_HEXHEX::runOpenMPTargetVariant
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      printf ( "INTSC_HEXHEX : Running Base_OpenMPTarget\n" ) ;
-      printf ( "INTSC_HEXHEX : did=%d\n", did ) ;
 
 #pragma omp target is_device_ptr          \
   (m_dsubz,m_tsubz,m_vv_out) \
@@ -82,7 +79,6 @@ void INTSC_HEXHEX::runOpenMPTargetVariant
       for (Index_type i = ibegin ; i < iend ; ++i ) {
         intscHexHexOMP_Target( i, iend ) ;
       }
-      printf ( "INTSC_HEXHEX : Finished Base_OpenMPTarget\n" ) ;
     }
     stopTimer();
 
