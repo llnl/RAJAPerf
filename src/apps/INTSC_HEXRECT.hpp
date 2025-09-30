@@ -69,14 +69,14 @@ inline constexpr int max_polygon_pts = 10 ;
 
 #define  INTSC_HEXRECT_DATA_SETUP \
   Char_ptr ncord_gpu = m_ncord ; \
-  Real_const_ptr xdnode = (Real_const_ptr) m_xdnode ; \
-  Real_const_ptr ydnode = (Real_const_ptr) m_ydnode ; \
-  Real_const_ptr zdnode = (Real_const_ptr) m_zdnode ; \
-  Int_const_ptr znlist  = (Int_const_ptr) m_znlist  ; \
-  Int_const_ptr intsc_d = (Int_const_ptr) m_intsc_d ; \
-  Int_const_ptr intsc_t = (Int_const_ptr) m_intsc_t ; \
+  Real_ptr xdnode = m_xdnode ; \
+  Real_ptr ydnode = m_ydnode ; \
+  Real_ptr zdnode = m_zdnode ; \
+  Int_ptr znlist  = m_znlist  ; \
+  Int_ptr intsc_d = m_intsc_d ; \
+  Int_ptr intsc_t = m_intsc_t ; \
   Index_type const nrecords = m_nrecords ; \
-  Real_ptr records = (Real_ptr )m_records ;
+  Real_ptr records = m_records ;
 
 #include "common/KernelBase.hpp"
 
