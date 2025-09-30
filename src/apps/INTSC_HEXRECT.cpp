@@ -360,8 +360,8 @@ void INTSC_HEXRECT::setUp(VariantID vid,
 
   allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
-  m_records_h = (Real_ptr) detail::allocHostData
-        ( 4L*m_nrecords*sizeof(Real_type), getDataAlignment() ) ;
+  //  Output records copied to the host.
+  allocDataForInit ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
 
   delete[] ( intsc_d ) ;
   delete[] ( intsc_t ) ;
@@ -668,7 +668,7 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, Size_type tune_idx)
       ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
-  detail::deallocHostData ( m_records_h ) ;
+  deallocData ( m_records_h, Base_Seq ) ;
 
   checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
 }

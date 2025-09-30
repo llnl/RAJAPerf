@@ -134,27 +134,20 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   Real_ptr ds_h, ts_h ;
 
   do {
-    using namespace detail ;
-
-    dcoord = (Real_ptr) allocHostData
-        ( 24*sizeof(Real_type), getDataAlignment() );
+    allocDataForInit ( dcoord, 24, Base_Seq ) ;
     memcpy ( dcoord   , xdzone, 8*sizeof(Real_type) ) ;
     memcpy ( dcoord+ 8, ydzone, 8*sizeof(Real_type) ) ;
     memcpy ( dcoord+16, zdzone, 8*sizeof(Real_type) ) ;
 
-    tcoord = (Real_ptr) allocHostData
-        ( 24*sizeof(Real_type), getDataAlignment() );
+    allocDataForInit ( tcoord, 24, Base_Seq ) ;
     memcpy ( tcoord   , xtzone, 8*sizeof(Real_type) ) ;
     memcpy ( tcoord+ 8, ytzone, 8*sizeof(Real_type) ) ;
     memcpy ( tcoord+16, ztzone, 8*sizeof(Real_type) ) ;
 
-    m_vv = (Real_ptr) allocHostData
-        ( 4L*n_subz_intsc*sizeof(Real_type), getDataAlignment() ) ;
+    allocDataForInit ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
 
-    ds_h = (Real_ptr) allocHostData
-        ( 24L*n_subz_intsc*sizeof(Real_type) , getDataAlignment() ) ;
-    ts_h = (Real_ptr) allocHostData
-        ( 24L*n_subz_intsc*sizeof(Real_type) , getDataAlignment() ) ;
+    allocDataForInit ( ds_h, 24L*n_subz_intsc, Base_Seq ) ;
+    allocDataForInit ( ts_h, 24L*n_subz_intsc, Base_Seq ) ;
 
   } while ( false ) ;
 
@@ -169,11 +162,10 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_subz_intsc, vid ) ;
 
   do {
-    using namespace detail ;
-    deallocHostData ( ds_h ) ;
-    deallocHostData ( ts_h ) ;
-    deallocHostData ( dcoord ) ;
-    deallocHostData ( tcoord ) ;
+    deallocData ( ds_h, Base_Seq ) ;
+    deallocData ( ts_h, Base_Seq ) ;
+    deallocData ( dcoord, Base_Seq ) ;
+    deallocData ( tcoord, Base_Seq ) ;
   } while ( false ) ;
 
   const Int_type block_size = default_gpu_block_size ;
@@ -299,7 +291,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  detail::deallocHostData ( m_vv ) ;
+  deallocData ( m_vv, Base_Seq ) ;
 
   checksum[vid][tune_idx] += calcChecksum(m_vv_out, 4L*n_subz_intsc, vid  );
 }
