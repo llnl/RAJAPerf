@@ -216,7 +216,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
       xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
     }
     Real_type dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
-    if ( dx <= 0.0 or dy <= 0.0 or dz <= 0.0 ) {
+    if ( dx <= 0.0 || dy <= 0.0 || dz <= 0.0 ) {
       v0 = vx = vy = vz = 0.0 ;
     } else {
       Real_type xc = 0.5 * ( xmax + xmin ) ;
@@ -246,9 +246,9 @@ void INTSC_HEXHEX::check_intsc_volume_moments
       Real_type dzm = vv[ 4*k + 3 ] - vz ;
 
       // Print an error message if a volume or moment is incorrect.
-      if ( ( dv*dv   > tolsqv ) or
-           ( dxm*dxm > tolsqx ) or
-           ( dym*dym > tolsqy ) or
+      if ( ( dv*dv   > tolsqv ) ||
+           ( dxm*dxm > tolsqx ) ||
+           ( dym*dym > tolsqy ) ||
            ( dzm*dzm > tolsqz ) ) {
 
         printf ( "%s %s %s.\n", tst,
