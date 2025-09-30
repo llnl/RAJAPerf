@@ -121,13 +121,12 @@ private:
   void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
 
   void check_intsc_volume_moments
-      ( Index_type const n_intsc, Real_const_ptr vv ) ;
+      ( Index_type const n_intsc, Real_const_ptr vv, VariantID vid ) ;
 
   static constexpr size_t m_tri_per_intsc = 576 ;
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
-  VariantID m_vid ;
   Real_ptr m_mydata;
   Real_ptr m_dsubz ;    // donor subzone coordinates
   Real_ptr m_tsubz ;    // target subzone coordinates

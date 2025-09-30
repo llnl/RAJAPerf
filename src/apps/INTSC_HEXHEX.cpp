@@ -106,8 +106,6 @@ INTSC_HEXHEX::~INTSC_HEXHEX()
 void INTSC_HEXHEX::setUp(VariantID vid,
                          Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  m_vid = vid ;    // Remember variant to deallocate data.
-
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;
   Index_type n_subz_intsc = 8L * n_std_intsc ;
@@ -193,7 +191,8 @@ void INTSC_HEXHEX::setUp(VariantID vid,
 //
 void INTSC_HEXHEX::check_intsc_volume_moments
     ( Index_type const n_subz_intsc,  // number of subzone intersections
-      Real_const_ptr vv )   // computed volumes, moments on the host
+      Real_const_ptr vv,   // computed volumes, moments on the host
+      VariantID vid )   // Print variant name in case of error
 {
   Int_type rank = 0;
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -253,7 +252,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
         printf ( "%s %s %s.\n", tst,
                  "Calculated Volumes and/or moments are INCORRECT for ",
-                 getVariantName(m_vid).c_str() ) ;
+                 getVariantName(vid).c_str() ) ;
         printf ( "%s %s", tst, "First error encountered:\n" ) ;
 
         printf
@@ -283,7 +282,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
   copyData ( DataSpace::Host, m_vv,
              getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;
 
-  check_intsc_volume_moments ( n_subz_intsc, m_vv ) ;
+  check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
   detail::deallocHostData ( m_vv ) ;
 

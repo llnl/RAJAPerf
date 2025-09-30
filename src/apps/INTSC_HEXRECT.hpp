@@ -140,7 +140,8 @@ private:
 
   void copyTargetToDevice
       ( Real_const_ptr2 planes,
-        Int_const_ptr ncord ) ;
+        Int_const_ptr ncord,
+        VariantID vid ) ;
 
   void checkMoments
       ( Real_ptr records, Int_type const n_intsc,
@@ -148,12 +149,15 @@ private:
         Real_type const xd0, Real_type const yd0, Real_type const zd0,
         Real_type const x0, Real_type const y0, Real_type const z0,
         Real_type const sep,
-        Real_type const sep1x, Real_type const sep1y, Real_type const sep1z ) ;
+        Real_type const sep1x, Real_type const sep1y, Real_type const sep1z,
+        VariantID vid ) ;
 
   void checkScaledVolumes
       ( Real_const_ptr records,
-        Int_type const x_scl_offs, Int_type const y_scl_offs, Int_type const z_scl_offs,
-        Real_type const sep ) ;
+        Int_type const x_scl_offs,
+        Int_type const y_scl_offs,
+        Int_type const z_scl_offs,
+        Real_type const sep, VariantID vid ) ;
 
   void intscHexRectSeq        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP        ( Index_type i, Index_type iend ) ;
@@ -168,7 +172,6 @@ private:
 
   static const Size_type m_tri_per_intsc = 24 ;
 
-  VariantID m_vid ;
   Index_type m_gsize ;        // grid size (number of blocks)
   Index_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
 

@@ -114,7 +114,8 @@ INTSC_HEXRECT::~INTSC_HEXRECT()
 
 void INTSC_HEXRECT::copyTargetToDevice
     ( Real_const_ptr2 planes, // [3] Target mesh planes in (z,y,x)
-      Int_const_ptr ncord )     // [3] number of target zones in (z,y,x)
+      Int_const_ptr ncord,    // [3] number of target zones in (z,y,x)
+      VariantID vid )      // to allocate memory on device
 {
   Int_type my_ncord[4] = {0} ;     // Fourth integer for alignment.
   my_ncord[2] = ncord[2] ;    // x
@@ -147,7 +148,7 @@ void INTSC_HEXRECT::copyTargetToDevice
   }
 
   //   Copy the buffer to the device.
-  allocAndCopyHostData ( m_ncord, ncord_host, planes_size, m_vid ) ;
+  allocAndCopyHostData ( m_ncord, ncord_host, planes_size, vid ) ;
   delete[] (ncord_host) ;
 }
 
@@ -275,8 +276,6 @@ void INTSC_HEXRECT::setupIntscPairs
 void INTSC_HEXRECT::setUp(VariantID vid,
                           Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  m_vid = vid ;
-
   //  m_nrecords = number of intersections = 8 * number of donor zones
   m_nrecords = getActualProblemSize() ;
 
@@ -346,7 +345,7 @@ void INTSC_HEXRECT::setUp(VariantID vid,
 
   Real_const_ptr2 planes_c = const_cast<Real_const_ptr2>(planes) ;
 
-  copyTargetToDevice ( planes_c, ncord ) ;
+  copyTargetToDevice ( planes_c, ncord, vid ) ;
 
   Int_type ndnodes = (ndx+1) * (ndy+1) * (ndz+1) ;
 
@@ -381,7 +380,8 @@ void INTSC_HEXRECT::checkMoments
       Real_type const xd0, Real_type const yd0, Real_type const zd0,  // donor corner
       Real_type const x0, Real_type const y0, Real_type const z0,  // target corner
       Real_type const sep,  //  target plane pitch
-      Real_type const sep1x, Real_type const sep1y, Real_type const sep1z )
+      Real_type const sep1x, Real_type const sep1y, Real_type const sep1z,
+      VariantID vid )     // Print variant name in case of error.
 {
   Int_type rank = 0;
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -492,7 +492,7 @@ void INTSC_HEXRECT::checkMoments
 
         printf ( "%s %s %s.\n", tst,
                  "Centroid error exceeds tolerance for ",
-                 getVariantName(m_vid).c_str() ) ;
+                 getVariantName(vid).c_str() ) ;
         printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) irec=%d"
                  "  tolerance =%10.2e\n",
                  tst, loc_jx, loc_jy, loc_jz, loc_irec, tol ) ;
@@ -520,7 +520,8 @@ void INTSC_HEXRECT::checkScaledVolumes
     ( Real_const_ptr records,  // volumes, moments on host (rescaled here)
       Int_type const x_scl_offs, Int_type const y_scl_offs,  // scaled offsets
       Int_type const z_scl_offs,
-      Real_type const sep )  //  target plane pitch
+      Real_type const sep,     //  target plane pitch
+      VariantID vid )   // Print variant name in case of error.
 {
   Int_type rank = 0;
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -597,7 +598,7 @@ void INTSC_HEXRECT::checkScaledVolumes
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
       printf ( "%s %s %s.\n", tst,
                "Volume exceeds tolerance for ",
-               getVariantName(m_vid).c_str() ) ;
+               getVariantName(vid).c_str() ) ;
       printf ( "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) krec=%d"
                "  tolerance =%10.2e\n",
                tst, loc_jx, loc_jy, loc_jz, loc_krec, tol ) ;
@@ -618,11 +619,11 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, Size_type tune_idx)
   checkMoments
       ( m_records_h, m_nrecords,
         m_ndx, m_ndy, m_ndz, m_xd0, m_yd0, m_zd0,
-        m_x0, m_y0, m_z0, m_sep, m_sep1x, m_sep1y, m_sep1z ) ;
+        m_x0, m_y0, m_z0, m_sep, m_sep1x, m_sep1y, m_sep1z, vid ) ;
 
   checkScaledVolumes
       ( m_records_h,
-        m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep ) ;
+        m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
   detail::deallocHostData ( m_records_h ) ;
 
