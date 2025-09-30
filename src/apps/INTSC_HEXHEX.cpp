@@ -43,7 +43,8 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   Size_type a3 =
       (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
 
-  a3 = std::max(1UL,a3) ;
+  if ( a3 < 1UL ) { a3 = 1UL ; }
+
   Size_type n_std_intsc = a3*a3*a3 ;
 
   setActualProblemSize( n_std_intsc ) ;

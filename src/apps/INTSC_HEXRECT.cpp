@@ -48,7 +48,8 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   // number of donor zones on a side of the cube
   Size_type side = a3 / 2 ;
-  side = std::max(1UL,side) ;
+
+  if ( side < 1UL ) { side = 1UL ; }
 
   m_ndzones = side * side * side ;   // number of "donor zones" on a side
   Size_type n_intsc = 8L*m_ndzones ;   // number of intersections to compute
