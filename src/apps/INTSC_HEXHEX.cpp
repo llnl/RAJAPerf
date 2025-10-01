@@ -134,14 +134,18 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   Real_ptr ds_h, ts_h ;
 
   allocDataForInit ( dcoord, 24, Base_Seq ) ;
-  memcpy ( dcoord   , xdzone, 8*sizeof(Real_type) ) ;
-  memcpy ( dcoord+ 8, ydzone, 8*sizeof(Real_type) ) ;
-  memcpy ( dcoord+16, zdzone, 8*sizeof(Real_type) ) ;
+  for ( Index_type i=0 ; i<8 ; ++i ) {
+    dcoord[i+ 0] = xdzone[i] ;
+    dcoord[i+ 8] = ydzone[i] ;
+    dcoord[i+16] = zdzone[i] ;
+  }
 
   allocDataForInit ( tcoord, 24, Base_Seq ) ;
-  memcpy ( tcoord   , xtzone, 8*sizeof(Real_type) ) ;
-  memcpy ( tcoord+ 8, ytzone, 8*sizeof(Real_type) ) ;
-  memcpy ( tcoord+16, ztzone, 8*sizeof(Real_type) ) ;
+  for ( Index_type i=0 ; i<8 ; ++i ) {
+    tcoord[i+ 0] = xtzone[i] ;
+    tcoord[i+ 8] = ytzone[i] ;
+    tcoord[i+16] = ztzone[i] ;
+  }
 
   allocDataForInit ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
 
@@ -152,8 +156,10 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
   for ( Index_type k=0 ; k < n_subz_intsc ; ++k ) {
-    memcpy ( ds_h + 24L*k, dcoord, 24*sizeof(Real_type) ) ;
-    memcpy ( ts_h + 24L*k, tcoord, 24*sizeof(Real_type) ) ;
+    for ( Index_type i=0 ; i<24 ; ++i ) {
+      ds_h[24L*k+i] = dcoord[i] ;
+      ts_h[24L*k+i] = tcoord[i] ;
+    }
   }
 
   allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_subz_intsc, vid ) ;

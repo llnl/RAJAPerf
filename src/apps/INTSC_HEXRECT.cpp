@@ -131,19 +131,26 @@ void INTSC_HEXRECT::copyTargetToDevice
       4 * sizeof(Int_type) + nplanes * sizeof(Real_type) + 3 * sizeof(void*) ;
 
   Char_ptr ncord_host = new Char_type [ planes_size ] ;  // host buffer
-  memset ( ncord_host, 0, planes_size ) ;
+  for ( Index_type k=0 ; k<planes_size ; ++k ) {
+    ncord_host[k] = (Char_type)0 ;
+  }
 
   //  Build the buffer on the host in order to reduce the number
   //  of cudaMemcpy calls which are slow.
-  memcpy ( ncord_host, my_ncord, 4*sizeof(Int_type) ) ;
+  Int_ptr ncord_ptr = (Int_ptr) ncord_host ;
+  for ( Index_type k=0 ; k<4 ; ++k ) {
+    ncord_ptr[k] = my_ncord[k] ;
+  }
 
   Index_type pos = 4 * sizeof(Int_type) ;
   pos += 3 * sizeof(void*) ;    // pointers to planes arrays
+  Real_ptr cord_ptr = (Real_ptr) (ncord_host + pos) ;
   for ( Index_type dir = 0 ; dir < 3 ; ++dir ) {   // Loop over directions.
     if ( my_ncord[dir] > 0 ) {
-      Index_type n = (my_ncord[dir]+1)*sizeof(Real_type) ;   // copy bytes
-      memcpy ( ncord_host + pos, planes[dir], n ) ;
-      pos   += n ;
+      for ( Index_type k=0 ; k <  (my_ncord[dir]+1) ; ++k ) {
+        cord_ptr[k] = planes[dir][k] ;
+      }
+      cord_ptr += my_ncord[dir] + 1 ;
     }
   }
 
