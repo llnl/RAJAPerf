@@ -440,7 +440,7 @@ void INTSC_HEXRECT::checkMoments
     }
 
 
-    do {
+    {
       Int_type rec0 = 0 ;
       Real_type maxerr = 0.0 ;
 
@@ -524,7 +524,7 @@ void INTSC_HEXRECT::checkMoments
         delete[] ( buf ) ;
       }
 
-    } while ( false ) ;
+    }
 
     delete[] ( xca ) ;
     delete[] ( xcb ) ;

@@ -133,23 +133,21 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   // Expanded donor and target coordinates on host
   Real_ptr ds_h, ts_h ;
 
-  do {
-    allocDataForInit ( dcoord, 24, Base_Seq ) ;
-    memcpy ( dcoord   , xdzone, 8*sizeof(Real_type) ) ;
-    memcpy ( dcoord+ 8, ydzone, 8*sizeof(Real_type) ) ;
-    memcpy ( dcoord+16, zdzone, 8*sizeof(Real_type) ) ;
+  allocDataForInit ( dcoord, 24, Base_Seq ) ;
+  memcpy ( dcoord   , xdzone, 8*sizeof(Real_type) ) ;
+  memcpy ( dcoord+ 8, ydzone, 8*sizeof(Real_type) ) ;
+  memcpy ( dcoord+16, zdzone, 8*sizeof(Real_type) ) ;
 
-    allocDataForInit ( tcoord, 24, Base_Seq ) ;
-    memcpy ( tcoord   , xtzone, 8*sizeof(Real_type) ) ;
-    memcpy ( tcoord+ 8, ytzone, 8*sizeof(Real_type) ) ;
-    memcpy ( tcoord+16, ztzone, 8*sizeof(Real_type) ) ;
+  allocDataForInit ( tcoord, 24, Base_Seq ) ;
+  memcpy ( tcoord   , xtzone, 8*sizeof(Real_type) ) ;
+  memcpy ( tcoord+ 8, ytzone, 8*sizeof(Real_type) ) ;
+  memcpy ( tcoord+16, ztzone, 8*sizeof(Real_type) ) ;
 
-    allocDataForInit ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
+  allocDataForInit ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
 
-    allocDataForInit ( ds_h, 24L*n_subz_intsc, Base_Seq ) ;
-    allocDataForInit ( ts_h, 24L*n_subz_intsc, Base_Seq ) ;
+  allocDataForInit ( ds_h, 24L*n_subz_intsc, Base_Seq ) ;
+  allocDataForInit ( ts_h, 24L*n_subz_intsc, Base_Seq ) ;
 
-  } while ( false ) ;
 
   //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
@@ -161,12 +159,10 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_subz_intsc, vid ) ;
   allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_subz_intsc, vid ) ;
 
-  do {
-    deallocData ( ds_h, Base_Seq ) ;
-    deallocData ( ts_h, Base_Seq ) ;
-    deallocData ( dcoord, Base_Seq ) ;
-    deallocData ( tcoord, Base_Seq ) ;
-  } while ( false ) ;
+  deallocData ( ds_h, Base_Seq ) ;
+  deallocData ( ts_h, Base_Seq ) ;
+  deallocData ( dcoord, Base_Seq ) ;
+  deallocData ( tcoord, Base_Seq ) ;
 
   const Int_type block_size = default_gpu_block_size ;
   m_nthreads = 72L * n_subz_intsc ;

@@ -14,21 +14,21 @@
 ///     double xd[24] ;
 ///     double *yd = xd + 8 ;
 ///     double *zd = yd + 8 ;
-///     do {
+///     {
 ///       int dzone = intsc_d[irec] ;
 ///       for (int j=0 ; j<8 ; j++) {
 ///         int node = znlist[ 8*dzone + j ] ;
 ///         xd[j] = xdnode[node] ;
 ///         yd[j] = ydnode[node] ;
 ///         zd[j] = zdnode[node] ; }
-///     } while ( false ) ;
-///     do {
+///     }
+///     {
 ///       double sum0, sumx, sumy, sumz ;
 ///       double const *zplane ;
 ///       double const *yplane ;
 ///       double const *xplane ;
 ///       int jz, jy, jx ;
-///       do {
+///       {
 ///         int *ncord = (int*) ncord_gpu ;
 ///         double const **planes = ( double const** ) ( ncord + 4 ) ;
 ///         zplane = ( double const* ) ( planes + 3 ) ;
@@ -40,19 +40,18 @@
 ///         jz = tz / ( nxzones * nyzones ) ;
 ///         jy = ( tz / nxzones ) % nyzones ;
 ///         jx = tz % nxzones ;
-///       } while ( false ) ;
+///       }
 ///       intsc24_hex
 ///           ( xd, my_qx,
 ///             xplane[jx], xplane[jx+1], yplane[jy], yplane[jy+1],
 ///             zplane[jz], zplane[jz+1],
 ///             sum0, sumx, sumy, sumz ) ;
-///       do {
-///         record[0] = sum0 ;
-///         record[1] = sumx ;
-///         record[2] = sumy ;
-///         record[3] = sumz ;
-///       } while ( false ) ;
-///     } while ( false ) ;
+///       record[0] = sum0 ;
+///       record[1] = sumx ;
+///       record[2] = sumy ;
+///       record[3] = sumz ;
+///       }
+///     }
 ///   }
 
 #ifndef RAJAPerf_Apps_INTSC_HEXRECT_HPP
