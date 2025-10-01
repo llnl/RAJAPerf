@@ -395,8 +395,7 @@ void INTSC_HEXRECT::checkMoments
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif // RAJA_PERFSUITE_ENABLE_MPI
 
-  // Check on rank 0, other ranks are identical.
-  if ( rank == 0 ) {
+  {
     Real_type scale = 8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
 
     //  Scale the volumes to produce integers.
@@ -556,8 +555,7 @@ void INTSC_HEXRECT::checkScaledVolumes
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif // RAJA_PERFSUITE_ENABLE_MPI
 
-  // Check on rank 0, other ranks are identical.
-  if ( rank == 0 ) {
+  {
     Int_type ndx = m_ndx ;
     Int_type ndy = m_ndy ;
     Int_type ndz = m_ndz ;
@@ -627,7 +625,8 @@ void INTSC_HEXRECT::checkScaledVolumes
       Size_type paragraph_max = 1000 ;
 
       std::string sbuf  ;
-      Char_ptr buf = new Char_type [ paragraph_max ] ;
+      std::vector<Char_type> vbuf(paragraph_max) ;
+      Char_ptr buf = vbuf.data() ;
 
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
       snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
@@ -654,7 +653,6 @@ void INTSC_HEXRECT::checkScaledVolumes
       sbuf += buf ;
 
       getCout() << sbuf.c_str() ;
-      delete[] ( buf ) ;
     }
   }
 }

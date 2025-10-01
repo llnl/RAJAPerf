@@ -193,8 +193,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif // RAJA_PERFSUITE_ENABLE_MPI
 
-  // Check on rank 0, other ranks are identical.
-  if ( rank == 0 ) {
+  {
     Char_const_ptr tst = "INTSC_HEXHEX:" ;
 
     //   Determine the correct volume and moments.
