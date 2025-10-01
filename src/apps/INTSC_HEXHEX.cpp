@@ -292,8 +292,6 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  deallocData ( m_vv, Base_Seq ) ;
-
   checksum[vid][tune_idx] += calcChecksum(m_vv_out, 4L*n_subz_intsc, vid  );
 }
 
@@ -304,6 +302,7 @@ void INTSC_HEXHEX::tearDown(VariantID vid,
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
   deallocData ( m_vv_out, vid ) ;
+  deallocData ( m_vv, Base_Seq ) ;
 }
 
 } // end namespace apps

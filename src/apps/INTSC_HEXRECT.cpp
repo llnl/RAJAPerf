@@ -675,8 +675,6 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, Size_type tune_idx)
       ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
-  deallocData ( m_records_h, Base_Seq ) ;
-
   checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
 }
 
@@ -690,7 +688,7 @@ void INTSC_HEXRECT::tearDown(VariantID vid,
   deallocData ( m_xdnode, vid ) ;
   deallocData ( m_ydnode, vid ) ;
   deallocData ( m_zdnode, vid ) ;
-
+  deallocData ( m_records_h, Base_Seq ) ;
 }
 
 } // end namespace apps
