@@ -500,7 +500,8 @@ void INTSC_HEXRECT::checkMoments
         Size_type paragraph_max = 1000 ;
 
         std::string sbuf  ;
-        Char_ptr buf = new Char_type [ paragraph_max ] ;
+        std::vector<Char_type> vbuf(paragraph_max) ;
+        Char_ptr buf = vbuf.data() ;
 
         snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
                    "Centroid error exceeds tolerance for ",
@@ -528,7 +529,6 @@ void INTSC_HEXRECT::checkMoments
         sbuf += buf ;
 
         getCout() << sbuf.c_str() ;
-        delete[] ( buf ) ;
       }
 
     }

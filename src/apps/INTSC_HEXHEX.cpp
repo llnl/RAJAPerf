@@ -247,7 +247,8 @@ void INTSC_HEXHEX::check_intsc_volume_moments
         Size_type paragraph_max = 1000 ;
 
         std::string sbuf  ;
-        Char_ptr buf = new Char_type [ paragraph_max ] ;
+        std::vector<Char_type> vbuf(paragraph_max) ;
+        Char_ptr buf = vbuf.data() ;
 
         snprintf ( buf, paragraph_max, "%s %s %s.\n",
                    tst, "Calculated Volumes and/or moments are INCORRECT for ",
@@ -272,8 +273,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
         sbuf += buf ;
 
         getCout() << sbuf.c_str() ;
-
-        delete[] ( buf ) ;
         break ;
       }
     }
