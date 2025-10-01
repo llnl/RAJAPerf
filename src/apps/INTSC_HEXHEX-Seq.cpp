@@ -39,8 +39,7 @@ void INTSC_HEXHEX::intscHexHexSeq
     }
   }
 
-  Real_ptr tsubz = m_tsubz ;
-  Real_ptr dsubz = m_dsubz ;
+  INTSC_HEXHEX_DATA_SETUP ;
 
   INTSC_HEXHEX_BODY_SEQ ;
 

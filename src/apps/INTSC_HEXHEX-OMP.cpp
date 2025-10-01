@@ -43,8 +43,7 @@ void INTSC_HEXHEX::intscHexHexOMP
     Index_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
     Index_type blk = ith / blksize ;   // which "block" for gpu compatibility
 
-    Real_ptr tsubz = m_tsubz ;
-    Real_ptr dsubz = m_dsubz ;
+    INTSC_HEXHEX_DATA_SETUP ;
 
     INTSC_HEXHEX_BODY_SEQ ;
 
