@@ -77,16 +77,6 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
       intscHexHexOMP ( i, iend ) ;
     };
 
-  // Insert a warmup call to remove time of initialization of OpenMP
-  // that affects the first call to the function.
-  Bool_type const do_warmup = true ;
-  if ( do_warmup ) {
-#pragma omp parallel for
-    for (Index_type i = ibegin ; i < iend ; ++i ) {
-      intscHexHexOMP( i, iend ) ;
-    }
-  }
-
   switch ( vid ) {
 
     case Base_OpenMP : {
