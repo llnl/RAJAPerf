@@ -127,48 +127,21 @@ void INTSC_HEXHEX::setUp(VariantID vid,
     ztzone[i] = zdzone[i] + m_shift ;
   }
 
-  Real_ptr dcoord ;   // donor  coordinates [24]
-  Real_ptr tcoord ;   // target coordinates [24]
-
-  // Expanded donor and target coordinates on host
-  Real_ptr ds_h, ts_h ;
-
-  allocDataForInit ( dcoord, 24, Base_Seq ) ;
-  for ( Index_type i=0 ; i<8 ; ++i ) {
-    dcoord[i+ 0] = xdzone[i] ;
-    dcoord[i+ 8] = ydzone[i] ;
-    dcoord[i+16] = zdzone[i] ;
-  }
-
-  allocDataForInit ( tcoord, 24, Base_Seq ) ;
-  for ( Index_type i=0 ; i<8 ; ++i ) {
-    tcoord[i+ 0] = xtzone[i] ;
-    tcoord[i+ 8] = ytzone[i] ;
-    tcoord[i+16] = ztzone[i] ;
-  }
-
-  allocDataForInit ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
-
-  allocDataForInit ( ds_h, 24L*n_subz_intsc, Base_Seq ) ;
-  allocDataForInit ( ts_h, 24L*n_subz_intsc, Base_Seq ) ;
-
+  auto a_ds = allocDataForInit ( m_dsubz, 24L*n_subz_intsc, vid ) ;
+  auto a_ts = allocDataForInit ( m_tsubz, 24L*n_subz_intsc, vid ) ;
 
   //  Repeat the same calculation n_subz_intsc times, expand the
   //  same donor and target zones.
   for ( Index_type k=0 ; k < n_subz_intsc ; ++k ) {
-    for ( Index_type i=0 ; i<24 ; ++i ) {
-      ds_h[24L*k+i] = dcoord[i] ;
-      ts_h[24L*k+i] = tcoord[i] ;
+    for ( Index_type i=0 ; i<8 ; ++i ) {
+      m_dsubz[24L*k+ 0+i] = xdzone[i] ;
+      m_dsubz[24L*k+ 8+i] = ydzone[i] ;
+      m_dsubz[24L*k+16+i] = zdzone[i] ;
+      m_tsubz[24L*k+ 0+i] = xtzone[i] ;
+      m_tsubz[24L*k+ 8+i] = ytzone[i] ;
+      m_tsubz[24L*k+16+i] = ztzone[i] ;
     }
   }
-
-  allocAndCopyHostData ( m_dsubz, ds_h, 24L*n_subz_intsc, vid ) ;
-  allocAndCopyHostData ( m_tsubz, ts_h, 24L*n_subz_intsc, vid ) ;
-
-  deallocData ( ds_h, Base_Seq ) ;
-  deallocData ( ts_h, Base_Seq ) ;
-  deallocData ( dcoord, Base_Seq ) ;
-  deallocData ( tcoord, Base_Seq ) ;
 
   const Int_type block_size = default_gpu_block_size ;
   m_nthreads = 72L * n_subz_intsc ;
@@ -178,6 +151,9 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocData ( m_vv_int, 8L*m_gsize, vid ) ;
 
   allocAndInitDataConst ( m_vv_out, 4L*n_subz_intsc, 0.0, vid ) ;
+
+  // output volumes and moments on the host
+  allocData ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
 }
 
 

@@ -368,7 +368,7 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
   //  Output records copied to the host.
-  allocDataForInit ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
+  allocData             ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
 
   delete[] ( intsc_d ) ;
   delete[] ( intsc_t ) ;
