@@ -130,21 +130,21 @@ void INTSC_HEXRECT::copyTargetToDevice
   Size_type planes_size =
       4 * sizeof(Int_type) + nplanes * sizeof(Real_type) + 3 * sizeof(void*) ;
 
-  Char_ptr ncord_host = new Char_type [ planes_size ] ;  // host buffer
+  auto a_nc = allocDataForInit ( m_ncord, planes_size, vid ) ;
   for ( Index_type k=0 ; k<planes_size ; ++k ) {
-    ncord_host[k] = (Char_type)0 ;
+    m_ncord[k] = (Char_type)0 ;
   }
 
   //  Build the buffer on the host in order to reduce the number
   //  of cudaMemcpy calls which are slow.
-  Int_ptr ncord_ptr = (Int_ptr) ncord_host ;
+  Int_ptr ncord_ptr = (Int_ptr) m_ncord ;
   for ( Index_type k=0 ; k<4 ; ++k ) {
     ncord_ptr[k] = my_ncord[k] ;
   }
 
   Index_type pos = 4 * sizeof(Int_type) ;
   pos += 3 * sizeof(void*) ;    // pointers to planes arrays
-  Real_ptr cord_ptr = (Real_ptr) (ncord_host + pos) ;
+  Real_ptr cord_ptr = (Real_ptr) (m_ncord + pos) ;
   for ( Index_type dir = 0 ; dir < 3 ; ++dir ) {   // Loop over directions.
     if ( my_ncord[dir] > 0 ) {
       for ( Index_type k=0 ; k <  (my_ncord[dir]+1) ; ++k ) {
@@ -153,10 +153,6 @@ void INTSC_HEXRECT::copyTargetToDevice
       cord_ptr += my_ncord[dir] + 1 ;
     }
   }
-
-  //   Copy the buffer to the device.
-  allocAndCopyHostData ( m_ncord, ncord_host, planes_size, vid ) ;
-  delete[] (ncord_host) ;
 }
 
 
@@ -326,16 +322,17 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   m_zd0 = corner_d ( m_z0, sep, z_scl_offs, ndz ) ;
 
   //  donor zone coordinates (a simple Cartesian mesh).
-  Real_ptr xdnode = new Real_type [ 3*(ndx+1)*(ndy+1)*(ndz+1) ] ;
-  Real_ptr ydnode = xdnode + (ndx+1)*(ndy+1)*(ndz+1) ;
-  Real_ptr zdnode = ydnode + (ndx+1)*(ndy+1)*(ndz+1) ;
+  int ndnodes = (ndx+1)*(ndy+1)*(ndz+1) ;
+  auto a_xd = allocDataForInit ( m_xdnode, ndnodes, vid ) ;
+  auto a_yd = allocDataForInit ( m_ydnode, ndnodes, vid ) ;
+  auto a_zd = allocDataForInit ( m_zdnode, ndnodes, vid ) ;
 
   // zone node list for the donor mesh
-  Int_ptr znlist = new Int_type [ 8*ndx*ndy*ndz ] ;
+  auto a_zl = allocDataForInit ( m_znlist, 8*ndzones, vid ) ;
 
   setupDonorMesh
       ( sep, m_xd0, m_yd0, m_zd0, ndx, ndy, ndz,
-        xdnode, ydnode, zdnode, znlist ) ;
+        m_xdnode, m_ydnode, m_zdnode, m_znlist ) ;
 
   setupTargetPlanes
       ( planes, ncord,
@@ -344,36 +341,21 @@ void INTSC_HEXRECT::setUp(VariantID vid,
 
   // which zones to intersect.  Computed by hand for this test of
   // the geometry kernel.
-  Int_ptr intsc_d = new Int_type [ m_nrecords ] ;
-  Int_ptr intsc_t = new Int_type [ m_nrecords ] ;
+  allocDataForInit ( m_intsc_d, m_nrecords, vid ) ;
+  allocDataForInit ( m_intsc_t, m_nrecords, vid ) ;
 
   setupIntscPairs
-      ( ncord, ndx, ndy, ndz, intsc_d, intsc_t ) ;
+      ( ncord, ndx, ndy, ndz, m_intsc_d, m_intsc_t ) ;
 
   Real_const_ptr2 planes_c = const_cast<Real_const_ptr2>(planes) ;
 
   copyTargetToDevice ( planes_c, ncord, vid ) ;
-
-  Int_type ndnodes = (ndx+1) * (ndy+1) * (ndz+1) ;
-
-  allocAndCopyHostData ( m_xdnode, xdnode, ndnodes, vid ) ;
-  allocAndCopyHostData ( m_ydnode, ydnode, ndnodes, vid ) ;
-  allocAndCopyHostData ( m_zdnode, zdnode, ndnodes, vid ) ;
-
-  allocAndCopyHostData ( m_znlist, znlist, 8*ndzones, vid ) ;
-
-  allocAndCopyHostData ( m_intsc_d, intsc_d, m_nrecords, vid ) ;
-  allocAndCopyHostData ( m_intsc_t, intsc_t, m_nrecords, vid ) ;
 
   allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
   //  Output records copied to the host.
   allocData             ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
 
-  delete[] ( intsc_d ) ;
-  delete[] ( intsc_t ) ;
-  delete[] ( xdnode ) ;
-  delete[] ( znlist ) ;
   delete[] ( planes[0] ) ;
 }
 
