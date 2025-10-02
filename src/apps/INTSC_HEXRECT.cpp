@@ -127,7 +127,7 @@ void INTSC_HEXRECT::copyTargetToDevice
 
   // Pack the coordinates together, on the GPU.
   //  Allocate 3 spots for pointers to planes arrays, to set on GPU.
-  Size_type planes_size =
+  Index_type planes_size =
       4 * sizeof(Int_type) + nplanes * sizeof(Real_type) + 3 * sizeof(void*) ;
 
   auto a_nc = allocDataForInit ( m_ncord, planes_size, vid ) ;
@@ -372,10 +372,6 @@ void INTSC_HEXRECT::checkMoments
       Real_type const sep1x, Real_type const sep1y, Real_type const sep1z,
       VariantID vid )     // Print variant name in case of error.
 {
-  Int_type rank = 0;
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif // RAJA_PERFSUITE_ENABLE_MPI
 
   {
     Real_type scale = 8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
@@ -532,10 +528,6 @@ void INTSC_HEXRECT::checkScaledVolumes
       Real_type const sep,     //  target plane pitch
       VariantID vid )   // Print variant name in case of error.
 {
-  Int_type rank = 0;
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif // RAJA_PERFSUITE_ENABLE_MPI
 
   {
     Int_type ndx = m_ndx ;

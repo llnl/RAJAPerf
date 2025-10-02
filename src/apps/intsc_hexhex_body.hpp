@@ -478,7 +478,7 @@ RAJA_INLINE void hex_intsc_subz
       m_vv_out[k] = 0.0 ; \
     } \
   } \
-  INTSC_HEXHEX_DATA_SETUP ; \
+  INTSC_HEXHEX_DATA_SETUP_SEQ ; \
   INTSC_HEXHEX_BODY_SEQ ; \
   Real_ptr vv_out = m_vv_out + 4L*ipair; \
   vv_out[0] += vv_hi + vv_lo ; \

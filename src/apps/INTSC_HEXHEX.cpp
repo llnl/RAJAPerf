@@ -164,10 +164,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
       Real_const_ptr vv,   // computed volumes, moments on the host
       VariantID vid )   // Print variant name in case of error
 {
-  Int_type rank = 0;
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-#endif // RAJA_PERFSUITE_ENABLE_MPI
 
   {
     Char_const_ptr tst = "INTSC_HEXHEX:" ;

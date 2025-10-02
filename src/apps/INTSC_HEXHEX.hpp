@@ -58,9 +58,12 @@
 #include "common/RPTypes.hpp"
 
 
-#define  INTSC_HEXHEX_DATA_SETUP    \
-  Real_ptr const dsubz  = m_dsubz ; \
-  Real_ptr const tsubz  = m_tsubz ; \
+#define  INTSC_HEXHEX_DATA_SETUP_SEQ \
+  Real_ptr const dsubz  = m_dsubz ;  \
+  Real_ptr const tsubz  = m_tsubz ;
+
+#define  INTSC_HEXHEX_DATA_SETUP  \
+  INTSC_HEXHEX_DATA_SETUP_SEQ \
   Real_ptr       vv_int = m_vv_int ; \
   Real_ptr      vv_pair = m_vv_out ;
 
