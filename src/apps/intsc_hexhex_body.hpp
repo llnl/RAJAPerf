@@ -402,9 +402,9 @@ RAJA_INLINE void hex_intsc_subz
 
 
 #define INTSC_HEXHEX_BODY_SEQ \
-  Index_type const n_dsz_tris = 12 ; \
-  Index_type const n_tsz_tets = 6 ; \
-  Index_type const nth_per_isc = n_dsz_tris * n_tsz_tets ; \
+  Index_type constexpr n_dsz_tris = 12 ; \
+  Index_type constexpr n_tsz_tets = 6 ; \
+  Index_type constexpr nth_per_isc = n_dsz_tris * n_tsz_tets ; \
   Index_type ipair   = ith / nth_per_isc ; \
   Int_type dfacet  = ( ith / n_tsz_tets ) % n_dsz_tris ; \
   Int_type ttet    = ith % n_tsz_tets ; \
