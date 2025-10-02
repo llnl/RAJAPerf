@@ -294,7 +294,7 @@ RAJA_INLINE Int_type intsc24_hex_filter
   Real_type const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
 
   Real_type a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
-  do {
+  {
 
     Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
     Real_type det  = dtx * dty ;    // area of the target zone (determinant)
@@ -304,7 +304,7 @@ RAJA_INLINE Int_type intsc24_hex_filter
 
     a11 =  dty * deti;
     a22 =  dtx * deti;
-  } while ( false ) ;
+  }
 
   Int_type count = 0 ;
   for ( Index_type f = 0 ; f < 6 ; ++f ) {   // six faces of the hexahedron
@@ -400,7 +400,7 @@ RAJA_INLINE Int_type intsc24_hex
   Real_type const dzt = ( zt1 > zt0 ) ? ( zt1 - zt0 ) : 0.0 ;
 
   Real_type a11, a22 ;    // Transformation to unit target frame 0<(x,y)<1
-  do {
+  {
 
     Real_type dtx = xt1 - xt0, dty = yt1 - yt0 ;
     Real_type det  = dtx * dty ;    // area of the target zone (determinant)
@@ -410,7 +410,7 @@ RAJA_INLINE Int_type intsc24_hex
 
     a11 =  dty * deti;
     a22 =  dtx * deti;
-  } while ( false ) ;
+  }
 
   Int_type inside, abovez, clip ;   // which facets interior, above, or clipped.
 
@@ -577,21 +577,21 @@ RAJA_INLINE Int_type intsc24_hex
     Real_type xd[24] ; \
     Real_ptr yd = xd + 8 ; \
     Real_ptr zd = yd + 8 ; \
-    do { \
+    { \
       Int_type dzone = intsc_d[irec] ; \
       for ( Index_type j=0 ; j<8 ; j++) { \
         Int_type node = znlist[ 8*dzone + j ] ; \
         xd[j] = xdnode[node] ; \
         yd[j] = ydnode[node] ; \
         zd[j] = zdnode[node] ; } \
-    } while ( false ) ; \
-    do { \
+    } \
+    { \
       Real_type sum0, sumx, sumy, sumz ; \
       Real_const_ptr zplane ; \
       Real_const_ptr yplane ; \
       Real_const_ptr xplane ; \
       Int_type jz, jy, jx ; \
-      do { \
+      { \
         Int_ptr ncord = (Int_ptr) ncord_gpu ; \
         Real_const_ptr2 planes = ( Real_const_ptr2 ) ( ncord + 4 ) ; \
         zplane = ( Real_const_ptr ) ( planes + 3 ) ; \
@@ -603,20 +603,20 @@ RAJA_INLINE Int_type intsc24_hex
         jz = tz / ( nxzones * nyzones ) ; \
         jy = ( tz / nxzones ) % nyzones ; \
         jx = tz % nxzones ; \
-      } while ( false ) ; \
+      } \
       intsc24_hex \
           ( xd, my_qx, \
             xplane[jx], xplane[jx+1], yplane[jy], yplane[jy+1], \
             zplane[jz], zplane[jz+1], \
             sum0, sumx, sumy, sumz ) ; \
-      do { \
+      { \
         Real_type vf   = 1.0 ; \
         record[0] = vf * sum0 ; \
         record[1] = vf * sumx ; \
         record[2] = vf * sumy ; \
         record[3] = vf * sumz ; \
-      } while ( false ) ; \
-    } while ( false ) ; \
+      } \
+    } \
   }
 
 #endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP

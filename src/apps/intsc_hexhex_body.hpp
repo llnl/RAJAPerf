@@ -341,7 +341,7 @@ RAJA_INLINE void hex_intsc_subz
   //  coordinates of the donor triangle
   Real_type xdt[3], ydt[3], zdt[3] ;
 
-  do {
+  {
     //  cyclic nodes to form facets with node 0.
     Int_type cyc_nod[len_cycnod] = { 1, 5, 4, 6, 2, 3, 1 } ;
 
@@ -368,7 +368,7 @@ RAJA_INLINE void hex_intsc_subz
     zdt[1] = zds[v1] ;
     zdt[2] = zds[v2] ;
 
-  } while ( false ) ;
+  }
 
   //   Set up the target tet and do the intersections.
 
