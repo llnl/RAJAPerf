@@ -31,4 +31,18 @@
 
 #define CPU_FOREACH(i, k, N) for (int i = 0; i < N; i++)
 
+#define SHARED_LOOP_2D(tx, ty, Nx, Ny) \
+   for (int ty = 0; ty < Ny; ty++)     \
+      for (int tx = 0; tx < Nx; tx++)
+
+#define SHARED_LOOP_2D_DIRECT(tx, ty, Nx, Ny) SHARED_LOOP_2D(tx, ty, Nx, Ny)
+
+#define SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) \
+   for (int tz = 0; tz < Nz; tz++)             \
+      for (int ty = 0; ty < Ny; ty++)          \
+         for (int tx = 0; tx < Nx; tx++)
+
+#define SHARED_LOOP_3D_DIRECT(tx, ty, tz, Nx, Ny, Nz) SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)
+
+
 #endif // closing endif for header file include guard

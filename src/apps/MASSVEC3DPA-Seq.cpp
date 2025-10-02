@@ -37,101 +37,100 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
       constexpr int MD1 = MVPA_D1D;
       constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-#if 0
-      TEAM_SHARED double B[MQ1][MD1];
-      TEAM_SHARED double Bt[MD1][MQ1];
+      /*RAJA_TEAM_SHARED*/ double smB[MQ1][MD1];
+      /*RAJA_TEAM_SHARED*/ double smBt[MD1][MQ1];
 
-      TEAM_SHARED double sm0[MDQ * MDQ * MDQ];
-      TEAM_SHARED double sm1[MDQ * MDQ * MDQ];
-      double(*X)[MD1][MD1]   = (double(*)[MD1][MD1])sm0;
+      /*TEAM_SHARED*/ double sm0[MDQ * MDQ * MDQ];
+      /*TEAM_SHARED*/ double sm1[MDQ * MDQ * MDQ];
+      double(*smX)[MD1][MD1]   = (double(*)[MD1][MD1])sm0;
       double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1;
       double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0;
       double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1;
       double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0;
       double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
-      SHARED_LOOP_2D_DIRECT(q, d, Q1D, D1D)
+      SHARED_LOOP_2D_DIRECT(q, d, MVPA_Q1D, MVPA_D1D)
       {
-         B[q][d]  = b(q, d);
-         Bt[d][q] = B[q][d];
+         smB[q][d]  = mvpaB_(q, d);
+         smBt[d][q] = smB[q][d];
       }
 
       for (int c = 0; c < 3; ++c)
       {
-         SHARED_LOOP_3D_DIRECT(dx, dy, dz, D1D, D1D, D1D)
+         SHARED_LOOP_3D_DIRECT(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D)
          {
-            X[dz][dy][dx] = dview_x_local(dx, dy, dz, c, e);
+            smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(qx, dy, dz, Q1D, D1D, D1D)
+         SHARED_LOOP_3D_DIRECT(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D)
          {
             double u = 0.0;
-            for (int dx = 0; dx < D1D; ++dx)
+            for (int dx = 0; dx < MVPA_D1D; ++dx)
             {
-               u += X[dz][dy][dx] * B[qx][dx];
+               u += smX[dz][dy][dx] * smB[qx][dx];
             }
             DDQ[dz][dy][qx] = u;
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(qx, qy, dz, Q1D, Q1D, D1D)
+         SHARED_LOOP_3D_DIRECT(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D)
          {
             double u = 0.0;
-            for (int dy = 0; dy < D1D; ++dy)
+            for (int dy = 0; dy < MVPA_D1D; ++dy)
             {
-               u += DDQ[dz][dy][qx] * B[qy][dy];
+               u += DDQ[dz][dy][qx] * smB[qy][dy];
             }
             DQQ[dz][qy][qx] = u;
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(qx, qy, qz, Q1D, Q1D, Q1D)
+         SHARED_LOOP_3D_DIRECT(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D)
          {
             double u = 0.0;
-            for (int dz = 0; dz < D1D; ++dz)
+            for (int dz = 0; dz < MVPA_D1D; ++dz)
             {
-               u += DQQ[dz][qy][qx] * B[qz][dz];
+               u += DQQ[dz][qy][qx] * smB[qz][dz];
             }
-            QQQ[qz][qy][qx] = u * D(qx, qy, qz, e);
+            QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(dx, qy, qz, D1D, Q1D, Q1D)
+         SHARED_LOOP_3D_DIRECT(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D)
          {
             double u = 0.0;
-            for (int qx = 0; qx < Q1D; ++qx)
+            for (int qx = 0; qx < MVPA_Q1D; ++qx)
             {
-               u += QQQ[qz][qy][qx] * Bt[dx][qx];
+               u += QQQ[qz][qy][qx] * smBt[dx][qx];
             }
             QQD[qz][qy][dx] = u;
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(dx, dy, qz, D1D, D1D, Q1D)
+         SHARED_LOOP_3D_DIRECT(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D)
          {
             double u = 0.0;
-            for (int qy = 0; qy < Q1D; ++qy)
+            for (int qy = 0; qy < MVPA_Q1D; ++qy)
             {
-               u += QQD[qz][qy][dx] * Bt[dy][qy];
+               u += QQD[qz][qy][dx] * smBt[dy][qy];
             }
             QDD[qz][dy][dx] = u;
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
 
-         SHARED_LOOP_3D_DIRECT(dx, dy, dz, D1D, D1D, D1D)
+         SHARED_LOOP_3D_DIRECT(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D)
          {
             double u = 0.0;
-            for (int qz = 0; qz < Q1D; ++qz)
+            for (int qz = 0; qz < MVPA_Q1D; ++qz)
             {
-               u += QDD[qz][dy][dx] * Bt[dz][qz];
+               u += QDD[qz][dy][dx] * smBt[dz][qz];
             }
-            dview_y_local(dx, dy, dz, c, e) = u;
+            mvpaY_(dx, dy, dz, c, e) = u;
          }
-         TEAM_SYNC;
+         /*TEAM_SYNC;*/
+
       }
 
-#endif
       } //element loop
 
 

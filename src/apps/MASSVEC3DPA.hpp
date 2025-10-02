@@ -44,36 +44,9 @@ Index_type NE = m_NE;
   D[qx + MVPA_Q1D * qy + MVPA_Q1D * MVPA_Q1D * qz + MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * e ]
 
 #define MASSVEC3DPA_0_CPU           \
-        constexpr int MQ1 = MVPA_Q1D; \
-        constexpr int MD1 = MVPA_D1D; \
-        constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1; \
-        double sDQ[MQ1 * MD1]; \
-        double(*Bsmem)[MD1] = (double(*)[MD1])sDQ; \
-        double(*Btsmem)[MQ1] = (double(*)[MQ1])sDQ; \
-        double sm0[MDQ * MDQ * MDQ]; \
-        double sm1[MDQ * MDQ * MDQ]; \
-        double(*Xsmem)[MD1][MD1] = (double(*)[MD1][MD1])sm0; \
-        double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1; \
-        double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0; \
-        double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1; \
-        double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0; \
-        double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
+
 
 #define MASSVEC3DPA_0_GPU \
-        constexpr int MQ1 = MVPA_Q1D; \
-        constexpr int MD1 = MVPA_D1D; \
-        constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1; \
-        RAJA_TEAM_SHARED  double sDQ[MQ1 * MD1];     \
-        double(*Bsmem)[MD1] = (double(*)[MD1])sDQ; \
-        double(*Btsmem)[MQ1] = (double(*)[MQ1])sDQ; \
-        RAJA_TEAM_SHARED double sm0[MDQ * MDQ * MDQ];       \
-        RAJA_TEAM_SHARED double sm1[MDQ * MDQ * MDQ];      \
-        double(*Xsmem)[MD1][MD1] = (double(*)[MD1][MD1])sm0; \
-        double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1; \
-        double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0; \
-        double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1; \
-        double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0; \
-        double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1 \
 
