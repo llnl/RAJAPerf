@@ -626,5 +626,7 @@ RAJA_INLINE Int_type intsc24_hex
   Real_ptr my_qx = xd_work ; \
   INTSC_HEXRECT_BODY ;
 
+#define INTSC_HEXRECT_OMP(i) \
+  INTSC_HEXRECT_SEQ(i)
 
 #endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP

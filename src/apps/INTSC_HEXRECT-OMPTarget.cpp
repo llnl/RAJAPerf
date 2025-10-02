@@ -23,40 +23,6 @@ namespace rajaperf
 namespace apps
 {
 
-  //
-  // Define threads per team for target execution (workgroup size)
-  //
-  const Size_type threads_per_team = 64;
-
-
-void INTSC_HEXRECT::intscHexHexOMP_Target
-    ( Index_type i,
-      Index_type iend )  // number of standard intersections
-{
-  Index_type nisc_stage = iend * m_tri_per_intsc ;
-
-  for ( Size_type j = 0L ; j < m_tri_per_intsc ; ++j ) {
-
-    Index_type blksize = threads_per_team ;
-    Index_type ith = i * m_tri_per_intsc + j ;    // which triangle contribution
-    Index_type blk = ith / blksize ;   // which "block" for gpu compatibility
-
-    Real_ptr tsubz = m_tsubz ;
-    Real_ptr dsubz = m_dsubz ;
-
-    INTSC_HEXRECT_BODY_SEQ ;
-
-    // Volumes directly to vv_out on the CPU.
-    Real_ptr vv_out = m_vv_out + 4L*ipair;
-
-    //   Save results for this triangle, for the subzone pair intersection.
-    vv_out[0] += vv_hi + vv_lo ;
-    vv_out[1] += vx_hi + vx_lo ;
-    vv_out[2] += vy_hi + vy_lo ;
-    vv_out[3] += vz_hi + vz_lo ;
-  }
-}
-
 
 
 void INTSC_HEXRECT::runOpenMPTargetVariant(VariantID vid,
@@ -76,7 +42,7 @@ void INTSC_HEXRECT::runOpenMPTargetVariant(VariantID vid,
   device( did )
 #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin ; i < iend ; ++i ) {
-        intscHexHexOMP_Target( i, iend ) ;
+        INTSC_HEXRECT_OMP( i ) ;
       }
     }
     stopTimer();
@@ -90,7 +56,7 @@ void INTSC_HEXRECT::runOpenMPTargetVariant(VariantID vid,
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-          intscHexHexOMP_Target (i, iend) ;
+          INTSC_HEXRECT_OMP ( i ) ;
       });
     }
     stopTimer();

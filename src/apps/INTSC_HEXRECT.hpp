@@ -158,9 +158,6 @@ private:
         Int_type const z_scl_offs,
         Real_type const sep, VariantID vid ) ;
 
-  void intscHexRectOMP        ( Index_type i, Index_type iend ) ;
-  void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
-
   static const Size_type default_gpu_block_size = 64;
   using gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<default_gpu_block_size>;

@@ -19,20 +19,6 @@ namespace rajaperf
 namespace apps
 {
 
-void INTSC_HEXRECT::intscHexRectOMP
-    ( Index_type i,
-      Index_type )
-{
-  INTSC_HEXRECT_DATA_SETUP ;
-
-  Index_type irec = i ;
-  Real_type xd_work[ 3*max_polygon_pts+1 ] ;
-  Real_ptr my_qx = xd_work ;
-
-  INTSC_HEXRECT_BODY ;
-}
-
-
 void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
                                      Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
@@ -48,7 +34,7 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
 
   auto intsc_hexrect_lam =
     [=](Index_type i) {
-      intscHexRectOMP ( i, iend ) ;
+      INTSC_HEXRECT_OMP ( i ) ;
     };
 
   switch ( vid ) {
@@ -60,7 +46,7 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
-          intscHexRectOMP( i, iend ) ;
+          INTSC_HEXRECT_OMP( i ) ;
         }
 
       }

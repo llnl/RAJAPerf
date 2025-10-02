@@ -110,9 +110,6 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  void intscHexHexOMP        ( Index_type i, Index_type iend ) ;
-  void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
-
   void check_intsc_volume_moments
       ( Index_type const n_intsc, Real_const_ptr vv, VariantID vid ) ;
 
