@@ -162,17 +162,11 @@ private:
   void intscHexRectOMP        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
 
-  void check_intsc_volume_moments
-      ( FILE* f, Index_type const n_intsc, Real_const_ptr vv ) ;
-
   static const Size_type default_gpu_block_size = 64;
   using gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
   static const Size_type m_tri_per_intsc = 24 ;
-
-  Index_type m_gsize ;        // grid size (number of blocks)
-  Index_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
 
   Size_type m_ndzones ;    // number of "donor zones"
   Size_type m_ntzones ;    // number of "target zones"
@@ -194,9 +188,6 @@ private:
   Real_type m_sep1x, m_sep1y, m_sep1z ;   // donor mesh zone widths
   Int_type  m_x_scl_offs, m_y_scl_offs, m_z_scl_offs ;  // donor scaled offsets
   Int_type  m_ndx, m_ndy, m_ndz ;     // donor mesh dimensions (are equal)
-
-  FILE *m_f_hexrect ;  // output file
-
 };
 
 } // end namespace apps

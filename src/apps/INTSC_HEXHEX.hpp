@@ -127,12 +127,10 @@ private:
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
-  Real_ptr m_mydata;
   Real_ptr m_dsubz ;    // donor subzone coordinates
   Real_ptr m_tsubz ;    // target subzone coordinates
 
-  Index_type m_gsize ;        // grid size (number of blocks)
-  Index_type m_nthreads ;     // total number of gpu threads (=64*m_gsize)
+  Index_type m_nthreads ;     //  number of threads (=576 per standard intsc.)
   Real_ptr m_vv_int ;   // intermediate volumes and moments
   Real_ptr m_vv_out ;   // [4*n_nitsc] computed volumes, moments on device
 

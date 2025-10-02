@@ -145,10 +145,10 @@ void INTSC_HEXHEX::setUp(VariantID vid,
 
   const Int_type block_size = default_gpu_block_size ;
   m_nthreads = 72L * n_subz_intsc ;
-  m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
+  Index_type gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
   // intermediate volumes, moments
-  allocData ( m_vv_int, 8L*m_gsize, vid ) ;
+  allocData ( m_vv_int, 8L*gsize, vid ) ;
 
   allocAndInitDataConst ( m_vv_out, 4L*n_subz_intsc, 0.0, vid ) ;
 
