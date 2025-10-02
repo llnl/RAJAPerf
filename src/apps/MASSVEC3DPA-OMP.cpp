@@ -40,52 +40,52 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
          CPU_FOREACH(dy, y, MVPA_D1D) {
           CPU_FOREACH(dx, x, MVPA_D1D){
-            MASSVEC3DPA_1
+            //MASSVEC3DPA_1
           }
           CPU_FOREACH(dx, x, MVPA_Q1D) {
-            MASSVEC3DPA_2
+            //MASSVEC3DPA_2
           }
         }
 
         CPU_FOREACH(dy, y, MVPA_D1D) {
           CPU_FOREACH(qx, x, MVPA_Q1D) {
-            MASSVEC3DPA_3
+            //MASSVEC3DPA_3
           }
         }
 
         CPU_FOREACH(qy, y, MVPA_Q1D) {
           CPU_FOREACH(qx, x, MVPA_Q1D) {
-            MASSVEC3DPA_4
+            //MASSVEC3DPA_4
           }
         }
 
         CPU_FOREACH(qy, y, MVPA_Q1D) {
           CPU_FOREACH(qx, x, MVPA_Q1D) {
-            MASSVEC3DPA_5
+            //MASSVEC3DPA_5
           }
         }
 
         CPU_FOREACH(d, y, MVPA_D1D) {
           CPU_FOREACH(q, x, MVPA_Q1D) {
-            MASSVEC3DPA_6
+            //MASSVEC3DPA_6
           }
         }
 
         CPU_FOREACH(qy, y, MVPA_Q1D) {
           CPU_FOREACH(dx, x, MVPA_D1D) {
-            MASSVEC3DPA_7
+            //MASSVEC3DPA_7
           }
         }
 
         CPU_FOREACH(dy, y, MVPA_D1D) {
           CPU_FOREACH(dx, x, MVPA_D1D) {
-            MASSVEC3DPA_8
+            //MASSVEC3DPA_8
           }
         }
 
         CPU_FOREACH(dy, y, MVPA_D1D) {
           CPU_FOREACH(dx, x, MVPA_D1D) {
-            MASSVEC3DPA_9
+            //MASSVEC3DPA_9
           }
         }
 
@@ -125,13 +125,13 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_1
+                      //MASSVEC3DPA_1
                     }
                   );  // RAJA::loop<inner_x>
 
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int dx) {
-                      MASSVEC3DPA_2
+                      //MASSVEC3DPA_2
                     }
                   );  // RAJA::loop<inner_x>
                 }  // lambda (dy)
@@ -143,7 +143,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_3
+                      //MASSVEC3DPA_3
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -155,7 +155,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_4
+                      //MASSVEC3DPA_4
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -167,7 +167,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_5
+                      //MASSVEC3DPA_5
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -179,7 +179,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int d) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int q) {
-                      MASSVEC3DPA_6
+                      //MASSVEC3DPA_6
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -191,7 +191,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_7
+                      //MASSVEC3DPA_7
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -203,7 +203,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_8
+                      //MASSVEC3DPA_8
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -215,7 +215,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_9
+                      //MASSVEC3DPA_9
                     }
                   );  // RAJA::loop<inner_x>
                 }

@@ -33,56 +33,56 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
 
   GPU_FOREACH_THREAD(dy, y, MVPA_D1D) {
     GPU_FOREACH_THREAD(dx, x, MVPA_D1D){
-      MASSVEC3DPA_1
+      //MASSVEC3DPA_1
     }
     GPU_FOREACH_THREAD(dx, x, MVPA_Q1D) {
-      MASSVEC3DPA_2
+      //MASSVEC3DPA_2
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD(dy, y, MVPA_D1D) {
     GPU_FOREACH_THREAD(qx, x, MVPA_Q1D) {
-      MASSVEC3DPA_3
+      //MASSVEC3DPA_3
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD(qy, y, MVPA_Q1D) {
     GPU_FOREACH_THREAD(qx, x, MVPA_Q1D) {
-      MASSVEC3DPA_4
+      //MASSVEC3DPA_4
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD(qy, y, MVPA_Q1D) {
     GPU_FOREACH_THREAD(qx, x, MVPA_Q1D) {
-      MASSVEC3DPA_5
+      //MASSVEC3DPA_5
     }
   }
 
   __syncthreads();
   GPU_FOREACH_THREAD(d, y, MVPA_D1D) {
     GPU_FOREACH_THREAD(q, x, MVPA_Q1D) {
-      MASSVEC3DPA_6
+      //MASSVEC3DPA_6
     }
   }
 
   __syncthreads();
   GPU_FOREACH_THREAD(qy, y, MVPA_Q1D) {
     GPU_FOREACH_THREAD(dx, x, MVPA_D1D) {
-      MASSVEC3DPA_7
+      //MASSVEC3DPA_7
     }
   }
   __syncthreads();
 
   GPU_FOREACH_THREAD(dy, y, MVPA_D1D) {
     GPU_FOREACH_THREAD(dx, x, MVPA_D1D) {
-      MASSVEC3DPA_8
+      //MASSVEC3DPA_8
     }
   }
 
   __syncthreads();
   GPU_FOREACH_THREAD(dy, y, MVPA_D1D) {
     GPU_FOREACH_THREAD(dx, x, MVPA_D1D) {
-      MASSVEC3DPA_9
+      //MASSVEC3DPA_9
     }
   }
 }
@@ -144,13 +144,13 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_1
+                      //MASSVEC3DPA_1
                     }
                   );  // RAJA::loop<inner_x>
 
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int dx) {
-                      MASSVEC3DPA_2
+                      //MASSVEC3DPA_2
                     }
                   );  // RAJA::loop<inner_x>
                 } // lambda (dy)
@@ -162,7 +162,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_3
+                      //MASSVEC3DPA_3
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -174,7 +174,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_4
+                      //MASSVEC3DPA_4
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -186,7 +186,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int qx) {
-                      MASSVEC3DPA_5
+                      //MASSVEC3DPA_5
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -198,7 +198,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int d) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                     [&](int q) {
-                      MASSVEC3DPA_6
+                      //MASSVEC3DPA_6
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -210,7 +210,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_7
+                      //MASSVEC3DPA_7
                     }
                   );  // RAJA::loop<inner_x
                 }
@@ -222,7 +222,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_8
+                      //MASSVEC3DPA_8
                     }
                   );  // RAJA::loop<inner_x>
                 }
@@ -234,7 +234,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
                 [&](int dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                     [&](int dx) {
-                      MASSVEC3DPA_9
+                      //MASSVEC3DPA_9
                     }
                   );  // RAJA::loop<inner_x>
                 }

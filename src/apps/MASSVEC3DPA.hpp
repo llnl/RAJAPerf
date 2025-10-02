@@ -44,34 +44,97 @@ Index_type NE = m_NE;
   D[qx + MVPA_Q1D * qy + MVPA_Q1D * MVPA_Q1D * qz + MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * e ]
 
 #define MASSVEC3DPA_0_CPU           \
-
+      constexpr int MQ1 = MVPA_Q1D; \
+      constexpr int MD1 = MVPA_D1D; \
+      constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1; \
+      /*RAJA_TEAM_SHARED*/ double smB[MQ1][MD1]; \
+      /*RAJA_TEAM_SHARED*/ double smBt[MD1][MQ1]; \
+      /*RAJA_TEAM_SHARED*/ double sm0[MDQ * MDQ * MDQ]; \
+      /*RAJA_TEAM_SHARED*/ double sm1[MDQ * MDQ * MDQ]; \
+      double(*smX)[MD1][MD1]   = (double(*)[MD1][MD1])sm0; \
+      double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1; \
+      double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0; \
+      double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1; \
+      double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0; \
+      double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_0_GPU \
+      constexpr int MQ1 = MVPA_Q1D; \
+      constexpr int MD1 = MVPA_D1D; \
+      constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1; \
+      RAJA_TEAM_SHARED double smB[MQ1][MD1]; \
+      RAJA_TEAM_SHARED double smBt[MD1][MQ1]; \
+      RAJA_TEAM_SHARED double sm0[MDQ * MDQ * MDQ]; \
+      RAJA_TEAM_SHARED double sm1[MDQ * MDQ * MDQ];    \
+      double(*smX)[MD1][MD1]   = (double(*)[MD1][MD1])sm0; \
+      double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1; \
+      double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0; \
+      double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1; \
+      double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0; \
+      double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1 \
-
+  smB[q][d]  = mvpaB_(q, d); \
+  smBt[d][q] = smB[q][d]; 
 
 #define MASSVEC3DPA_2 \
+  smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
 
-// 2 * MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D
+
 #define MASSVEC3DPA_3 \
+  double u = 0.0; \
+  for (int dx = 0; dx < MVPA_D1D; ++dx) \
+  { \
+    u += smX[dz][dy][dx] * smB[qx][dx]; \
+  } \
+  DDQ[dz][dy][qx] = u; \
 
 
 //2 * MVPA_D1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_4 \
+  double u = 0.0; \
+  for (int dy = 0; dy < MVPA_D1D; ++dy) \
+  { \
+    u += DDQ[dz][dy][qx] * smB[qy][dy]; \
+  } \
+  DQQ[dz][qy][qx] = u;
 
 //2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D + MVPA_Q1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_5 \
+  double u = 0.0; \
+for (int dz = 0; dz < MVPA_D1D; ++dz) \
+{ \
+  u += DQQ[dz][qy][qx] * smB[qz][dz]; \
+ } \
+QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
 
 #define MASSVEC3DPA_6 \
+  double u = 0.0; \
+  for (int qx = 0; qx < MVPA_Q1D; ++qx) \
+  { \
+    u += QQQ[qz][qy][qx] * smBt[dx][qx]; \
+  } \
+  QQD[qz][qy][dx] = u;  
 
 
 //2 * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D
 #define MASSVEC3DPA_7 \
+  double u = 0.0; \
+  for (int qy = 0; qy < MVPA_Q1D; ++qy) \
+  { \
+    u += QQD[qz][qy][dx] * smBt[dy][qy]; \
+  } \
+ QDD[qz][dy][dx] = u;
 
 
 // 2 * MVPA_Q1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_8 \
+  double u = 0.0; \
+  for (int qz = 0; qz < MVPA_Q1D; ++qz) \
+  { \
+    u += QDD[qz][dy][dx] * smBt[dz][qz]; \
+  } \
+  mvpaY_(dx, dy, dz, c, e) = u;
 
 //2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D + MVPA_D1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_9 \
