@@ -58,22 +58,13 @@
 #include "common/RPTypes.hpp"
 
 
-RAJA_HOST_DEVICE
-RAJA_INLINE void intsc_hexhex_stub(
-)
-{
-}
-
-
-#include "intsc_hexhex_body.hpp"
-
-
-#define  INTSC_HEXHEX_DATA_SETUP \
+#define  INTSC_HEXHEX_DATA_SETUP    \
   Real_ptr const dsubz  = m_dsubz ; \
   Real_ptr const tsubz  = m_tsubz ; \
   Real_ptr       vv_int = m_vv_int ; \
   Real_ptr      vv_pair = m_vv_out ;
 
+#include "intsc_hexhex_body.hpp"
 
 #include "common/KernelBase.hpp"
 
@@ -116,7 +107,6 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  void intscHexHexSeq        ( Index_type i, Index_type iend ) ;
   void intscHexHexOMP        ( Index_type i, Index_type iend ) ;
   void intscHexHexOMP_Target ( Index_type i, Index_type iend ) ;
 

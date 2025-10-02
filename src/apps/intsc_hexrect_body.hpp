@@ -619,4 +619,12 @@ RAJA_INLINE Int_type intsc24_hex
     } \
   }
 
+#define INTSC_HEXRECT_SEQ(i) \
+  INTSC_HEXRECT_DATA_SETUP ; \
+  Index_type irec = i ; \
+  Real_type xd_work[ 3*max_polygon_pts+1 ] ; \
+  Real_ptr my_qx = xd_work ; \
+  INTSC_HEXRECT_BODY ;
+
+
 #endif // closing include guard RAJAPerf_Apps_INTSC_HEXRECT_BODY_HPP

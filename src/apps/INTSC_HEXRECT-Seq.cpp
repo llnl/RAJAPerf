@@ -21,19 +21,6 @@ namespace rajaperf
 namespace apps
 {
 
-void INTSC_HEXRECT::intscHexRectSeq
-    ( Index_type i, Index_type )
-{
-  INTSC_HEXRECT_DATA_SETUP ;
-
-  Index_type irec = i ;
-  Real_type xd_work[ 3*max_polygon_pts+1 ] ;
-  Real_ptr my_qx = xd_work ;
-
-  INTSC_HEXRECT_BODY ;
-
-}
-
 
 void INTSC_HEXRECT::runSeqVariant(VariantID vid,
                                   Size_type RAJAPERF_UNUSED_ARG(tune_idx))
@@ -44,7 +31,7 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
 
 #if defined(RUN_RAJA_SEQ)
   auto intsc_hexrect_lam = [=](Index_type i) {
-                     intscHexRectSeq ( i, iend ) ;
+                     INTSC_HEXRECT_SEQ ( i ) ;
                    };
 #endif
 
@@ -56,7 +43,7 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
         for (Index_type i = ibegin ; i < iend ; ++i ) {
-          intscHexRectSeq ( i, iend ) ;
+          INTSC_HEXRECT_SEQ ( i ) ;
         }
 
       }

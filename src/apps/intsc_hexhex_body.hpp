@@ -466,6 +466,27 @@ RAJA_INLINE void hex_intsc_subz
     vv_out[thridx] = vv_reduce[ 2 * thridx ] ; \
   }
 
+#define INTSC_HEXHEX_SEQ(i,iend)      \
+  Index_type nisc_stage = iend ; \
+  Index_type blksize = default_gpu_block_size ; \
+  Index_type ith = i ; \
+  Index_type blk = ith / blksize ; \
+  if ( i == 0 ) { \
+    Index_type n_std_intsc = m_nthreads / m_tri_per_intsc ; \
+    Index_type vv_len = 32L * n_std_intsc ; \
+    for ( Index_type k = 0 ; k < vv_len ; ++k ) { \
+      m_vv_out[k] = 0.0 ; \
+    } \
+  } \
+  INTSC_HEXHEX_DATA_SETUP ; \
+  INTSC_HEXHEX_BODY_SEQ ; \
+  Real_ptr vv_out = m_vv_out + 4L*ipair; \
+  vv_out[0] += vv_hi + vv_lo ; \
+  vv_out[1] += vx_hi + vx_lo ; \
+  vv_out[2] += vy_hi + vy_lo ; \
+  vv_out[3] += vz_hi + vz_lo ;
+
+
 //  This is not needed on Seq and OMP CPU variants.
 //
 #define FIXUP_VV_BODY \

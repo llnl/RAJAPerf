@@ -64,8 +64,6 @@
 
 inline constexpr int max_polygon_pts = 10 ;
 
-#include "intsc_hexrect_body.hpp"
-
 #define  INTSC_HEXRECT_DATA_SETUP \
   Char_ptr ncord_gpu = m_ncord ; \
   Real_ptr xdnode = m_xdnode ; \
@@ -76,6 +74,8 @@ inline constexpr int max_polygon_pts = 10 ;
   Int_ptr intsc_t = m_intsc_t ; \
   Index_type const nrecords = m_nrecords ; \
   Real_ptr records = m_records ;
+
+#include "intsc_hexrect_body.hpp"
 
 #include "common/KernelBase.hpp"
 
@@ -158,7 +158,6 @@ private:
         Int_type const z_scl_offs,
         Real_type const sep, VariantID vid ) ;
 
-  void intscHexRectSeq        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP        ( Index_type i, Index_type iend ) ;
   void intscHexRectOMP_Target ( Index_type i, Index_type iend ) ;
 
