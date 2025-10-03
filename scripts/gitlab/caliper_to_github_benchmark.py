@@ -51,7 +51,8 @@ def caliper_to_benchmark_json(input_file):
             benchmark = {
                 "name": f"{variant}_{kernel_name}",
                 "unit": "ms/rep",
-                "value": avg_time_per_rep_ms
+                "value": avg_time_per_rep_ms,
+                "extra": f"reps: {reps}, passes: {passes}, total_time: {total_time_s:.3f}s"
             }
             benchmarks.append(benchmark)
 
