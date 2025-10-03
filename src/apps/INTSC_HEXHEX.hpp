@@ -67,7 +67,7 @@
   Real_ptr       vv_int = m_vv_int ; \
   Real_ptr      vv_pair = m_vv_out ;
 
-#include "intsc_hexhex_body.hpp"
+#include "INTSC_HEXHEX_BODY.hpp"
 
 #include "common/KernelBase.hpp"
 

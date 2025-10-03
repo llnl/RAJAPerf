@@ -75,7 +75,7 @@ inline constexpr int max_polygon_pts = 10 ;
   Index_type const nrecords = m_nrecords ; \
   Real_ptr records = m_records ;
 
-#include "intsc_hexrect_body.hpp"
+#include "INTSC_HEXRECT_BODY.hpp"
 
 #include "common/KernelBase.hpp"
 
