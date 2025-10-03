@@ -62,7 +62,14 @@
 
 #include "common/RPTypes.hpp"
 
-inline constexpr int max_polygon_pts = 10 ;
+namespace rajaperf {
+
+static constexpr int max_polygon_pts = 10 ;
+
+//  24 triangular facets on hexahedron zone, intersected with rectangular solid
+static constexpr Size_type tri_per_hex = 24 ;
+
+}
 
 #define  INTSC_HEXRECT_DATA_SETUP \
   Char_ptr ncord_gpu = m_ncord ; \
@@ -161,8 +168,6 @@ private:
   static const Size_type default_gpu_block_size = 64;
   using gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<default_gpu_block_size>;
-
-  static const Size_type m_tri_per_intsc = 24 ;
 
   Size_type m_ndzones ;    // number of "donor zones"
   Size_type m_ntzones ;    // number of "target zones"

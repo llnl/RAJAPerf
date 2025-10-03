@@ -75,7 +75,7 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 150 ;
-  constexpr Size_type flops_per_intsc = flops_per_tri * m_tri_per_intsc ;
+  constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_hex ;
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
 

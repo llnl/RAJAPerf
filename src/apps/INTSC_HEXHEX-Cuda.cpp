@@ -35,7 +35,7 @@ __global__ void intsc_hexhex
 {
   __shared__ Real_type vv_reduce[16] ;
 
-  Index_type blksize = block_size ;   // blocksize = 64  must <= nth_per_isc
+  Index_type blksize = block_size ;   // blocksize = 64  must <= tri_per_pair
   Index_type blk     = blockIdx.x ;
   Index_type ith     = blk*blksize + threadIdx.x ;  // which thread with offset
   Index_type thridx  = threadIdx.x ;
@@ -63,10 +63,10 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin   = 0 ;
-  const Index_type iend     = m_tri_per_intsc * getActualProblemSize() ;
+  const Index_type iend     = tri_per_std_intsc * getActualProblemSize() ;
 
-  const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
-  const Size_type  nisc_stage   = n_subz_intsc ;
+  const Size_type  n_subz_intsc= npairs_per_std_intsc * getActualProblemSize();
+  const Size_type  nisc_stage  = n_subz_intsc ;
 
   const Size_type  n_szgrp     = n_subz_intsc / 8 ;
   const Size_type  gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, block_size) ;

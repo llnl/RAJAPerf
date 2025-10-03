@@ -11,11 +11,11 @@
 ///  for ( itri=0 ; itri < 576*n_std_intsc ; ++itri ) {
 ///   long const n_dsz_tris = 12 ;
 ///   long const n_tsz_tets = 6 ;
-///   long const nth_per_isc = n_dsz_tris * n_tsz_tets ;
-///   long ipair   = itri / nth_per_isc ;
+///   long const tri_per_pair = n_dsz_tris * n_tsz_tets ;
+///   long ipair   = itri / tri_per_pair ;
 ///   int dfacet  = ( itri / n_tsz_tets ) % n_dsz_tris ;
 ///   int ttet    = itri % n_tsz_tets ;
-///   long pair_base_thr = ipair * nth_per_isc ;
+///   long pair_base_thr = ipair * tri_per_pair ;
 ///   long blk_base = blk * blksize ;
 ///   double vv=0.0, vx=0.0, vy=0.0, vz=0.0 ;
 ///
@@ -57,6 +57,25 @@
 
 #include "common/RPTypes.hpp"
 
+namespace rajaperf {
+
+// Number of donor triangles in a 12 sided hexahedron subzone
+static Index_type constexpr n_dsz_tris = 12 ;
+
+// Number of target tets in a 12 sided hexahedron subzone
+static Index_type constexpr n_tsz_tets = 6 ;
+
+// Number of triangle-tet contributions per subzone pair (=72)
+static Index_type constexpr tri_per_pair = n_dsz_tris * n_tsz_tets ;
+
+// A standard intersection is defined as eight subzone pairs.
+static Index_type constexpr npairs_per_std_intsc = 8 ;
+
+// 576 threads per standard intersection.
+static Index_type constexpr tri_per_std_intsc =
+    tri_per_pair * npairs_per_std_intsc ;
+
+}
 
 #define  INTSC_HEXHEX_DATA_SETUP_SEQ \
   Real_ptr const dsubz  = m_dsubz ;  \
@@ -113,7 +132,6 @@ private:
   void check_intsc_volume_moments
       ( Index_type const n_intsc, Real_const_ptr vv, VariantID vid ) ;
 
-  static constexpr size_t m_tri_per_intsc = 576 ;
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 

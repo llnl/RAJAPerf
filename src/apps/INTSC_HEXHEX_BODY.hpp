@@ -402,13 +402,10 @@ RAJA_INLINE void hex_intsc_subz
 
 
 #define INTSC_HEXHEX_BODY_SEQ \
-  static Index_type constexpr n_dsz_tris = 12 ; \
-  static Index_type constexpr n_tsz_tets = 6 ; \
-  static Index_type constexpr nth_per_isc = n_dsz_tris * n_tsz_tets ; \
-  Index_type ipair   = ith / nth_per_isc ; \
+  Index_type ipair   = ith / tri_per_pair ; \
   Int_type dfacet  = ( ith / n_tsz_tets ) % n_dsz_tris ; \
   Int_type ttet    = ith % n_tsz_tets ; \
-  Index_type pair_base_thr = ipair * nth_per_isc ; \
+  Index_type pair_base_thr = ipair * tri_per_pair ; \
   Index_type blk_base = blk * blksize ; \
   Real_type vv_lo=0.0, vx_lo=0.0, vy_lo=0.0, vz_lo=0.0 ; \
   Real_type vv_hi=0.0, vx_hi=0.0, vy_hi=0.0, vz_hi=0.0 ; \
@@ -472,7 +469,7 @@ RAJA_INLINE void hex_intsc_subz
   Index_type ith = i ; \
   Index_type blk = ith / blksize ; \
   if ( i == 0 ) { \
-    Index_type n_std_intsc = m_nthreads / m_tri_per_intsc ; \
+    Index_type n_std_intsc = m_nthreads / tri_per_std_intsc ; \
     Index_type vv_len = 32L * n_std_intsc ; \
     for ( Index_type k = 0 ; k < vv_len ; ++k ) { \
       m_vv_out[k] = 0.0 ; \
@@ -488,16 +485,14 @@ RAJA_INLINE void hex_intsc_subz
 
 
 #define INTSC_HEXHEX_OMP(i,iend)      \
-  Index_type nisc_stage = iend * m_tri_per_intsc ; \
-  Index_type nsubzones_per_std_intsc = 8 ; \
-  Index_type ipair0 = i * nsubzones_per_std_intsc ; \
-  for ( Index_type j=0 ; j < 4L*nsubzones_per_std_intsc ; ++j ) { \
+  Index_type nisc_stage = iend * tri_per_std_intsc ; \
+  Index_type ipair0 = i * npairs_per_std_intsc ; \
+  for ( Index_type j=0 ; j < 4L*npairs_per_std_intsc ; ++j ) { \
     m_vv_out[ 4L*ipair0 + j ] = 0.0 ; \
   } \
-  Index_type const tri_per_intsc = (Index_type) m_tri_per_intsc ; \
-  for ( Index_type j = 0 ; j < tri_per_intsc ; ++j ) { \
+  for ( Index_type j = 0 ; j < tri_per_std_intsc ; ++j ) { \
     Index_type blksize = default_gpu_block_size ; \
-    Index_type ith = i * m_tri_per_intsc + j ; \
+    Index_type ith = i * tri_per_std_intsc + j ; \
     Index_type blk = ith / blksize ; \
     INTSC_HEXHEX_DATA_SETUP_SEQ ; \
     INTSC_HEXHEX_BODY_SEQ ; \

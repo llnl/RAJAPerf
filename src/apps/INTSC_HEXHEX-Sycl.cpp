@@ -34,7 +34,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   // const Index_type ibegin = 0 ;
-  // const Index_type iend     = m_tri_per_intsc * getActualProblemSize() ;
+  // const Index_type iend     = tri_per_std_intsc * getActualProblemSize() ;
 
   // const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
   // const Size_type  nisc_stage   = n_subz_intsc ;
