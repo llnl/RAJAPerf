@@ -64,11 +64,16 @@
 
 namespace rajaperf {
 
-static constexpr int max_polygon_pts = 10 ;
+static int constexpr max_polygon_pts = 10 ;
 
 //  24 triangular facets on hexahedron zone, intersected with rectangular solid
-static constexpr Size_type tri_per_hex = 24 ;
+static Size_type constexpr tri_per_hex = 24 ;
 
+//  Number of hex-rectangular solid intersections per donor zone
+static Size_type constexpr intsc_per_zone = 8 ;
+
+//  Number of computed values per intersection (volume, x, y, z moments).
+static int constexpr nvals_hexrect = 4 ;
 }
 
 #define  INTSC_HEXRECT_DATA_SETUP \

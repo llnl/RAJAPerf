@@ -33,7 +33,7 @@ __global__ void intsc_hexhex
     Size_type  const nisc_stage,
     Real_ptr vv_int )
 {
-  __shared__ Real_type vv_reduce[16] ;
+  __shared__ Real_type vv_reduce[len_vv_reduce] ;
 
   Index_type blksize = block_size ;   // blocksize = 64  must <= tri_per_pair
   Index_type blk     = blockIdx.x ;
@@ -68,7 +68,13 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
   const Size_type  n_subz_intsc= npairs_per_std_intsc * getActualProblemSize();
   const Size_type  nisc_stage  = n_subz_intsc ;
 
-  const Size_type  n_szgrp     = n_subz_intsc / 8 ;
+  // n_szgrp is number of groups of subzone pairs in fixup kernel.
+  // gsize_fixup = fixup kernel grid size (1 thread per group of subzone pairs)
+  // iend_fixup = number of threads for fixup kernel.
+  //      Kernel has bounds check to mask out excess threads.
+
+  const Size_type  n_szgrp     =
+      RAJA_DIVIDE_CEILING_INT(n_subz_intsc, fixup_groupsize)  ;
   const Size_type  gsize_fixup = RAJA_DIVIDE_CEILING_INT(n_szgrp, block_size) ;
   const Index_type iend_fixup  = gsize_fixup * block_size ;
 
@@ -111,7 +117,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       auto intsc_hexhex_lambda = [=] __device__
           ( Index_type i )
          {
-           __shared__ Real_type vv_reduce[16] ;
+           __shared__ Real_type vv_reduce[len_vv_reduce] ;
 
            Index_type blksize   = block_size ;
            Index_type blk       = i / block_size ;
@@ -155,7 +161,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            __shared__ Real_type vv_reduce[16] ;
+            __shared__ Real_type vv_reduce[len_vv_reduce] ;
 
             Index_type blksize   = block_size ;
             Index_type blk       = i / block_size ;

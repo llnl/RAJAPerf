@@ -31,12 +31,12 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   //
   //  Default problem size is 50 cubed "donor zones", one million intersections
   //   Problem size is specified as number of intersections, which is
-  //     8 * number of donor zones.
+  //     intsc_per_zone (=8) * number of donor zones.
   //   Number of donor zones is a cube number, "side" is the length
   //   of a side of the cube (cube root of number of donor zones)
   //
   constexpr Size_type a3_def = 50 ;
-  Size_type n_intsc_def = 8L * a3_def * a3_def * a3_def ;
+  Size_type n_intsc_def = intsc_per_zone * a3_def * a3_def * a3_def ;
   setDefaultProblemSize(n_intsc_def);
 
   //  Command line --size specifies requested number of intersections.
@@ -52,7 +52,7 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   if ( side < 1UL ) { side = 1UL ; }
 
   m_ndzones = side * side * side ;   // number of "donor zones" on a side
-  Size_type n_intsc = 8L*m_ndzones ;   // number of intersections to compute
+  Size_type n_intsc = intsc_per_zone*m_ndzones ;   // number of intersections
   m_ntzones = n_intsc ;          // one "target zone" per intersection
   setDefaultReps(1);
 
@@ -70,8 +70,8 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
                       8*m_ndzones*sizeof(Int_type) +
                       2*sizeof(Int_type) * getItsPerRep() );
 
-  // Bytes written : 4 for each intersection.
-  setBytesWrittenPerRep( 4*sizeof(Real_type) * getItsPerRep() );
+  // Bytes written : nvals_hexrect (=4) doubles for each intersection.
+  setBytesWrittenPerRep( nvals_hexrect*sizeof(Real_type) * getItsPerRep() );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 150 ;

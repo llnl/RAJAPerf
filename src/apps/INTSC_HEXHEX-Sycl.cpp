@@ -36,14 +36,18 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
   // const Index_type ibegin = 0 ;
   // const Index_type iend     = tri_per_std_intsc * getActualProblemSize() ;
 
-  // const Size_type  n_subz_intsc = 8 * getActualProblemSize() ;
+  // const Size_type n_subz_intsc= npairs_per_std_intsc*getActualProblemSize();
   // const Size_type  nisc_stage   = n_subz_intsc ;
 
-  // const Size_type  n_szgrp     = n_subz_intsc / 8 ;
+  // n_szgrp is number of groups of subzone pairs in fixup kernel.
+  // gsize_fixup = fixup kernel grid size (1 thread per group of subzone pairs)
+  // iend_fixup = number of threads for fixup kernel.
+  //      Kernel has bounds check to mask out excess threads.
 
+  // const Size_type  n_szgrp     =
+  //     RAJA_DIVIDE_CEILING_INT(n_subz_intsc, fixup_groupsize) ;
   // const Size_type  gsize_fixup =
   //     RAJA_DIVIDE_CEILING_INT(n_szgrp, work_group_size) ;
-
   // const Index_type iend_fixup  = gsize_fixup * work_group_size ;
 
   // const Size_type  n_szpairs   = n_subz_intsc ;

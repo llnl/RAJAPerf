@@ -59,22 +59,58 @@
 
 namespace rajaperf {
 
+// GPU block size is 64 for this kernel.
+static Index_type constexpr gpu_block_size = 64 ;
+
 // Number of donor triangles in a 12 sided hexahedron subzone
 static Index_type constexpr n_dsz_tris = 12 ;
 
 // Number of target tets in a 12 sided hexahedron subzone
 static Index_type constexpr n_tsz_tets = 6 ;
 
-// Number of triangle-tet contributions per subzone pair (=72)
+// Number of triangle-tet contributions per subzone pair (= 72)
 static Index_type constexpr tri_per_pair = n_dsz_tris * n_tsz_tets ;
 
 // A standard intersection is defined as eight subzone pairs.
 static Index_type constexpr npairs_per_std_intsc = 8 ;
 
+// Number of subzone pairs grouped together in fixup.
+//  (is gpu_block_size / gcd(gpu_block_size, tri_per_pair)
+static Index_type constexpr fixup_groupsize = 8 ;
+
 // 576 threads per standard intersection.
 static Index_type constexpr tri_per_std_intsc =
     tri_per_pair * npairs_per_std_intsc ;
 
+// Compute four values per pair (intersection volume, x, y, z moments).
+static Index_type constexpr nvals_per_pair = 4 ;
+
+// Number of values computed per standard intersection ( = 4*8 = 32)
+static Index_type constexpr nvals_per_std_intsc =
+    nvals_per_pair * npairs_per_std_intsc ;
+
+// Minimum warp size (is 32 for Cuda and 64 for Hip).
+static Index_type constexpr min_warp_size = 32 ;
+
+// Maximum warps per block (= 2)
+static Index_type constexpr max_warps_per_block =
+    (gpu_block_size + min_warp_size - 1) / min_warp_size ;
+
+// Maximum number of pairs represented in a gpu block.
+// With gpu_block_size < tri_per_pair at most two pairs represented in a block.
+//
+  static Index_type constexpr max_pairs_per_block = 2 ;
+
+  // Number of intermediate computed values per gpu block
+  static Index_type constexpr nvals_per_block =
+      max_pairs_per_block * nvals_per_pair ;
+
+  // shared memory size for reduction within a block.
+  // The two distinct subzone pairs in a block are distinct.
+  // For each subzone pair, have reduction values per warp.
+  // len_vv_reduce = 16.
+  static Index_type constexpr len_vv_reduce =
+      max_warps_per_block * max_pairs_per_block * nvals_per_pair ;
 }
 
 #define  INTSC_HEXHEX_DATA_SETUP_SEQ \

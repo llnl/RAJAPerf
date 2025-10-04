@@ -108,9 +108,9 @@ void INTSC_HEXHEX::setUp(VariantID vid,
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;
-  Index_type n_subz_intsc = 8L * n_std_intsc ;
+  Index_type n_subz_intsc = npairs_per_std_intsc * n_std_intsc ;
 
-  // coordinates for donor zone
+  // coordinates for donor zone (the eight corner points)
   Real_type xdzone[8] =
       { m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax } ;
 
@@ -144,16 +144,16 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   }
 
   const Int_type block_size = default_gpu_block_size ;
-  m_nthreads = 72L * n_subz_intsc ;
+  m_nthreads = tri_per_pair * n_subz_intsc ;  // 72 threads per subzone pair
   Index_type gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
   // intermediate volumes, moments
-  allocData ( m_vv_int, 8L*gsize, vid ) ;
+  allocData ( m_vv_int, nvals_per_block * gsize, vid ) ;
 
-  allocAndInitDataConst ( m_vv_out, 4L*n_subz_intsc, 0.0, vid ) ;
+  allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
 
   // output volumes and moments on the host
-  allocData ( m_vv, 4L*n_subz_intsc, Base_Seq ) ;
+  allocData ( m_vv, nvals_per_pair * n_subz_intsc, Base_Seq ) ;
 }
 
 
@@ -204,10 +204,12 @@ void INTSC_HEXHEX::check_intsc_volume_moments
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
 
     for ( Index_type k = 0 ; k < n_subz_intsc ; ++k ) {
-      Real_type dv  = vv[ 4*k + 0 ] - v0 ;   // diff computed and correct
-      Real_type dxm = vv[ 4*k + 1 ] - vx ;
-      Real_type dym = vv[ 4*k + 2 ] - vy ;
-      Real_type dzm = vv[ 4*k + 3 ] - vz ;
+
+      //  differences between computed and correct
+      Real_type dv  = vv[ nvals_per_pair*k + 0 ] - v0 ;
+      Real_type dxm = vv[ nvals_per_pair*k + 1 ] - vx ;
+      Real_type dym = vv[ nvals_per_pair*k + 2 ] - vy ;
+      Real_type dzm = vv[ nvals_per_pair*k + 3 ] - vz ;
 
       // Print an error message if a volume or moment is incorrect.
       if ( ( dv*dv   > tolsqv ) ||
@@ -237,10 +239,10 @@ void INTSC_HEXHEX::check_intsc_volume_moments
             "%s k = %ld    vy = %23.15e  expected %23.15e   tolerance %11.3e\n"
             "%s k = %ld    vz = %23.15e  expected %23.15e   tolerance %11.3e\n"
             "\n",
-            tst, k, vv[4*k+0], v0, sqrt(tolsqv),
-            tst, k, vv[4*k+1], vx, sqrt(tolsqx),
-            tst, k, vv[4*k+2], vy, sqrt(tolsqy),
-            tst, k, vv[4*k+3], vz, sqrt(tolsqz) ) ;
+            tst, k, vv[nvals_per_pair*k+0], v0, sqrt(tolsqv),
+            tst, k, vv[nvals_per_pair*k+1], vx, sqrt(tolsqx),
+            tst, k, vv[nvals_per_pair*k+2], vy, sqrt(tolsqy),
+            tst, k, vv[nvals_per_pair*k+3], vz, sqrt(tolsqz) ) ;
         sbuf += buf ;
 
         getCout() << sbuf.c_str() ;
@@ -256,14 +258,15 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;
-  Index_type n_subz_intsc = 8L * n_std_intsc ;
+  Index_type n_subz_intsc = npairs_per_std_intsc * n_std_intsc ;
 
   copyData ( DataSpace::Host, m_vv,
-             getDataSpace(vid), m_vv_out, 4L*n_subz_intsc ) ;
+             getDataSpace(vid), m_vv_out, nvals_per_pair*n_subz_intsc ) ;
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum(m_vv_out, 4L*n_subz_intsc, vid  );
+  checksum[vid][tune_idx] += calcChecksum
+      (m_vv_out, nvals_per_pair*n_subz_intsc, vid  );
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid,

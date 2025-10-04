@@ -446,21 +446,22 @@ RAJA_INLINE void hex_intsc_subz
   Int_type const nwarps = blksize / WARPSIZE ; \
   Int_type k = thridx / WARPSIZE ; \
   if ( thridx == k*WARPSIZE ) { \
-    vv_reduce[k+ 0] = vv_lo ; \
-    vv_reduce[k+ 2] = vx_lo ; \
-    vv_reduce[k+ 4] = vy_lo ; \
-    vv_reduce[k+ 6] = vz_lo ; \
-    vv_reduce[k+ 8] = vv_hi ; \
-    vv_reduce[k+10] = vx_hi ; \
-    vv_reduce[k+12] = vy_hi ; \
-    vv_reduce[k+14] = vz_hi ; \
+    vv_reduce[ k + 0*max_warps_per_block ] = vv_lo ; \
+    vv_reduce[ k + 1*max_warps_per_block ] = vx_lo ; \
+    vv_reduce[ k + 2*max_warps_per_block ] = vy_lo ; \
+    vv_reduce[ k + 3*max_warps_per_block ] = vz_lo ; \
+    vv_reduce[ k + 4*max_warps_per_block ] = vv_hi ; \
+    vv_reduce[ k + 5*max_warps_per_block ] = vx_hi ; \
+    vv_reduce[ k + 6*max_warps_per_block ] = vy_hi ; \
+    vv_reduce[ k + 7*max_warps_per_block ] = vz_hi ; \
   } \
   __syncthreads() ; \
-  if ( thridx < 8 ) { \
+  if ( thridx < max_pairs_per_block * nvals_per_pair ) { \
     for ( Index_type k = 1 ; k < nwarps ; ++k ) { \
-      vv_reduce[ 2*thridx ] += vv_reduce[ 2*thridx + 1 ] ; \
+      vv_reduce    [ max_warps_per_block*thridx     ] += \
+          vv_reduce[ max_warps_per_block*thridx + k ] ;            \
     } \
-    vv_out[thridx] = vv_reduce[ 2 * thridx ] ; \
+    vv_out[thridx] = vv_reduce[ max_warps_per_block * thridx ] ; \
   }
 
 #define INTSC_HEXHEX_SEQ(i,iend)      \
@@ -470,25 +471,29 @@ RAJA_INLINE void hex_intsc_subz
   Index_type blk = ith / blksize ; \
   if ( i == 0 ) { \
     Index_type n_std_intsc = m_nthreads / tri_per_std_intsc ; \
-    Index_type vv_len = 32L * n_std_intsc ; \
+    Index_type vv_len = nvals_per_std_intsc * n_std_intsc ;  \
     for ( Index_type k = 0 ; k < vv_len ; ++k ) { \
       m_vv_out[k] = 0.0 ; \
     } \
   } \
   INTSC_HEXHEX_DATA_SETUP_SEQ ; \
   INTSC_HEXHEX_BODY_SEQ ; \
-  Real_ptr vv_out = m_vv_out + 4L*ipair; \
+  Real_ptr vv_out = m_vv_out + nvals_per_pair * ipair; \
   vv_out[0] += vv_hi + vv_lo ; \
   vv_out[1] += vx_hi + vx_lo ; \
   vv_out[2] += vy_hi + vy_lo ; \
   vv_out[3] += vz_hi + vz_lo ;
 
 
+//  Index i is standard intersection, ipair0 = 8*i is the first
+//  subzone pair for this intersection.  Initializes 32 output values
+//  for the eight pairs in the first loop.
+//
 #define INTSC_HEXHEX_OMP(i,iend)      \
   Index_type nisc_stage = iend * tri_per_std_intsc ; \
   Index_type ipair0 = i * npairs_per_std_intsc ; \
-  for ( Index_type j=0 ; j < 4L*npairs_per_std_intsc ; ++j ) { \
-    m_vv_out[ 4L*ipair0 + j ] = 0.0 ; \
+  for ( Index_type j=0 ; j < nvals_per_std_intsc ; ++j ) { \
+    m_vv_out[ nvals_per_pair * ipair0 + j ] = 0.0 ; \
   } \
   for ( Index_type j = 0 ; j < tri_per_std_intsc ; ++j ) { \
     Index_type blksize = default_gpu_block_size ; \
@@ -496,7 +501,7 @@ RAJA_INLINE void hex_intsc_subz
     Index_type blk = ith / blksize ; \
     INTSC_HEXHEX_DATA_SETUP_SEQ ; \
     INTSC_HEXHEX_BODY_SEQ ; \
-    Real_ptr vv_out = m_vv_out + 4L*ipair; \
+    Real_ptr vv_out = m_vv_out + nvals_per_pair * ipair; \
     vv_out[0] += vv_hi + vv_lo ; \
     vv_out[1] += vx_hi + vx_lo ; \
     vv_out[2] += vy_hi + vy_lo ; \
@@ -509,21 +514,23 @@ RAJA_INLINE void hex_intsc_subz
 //  This is not needed on Seq and OMP CPU variants.
 //
 #define FIXUP_VV_BODY \
-  Real_ptr vv          = vv_pair + 32*ith ; \
-  Real_const_ptr vv_in = vv_int  + 72*ith ; \
+  Real_ptr vv              = vv_pair + nvals_per_std_intsc * ith ; \
+  Real_const_ptr vv_in     = vv_int  + 72*ith ; \
+  Index_type constexpr nvp = nvals_per_pair ; \
+  Index_type constexpr nvb = nvals_per_block ; \
   Int_type k=0 ; \
   if ( 8*ith + k < n_szpairs ) { \
-    vv[4*k+0] = vv_in[8*k+0] + vv_in[8*k+8] ; \
-    vv[4*k+1] = vv_in[8*k+1] + vv_in[8*k+9] ; \
-    vv[4*k+2] = vv_in[8*k+2] + vv_in[8*k+10] ; \
-    vv[4*k+3] = vv_in[8*k+3] + vv_in[8*k+11] ; \
+    vv[nvp*k+0] = vv_in[nvb*k+0] + vv_in[nvb*(k+1)+0] ;   \
+    vv[nvp*k+1] = vv_in[nvb*k+1] + vv_in[nvb*(k+1)+1] ;   \
+    vv[nvp*k+2] = vv_in[nvb*k+2] + vv_in[nvb*(k+1)+2] ;   \
+    vv[nvp*k+3] = vv_in[nvb*k+3] + vv_in[nvb*(k+1)+3] ;   \
   } \
   for ( Index_type k=1 ; k<8 ; ++k ) { \
     if ( 8*ith + k < n_szpairs ) { \
-      vv[4*k+0] = vv_in[8*k+4] + vv_in[8*k+8] ; \
-      vv[4*k+1] = vv_in[8*k+5] + vv_in[8*k+9] ; \
-      vv[4*k+2] = vv_in[8*k+6] + vv_in[8*k+10] ; \
-      vv[4*k+3] = vv_in[8*k+7] + vv_in[8*k+11] ; \
+      vv[nvp*k+0] = vv_in[nvb*k+4] + vv_in[nvb*(k+1)+0] ;  \
+      vv[nvp*k+1] = vv_in[nvb*k+5] + vv_in[nvb*(k+1)+1] ;  \
+      vv[nvp*k+2] = vv_in[nvb*k+6] + vv_in[nvb*(k+1)+2] ;  \
+      vv[nvp*k+3] = vv_in[nvb*k+7] + vv_in[nvb*(k+1)+3] ;  \
     } \
   }
 
