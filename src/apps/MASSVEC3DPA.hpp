@@ -178,7 +178,7 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = MVPA_Q1D * MVPA_Q1D;
+  static const size_t default_gpu_block_size = MVPA_Q1D * MVPA_Q1D * MVPA_Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;

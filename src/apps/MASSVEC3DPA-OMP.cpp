@@ -80,7 +80,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
             MASSVEC3DPA_8;
           }
           /*TEAM_SYNC;*/
-        }
+        } //(c) dimension loop
 
       } // element loop
     }
@@ -170,7 +170,6 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 });
               });
             });
-
             ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int qz) {
@@ -190,7 +189,6 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                 });
               });
             });
-
             ctx.teamSync();
 
             } //c - dim loop
