@@ -9,6 +9,9 @@
 // Uncomment to add compiler directives loop unrolling
 //#define USE_RAJAPERF_UNROLL
 
+// Uncomment to use direct policies
+//#define USE_DIRECT
+
 #include "MASSVEC3DPA.hpp"
 
 #include "RAJA/RAJA.hpp"
@@ -28,14 +31,14 @@ __global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
   const int e = hipBlockIdx_x;
-  
+
   MASSVEC3DPA_0_GPU;
-  
+
   GPU_SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
     MASSVEC3DPA_1;
   }
 
-  for (int c = 0; c < 3; ++c) {        
+  for (int c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
       MASSVEC3DPA_2;
     }
@@ -50,27 +53,27 @@ __global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
       MASSVEC3DPA_4;
     }
     __syncthreads();
-          
+
     GPU_SHARED_LOOP_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_5;
     }
     __syncthreads();
-    
+
     GPU_SHARED_LOOP_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_6;
     }
     __syncthreads();
-          
+
     GPU_SHARED_LOOP_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
       MASSVEC3DPA_7;
     }
     __syncthreads();
-    
+
     GPU_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
       MASSVEC3DPA_8;
     }
     __syncthreads();
-    
+
   } // (c) dimension loop
 }
 
@@ -111,11 +114,19 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
+#if defined(USE_DIRECT)
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MVPA_Q1D>>;
+
+    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<MVPA_Q1D>>;
+
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<MVPA_Q1D>>;
+#else
     using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<MVPA_Q1D>>;
 
     using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<MVPA_Q1D>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;    
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;
+#endif
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -204,10 +215,10 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
             ctx.teamSync();
 
             } //c - dim loop
-            
+
             }  // lambda (e)
           );  // RAJA::loop<outer_x>
-          
+
         }  // outer lambda (ctx)
       );  // RAJA::launch
 
