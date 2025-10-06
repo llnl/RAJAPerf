@@ -142,12 +142,15 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
 
          SHARED_LOOP_3D_DIRECT(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D)
          {
+         /*
             double u = 0.0;
             for (int qz = 0; qz < MVPA_Q1D; ++qz)
             {
                u += QDD[qz][dy][dx] * smBt[dz][qz];
             }
             mvpaY_(dx, dy, dz, c, e) = u;
+         */
+         MASSVEC3DPA_8;
          }
          /*TEAM_SYNC;*/
 
@@ -272,7 +275,7 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                   [&] (int qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
-                    [&] (int dx) {    
+                    [&] (int dx) {
                       /*
                         double u = 0.0;
                         for (int qx = 0; qx < MVPA_Q1D; ++qx)
@@ -286,7 +289,7 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
                   });
                 });
                   /*TEAM_SYNC;*/
-              
+
 
               //SHARED_LOOP_3D_DIRECT(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D)
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
@@ -316,10 +319,10 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                 [&] (int dy) {
                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
-                [&] (int dx) {                  
-                
+                [&] (int dx) {
+
                 MASSVEC3DPA_8;
-                
+
                 });
                 });
                 });
