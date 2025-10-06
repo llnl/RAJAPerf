@@ -25,25 +25,22 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   Index_type N_default = 102;
 
   setDefaultProblemSize( (N_default-2)*(N_default-2)*(N_default-2) );
-  setDefaultReps(20);
+  setDefaultReps(400);
 
   m_N = std::cbrt( getTargetProblemSize() ) + 2 + std::cbrt(3)-1;
-  m_tsteps = 20;
 
 
   setActualProblemSize( (m_N-2) * (m_N-2) * (m_N-2) );
 
-  setItsPerRep( m_tsteps * ( 2 * getActualProblemSize() ) );
-  setKernelsPerRep( m_tsteps * 2 );
-  setBytesReadPerRep((1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8) +
-
-                      1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8)) * m_tsteps);
-  setBytesWrittenPerRep((1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) +
-
-                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2)) * m_tsteps);
+  setItsPerRep( 2 * getActualProblemSize() );
+  setKernelsPerRep( 2 );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8) +
+                      1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8));
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) +
+                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( m_tsteps * ( 15 * (m_N-2) * (m_N-2) * (m_N-2) +
-                               15 * (m_N-2) * (m_N-2) * (m_N-2) ) );
+  setFLOPsPerRep( 15 * (m_N-2) * (m_N-2) * (m_N-2) +
+                  15 * (m_N-2) * (m_N-2) * (m_N-2) );
 
   checksum_scale_factor = 0.0001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /

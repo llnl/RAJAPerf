@@ -34,33 +34,29 @@ void POLYBENCH_ADI::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < n-1; ++i) {
-            POLYBENCH_ADI_BODY2;
-            for (Index_type j = 1; j < n-1; ++j) {
-              POLYBENCH_ADI_BODY3;
-            }
-            POLYBENCH_ADI_BODY4;
-            for (Index_type k = n-2; k >= 1; --k) {
-              POLYBENCH_ADI_BODY5;
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < n-1; ++i) {
+          POLYBENCH_ADI_BODY2;
+          for (Index_type j = 1; j < n-1; ++j) {
+            POLYBENCH_ADI_BODY3;
           }
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < n-1; ++i) {
-            POLYBENCH_ADI_BODY6;
-            for (Index_type j = 1; j < n-1; ++j) {
-              POLYBENCH_ADI_BODY7;
-            }
-            POLYBENCH_ADI_BODY8;
-            for (Index_type k = n-2; k >= 1; --k) {
-              POLYBENCH_ADI_BODY9;
-            }
+          POLYBENCH_ADI_BODY4;
+          for (Index_type k = n-2; k >= 1; --k) {
+            POLYBENCH_ADI_BODY5;
           }
+        }
 
-        }  // tstep loop
+        #pragma omp parallel for
+        for (Index_type i = 1; i < n-1; ++i) {
+          POLYBENCH_ADI_BODY6;
+          for (Index_type j = 1; j < n-1; ++j) {
+            POLYBENCH_ADI_BODY7;
+          }
+          POLYBENCH_ADI_BODY8;
+          for (Index_type k = n-2; k >= 1; --k) {
+            POLYBENCH_ADI_BODY9;
+          }
+        }
 
       }  // run_reps
       stopTimer();
@@ -98,33 +94,29 @@ void POLYBENCH_ADI::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < n-1; ++i) {
-            poly_adi_base_lam2(i);
-            for (Index_type j = 1; j < n-1; ++j) {
-              poly_adi_base_lam3(i, j);
-            }
-            poly_adi_base_lam4(i);
-            for (Index_type k = n-2; k >= 1; --k) {
-              poly_adi_base_lam5(i, k);
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < n-1; ++i) {
+          poly_adi_base_lam2(i);
+          for (Index_type j = 1; j < n-1; ++j) {
+            poly_adi_base_lam3(i, j);
           }
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < n-1; ++i) {
-            poly_adi_base_lam6(i);
-            for (Index_type j = 1; j < n-1; ++j) {
-              poly_adi_base_lam7(i, j);
-            }
-            poly_adi_base_lam8(i);
-            for (Index_type k = n-2; k >= 1; --k) {
-              poly_adi_base_lam9(i, k);
-            }
+          poly_adi_base_lam4(i);
+          for (Index_type k = n-2; k >= 1; --k) {
+            poly_adi_base_lam5(i, k);
           }
+        }
 
-        }  // tstep loop
+        #pragma omp parallel for
+        for (Index_type i = 1; i < n-1; ++i) {
+          poly_adi_base_lam6(i);
+          for (Index_type j = 1; j < n-1; ++j) {
+            poly_adi_base_lam7(i, j);
+          }
+          poly_adi_base_lam8(i);
+          for (Index_type k = n-2; k >= 1; --k) {
+            poly_adi_base_lam9(i, k);
+          }
+        }
 
       }  // run_reps
       stopTimer();
@@ -180,35 +172,31 @@ void POLYBENCH_ADI::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeStrideSegment{n-2, 0, -1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeStrideSegment{n-2, 0, -1}),
-            res,
+          poly_adi_lam2,
+          poly_adi_lam3,
+          poly_adi_lam4,
+          poly_adi_lam5
 
-            poly_adi_lam2,
-            poly_adi_lam3,
-            poly_adi_lam4,
-            poly_adi_lam5
+        );
 
-          );
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeStrideSegment{n-2, 0, -1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeStrideSegment{n-2, 0, -1}),
-            res,
+          poly_adi_lam6,
+          poly_adi_lam7,
+          poly_adi_lam8,
+          poly_adi_lam9
 
-            poly_adi_lam6,
-            poly_adi_lam7,
-            poly_adi_lam8,
-            poly_adi_lam9
-
-          );
-
-        }  // tstep loop
+        );
 
       } // run_reps
       stopTimer();
