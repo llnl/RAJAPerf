@@ -35,45 +35,45 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid,
 
         MASSVEC3DPA_0_CPU;
 
-        SHARED_LOOP_2D_DIRECT(q, d, MVPA_Q1D, MVPA_D1D) {
+        SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
           MASSVEC3DPA_1;
           MASSVEC3DPA_1;
         }
 
         for (int c = 0; c < 3; ++c) {
-          SHARED_LOOP_3D_DIRECT(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
 
             MASSVEC3DPA_2;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D) {
 
             MASSVEC3DPA_3;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D) {
+          SHARED_LOOP_3D(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D) {
             MASSVEC3DPA_4;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
             MASSVEC3DPA_5;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
             MASSVEC3DPA_6;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
             MASSVEC3DPA_7;
           }
           /*TEAM_SYNC;*/
 
-          SHARED_LOOP_3D_DIRECT(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
             MASSVEC3DPA_8;
           }
           /*TEAM_SYNC;*/

@@ -35,44 +35,36 @@
    for (int ty = 0; ty < Ny; ty++)     \
       for (int tx = 0; tx < Nx; tx++)
 
-#define SHARED_LOOP_2D_DIRECT(tx, ty, Nx, Ny) SHARED_LOOP_2D(tx, ty, Nx, Ny)
-
 #define SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) \
    for (int tz = 0; tz < Nz; tz++)             \
       for (int ty = 0; ty < Ny; ty++)          \
          for (int tx = 0; tx < Nx; tx++)
-
-#define SHARED_LOOP_3D_DIRECT(tx, ty, tz, Nx, Ny, Nz) SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)
-
-#define SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) \
-   for (int tz = 0; tz < Nz; tz++)             \
-      for (int ty = 0; ty < Ny; ty++)          \
-         for (int tx = 0; tx < Nx; tx++)
-
-#define SHARED_LOOP_3D_DIRECT(tx, ty, tz, Nx, Ny, Nz) SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)
 
 
 #if defined(RAJA_ENABLE_CUDA) || defined(RAJA_ENABLE_HIP)
+#if defined(USE_DIRECT)
+#define GPU_SHARED_LOOP_2D(tx, ty, Nx, Ny)  \
+   if (threadIdx.z < 1)                        \
+      if (const int ty = threadIdx.y; ty < Ny) \
+         if (const int tx = threadIdx.x; tx < Nx)
+
+#define GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) \
+   if (const int tz = threadIdx.z; tz < Nz)           \
+      if (const int ty = threadIdx.y; ty < Ny)        \
+         if (const int tx = threadIdx.x; tx < Nx)
+#else
+
 #define GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)          \
    for (int tz = threadIdx.z; tz < Nz; tz += blockDim.z)    \
       for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y) \
          for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
-
-#define GPU_SHARED_LOOP_3D_DIRECT(tx, ty, tz, Nx, Ny, Nz) \
-   if (const int tz = threadIdx.z; tz < Nz)           \
-      if (const int ty = threadIdx.y; ty < Ny)        \
-         if (const int tx = threadIdx.x; tx < Nx)
 
 #define GPU_SHARED_LOOP_2D(tx, ty, Nx, Ny)                      \
    if (threadIdx.z < 1)                                     \
       for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y) \
          for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
 
-#define GPU_SHARED_LOOP_2D_DIRECT(tx, ty, Nx, Ny)  \
-   if (threadIdx.z < 1)                        \
-      if (const int ty = threadIdx.y; ty < Ny) \
-         if (const int tx = threadIdx.x; tx < Nx)
-
+#endif
 #endif
 
 
