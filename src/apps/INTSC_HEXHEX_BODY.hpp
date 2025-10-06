@@ -469,20 +469,25 @@ RAJA_INLINE void hex_intsc_subz
   Index_type blksize = default_gpu_block_size ; \
   Index_type ith = i ; \
   Index_type blk = ith / blksize ; \
+  Index_type thridx = i % blksize ; \
+  Real_ptr vv_int = m_vv_int + nvals_per_block * blk ; \
   if ( i == 0 ) { \
-    Index_type n_std_intsc = m_nthreads / tri_per_std_intsc ; \
-    Index_type vv_len = nvals_per_std_intsc * n_std_intsc ;  \
-    for ( Index_type k = 0 ; k < vv_len ; ++k ) { \
-      m_vv_out[k] = 0.0 ; \
+    Index_type gsize = iend / blksize ; \
+    Index_type vv_int_len = nvals_per_block * gsize ;  \
+    for ( Index_type k = 0 ; k < vv_int_len ; ++k ) { \
+      vv_int[k] = 0.0 ; \
     } \
   } \
   INTSC_HEXHEX_DATA_SETUP_SEQ ; \
   INTSC_HEXHEX_BODY_SEQ ; \
-  Real_ptr vv_out = m_vv_out + nvals_per_pair * ipair; \
-  vv_out[0] += vv_hi + vv_lo ; \
-  vv_out[1] += vx_hi + vx_lo ; \
-  vv_out[2] += vy_hi + vy_lo ; \
-  vv_out[3] += vz_hi + vz_lo ;
+  vv_int[0] += vv_lo ; \
+  vv_int[1] += vx_lo ; \
+  vv_int[2] += vy_lo ; \
+  vv_int[3] += vz_lo ; \
+  vv_int[4] += vv_hi ; \
+  vv_int[5] += vx_hi ; \
+  vv_int[6] += vy_hi ; \
+  vv_int[7] += vz_hi ;
 
 
 //  Index i is standard intersection, ipair0 = 8*i is the first
@@ -513,7 +518,8 @@ RAJA_INLINE void hex_intsc_subz
 
 //  This is not needed on Seq and OMP CPU variants.
 //
-#define FIXUP_VV_BODY \
+#define FIXUP_VV_BODY            \
+  Index_type ith           = i ; \
   Real_ptr vv              = vv_pair + nvals_per_std_intsc * ith ; \
   Real_const_ptr vv_in     = vv_int  + 72*ith ; \
   Index_type constexpr nvp = nvals_per_pair ; \

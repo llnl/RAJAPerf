@@ -52,7 +52,7 @@ __global__ void intsc_hexhex_fixup_vv_64to72
       Size_type const n_szpairs,  // number of subzone pairs
       Real_ptr vv_pair )       // [4*n_szpairs] output voluments, moments
 {
-  Int_type ith = blockIdx.x*block_size + threadIdx.x;
+  Int_type i = blockIdx.x*block_size + threadIdx.x;
   FIXUP_VV_BODY ;
 }
 
@@ -130,7 +130,6 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       auto intsc_hexhex_fixup_lambda = [=] __device__
           ( Index_type i )
          {
-           Int_type ith = i ;
            FIXUP_VV_BODY ; } ;
 
       constexpr Size_type shmem = 0;
@@ -176,7 +175,6 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend_fixup), [=] __device__ (Index_type i)
           {
-            Int_type ith = i ;
             FIXUP_VV_BODY ;
           }
       ) ;
