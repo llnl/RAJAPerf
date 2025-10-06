@@ -190,7 +190,7 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid,
 
             ctx.teamSync();
 
-            }
+            } //c - dim loop
 
             } // lambda (e)
           ); // RAJA::loop<outer_x>
