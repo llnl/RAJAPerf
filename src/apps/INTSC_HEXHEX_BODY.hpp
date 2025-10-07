@@ -461,7 +461,7 @@ RAJA_INLINE void hex_intsc_subz
       vv_reduce    [ max_warps_per_block*thridx     ] += \
           vv_reduce[ max_warps_per_block*thridx + k ] ;            \
     } \
-    vv_out[thridx] = vv_reduce[ max_warps_per_block * thridx ] ; \
+    vv_int_p[thridx] = vv_reduce[ max_warps_per_block * thridx ] ; \
   }
 
 #define INTSC_HEXHEX_SEQ(i,iend)      \
@@ -469,51 +469,50 @@ RAJA_INLINE void hex_intsc_subz
   Index_type blksize = default_gpu_block_size ; \
   Index_type ith = i ; \
   Index_type blk = ith / blksize ; \
-  Real_ptr vv_int = m_vv_int + n_vvint_per_block * blk ; \
+  Real_ptr vv_int_p = vv_int + n_vvint_per_block * blk ; \
   if ( i == 0 ) { \
     Index_type gsize = iend / blksize ; \
     Index_type vv_int_len = n_vvint_per_block * gsize ;  \
     for ( Index_type k = 0 ; k < vv_int_len ; ++k ) { \
-      vv_int[k] = 0.0 ; \
+      vv_int_p[k] = 0.0 ; \
     } \
   } \
   INTSC_HEXHEX_BODY_SEQ ; \
-  vv_int[0] += vv_lo ; \
-  vv_int[1] += vx_lo ; \
-  vv_int[2] += vy_lo ; \
-  vv_int[3] += vz_lo ; \
-  vv_int[4] += vv_hi ; \
-  vv_int[5] += vx_hi ; \
-  vv_int[6] += vy_hi ; \
-  vv_int[7] += vz_hi ;
+  vv_int_p[0] += vv_lo ; \
+  vv_int_p[1] += vx_lo ; \
+  vv_int_p[2] += vy_lo ; \
+  vv_int_p[3] += vz_lo ; \
+  vv_int_p[4] += vv_hi ; \
+  vv_int_p[5] += vx_hi ; \
+  vv_int_p[6] += vy_hi ; \
+  vv_int_p[7] += vz_hi ;
 
 
 //  Index i is standard intersection, ipair0 = 8*i is the first
 //  subzone pair for this intersection.  Initializes 32 output values
 //  for the eight pairs in the first loop.
-//    m_vv_int[ nvals_per_pair * ipair0 + j ] = 0.0 ;   \
 //
 #define INTSC_HEXHEX_OMP(i,iend)      \
+  Index_type blksize = default_gpu_block_size ; \
   Index_type nisc_stage = iend * tri_per_group ; \
-  Index_type i0 = i * n_vvint_per_group ; \
+  Real_ptr vv_int_p0 = vv_int + i * n_vvint_per_group ; \
   for ( Index_type j=0 ; j < n_vvint_per_group ; ++j ) { \
-    m_vv_int[ i0 + j ] = 0.0 ; \
+    vv_int_p0[ j ] = 0.0 ; \
   } \
   Index_type j0 = i * tri_per_group ; \
   for ( Index_type j = 0 ; j < tri_per_group ; ++j ) { \
-    Index_type blksize = default_gpu_block_size ; \
     Index_type ith = j0 + j ; \
     Index_type blk = ith / blksize ; \
     INTSC_HEXHEX_BODY_SEQ ; \
-    Real_ptr vv_int = m_vv_int + n_vvint_per_block * blk ; \
-    vv_int[0] += vv_lo ; \
-    vv_int[1] += vx_lo ; \
-    vv_int[2] += vy_lo ; \
-    vv_int[3] += vz_lo ; \
-    vv_int[4] += vv_hi ; \
-    vv_int[5] += vx_hi ; \
-    vv_int[6] += vy_hi ; \
-    vv_int[7] += vz_hi ; \
+    Real_ptr vv_int_p = vv_int + n_vvint_per_block * blk ; \
+    vv_int_p[0] += vv_lo ; \
+    vv_int_p[1] += vx_lo ; \
+    vv_int_p[2] += vy_lo ; \
+    vv_int_p[3] += vz_lo ; \
+    vv_int_p[4] += vv_hi ; \
+    vv_int_p[5] += vx_hi ; \
+    vv_int_p[6] += vy_hi ; \
+    vv_int_p[7] += vz_hi ; \
   }
 
 
@@ -524,22 +523,22 @@ RAJA_INLINE void hex_intsc_subz
 #define FIXUP_VV_BODY            \
   Index_type ith           = i ; \
   Real_ptr vv              = vv_pair + nvals_per_std_intsc * ith ; \
-  Real_const_ptr vv_in     = vv_int  + 72*ith ; \
+  Real_const_ptr vv_int_p  = vv_int  + 72*ith ; \
   Index_type constexpr nvp = nvals_per_pair ; \
   Index_type constexpr nvb = n_vvint_per_block ; \
   Int_type k=0 ; \
   if ( 8*ith + k < n_szpairs ) { \
-    vv[nvp*k+0] = vv_in[nvb*k+0] + vv_in[nvb*(k+1)+0] ;   \
-    vv[nvp*k+1] = vv_in[nvb*k+1] + vv_in[nvb*(k+1)+1] ;   \
-    vv[nvp*k+2] = vv_in[nvb*k+2] + vv_in[nvb*(k+1)+2] ;   \
-    vv[nvp*k+3] = vv_in[nvb*k+3] + vv_in[nvb*(k+1)+3] ;   \
+    vv[nvp*k+0] = vv_int_p[nvb*k+0] + vv_int_p[nvb*(k+1)+0] ;   \
+    vv[nvp*k+1] = vv_int_p[nvb*k+1] + vv_int_p[nvb*(k+1)+1] ;   \
+    vv[nvp*k+2] = vv_int_p[nvb*k+2] + vv_int_p[nvb*(k+1)+2] ;   \
+    vv[nvp*k+3] = vv_int_p[nvb*k+3] + vv_int_p[nvb*(k+1)+3] ;   \
   } \
   for ( Index_type k=1 ; k<8 ; ++k ) { \
     if ( 8*ith + k < n_szpairs ) { \
-      vv[nvp*k+0] = vv_in[nvb*k+4] + vv_in[nvb*(k+1)+0] ;  \
-      vv[nvp*k+1] = vv_in[nvb*k+5] + vv_in[nvb*(k+1)+1] ;  \
-      vv[nvp*k+2] = vv_in[nvb*k+6] + vv_in[nvb*(k+1)+2] ;  \
-      vv[nvp*k+3] = vv_in[nvb*k+7] + vv_in[nvb*(k+1)+3] ;  \
+      vv[nvp*k+0] = vv_int_p[nvb*k+4] + vv_int_p[nvb*(k+1)+0] ;  \
+      vv[nvp*k+1] = vv_int_p[nvb*k+5] + vv_int_p[nvb*(k+1)+1] ;  \
+      vv[nvp*k+2] = vv_int_p[nvb*k+6] + vv_int_p[nvb*(k+1)+2] ;  \
+      vv[nvp*k+3] = vv_int_p[nvb*k+7] + vv_int_p[nvb*(k+1)+3] ;  \
     } \
   }
 

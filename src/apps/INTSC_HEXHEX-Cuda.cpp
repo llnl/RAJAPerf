@@ -40,7 +40,7 @@ __global__ void intsc_hexhex
   Index_type ith     = blk*blksize + threadIdx.x ;  // which thread with offset
   Index_type thridx  = threadIdx.x ;
 
-  Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
+  Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
 
   INTSC_HEXHEX_BODY;
 }
@@ -124,7 +124,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
            Index_type ith       = i ;
            Index_type thridx    = i % block_size ;
 
-           Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
+           Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
            INTSC_HEXHEX_BODY; };
 
       auto intsc_hexhex_fixup_lambda = [=] __device__
@@ -167,7 +167,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
             Index_type ith       = i ;
             Index_type thridx    = i % block_size ;
 
-            Real_ptr vv_out = (Real_ptr ) vv_int + 8*blk ;
+            Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
             INTSC_HEXHEX_BODY;
           }
       ) ;

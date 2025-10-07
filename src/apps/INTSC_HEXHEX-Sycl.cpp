@@ -77,7 +77,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
       //     Index_type blksize = work_group_size ;
       //     Index_type blk     = i / blksize ;
       //     Index_type thridx    = i % work_group_size ;
-      //     Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
+      //     Real_ptr vv_int_p = (Real_ptr) vv_int + 8*blk ;
       //     INTSC_HEXHEX_BODY;
       //   });
       // });
@@ -108,7 +108,7 @@ void INTSC_HEXHEX::runSyclVariantImpl(VariantID vid)
       //   Index_type blksize = work_group_size ;
       //   Index_type blk     = i / blksize ;
       //   Index_type thridx  = i % work_group_size ;
-      //   Real_ptr vv_out = (Real_ptr) vv_int + 8*blk ;
+      //   Real_ptr vv_int_p = (Real_ptr) vv_int + 8*blk ;
       //   INTSC_HEXHEX_BODY;
       // });
 
