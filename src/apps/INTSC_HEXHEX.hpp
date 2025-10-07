@@ -78,7 +78,11 @@ static Index_type constexpr npairs_per_std_intsc = 8 ;
 //  (is gpu_block_size / gcd(gpu_block_size, tri_per_pair)
 static Index_type constexpr fixup_groupsize = 8 ;
 
-// 576 threads per standard intersection.
+// 576 triangle contributions per group (eight subzone intersections grouped)
+static Index_type constexpr tri_per_group =
+    tri_per_pair * fixup_groupsize ;
+
+// 576 threads (triangle contributions) per standard intersection.
 static Index_type constexpr tri_per_std_intsc =
     tri_per_pair * npairs_per_std_intsc ;
 
@@ -88,6 +92,9 @@ static Index_type constexpr nvals_per_pair = 4 ;
 // Number of values computed per standard intersection ( = 4*8 = 32)
 static Index_type constexpr nvals_per_std_intsc =
     nvals_per_pair * npairs_per_std_intsc ;
+
+// 9 gpu blocks per group of intersections of subzones
+static Index_type blks_per_group = tri_per_group / gpu_block_size ;
 
 // Minimum warp size (is 32 for Cuda and 64 for Hip).
 static Index_type constexpr min_warp_size = 32 ;
@@ -102,8 +109,11 @@ static Index_type constexpr max_warps_per_block =
   static Index_type constexpr max_pairs_per_block = 2 ;
 
   // Number of intermediate computed values per gpu block
-  static Index_type constexpr nvals_per_block =
+  static Index_type constexpr n_vvint_per_block =
       max_pairs_per_block * nvals_per_pair ;
+
+// 72 data entries in group in intermediate results (before fixup).
+static Index_type n_vvint_per_group = n_vvint_per_block * blks_per_group ;
 
   // shared memory size for reduction within a block.
   // The two distinct subzone pairs in a block are distinct.

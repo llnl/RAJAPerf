@@ -29,12 +29,24 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
   //  standard intersections among threads, iend is getActualProblemSize.
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type iend = getActualProblemSize() ;
+  const Index_type n_std_intsc = getActualProblemSize() ;
 
+  const Index_type n_subz_intsc= npairs_per_std_intsc * n_std_intsc ;
+  const Index_type n_szpairs   = n_subz_intsc ;
+
+  //  Thread loop is over grouped intersections between subzone pairs.
+  const Index_type iend = RAJA_DIVIDE_CEILING_INT
+      ( n_subz_intsc, fixup_groupsize ) ;
+
+  INTSC_HEXHEX_DATA_SETUP ;
 
   auto intsc_hexhex_lam =
     [=](Index_type i) {
       INTSC_HEXHEX_OMP ( i, iend ) ;
+    };
+  auto fixup_vv_lam     =
+    [=](Index_type i) {
+      FIXUP_VV_BODY ;
     };
 
   // Insert a warmup call to remove time of initialization of OpenMP
@@ -44,6 +56,10 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
 #pragma omp parallel for
     for (Index_type i = ibegin ; i < iend ; ++i ) {
       INTSC_HEXHEX_OMP( i, iend ) ;
+    }
+#pragma omp parallel for
+    for (Index_type i = ibegin ; i < n_szpairs ; ++i ) {
+      FIXUP_VV_BODY ;
     }
   }
 
@@ -57,6 +73,10 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           INTSC_HEXHEX_OMP( i, iend ) ;
+        }
+        #pragma omp parallel for
+        for (Index_type i = ibegin ; i < n_szpairs ; ++i ) {
+          FIXUP_VV_BODY ;
         }
 
       }
@@ -74,6 +94,10 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           intsc_hexhex_lam(i);
         }
+        #pragma omp parallel for
+        for (Index_type i = ibegin ; i < n_szpairs ; ++i ) {
+          fixup_vv_lam( i ) ;
+        }
 
       }
       stopTimer();
@@ -90,6 +114,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexhex_lam);
+        RAJA::forall<RAJA::omp_parallel_for_exec>( res,
+          RAJA::RangeSegment(ibegin, n_szpairs), fixup_vv_lam);
 
       }
       stopTimer();

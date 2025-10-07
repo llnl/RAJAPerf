@@ -148,7 +148,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   Index_type gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
 
   // intermediate volumes, moments
-  allocData ( m_vv_int, nvals_per_block * gsize, vid ) ;
+  allocData ( m_vv_int, n_vvint_per_block * gsize, vid ) ;
 
   allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
 
