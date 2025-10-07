@@ -10,7 +10,7 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-//#define USE_DIRECT
+#define USE_DIRECT
 
 #include "MASSVEC3DPA.hpp"
 
@@ -113,7 +113,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
     using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, MVPA_Q1D*MVPA_Q1D*MVPA_Q1D>>;
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
-
+    /*
 #if defined(USE_DIRECT)
     using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MVPA_Q1D>>;
 
@@ -126,6 +126,21 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
     using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<MVPA_Q1D>>;
 
     using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;
+#endif
+    */
+
+#if defined(USE_DIRECT)
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_direct>;
+
+    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_direct>;
+
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
+#else
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_threade_x_loop>;
+
+    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
+
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 #endif
 
     startTimer();
