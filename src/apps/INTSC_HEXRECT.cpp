@@ -113,7 +113,7 @@ INTSC_HEXRECT::~INTSC_HEXRECT()
 
 
 void INTSC_HEXRECT::copyTargetToDevice
-    ( Real_const_ptr2 planes, // [3] Target mesh planes in (z,y,x)
+    ( Real_const_ptr_ptr planes, // [3] Target mesh planes in (z,y,x)
       Int_const_ptr ncord,    // [3] number of target zones in (z,y,x)
       VariantID vid )      // to allocate memory on device
 {
@@ -163,7 +163,7 @@ void INTSC_HEXRECT::copyTargetToDevice
 // each direction, so that each donor zone may intersect eight target zones.
 //
 void INTSC_HEXRECT::setupTargetPlanes
-    ( Real_ptr2 planes, Int_ptr ncord,
+    ( Real_ptr_ptr planes, Int_ptr ncord,
       Int_type const ndx, Int_type const ndy, Int_type const ndz,  // donor zones each dir.
       Real_type const x0, Real_type const y0, Real_type const z0,  // corner
       Real_type const sep )    // plane pitch (separation)
@@ -347,7 +347,7 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   setupIntscPairs
       ( ncord, ndx, ndy, ndz, m_intsc_d, m_intsc_t ) ;
 
-  Real_const_ptr2 planes_c = const_cast<Real_const_ptr2>(planes) ;
+  Real_const_ptr_ptr planes_c = const_cast<Real_const_ptr_ptr>(planes) ;
 
   copyTargetToDevice ( planes_c, ncord, vid ) ;
 

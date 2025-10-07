@@ -143,12 +143,10 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
+using Real_const_ptr = Real_type const *;
 ///
 using Real_ptr_ptr = Real_type**;
-///
-using Real_ptr2 = Real_type**;
-using Real_const_ptr = Real_type const *;
-using Real_const_ptr2 = Real_type const **;
+using Real_const_ptr_ptr = Real_type const **;
 
 #if defined(RP_USE_COMPLEX)
 ///

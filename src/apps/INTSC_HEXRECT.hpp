@@ -131,7 +131,7 @@ public:
 
 private:
   void setupTargetPlanes
-      ( Real_ptr2 planes, Int_ptr ncord,
+      ( Real_ptr_ptr planes, Int_ptr ncord,
         Int_type const ndx, Int_type const ndy, Int_type const ndz,
         Real_type const x0, Real_type const y0, Real_type const z0,
         Real_type const sep ) ;
@@ -150,7 +150,7 @@ private:
         Int_ptr intsc_t ) ;
 
   void copyTargetToDevice
-      ( Real_const_ptr2 planes,
+      ( Real_const_ptr_ptr planes,
         Int_const_ptr ncord,
         VariantID vid ) ;
 

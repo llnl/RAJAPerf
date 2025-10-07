@@ -593,7 +593,7 @@ RAJA_INLINE Int_type intsc24_hex
       Int_type jz, jy, jx ; \
       { \
         Int_ptr ncord = (Int_ptr) ncord_gpu ; \
-        Real_const_ptr2 planes = ( Real_const_ptr2 ) ( ncord + 4 ) ; \
+        Real_const_ptr_ptr planes = ( Real_const_ptr_ptr ) ( ncord + 4 ) ; \
         zplane = ( Real_const_ptr ) ( planes + 3 ) ; \
         yplane = zplane + ncord[0] + 1 ; \
         xplane = yplane + ncord[1] + 1 ; \
