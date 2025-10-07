@@ -10,7 +10,7 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-//#define USE_DIRECT
+#define USE_DIRECT
 
 #include "MASSVEC3DPA.hpp"
 
@@ -114,7 +114,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
-    /*
+    /*Compile time loop bounds */
+    /*   
 #if defined(USE_DIRECT)
     using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MVPA_Q1D>>;
 

@@ -31,8 +31,8 @@ Index_type NE = m_NE;
 #include "RAJA/RAJA.hpp"
 
 //Number of Dofs/Qpts in 1D
-#define MVPA_D1D 2
-#define MVPA_Q1D 3
+#define MVPA_D1D 3
+#define MVPA_Q1D 4
 #define MVDIM 3
 #define mvpaB_(x, y) B[x + MVPA_Q1D * y]
 #define mvpaBt_(x, y) Bt[x + MVPA_D1D * y]
