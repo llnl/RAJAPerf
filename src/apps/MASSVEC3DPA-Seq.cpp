@@ -119,6 +119,7 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid,
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
                 MASSVEC3DPA_1;
+                });
               });
             });
 

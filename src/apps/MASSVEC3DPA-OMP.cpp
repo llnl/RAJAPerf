@@ -121,7 +121,8 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1), [&](int ) {
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
-                MASSVEC3DPA_1;
+                  MASSVEC3DPA_1;
+                });
               });
             });
 
