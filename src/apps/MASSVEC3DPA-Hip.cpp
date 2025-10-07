@@ -10,7 +10,7 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-#define USE_DIRECT
+//#define USE_DIRECT
 
 #include "MASSVEC3DPA.hpp"
 
@@ -136,7 +136,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
 
     using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
 #else
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_threade_x_loop>;
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
     using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
 
