@@ -10,7 +10,7 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-#define USE_DIRECT
+//#define USE_DIRECT
 
 #include "MASSVEC3DPA.hpp"
 
@@ -139,9 +139,12 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
             [&](int e) {
 
             MASSVEC3DPA_0_GPU
-            RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
-                MASSVEC3DPA_1;
+
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1), [&](int ) {
+              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
+                RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
+                  MASSVEC3DPA_1;
+                });
               });
             });
 

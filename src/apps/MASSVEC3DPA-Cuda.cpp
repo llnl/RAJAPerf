@@ -28,14 +28,14 @@ __global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
   const int e = hipBlockIdx_x;
-  
+
   MASSVEC3DPA_0_GPU;
-  
+
   GPU_SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
     MASSVEC3DPA_1;
   }
 
-  for (int c = 0; c < 3; ++c) {        
+  for (int c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
       MASSVEC3DPA_2;
     }
@@ -50,27 +50,27 @@ __global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
       MASSVEC3DPA_4;
     }
     __syncthreads();
-          
+
     GPU_SHARED_LOOP_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_5;
     }
     __syncthreads();
-    
+
     GPU_SHARED_LOOP_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_6;
     }
     __syncthreads();
-          
+
     GPU_SHARED_LOOP_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
       MASSVEC3DPA_7;
     }
     __syncthreads();
-    
+
     GPU_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
       MASSVEC3DPA_8;
     }
     __syncthreads();
-    
+
   } // (c) dimension loop
 }
 
@@ -115,7 +115,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid) {
 
     using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<MVPA_Q1D>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;    
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -128,9 +128,11 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid) {
             [&](int e) {
 
             MASSVEC3DPA_0_GPU
-            RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
-                MASSVEC3DPA_1;
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1), [&](int ) {
+              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
+                RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
+                  MASSVEC3DPA_1;
+                });
               });
             });
 
@@ -204,10 +206,10 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid) {
             ctx.teamSync();
 
             } //c - dim loop
-            
+
             }  // lambda (e)
           );  // RAJA::loop<outer_x>
-          
+
         }  // outer lambda (ctx)
       );  // RAJA::launch
 

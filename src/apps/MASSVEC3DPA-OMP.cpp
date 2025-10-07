@@ -101,7 +101,7 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
     using inner_y = RAJA::LoopPolicy<RAJA::seq_exec>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;    
+    using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -116,8 +116,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
             MASSVEC3DPA_0_CPU;
 
-            RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
+            //3 loops to remain consistent with the GPU versions
+            //Masking out of the z-dimension thread is done with GPU versions
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1), [&](int ) {
+              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D), [&](int d) {
+                RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D), [&](int q) {
                 MASSVEC3DPA_1;
               });
             });
