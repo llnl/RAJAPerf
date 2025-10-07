@@ -40,7 +40,6 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
         SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
           MASSVEC3DPA_1;
-          MASSVEC3DPA_1;
         }
 
         for (int c = 0; c < 3; ++c) {
