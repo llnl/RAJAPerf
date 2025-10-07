@@ -113,6 +113,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
     using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, MVPA_Q1D*MVPA_Q1D*MVPA_Q1D>>;
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
+
     /*
 #if defined(USE_DIRECT)
     using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MVPA_Q1D>>;
@@ -136,7 +137,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
 
     using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
 #else
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_threade_x_loop>;
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
     using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
 
