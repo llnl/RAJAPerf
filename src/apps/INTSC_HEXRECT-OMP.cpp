@@ -31,6 +31,7 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
   const Index_type ibegin = 0 ;
   const Index_type iend = m_nrecords ;
 
+  INTSC_HEXRECT_DATA_SETUP ;
 
   auto intsc_hexrect_lam =
     [=](Index_type i) {

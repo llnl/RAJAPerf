@@ -477,7 +477,6 @@ RAJA_INLINE void hex_intsc_subz
       vv_int[k] = 0.0 ; \
     } \
   } \
-  INTSC_HEXHEX_DATA_SETUP_SEQ ; \
   INTSC_HEXHEX_BODY_SEQ ; \
   vv_int[0] += vv_lo ; \
   vv_int[1] += vx_lo ; \
@@ -505,7 +504,6 @@ RAJA_INLINE void hex_intsc_subz
     Index_type blksize = default_gpu_block_size ; \
     Index_type ith = j0 + j ; \
     Index_type blk = ith / blksize ; \
-    INTSC_HEXHEX_DATA_SETUP_SEQ ; \
     INTSC_HEXHEX_BODY_SEQ ; \
     Real_ptr vv_int = m_vv_int + n_vvint_per_block * blk ; \
     vv_int[0] += vv_lo ; \
