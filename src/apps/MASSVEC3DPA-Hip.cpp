@@ -10,7 +10,7 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-#define USE_DIRECT
+//#define USE_DIRECT
 
 #include "MASSVEC3DPA.hpp"
 
