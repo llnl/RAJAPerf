@@ -89,7 +89,6 @@ RAJA_INLINE void clip_polygon_ge_0
     next[jr1] = jr2 ;
     next[jr2] = ( ( clast < 0 ) || ( c00 < 0 ) ) ? -1 : jj2 ;
   }
-  return ;
 }
 
 
@@ -398,7 +397,7 @@ RAJA_INLINE void hex_intsc_subz
         vv_thr, vx_thr, vy_thr, vz_thr ) ;
 }
 
-}  // closing brace for rajaperf namespace
+}  // end namespace rajaperf
 
 
 #define INTSC_HEXHEX_BODY_SEQ \

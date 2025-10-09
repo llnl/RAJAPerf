@@ -106,22 +106,23 @@ static Index_type constexpr max_warps_per_block =
 // Maximum number of pairs represented in a gpu block.
 // With gpu_block_size < tri_per_pair at most two pairs represented in a block.
 //
-  static Index_type constexpr max_pairs_per_block = 2 ;
+static Index_type constexpr max_pairs_per_block = 2 ;
 
-  // Number of intermediate computed values per gpu block
-  static Index_type constexpr n_vvint_per_block =
-      max_pairs_per_block * nvals_per_pair ;
+// Number of intermediate computed values per gpu block
+static Index_type constexpr n_vvint_per_block =
+    max_pairs_per_block * nvals_per_pair ;
 
 // 72 data entries in group in intermediate results (before fixup).
 static Index_type n_vvint_per_group = n_vvint_per_block * blks_per_group ;
 
-  // shared memory size for reduction within a block.
-  // The two distinct subzone pairs in a block are distinct.
-  // For each subzone pair, have reduction values per warp.
-  // len_vv_reduce = 16.
-  static Index_type constexpr len_vv_reduce =
-      max_warps_per_block * max_pairs_per_block * nvals_per_pair ;
-}
+// shared memory size for reduction within a block.
+// The two distinct subzone pairs in a block are distinct.
+// For each subzone pair, have reduction values per warp.
+// len_vv_reduce = 16.
+static Index_type constexpr len_vv_reduce =
+    max_warps_per_block * max_pairs_per_block * nvals_per_pair ;
+
+}  // end namespace rajaperf
 
 #define  INTSC_HEXHEX_DATA_SETUP  \
   Real_ptr const dsubz  = m_dsubz ;  \

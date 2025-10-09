@@ -568,7 +568,7 @@ RAJA_INLINE Int_type intsc24_hex
   return vtxcnt ;
 }
 
-}  // closing brace for rajaperf namespace
+}  // end namespace rajaperf
 
 
 #define INTSC_HEXRECT_BODY \

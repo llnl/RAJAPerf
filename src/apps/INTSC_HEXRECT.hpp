@@ -74,7 +74,8 @@ static Size_type constexpr intsc_per_zone = 8 ;
 
 //  Number of computed values per intersection (volume, x, y, z moments).
 static int constexpr nvals_hexrect = 4 ;
-}
+
+}  // end namespace rajaperf
 
 #define  INTSC_HEXRECT_DATA_SETUP \
   Char_ptr ncord_gpu = m_ncord ; \
