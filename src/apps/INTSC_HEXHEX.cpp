@@ -83,9 +83,6 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setVariantDefined( Lambda_OpenMP );
   setVariantDefined( RAJA_OpenMP );
 
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
   setVariantDefined( Base_CUDA );
   setVariantDefined( Lambda_CUDA );
   setVariantDefined( RAJA_CUDA );
@@ -93,9 +90,6 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setVariantDefined( Base_HIP );
   setVariantDefined( Lambda_HIP );
   setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
 }
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
