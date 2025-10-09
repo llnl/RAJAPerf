@@ -152,12 +152,12 @@ RAJA_INLINE void cuda_hex_volpolyh_1poly
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void cuda_intsc_tri_tet
-    ( Real_type const xdt[3],    // donor triangle coordinates
-      Real_type const ydt[3],
-      Real_type const zdt[3],
-      Real_type xtt[4],    // target tet coordinates (modified here)
-      Real_type ytt[4],
-      Real_type ztt[4],
+    ( Real_type const (&xdt)[3],    // donor triangle coordinates
+      Real_type const (&ydt)[3],
+      Real_type const (&zdt)[3],
+      Real_type (&xtt)[4],    // target tet coordinates (modified here)
+      Real_type (&ytt)[4],
+      Real_type (&ztt)[4],
       Real_type &vv_thr,     // volume contribution for this triangle-tet
       Real_type &vx_thr,     // x moment contribution for this triangle-tet
       Real_type &vy_thr,     // y moment contribution for this triangle-tet

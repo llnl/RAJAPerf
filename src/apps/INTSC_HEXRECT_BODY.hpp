@@ -202,7 +202,7 @@ RAJA_INLINE Int_type intsc24_shxf1
 RAJA_HOST_DEVICE
 RAJA_INLINE Int_type intsc24_hex_mask_to_list
     ( Int_type const mask,            // mask (used bits 0 to 23)
-      Uchar_type mylist[24] ) //  list of which mask bits are set
+      Uchar_type (&mylist)[24] ) //  list of which mask bits are set
 {
   Int_type count=0 ;
   for ( Index_type bit = 0 ; bit < 24 ; ++bit ) {
@@ -229,9 +229,9 @@ RAJA_INLINE void intsc24_hex_get_tri
       Real_type const a22,    // y multiplier
       Int_type const f,         // which of six faces
       Int_type const k0,        // which of four facets of face
-      Real_type xf[3],        // transformed facet x
-      Real_type yf[3],        // transformed facet y
-      Real_type zf[3] )       // transformed facet z
+      Real_ptr xf,            // transformed facet x
+      Real_ptr yf,            // transformed facet y
+      Real_ptr zf )           // transformed facet z
 {
   Int_type v0, v1, v2, v3 ;
 
