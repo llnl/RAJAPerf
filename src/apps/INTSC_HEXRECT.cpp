@@ -175,7 +175,7 @@ void INTSC_HEXRECT::setupTargetPlanes
   Int_type nty = ndy + 1 ;
   Int_type ntz = ndz + 1 ;
 
-  planes[0] = new Real_type[nx+ny+nz] ;
+  allocData  ( planes[0], (nx+ny+nz), Base_Seq ) ;
   planes[1] = planes[0] + nz ;
   planes[2] = planes[1] + ny ;
 
@@ -356,7 +356,7 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   //  Output records copied to the host.
   allocData             ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
 
-  delete[] ( planes[0] ) ;
+  deallocData ( planes[0], Base_Seq ) ;
 }
 
 
@@ -395,12 +395,13 @@ void INTSC_HEXRECT::checkMoments
       }
     }
 
-    Real_ptr zca = new Real_type [ndz] ;
-    Real_ptr zcb = new Real_type [ndz] ;
-    Real_ptr yca = new Real_type [ndy] ;
-    Real_ptr ycb = new Real_type [ndy] ;
-    Real_ptr xca = new Real_type [ndx] ;
-    Real_ptr xcb = new Real_type [ndx] ;
+    Real_ptr zca, zcb, yca, ycb, xca, xcb ;
+    allocData  ( zca, ndz, Base_Seq ) ;
+    allocData  ( zcb, ndz, Base_Seq ) ;
+    allocData  ( yca, ndy, Base_Seq ) ;
+    allocData  ( ycb, ndy, Base_Seq ) ;
+    allocData  ( xca, ndx, Base_Seq ) ;
+    allocData  ( xcb, ndx, Base_Seq ) ;
 
     for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
       Real_type za = zd0 + jz * sep1z ;
@@ -509,14 +510,12 @@ void INTSC_HEXRECT::checkMoments
       }
 
     }
-
-    delete[] ( xca ) ;
-    delete[] ( xcb ) ;
-    delete[] ( yca ) ;
-    delete[] ( ycb ) ;
-    delete[] ( zca ) ;
-    delete[] ( zcb ) ;
-
+    deallocData ( xca, Base_Seq ) ;
+    deallocData ( xcb, Base_Seq ) ;
+    deallocData ( yca, Base_Seq ) ;
+    deallocData ( ycb, Base_Seq ) ;
+    deallocData ( zca, Base_Seq ) ;
+    deallocData ( zcb, Base_Seq ) ;
   }
 }
 
