@@ -18,9 +18,6 @@
 
 #include <iostream>
 
-#define WARPSIZE 32
-#define __shfl_xor_sync(mask,val,n) __shfl_xor(val,n)
-
 namespace rajaperf
 {
 namespace apps
@@ -30,63 +27,13 @@ namespace apps
 template < Size_type work_group_size >
 void INTSC_HEXRECT::runSyclVariantImpl(VariantID vid)
 {
-  const Index_type run_reps = getRunReps();
-  const Index_type ibegin   = 0 ;
-  const Index_type iend     = m_nrecords ;
-
-  auto res{getSyclResource()};
-  auto qu = res.get_queue();
-
-  INTSC_HEXRECT_DATA_SETUP;
-
   if ( vid == Base_SYCL ) {
 
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-      const Size_type global_size =
-          work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
-
-      qu->submit([&] (sycl::handler& h) {
-        h.parallel_for(sycl::nd_range<1>(global_size, work_group_size),
-                       [=] (sycl::nd_item<1> item ) {
-
-          Index_type i = item.get_global_id(0) + ibegin;
-
-          Index_type irec     = i ;
-          Index_type blksize = work_group_size ;
-          Index_type blk     = i / blksize ;
-
-          Real_type xd_work[ (3 * max_polygon_pts+1) ] ;
-          Real_ptr my_qx = xd_work ;
-
-          INTSC_HEXRECT_BODY;
-        });
-      });
-
-    }
-    stopTimer();
+    // empty
 
   } else if ( vid == RAJA_SYCL ) {
 
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-      RAJA::forall< RAJA::sycl_exec<work_group_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
-
-          Index_type irec     = i ;
-          Index_type blksize = work_group_size ;
-          Index_type blk     = i / blksize ;
-
-          Real_type xd_work[ (3 * max_polygon_pts+1) ] ;
-          Real_ptr my_qx = xd_work ;
-
-          INTSC_HEXRECT_BODY;
-      });
-
-    }
-    stopTimer();
+    // empty
 
   } else {
      getCout() << "\n  INTSC_HEXRECT : Unknown Sycl variant id = " << vid << std::endl;
