@@ -160,7 +160,7 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
           {
-            __shared__ Real_type vv_reduce[len_vv_reduce] ;
+            RAJA_TEAM_SHARED Real_type vv_reduce[len_vv_reduce] ;
 
             Index_type blksize   = block_size ;
             Index_type blk       = i / block_size ;
