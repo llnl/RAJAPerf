@@ -116,12 +116,9 @@ public:
   void runOpenMPVariant(VariantID vid, Size_type tune_idx);
   void runCudaVariant(VariantID vid, Size_type tune_idx);
   void runHipVariant(VariantID vid, Size_type tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, Size_type tune_idx);
-  void runSyclVariant(VariantID vid, Size_type tune_idx);
 
   void setCudaTuningDefinitions(VariantID vid);
   void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
 
   template < Size_type block_size >
   void runCudaVariantImpl(VariantID vid);
