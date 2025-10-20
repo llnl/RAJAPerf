@@ -40,14 +40,12 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
 
   INTSC_HEXHEX_DATA_SETUP ;
 
-  auto intsc_hexhex_lam =
-    [=](Index_type i) {
+  auto intsc_hexhex_lam = [=] ( Index_type i ) {
       INTSC_HEXHEX_OMP ( i, iend ) ;
-    };
-  auto fixup_vv_lam     =
-    [=](Index_type i) {
+  } ;
+  auto fixup_vv_lam     = [=] ( Index_type i ) {
       FIXUP_VV_BODY ;
-    };
+  } ;
 
   // Insert a warmup call to remove time of initialization of OpenMP
   // that affects the first call to the function.

@@ -32,9 +32,9 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
   INTSC_HEXRECT_DATA_SETUP ;
 
 #if defined(RUN_RAJA_SEQ)
-  auto intsc_hexrect_lam = [=](Index_type i) {
-                     INTSC_HEXRECT_SEQ ( i ) ;
-                   };
+  auto intsc_hexrect_lam = [=] ( Index_type i ) {
+      INTSC_HEXRECT_SEQ ( i ) ;
+  } ;
 #endif
 
   switch ( vid ) {

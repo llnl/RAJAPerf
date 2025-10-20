@@ -37,11 +37,11 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
 
 #if defined(RUN_RAJA_SEQ)
   auto intsc_hexhex_lam = [=](Index_type i) {
-                     INTSC_HEXHEX_SEQ ( i, iend ) ;
-                   };
+      INTSC_HEXHEX_SEQ ( i, iend ) ;
+  } ;
   auto fixup_vv_lam     = [=](Index_type i) {
-                     FIXUP_VV_BODY ;
-                   };
+      FIXUP_VV_BODY ;
+  } ;
 #endif
 
   switch ( vid ) {

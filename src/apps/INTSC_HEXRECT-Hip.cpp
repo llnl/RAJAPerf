@@ -104,18 +104,17 @@ void INTSC_HEXRECT::runHipVariantImpl(VariantID vid)
 
       const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-      auto intsc_hexrect_lambda = [=] __device__
-          ( Index_type i )
-         {
-           Index_type irec    = i ;
-           Index_type thridx  = i % block_size ;
+      auto intsc_hexrect_lambda = [=] __device__ ( Index_type i ) {
 
-           __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size] ;
+          Index_type irec    = i ;
+          Index_type thridx  = i % block_size ;
 
-           Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
+          __shared__ Real_type xd_work[(3 * max_polygon_pts+1) * block_size] ;
 
-           INTSC_HEXRECT_BODY;
-         };
+          Real_ptr my_qx = xd_work + (3 * max_polygon_pts+1) * thridx ;
+
+          INTSC_HEXRECT_BODY;
+      } ;
 
       constexpr Size_type shmem = 0;
 

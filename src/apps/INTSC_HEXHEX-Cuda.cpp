@@ -114,23 +114,22 @@ void INTSC_HEXHEX::runCudaVariantImpl(VariantID vid)
 
       const Size_type grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-      auto intsc_hexhex_lambda = [=] __device__
-          ( Index_type i )
-         {
-           __shared__ Real_type vv_reduce[len_vv_reduce] ;
+      auto intsc_hexhex_lambda = [=] __device__ ( Index_type i ) {
 
-           Index_type blksize   = block_size ;
-           Index_type blk       = i / block_size ;
-           Index_type ith       = i ;
-           Index_type thridx    = i % block_size ;
+          __shared__ Real_type vv_reduce[len_vv_reduce] ;
 
-           Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
-           INTSC_HEXHEX_BODY; };
+          Index_type blksize   = block_size ;
+          Index_type blk       = i / block_size ;
+          Index_type ith       = i ;
+          Index_type thridx    = i % block_size ;
 
-      auto intsc_hexhex_fixup_lambda = [=] __device__
-          ( Index_type i )
-         {
-           FIXUP_VV_BODY ; } ;
+          Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
+          INTSC_HEXHEX_BODY ;
+      } ;
+
+      auto intsc_hexhex_fixup_lambda = [=] __device__ ( Index_type i ) {
+          FIXUP_VV_BODY ;
+      } ;
 
       constexpr Size_type shmem = 0;
 

@@ -33,10 +33,9 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
 
   INTSC_HEXRECT_DATA_SETUP ;
 
-  auto intsc_hexrect_lam =
-    [=](Index_type i) {
+  auto intsc_hexrect_lam = [=] ( Index_type i ) {
       INTSC_HEXRECT_OMP ( i ) ;
-    };
+  } ;
 
   // Insert a warmup call to remove time of initialization of OpenMP
   // that affects the first call to the function.
