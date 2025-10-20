@@ -14,6 +14,7 @@
 #include "common/DataUtils.hpp"
 
 #include <cmath>
+#include <iomanip>
 
 
 namespace rajaperf
@@ -469,41 +470,43 @@ void INTSC_HEXRECT::checkMoments
       if ( maxerr > tol ) {
         Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
-        Size_type paragraph_max = 1000 ;
+        std::ostringstream oss ;
 
-        std::string sbuf  ;
-        std::vector<Char_type> vbuf(paragraph_max) ;
-        Char_ptr buf = vbuf.data() ;
+        oss << tst ;
+        oss << " Centroid error exceeds tolerance for "
+            << getVariantName(vid) << "."
+            << std::endl ;
+        oss << tst ;
+        oss << " Maximum error at (x,y,z)=("
+            << std::setw(3) << loc_jx << ","
+            << std::setw(3) << loc_jy << ","
+            << std::setw(3) << loc_jz << ")"
+            << " irec=" << loc_irec
+            << "  tolerance =  "
+            << std::scientific << std::setprecision(2) << std::setw(8) << tol
+            << std::endl ;
+        oss << tst ;
+        oss << " Maximum error = "
+            << std::setprecision(8) << std::setw(16) << maxerr
+            << std::endl ;
+        oss << tst ;
+        oss << " Computed ("
+            << std::setprecision(15)
+            << std::setw(23) << calc_xc << ","
+            << std::setw(23) << calc_yc << ","
+            << std::setw(23) << calc_zc << ")"
+            << std::endl ;
+        oss << tst ;
+        oss << " Expected ("
+            << std::setw(23) << expect_xc << ","
+            << std::setw(23) << expect_yc << ","
+            << std::setw(23) << expect_zc << ")"
+            << std::endl ;
 
-        snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
-                   "Centroid error exceeds tolerance for ",
-                   getVariantName(vid).c_str() ) ;
-        sbuf += buf ;
-
-        snprintf ( buf, paragraph_max,
-                   "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) irec=%d"
-                   "  tolerance =%10.2e\n",
-                   tst, loc_jx, loc_jy, loc_jz, loc_irec, tol ) ;
-        sbuf += buf ;
-
-        snprintf ( buf, paragraph_max,
-                   "%s Maximum error = %16.8e\n", tst, maxerr ) ;
-        sbuf += buf ;
-
-        snprintf ( buf, paragraph_max,
-                   "%s Computed (%23.15e,%23.15e,%23.15e)\n",
-                   tst, calc_xc, calc_yc, calc_zc ) ;
-        sbuf += buf ;
-
-        snprintf ( buf, paragraph_max,
-                   "%s Expected (%23.15e,%23.15e,%23.15e)\n",
-                   tst, expect_xc, expect_yc, expect_zc ) ;
-        sbuf += buf ;
-
-        getCout() << sbuf.c_str() ;
+        getCout() << oss.str() ;
       }
-
     }
+
     deallocData ( xca, Base_Seq ) ;
     deallocData ( xcb, Base_Seq ) ;
     deallocData ( yca, Base_Seq ) ;
@@ -588,38 +591,38 @@ void INTSC_HEXRECT::checkScaledVolumes
 
     Real_type const tol = 1.0e-12 * sep*sep*sep ;
     if ( maxerr > tol ) {
-
-      Size_type paragraph_max = 1000 ;
-
-      std::string sbuf  ;
-      std::vector<Char_type> vbuf(paragraph_max) ;
-      Char_ptr buf = vbuf.data() ;
-
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
-      snprintf ( buf, paragraph_max, "%s %s %s.\n", tst,
-                 "Volume error exceeds tolerance for ",
-                 getVariantName(vid).c_str() ) ;
-      sbuf += buf ;
 
-      snprintf ( buf, paragraph_max,
-                 "%s Maximum error at (x,y,z)=(%3d,%3d,%3d) krec=%d"
-                 "  tolerance =%10.2e\n",
-                 tst, loc_jx, loc_jy, loc_jz, loc_krec, tol ) ;
-      sbuf += buf ;
+      std::ostringstream oss ;
 
-      snprintf ( buf, paragraph_max,
-                 "%s Maximum error = %16.8e\n", tst, maxerr ) ;
-      sbuf += buf ;
+      oss << tst ;
+      oss << " Volume error exceeds tolerance for "
+          << getVariantName(vid).c_str() << "."
+          << std::endl ;
+      oss << tst ;
+      oss << " Maximum error at (x,y,z)=("
+          << std::setw(3) << loc_jx << ","
+          << std::setw(3) << loc_jy << ","
+          << std::setw(3) << loc_jz << ")"
+          << " krec=" << loc_krec
+          << std::scientific
+          << "  tolerance =" << std::setprecision(2) << std::setw(10) << tol
+          << std::endl ;
+      oss << tst ;
+      oss << " Maximum error ="
+          << std::setprecision(8) << std::setw(17) << maxerr
+          << std::endl ;
+      oss << tst ;
+      oss << " Computed "
+          << std::setprecision(15)
+          << std::setw(23) << calc_v / scale
+          << std::endl ;
+      oss << tst ;
+      oss << " Expected "
+          << std::setw(23) << expect_v / scale
+          << std::endl ;
 
-      snprintf ( buf, paragraph_max,
-                 "%s Computed %23.15e\n", tst, calc_v / scale ) ;
-      sbuf += buf ;
-
-      snprintf ( buf, paragraph_max,
-                 "%s Expected %23.15e\n", tst, expect_v / scale ) ;
-      sbuf += buf ;
-
-      getCout() << sbuf.c_str() ;
+      getCout() << oss.str() ;
     }
   }
 }

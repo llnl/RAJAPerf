@@ -14,6 +14,7 @@
 #include "common/DataUtils.hpp"
 
 #include <cmath>
+#include <iomanip>
 
 
 namespace rajaperf
@@ -211,35 +212,42 @@ void INTSC_HEXHEX::check_intsc_volume_moments
            ( dym*dym > tolsqy ) ||
            ( dzm*dzm > tolsqz ) ) {
 
-        Size_type paragraph_max = 1000 ;
+        std::ostringstream oss ;
 
-        std::string sbuf  ;
-        std::vector<Char_type> vbuf(paragraph_max) ;
-        Char_ptr buf = vbuf.data() ;
+        auto show_comparison = [&]
+            ( Int_type  kintsc,
+              std::string lbl,
+              Real_type vcalc,
+              Real_type const vexpected,
+              Real_type const tol )
+        {
+          oss << tst << " k = " << kintsc
+              << "    " << lbl << " = "
+              << std::scientific
+              << std::setprecision(15)
+              << std::setw(23) << vcalc
+              << "  expected "
+              << std::setw(23) << vexpected
+              << "   tolerance"
+              << std::setprecision(3)
+              << std::setw(12) << tol
+              << std::endl ;
+        } ;
 
-        snprintf ( buf, paragraph_max, "%s %s %s.\n",
-                   tst, "Calculated Volumes and/or moments are INCORRECT for ",
-                   getVariantName(vid).c_str() ) ;
-        sbuf += buf ;
+        oss << tst ;
+        oss << " Calculated Volumes and/or moments are INCORRECT for " ;
+        oss << getVariantName(vid).c_str() << "." << std::endl ;
 
-        snprintf ( buf, paragraph_max, "%s %s",
-                   tst, "First error encountered:\n" ) ;
-        sbuf += buf ;
+        oss << tst ;
+        oss << " First error encountered:" << std::endl ;
 
-        snprintf
-          ( buf, paragraph_max,
-            "%s k = %ld    vv = %23.15e  expected %23.15e   tolerance %11.3e\n"
-            "%s k = %ld    vx = %23.15e  expected %23.15e   tolerance %11.3e\n"
-            "%s k = %ld    vy = %23.15e  expected %23.15e   tolerance %11.3e\n"
-            "%s k = %ld    vz = %23.15e  expected %23.15e   tolerance %11.3e\n"
-            "\n",
-            tst, k, vv[nvals_per_pair*k+0], v0, sqrt(tolsqv),
-            tst, k, vv[nvals_per_pair*k+1], vx, sqrt(tolsqx),
-            tst, k, vv[nvals_per_pair*k+2], vy, sqrt(tolsqy),
-            tst, k, vv[nvals_per_pair*k+3], vz, sqrt(tolsqz) ) ;
-        sbuf += buf ;
+        show_comparison ( k, "vv", vv[nvals_per_pair*k+0], v0, sqrt(tolsqv) ) ;
+        show_comparison ( k, "vx", vv[nvals_per_pair*k+1], vx, sqrt(tolsqx) ) ;
+        show_comparison ( k, "vy", vv[nvals_per_pair*k+2], vy, sqrt(tolsqy) ) ;
+        show_comparison ( k, "vz", vv[nvals_per_pair*k+3], vz, sqrt(tolsqz) ) ;
+        oss << std::endl ;
 
-        getCout() << sbuf.c_str() ;
+        getCout() << oss.str() ;
         break ;
       }
     }
