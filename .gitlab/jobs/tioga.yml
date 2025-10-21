@@ -34,7 +34,7 @@ cce_19_0_0:
 
 rocmcc_6_4_1_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %llvm-amdgpu@=6.4.1 ^hip@6.4.1 ^blt@develop"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
@@ -42,7 +42,7 @@ rocmcc_6_4_1_hip_openmp:
 
 rocmcc_6_4_1_hip_openmp_mpi:
   variables:
-    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop"
+    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %llvm-amdgpu@=6.4.1 ^hip@6.4.1 ^blt@develop"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"

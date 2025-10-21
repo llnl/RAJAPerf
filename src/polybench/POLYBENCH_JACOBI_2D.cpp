@@ -24,25 +24,22 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   Index_type N_default = 1002;
 
   setDefaultProblemSize( (N_default-2)*(N_default-2) );
-  setDefaultReps(50);
+  setDefaultReps(2000);
 
   m_N = std::sqrt( getTargetProblemSize() ) + 2 + std::sqrt(2)-1;
-  m_tsteps = 40;
 
 
   setActualProblemSize( (m_N-2) * (m_N-2) );
 
-  setItsPerRep( m_tsteps * (2 * (m_N-2) * (m_N-2)) );
+  setItsPerRep( 2 * (m_N-2) * (m_N-2) );
   setKernelsPerRep(2);
-  setBytesReadPerRep((1*sizeof(Real_type ) * (m_N * m_N - 4) +
-
-                      1*sizeof(Real_type ) * (m_N * m_N - 4)) * m_tsteps);
-  setBytesWrittenPerRep((1*sizeof(Real_type ) * (m_N-2) * (m_N-2) +
-
-                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2)) * m_tsteps);
+  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_N * m_N - 4) +
+                      1*sizeof(Real_type ) * (m_N * m_N - 4) );
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) * (m_N-2) +
+                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( m_tsteps * ( 5 * (m_N-2)*(m_N-2) +
-                               5 * (m_N -2)*(m_N-2) ) );
+  setFLOPsPerRep( 5 * (m_N-2)*(m_N-2) +
+                  5 * (m_N-2)*(m_N-2) );
 
   checksum_scale_factor = 0.0001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
