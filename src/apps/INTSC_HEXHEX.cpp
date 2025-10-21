@@ -215,8 +215,6 @@ void INTSC_HEXHEX::check_intsc_volume_moments
            ( dym*dym > tolsqy ) ||
            ( dzm*dzm > tolsqz ) ) {
 
-        std::ostringstream oss ;
-
         auto show_comparison = [&]
             ( Int_type  kintsc,
               std::string lbl,
@@ -224,7 +222,8 @@ void INTSC_HEXHEX::check_intsc_volume_moments
               Real_type const vexpected,
               Real_type const tol )
         {
-          oss << tst << " k = " << kintsc
+          getCout()
+              << tst << " k = " << kintsc
               << "    " << lbl << " = "
               << std::scientific
               << std::setprecision(15)
@@ -237,20 +236,19 @@ void INTSC_HEXHEX::check_intsc_volume_moments
               << std::endl ;
         } ;
 
-        oss << tst ;
-        oss << " Calculated Volumes and/or moments are INCORRECT for " ;
-        oss << getVariantName(vid).c_str() << "." << std::endl ;
-
-        oss << tst ;
-        oss << " First error encountered:" << std::endl ;
+        getCout()
+            << tst
+            << " Calculated Volumes and/or moments are INCORRECT for "
+            << getVariantName(vid).c_str() << "." << std::endl
+            << tst
+            << " First error encountered:" << std::endl ;
 
         show_comparison ( k, "vv", vv[nvals_per_pair*k+0], v0, sqrt(tolsqv) ) ;
         show_comparison ( k, "vx", vv[nvals_per_pair*k+1], vx, sqrt(tolsqx) ) ;
         show_comparison ( k, "vy", vv[nvals_per_pair*k+2], vy, sqrt(tolsqy) ) ;
         show_comparison ( k, "vz", vv[nvals_per_pair*k+3], vz, sqrt(tolsqz) ) ;
-        oss << std::endl ;
+        getCout() << std::endl ;
 
-        getCout() << oss.str() ;
         break ;
       }
     }

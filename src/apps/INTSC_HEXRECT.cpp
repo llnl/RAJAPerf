@@ -472,40 +472,37 @@ void INTSC_HEXRECT::checkMoments
       if ( maxerr > tol ) {
         Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
-        std::ostringstream oss ;
-
-        oss << tst ;
-        oss << " Centroid error exceeds tolerance for "
+        getCout()
+            << tst
+            << " Centroid error exceeds tolerance for "
             << getVariantName(vid) << "."
-            << std::endl ;
-        oss << tst ;
-        oss << " Maximum error at (x,y,z)=("
+            << std::endl
+            << tst
+            << " Maximum error at (x,y,z)=("
             << std::setw(3) << loc_jx << ","
             << std::setw(3) << loc_jy << ","
             << std::setw(3) << loc_jz << ")"
             << " irec=" << loc_irec
             << "  tolerance =  "
             << std::scientific << std::setprecision(2) << std::setw(8) << tol
-            << std::endl ;
-        oss << tst ;
-        oss << " Maximum error = "
+            << std::endl
+            << tst
+            << " Maximum error = "
             << std::setprecision(8) << std::setw(16) << maxerr
-            << std::endl ;
-        oss << tst ;
-        oss << " Computed ("
+            << std::endl
+            << tst
+            << " Computed ("
             << std::setprecision(15)
             << std::setw(23) << calc_xc << ","
             << std::setw(23) << calc_yc << ","
             << std::setw(23) << calc_zc << ")"
-            << std::endl ;
-        oss << tst ;
-        oss << " Expected ("
+            << std::endl
+            << tst
+            << " Expected ("
             << std::setw(23) << expect_xc << ","
             << std::setw(23) << expect_yc << ","
             << std::setw(23) << expect_zc << ")"
             << std::endl ;
-
-        getCout() << oss.str() ;
       }
     }
 
@@ -598,36 +595,33 @@ void INTSC_HEXRECT::checkScaledVolumes
     if ( maxerr > tol ) {
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
-      std::ostringstream oss ;
-
-      oss << tst ;
-      oss << " Volume error exceeds tolerance for "
+      getCout()
+          << tst
+          << " Volume error exceeds tolerance for "
           << getVariantName(vid).c_str() << "."
-          << std::endl ;
-      oss << tst ;
-      oss << " Maximum error at (x,y,z)=("
+          << std::endl
+          << tst
+          << " Maximum error at (x,y,z)=("
           << std::setw(3) << loc_jx << ","
           << std::setw(3) << loc_jy << ","
           << std::setw(3) << loc_jz << ")"
           << " krec=" << loc_krec
           << std::scientific
           << "  tolerance =" << std::setprecision(2) << std::setw(10) << tol
-          << std::endl ;
-      oss << tst ;
-      oss << " Maximum error ="
+          << std::endl
+          << tst
+          << " Maximum error ="
           << std::setprecision(8) << std::setw(17) << maxerr
-          << std::endl ;
-      oss << tst ;
-      oss << " Computed "
+          << std::endl
+          << tst
+          << " Computed "
           << std::setprecision(15)
           << std::setw(23) << calc_v / scale
-          << std::endl ;
-      oss << tst ;
-      oss << " Expected "
+          << std::endl
+          << tst
+          << " Expected "
           << std::setw(23) << expect_v / scale
           << std::endl ;
-
-      getCout() << oss.str() ;
     }
   }
 }
