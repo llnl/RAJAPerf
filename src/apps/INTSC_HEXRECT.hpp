@@ -98,7 +98,6 @@ class RunParams;
 
 namespace apps
 {
-class ADomain;
 
 class INTSC_HEXRECT : public KernelBase
 {
