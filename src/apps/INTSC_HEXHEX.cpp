@@ -174,7 +174,10 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     } else {
       xmax -= m_shift ;   ymax -= m_shift ;   zmax -= m_shift ;
     }
-    Real_type dx = xmax - xmin, dy = ymax - ymin, dz = zmax - zmin ;
+
+    Real_type dx = xmax - xmin ;
+    Real_type dy = ymax - ymin ;
+    Real_type dz = zmax - zmin ;
     if ( dx <= 0.0 || dy <= 0.0 || dz <= 0.0 ) {
       v0 = vx = vy = vz = 0.0 ;
     } else {

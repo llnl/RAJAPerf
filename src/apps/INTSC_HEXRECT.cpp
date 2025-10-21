@@ -424,7 +424,8 @@ void INTSC_HEXRECT::checkMoments
       Int_type rec0 = 0 ;
       Real_type maxerr = 0.0 ;
 
-      Int_type loc_jx=0, loc_jy=0, loc_jz=0, loc_irec=0 ;
+      Int_type loc_jx=0, loc_jy=0, loc_jz=0 ;
+      Int_type loc_irec=0 ;
       Real_type expect_xc=0.0, expect_yc=0.0, expect_zc=0.0 ;
       Real_type calc_xc=0.0, calc_yc=0.0, calc_zc=0.0 ;
 
@@ -463,6 +464,7 @@ void INTSC_HEXRECT::checkMoments
                 calc_zc = records[4*irec+3] ;
               }
             }
+
             rec0 += 8 ;
           }}}
 
@@ -530,10 +532,13 @@ void INTSC_HEXRECT::checkScaledVolumes
     Int_type ndy = m_ndy ;
     Int_type ndz = m_ndz ;
 
-    Real_type scale = 8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
+    Real_type scale =
+        8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
 
-    Int_type loc_jx=0, loc_jy=0, loc_jz=0, loc_krec=0 ;  // error checking
-    Real_type expect_v=0.0, calc_v=0.0 ;
+    Int_type loc_jx=0, loc_jy=0, loc_jz=0 ;
+    Int_type loc_krec=0 ;
+    Real_type expect_v=0.0 ;
+    Real_type calc_v=0.0 ;
 
     Int_type rec0 = 0 ;
     Real_type maxerr = 0.0 ;
