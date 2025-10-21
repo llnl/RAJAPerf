@@ -26,7 +26,7 @@ EOS::EOS(const RunParams& params)
 
   setActualProblemSize( getTargetProblemSize() );
 
-  m_array_length = getActualProblemSize() + 7;
+  m_array_length = getActualProblemSize() + 6;
 
   setItsPerRep( getActualProblemSize() );
   setItsPerRep( getActualProblemSize() );

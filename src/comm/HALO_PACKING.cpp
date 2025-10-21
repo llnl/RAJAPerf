@@ -22,17 +22,18 @@ HALO_PACKING::HALO_PACKING(const RunParams& params)
 
   m_num_vars = params.getHaloNumVars();
   m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( m_num_vars * (m_var_size - getActualProblemSize()) );
+  setItsPerRep( 2 * m_num_vars * halo_size );
   setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
-  setBytesReadPerRep( 1*sizeof(Int_type) * getItsPerRep() +   // pack
-                      1*sizeof(Real_type) * getItsPerRep() +  // pack
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                      1*sizeof(Int_type) * getItsPerRep() +   // unpack
-                      1*sizeof(Real_type) * getItsPerRep() ); // unpack
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() +  // pack
+                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack
+                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                         1*sizeof(Real_type) * getItsPerRep() ); // unpack
+                         1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 

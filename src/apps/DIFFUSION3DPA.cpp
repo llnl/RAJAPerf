@@ -32,7 +32,7 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
 
   setActualProblemSize( m_NE*DPA_Q1D*DPA_Q1D*DPA_Q1D );
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( m_NE*DPA_Q1D*DPA_Q1D*DPA_Q1D );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * DPA_Q1D*DPA_D1D + // b, g

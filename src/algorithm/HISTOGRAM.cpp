@@ -38,7 +38,7 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
                       1*sizeof(Index_type) * getActualProblemSize() );
   setBytesWrittenPerRep( 1*sizeof(Data_type) * m_num_bins );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize());
+  setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
   setComplexity(Complexity::N);
 

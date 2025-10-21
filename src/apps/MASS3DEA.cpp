@@ -28,13 +28,13 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setDefaultProblemSize(m_NE_default*MEA_Q1D*MEA_Q1D*MEA_Q1D);
   setDefaultReps(1);
 
-  const int ea_mat_entries = MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D;
+  const Index_type ea_mat_entries = MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D;
 
   m_NE = std::max((getTargetProblemSize() + (ea_mat_entries)/2) / (ea_mat_entries), Index_type(1));
 
-  setActualProblemSize( m_NE*ea_mat_entries);
+  setActualProblemSize( m_NE*ea_mat_entries );
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( m_NE*MEA_Q1D*MEA_Q1D*MEA_Q1D );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 1*sizeof(Real_type) * MEA_Q1D*MEA_D1D + // B

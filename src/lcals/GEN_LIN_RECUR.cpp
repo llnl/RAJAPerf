@@ -28,7 +28,7 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
 
   m_N = getActualProblemSize();
 
-  setItsPerRep( getActualProblemSize() );
+  setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
   setBytesReadPerRep( 3*sizeof(Real_type ) * m_N +
                       3*sizeof(Real_type ) * m_N );
@@ -36,7 +36,7 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
                          2*sizeof(Real_type ) * m_N );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((3 +
-                  3 ) * getActualProblemSize());
+                  3 ) * m_N);
 
   checksum_scale_factor = 0.01 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
