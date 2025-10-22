@@ -39,7 +39,7 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
 
   setActualProblemSize( m_psilen );
 
-  setItsPerRep( getActualProblemSize() );
+  setItsPerRep( m_philen );
   setKernelsPerRep(1);
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_philen +

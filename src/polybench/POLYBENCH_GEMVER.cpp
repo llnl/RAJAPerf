@@ -35,15 +35,15 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
   setActualProblemSize( m_n * m_n );
 
   setItsPerRep( m_n*m_n +
-                m_n*m_n +
                 m_n +
-                m_n*m_n );
+                m_n +
+                m_n );
   setKernelsPerRep(4);
   setBytesReadPerRep( 1*sizeof(Real_type ) * m_n * m_n +
                       4*sizeof(Real_type ) * m_n +
 
                       1*sizeof(Real_type ) * m_n * m_n +
-                      2*sizeof(Real_type ) * m_n +
+                      1*sizeof(Real_type ) * m_n +
 
                       2*sizeof(Real_type ) * m_n +
 

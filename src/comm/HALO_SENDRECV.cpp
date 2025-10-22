@@ -28,11 +28,12 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   m_num_vars = params.getHaloNumVars();
   m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( m_num_vars * (m_var_size - getActualProblemSize()) );
+  setItsPerRep( 0 );
   setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // send
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // recv
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 

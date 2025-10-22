@@ -32,7 +32,7 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 
   setActualProblemSize( m_NE*MPA_Q1D*MPA_Q1D*MPA_Q1D );
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( m_NE*MPA_Q1D*MPA_Q1D );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * MPA_Q1D*MPA_D1D + // B, Bt

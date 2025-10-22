@@ -28,19 +28,25 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
 
   m_n = std::sqrt( getTargetProblemSize() ) + 2 + std::sqrt(2)-1;
 
-  setItsPerRep( (m_n-2) + (m_n-2) );
+  setItsPerRep( 2 * (m_n-2) + (m_n-2) );
 
 
   setActualProblemSize( (m_n-2) * (m_n-2) );
 
   setKernelsPerRep( 2 );
-  setBytesReadPerRep( 3*sizeof(Real_type ) * m_n * (m_n-2) +
-                      3*sizeof(Real_type ) * m_n * (m_n-2) );
-  setBytesWrittenPerRep( 3*sizeof(Real_type ) * m_n * (m_n-2) +
-                         3*sizeof(Real_type ) * m_n * (m_n-2) );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
+                      2*sizeof(Real_type ) * (m_n-2) * (m_n-2) +
+
+                      1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
+                      2*sizeof(Real_type ) * (m_n-2) * (m_n-2) );
+  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_n-2) * (m_n-1) +
+                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
+
+                         2*sizeof(Real_type ) * (m_n-2) * (m_n-1) +
+                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( (15 + 2) * (m_n-2)*(m_n-2) +
-                  (15 + 2) * (m_n-2)*(m_n-2) );
+  setFLOPsPerRep( (13 + 2) * (m_n-2)*(m_n-2) +
+                  (13 + 2) * (m_n-2)*(m_n-2) );
 
   checksum_scale_factor = 0.0000001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
