@@ -128,7 +128,7 @@ void REDUCE_STRUCT::runHipVariantBase(VariantID vid)
       RPlaunchHipKernel( (reduce_struct<block_size>),
                          grid_size, block_size,
                          shmem, res.get_stream(),
-                         points.x, points.y,
+                         x, y,
                          mem, mem+1, mem+2,    // xcenter,xmin,xmax
                          mem+3, mem+4, mem+5,  // ycenter,ymin,ymax
                          m_init_sum, m_init_min, m_init_max,

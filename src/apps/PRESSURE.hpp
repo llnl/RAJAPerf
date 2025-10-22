@@ -35,15 +35,14 @@
   const Real_type pmin = m_pmin; \
   const Real_type eosvmax = m_eosvmax;
 
-
 #define PRESSURE_BODY1 \
   bvc[i] = cls * (compression[i] + 1.0);
 
 #define PRESSURE_BODY2 \
   p_new[i] = bvc[i] * e_old[i] ; \
-  if ( fabs(p_new[i]) <  p_cut ) p_new[i] = 0.0 ; \
+  if ( fabs(p_new[i]) < p_cut ) p_new[i] = 0.0 ; \
   if ( vnewc[i] >= eosvmax ) p_new[i] = 0.0 ; \
-  if ( p_new[i]  <  pmin ) p_new[i]   = pmin ;
+  if ( p_new[i] < pmin ) p_new[i] = pmin ;
 
 
 #include "common/KernelBase.hpp"
