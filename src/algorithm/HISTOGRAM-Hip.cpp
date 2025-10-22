@@ -106,25 +106,25 @@ void HISTOGRAM::runHipVariantLibrary(VariantID vid)
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
 #if defined(__HIPCC__)
-    hipErrchk(::rocprim::histogram_even(d_temp_storage,
-                                        temp_storage_bytes,
-                                        bins+ibegin,
-                                        len,
-                                        counts,
-                                        static_cast<int>(num_bins+1),
-                                        static_cast<Index_type>(0),
-                                        num_bins,
-                                        stream));
+    CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::histogram_even,
+        d_temp_storage, temp_storage_bytes,
+        bins+ibegin,
+        len,
+        counts,
+        static_cast<int>(num_bins+1),
+        static_cast<Index_type>(0),
+        num_bins,
+        stream);
 #elif defined(__CUDACC__)
-    cudaErrchk(::cub::DeviceHistogram::HistogramEven(d_temp_storage,
-                                                     temp_storage_bytes,
-                                                     bins+ibegin,
-                                                     counts,
-                                                     static_cast<int>(num_bins+1),
-                                                     static_cast<Index_type>(0),
-                                                     num_bins,
-                                                     len,
-                                                     stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceHistogram::HistogramEven,
+        d_temp_storage, temp_storage_bytes,
+        bins+ibegin,
+        counts,
+        static_cast<int>(num_bins+1),
+        static_cast<Index_type>(0),
+        num_bins,
+        len,
+        stream);
 #endif
 
     // Allocate temporary storage
@@ -137,25 +137,25 @@ void HISTOGRAM::runHipVariantLibrary(VariantID vid)
 
       // Run
 #if defined(__HIPCC__)
-      hipErrchk(::rocprim::histogram_even(d_temp_storage,
-                                          temp_storage_bytes,
-                                          bins+ibegin,
-                                          len,
-                                          counts,
-                                          static_cast<int>(num_bins+1),
-                                          static_cast<Index_type>(0),
-                                          num_bins,
-                                          stream));
+      CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::histogram_even,
+          d_temp_storage, temp_storage_bytes,
+          bins+ibegin,
+          len,
+          counts,
+          static_cast<int>(num_bins+1),
+          static_cast<Index_type>(0),
+          num_bins,
+          stream);
 #elif defined(__CUDACC__)
-      cudaErrchk(::cub::DeviceHistogram::HistogramEven(d_temp_storage,
-                                                       temp_storage_bytes,
-                                                       bins+ibegin,
-                                                       counts,
-                                                       static_cast<int>(num_bins+1),
-                                                       static_cast<Index_type>(0),
-                                                       num_bins,
-                                                       len,
-                                                       stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceHistogram::HistogramEven,
+          d_temp_storage, temp_storage_bytes,
+          bins+ibegin,
+          counts,
+          static_cast<int>(num_bins+1),
+          static_cast<Index_type>(0),
+          num_bins,
+          len,
+          stream);
 #endif
 
       RAJAPERF_HIP_REDUCER_COPY_BACK(counts, hcounts, num_bins, 1);
@@ -195,7 +195,7 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
     auto* func = &histogram_atomic_runtime<block_size>;
 
     hipFuncAttributes func_attr;
-    hipErrchk(hipFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_HIP_API_INVOKE_AND_CHECK(hipFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 

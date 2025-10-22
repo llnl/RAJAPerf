@@ -83,12 +83,12 @@ void HALO_EXCHANGE::runHipVariantImpl(VariantID vid)
         }
 
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(send_buffers[l], pack_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
-        hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+        CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
             mpi_ranks[l], send_tags[l], MPI_COMM_WORLD, &pack_mpi_requests[l]);
       }
@@ -101,9 +101,9 @@ void HALO_EXCHANGE::runHipVariantImpl(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(unpack_buffers[l], recv_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -118,7 +118,7 @@ void HALO_EXCHANGE::runHipVariantImpl(VariantID vid)
           buffer += len;
         }
       }
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
 
       MPI_Waitall(num_neighbors, pack_mpi_requests.data(), MPI_STATUSES_IGNORE);
 

@@ -51,9 +51,8 @@ void RPlaunchHipKernel(void (*kernel)(KernArgs...),
   void* arg_arr[count]{(void*)&args...};
 
   auto k = reinterpret_cast<const void*>(kernel);
-  hipErrchk( hipLaunchKernel(k, numBlocks, dimBlocks,
-                             arg_arr,
-                             sharedMemBytes, stream) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipLaunchKernel,
+      k, numBlocks, dimBlocks, arg_arr, sharedMemBytes, stream );
 }
 
 /*!
@@ -128,7 +127,7 @@ namespace detail
 inline int getHipDevice()
 {
   int device = hipInvalidDeviceId;
-  hipErrchk( hipGetDevice( &device ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipGetDevice, &device );
   return device;
 }
 
@@ -138,7 +137,7 @@ inline int getHipDevice()
 inline hipDeviceProp_t getHipDeviceProp()
 {
   hipDeviceProp_t prop;
-  hipErrchk(hipGetDeviceProperties(&prop, getHipDevice()));
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipGetDeviceProperties, &prop, getHipDevice() );
   return prop;
 }
 
@@ -151,8 +150,8 @@ RAJA_INLINE
 int getHipOccupancyMaxBlocks(Func&& func, int num_threads, size_t shmem_size)
 {
   int max_blocks = -1;
-  hipErrchk(hipOccupancyMaxActiveBlocksPerMultiprocessor(
-      &max_blocks, func, num_threads, shmem_size));
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipOccupancyMaxActiveBlocksPerMultiprocessor,
+      &max_blocks, func, num_threads, shmem_size );
 
   size_t multiProcessorCount = getHipDeviceProp().multiProcessorCount;
 
@@ -164,9 +163,9 @@ int getHipOccupancyMaxBlocks(Func&& func, int num_threads, size_t shmem_size)
  */
 inline void copyHipData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
-  hipErrchk( hipMemcpy( dst_ptr, src_ptr, len,
-             hipMemcpyDefault ) );
-  hipErrchk( hipDeviceSynchronize( ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpy,
+      dst_ptr, src_ptr, len, hipMemcpyDefault );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipDeviceSynchronize );
 }
 
 /*!
@@ -175,7 +174,7 @@ inline void copyHipData(void* dst_ptr, const void* src_ptr, Size_type len)
 inline void* allocHipDeviceData(Size_type len)
 {
   void* dptr = nullptr;
-  hipErrchk( hipMalloc( &dptr, len ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipMalloc, &dptr, len );
   return dptr;
 }
 
@@ -185,8 +184,8 @@ inline void* allocHipDeviceData(Size_type len)
 inline void* allocHipDeviceFineData(Size_type len)
 {
   void* dfptr = nullptr;
-  hipErrchk( hipExtMallocWithFlags( &dfptr, len,
-              hipDeviceMallocFinegrained ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipExtMallocWithFlags,
+      &dfptr, len, hipDeviceMallocFinegrained );
   return dfptr;
 }
 
@@ -196,8 +195,8 @@ inline void* allocHipDeviceFineData(Size_type len)
 inline void* allocHipManagedData(Size_type len)
 {
   void* mptr = nullptr;
-  hipErrchk( hipMallocManaged( &mptr, len,
-              hipMemAttachGlobal ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipMallocManaged,
+      &mptr, len, hipMemAttachGlobal );
   return mptr;
 }
 
@@ -207,8 +206,8 @@ inline void* allocHipManagedData(Size_type len)
 inline void* allocHipPinnedData(Size_type len)
 {
   void* pptr = nullptr;
-  hipErrchk( hipHostMalloc( &pptr, len,
-              hipHostMallocMapped ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipHostMalloc,
+      &pptr, len, hipHostMallocMapped );
   return pptr;
 }
 
@@ -218,8 +217,8 @@ inline void* allocHipPinnedData(Size_type len)
 inline void* allocHipPinnedFineData(Size_type len)
 {
   void* pfptr = nullptr;
-  hipErrchk( hipHostMalloc( &pfptr, len,
-              hipHostMallocMapped | hipHostMallocCoherent ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipHostMalloc,
+      &pfptr, len, hipHostMallocMapped | hipHostMallocCoherent );
   return pfptr;
 }
 
@@ -229,8 +228,8 @@ inline void* allocHipPinnedFineData(Size_type len)
 inline void* allocHipPinnedCoarseData(Size_type len)
 {
   void* pcptr = nullptr;
-  hipErrchk( hipHostMalloc( &pcptr, len,
-              hipHostMallocMapped | hipHostMallocNonCoherent ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipHostMalloc,
+      &pcptr, len, hipHostMallocMapped | hipHostMallocNonCoherent );
   return pcptr;
 }
 
@@ -239,7 +238,8 @@ inline void* allocHipPinnedCoarseData(Size_type len)
  */
 inline void adviseHipData(void* ptr, size_t len, hipMemoryAdvise advice, int device)
 {
-  hipErrchk( hipMemAdvise( ptr, len, advice, device ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipMemAdvise,
+      ptr, len, advice, device );
 }
 
 #if defined(RAJAPERF_USE_MEMADVISE_COARSE)
@@ -260,7 +260,7 @@ inline void adviseHipFineData(void* ptr, size_t len)
  */
 inline void deallocHipDeviceData(void* dptr)
 {
-  hipErrchk( hipFree( dptr ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipFree, dptr );
 }
 
 /*!
@@ -268,7 +268,7 @@ inline void deallocHipDeviceData(void* dptr)
  */
 inline void deallocHipManagedData(void* mptr)
 {
-  hipErrchk( hipFree( mptr ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipFree, mptr );
 }
 
 /*!
@@ -276,7 +276,7 @@ inline void deallocHipManagedData(void* mptr)
  */
 inline void deallocHipPinnedData(void* pptr)
 {
-  hipErrchk( hipHostFree( pptr ) );
+  CAMP_HIP_API_INVOKE_AND_CHECK( hipHostFree, pptr );
 }
 
 }  // closing brace for detail namespace

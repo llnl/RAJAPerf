@@ -93,7 +93,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
     auto* func = &multi_reduce_atomic_runtime<block_size>;
 
     cudaFuncAttributes func_attr;
-    cudaErrchk(cudaFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(cudaFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 

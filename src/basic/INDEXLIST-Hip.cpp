@@ -104,8 +104,8 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
-                                res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
 
       RPlaunchHipKernel( (indexlist_custom<block_size, items_per_thread>),
                          grid_size, block_size,
@@ -114,7 +114,7 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
                          block_counts, grid_counts, block_readys,
                          len, iend-ibegin );
 
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
       m_len = *len;
 
     }

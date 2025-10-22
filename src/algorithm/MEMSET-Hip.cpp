@@ -48,7 +48,8 @@ void MEMSET::runHipVariantLibrary(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      hipErrchk( hipMemsetAsync(MEMSET_STD_ARGS, res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
+          MEMSET_STD_ARGS, res.get_stream() );
 
     }
     stopTimer();

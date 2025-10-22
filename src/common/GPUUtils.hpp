@@ -273,16 +273,17 @@ using reducer_helpers = camp::list<
 // Initialize device_ptr_name with length copies of init_value
 // host_ptr_name will be used as an intermediary with an explicit copy
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(gpu_type, init_value, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(gpu_type, gpu_type_upper, init_value, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
         host_ptr_name[i*(replication) + r] = (init_value);                     \
       }                                                                        \
     }                                                                          \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( device_ptr_name, host_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        device_ptr_name, host_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyHostToDevice, res.get_stream() ) );                    \
+        gpu_type##MemcpyHostToDevice, res.get_stream() );                      \
   } else {                                                                     \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
@@ -294,16 +295,17 @@ using reducer_helpers = camp::list<
 // Initialize device_ptr_name with values in init_ptr
 // host_ptr_name will be used as an intermediary with an explicit copy
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(gpu_type, init_ptr, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(gpu_type, gpu_type_upper, init_ptr, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
         host_ptr_name[i*(replication) + r] = (init_ptr)[i];                    \
       }                                                                        \
     }                                                                          \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( device_ptr_name, host_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        device_ptr_name, host_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyHostToDevice, res.get_stream() ) );                    \
+        gpu_type##MemcpyHostToDevice, res.get_stream() );                      \
   } else {                                                                     \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
@@ -314,35 +316,37 @@ using reducer_helpers = camp::list<
 
 // Copy back data from device_ptr_name into host_ptr_name
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(gpu_type, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(gpu_type, gpu_type_upper, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( host_ptr_name, device_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        host_ptr_name, device_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyDeviceToHost, res.get_stream() ) );                    \
+        gpu_type##MemcpyDeviceToHost, res.get_stream() );                      \
   }                                                                            \
-  gpu_type##Errchk( gpu_type##StreamSynchronize( res.get_stream() ) );
+  CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##StreamSynchronize,   \
+      res.get_stream() );
 
 #define RAJAPERF_CUDA_REDUCER_SETUP(pointer_type, device_ptr_name, host_ptr_name, length, replication) \
   RAJAPERF_GPU_REDUCER_SETUP_IMPL(pointer_type, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_TEARDOWN(device_ptr_name, host_ptr_name) \
   RAJAPERF_GPU_REDUCER_TEARDOWN_IMPL(device_ptr_name, host_ptr_name)
 #define RAJAPERF_CUDA_REDUCER_INITIALIZE_VALUE(init_value, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(cuda, init_value, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(cuda, CUDA, init_value, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_INITIALIZE(init_ptr, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(cuda, init_ptr, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(cuda, CUDA, init_ptr, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_COPY_BACK(device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(cuda, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(cuda, CUDA, device_ptr_name, host_ptr_name, length, replication)
 
 #define RAJAPERF_HIP_REDUCER_SETUP(pointer_type, device_ptr_name, host_ptr_name, length, replication) \
   RAJAPERF_GPU_REDUCER_SETUP_IMPL(pointer_type, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_TEARDOWN(device_ptr_name, host_ptr_name) \
   RAJAPERF_GPU_REDUCER_TEARDOWN_IMPL(device_ptr_name, host_ptr_name)
 #define RAJAPERF_HIP_REDUCER_INITIALIZE_VALUE(init_value, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(hip, init_value, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(hip, HIP, init_value, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_INITIALIZE(init_ptr, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(hip, init_ptr, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(hip, HIP, init_ptr, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_COPY_BACK(device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(hip, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(hip, HIP, device_ptr_name, host_ptr_name, length, replication)
 
 
 //
