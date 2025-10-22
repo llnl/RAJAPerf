@@ -21,13 +21,6 @@ namespace rajaperf
 namespace basic
 {
 
-#define INDEXLIST_3LOOP_DATA_SETUP_HIP \
-  Index_type* counts; \
-  allocData(DataSpace::HipDevice, counts, iend+1);
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_HIP \
-  deallocData(DataSpace::HipDevice, counts);
-
 
 template < size_t block_size >
 __launch_bounds__(block_size)
@@ -71,7 +64,7 @@ void INDEXLIST_3LOOP::runHipVariantImpl(VariantID vid)
 
   if ( vid == Base_HIP ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_HIP;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::HipDevice);
 
     Index_type* len;
     allocData(DataSpace::HipPinnedCoarse, len, 1);
@@ -152,11 +145,11 @@ void INDEXLIST_3LOOP::runHipVariantImpl(VariantID vid)
     deallocData(DataSpace::HipDevice, temp_storage);
     deallocData(DataSpace::HipPinnedCoarse, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_HIP;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::HipDevice);
 
   } else if ( vid == RAJA_HIP ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_HIP;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::HipDevice);
 
     Index_type* len;
     allocData(DataSpace::HipPinnedCoarse, len, 1);
@@ -194,7 +187,7 @@ void INDEXLIST_3LOOP::runHipVariantImpl(VariantID vid)
 
     deallocData(DataSpace::HipPinnedCoarse, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_HIP;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::HipDevice);
 
   } else {
     getCout() << "\n  INDEXLIST_3LOOP : Unknown variant id = " << vid << std::endl;

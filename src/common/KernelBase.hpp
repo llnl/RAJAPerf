@@ -311,9 +311,9 @@ public:
   Size_type getSizePaddedToDataAlignment(Size_type size) const;
 
   template <typename T>
-  T offsetPointer(T ptr, Size_type size) const
+  T offsetPointer(T ptr, Size_type num_bytes) const
   {
-    return (T)(((char*)ptr) + size);
+    return reinterpret_cast<T>(reinterpret_cast<char*>(ptr) + num_bytes);
   }
 
   DataSpace getDataSpace(VariantID vid) const;
@@ -334,11 +334,25 @@ public:
         ptr, len, getDataAlignment());
   }
 
-  template <typename T>
-  void allocAndInitDataConst(DataSpace dataSpace, T*& ptr, Size_type len, T val)
+  template <typename T, typename V>
+  void allocAndInitDataConst(DataSpace dataSpace, T*& ptr, Size_type len, V val)
   {
     rajaperf::allocAndInitDataConst(dataSpace,
         ptr, len, getDataAlignment(), val);
+  }
+
+  template <typename T>
+  void allocAndInitDataRandSign(DataSpace dataSpace, T*& ptr, Size_type len)
+  {
+    rajaperf::allocAndInitDataRandSign(dataSpace,
+        ptr, len, getDataAlignment());
+  }
+
+  template <typename T>
+  void allocAndInitDataRandValue(DataSpace dataSpace, T*& ptr, Size_type len)
+  {
+    rajaperf::allocAndInitDataRandValue(dataSpace,
+        ptr, len, getDataAlignment());
   }
 
   template <typename T>
@@ -390,17 +404,10 @@ public:
         ptr, len, getDataAlignment());
   }
 
-  template <typename T>
-  void allocAndInitDataConst(T*& ptr, Size_type len, T val, VariantID vid)
+  template <typename T, typename V>
+  void allocAndInitDataConst(T*& ptr, Size_type len, V val, VariantID vid)
   {
     rajaperf::allocAndInitDataConst(getDataSpace(vid),
-        ptr, len, getDataAlignment(), val);
-  }
-
-  template <typename T>
-  void allocAndInitDataConst(T*& ptr, Size_type len, T val, DataSpace dataSpace)
-  {
-    rajaperf::allocAndInitDataConst(dataSpace,
         ptr, len, getDataAlignment(), val);
   }
 
@@ -415,13 +422,6 @@ public:
   void allocAndInitDataRandValue(T*& ptr, Size_type len, VariantID vid)
   {
     rajaperf::allocAndInitDataRandValue(getDataSpace(vid),
-        ptr, len, getDataAlignment());
-  }
-
-  template <typename T>
-  void allocAndInitDataRandValue(T*& ptr, Size_type len, DataSpace dataSpace)
-  {
-    rajaperf::allocAndInitDataRandValue(dataSpace,
         ptr, len, getDataAlignment());
   }
 
@@ -475,24 +475,23 @@ public:
   }
 
   template <typename T>
-  long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, VariantID RAJAPERF_UNUSED_ARG(vid))
+  long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len,
+                           Real_type scale_factor = 1.0)
   {
     return rajaperf::calcChecksum(dataSpace,
-      ptr, len, getDataAlignment(), 1.0);
+      ptr, len, getDataAlignment(), scale_factor);
   }
 
   template <typename T>
   long double calcChecksum(T* ptr, Size_type len, VariantID vid)
   {
-    return rajaperf::calcChecksum(getDataSpace(vid),
-      ptr, len, getDataAlignment(), 1.0);
+    return calcChecksum(getDataSpace(vid), ptr, len);
   }
 
   template <typename T>
   long double calcChecksum(T* ptr, Size_type len, Real_type scale_factor, VariantID vid)
   {
-    return rajaperf::calcChecksum(getDataSpace(vid),
-      ptr, len, getDataAlignment(), scale_factor);
+    return calcChecksum(getDataSpace(vid), ptr, len, scale_factor);
   }
 
   void startTimer()

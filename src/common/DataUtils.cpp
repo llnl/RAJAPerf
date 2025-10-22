@@ -514,30 +514,6 @@ void initData(Real_ptr& ptr, Size_type len)
 }
 
 /*
- * Initialize Real_type data array to constant values.
- */
-void initDataConst(Real_ptr& ptr, Size_type len, Real_type val)
-{
-  for (Size_type i = 0; i < len; ++i) {
-    ptr[i] = val;
-  };
-
-  incDataInitCount();
-}
-
-/*
- * Initialize Index_type data array to constant values.
- */
-void initDataConst(Index_type*& ptr, Size_type len, Index_type val)
-{
-  for (Size_type i = 0; i < len; ++i) {
-    ptr[i] = val;
-  };
-
-  incDataInitCount();
-}
-
-/*
  * Initialize Real_type data array with random sign.
  */
 void initDataRandSign(Real_ptr& ptr, Size_type len)

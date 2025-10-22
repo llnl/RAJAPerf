@@ -21,8 +21,8 @@
 #define HISTOGRAM_DATA_SETUP \
   Index_type num_bins = m_num_bins; \
   Index_ptr bins = m_bins; \
-  std::vector<Data_type>& counts_init = m_counts_init; \
-  std::vector<Data_type>& counts_final = m_counts_final;
+  Data_ptr counts_init = m_counts_init; \
+  Data_ptr counts_final = m_counts_final;
 
 #define HISTOGRAM_DATA_TEARDOWN
 
@@ -45,10 +45,12 @@
   }
 
 #define HISTOGRAM_INIT_COUNTS_RAJA(policy) \
-  RAJA::MultiReduceSum<policy, Data_type> counts(counts_init);
+  auto counts_init_container = RAJA::make_span(counts_init, num_bins); \
+  RAJA::MultiReduceSum<policy, Data_type> counts(counts_init_container);
 
 #define HISTOGRAM_FINALIZE_COUNTS_RAJA(policy) \
-  counts.get_all(counts_final);
+  auto counts_final_container = RAJA::make_span(counts_final, num_bins); \
+  counts.get_all(counts_final_container);
 
 #define HISTOGRAM_GPU_FINALIZE_COUNTS(hcounts, num_bins, replication) \
   for (Index_type b = 0; b < (num_bins); ++b) { \
@@ -136,8 +138,8 @@ private:
   Index_type m_num_bins;
   RunParams::BinAssignmentAlgorithm m_bin_assignment_algorithm;
   Index_ptr m_bins;
-  std::vector<Data_type> m_counts_init;
-  std::vector<Data_type> m_counts_final;
+  Data_ptr m_counts_init;
+  Data_ptr m_counts_final;
 };
 
 } // end namespace algorithm

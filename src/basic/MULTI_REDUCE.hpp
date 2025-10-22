@@ -22,8 +22,8 @@
   Index_type num_bins = m_num_bins; \
   Index_ptr bins = m_bins; \
   Data_ptr data = m_data; \
-  std::vector<Data_type>& values_init = m_values_init; \
-  std::vector<Data_type>& values_final = m_values_final;
+  Data_ptr values_init = m_values_init; \
+  Data_ptr values_final = m_values_final;
 
 #define MULTI_REDUCE_DATA_TEARDOWN
 
@@ -46,10 +46,12 @@
   }
 
 #define MULTI_REDUCE_INIT_VALUES_RAJA(policy) \
-  RAJA::MultiReduceSum<policy, Data_type> values(values_init);
+  auto values_init_span = RAJA::make_span(values_init, num_bins); \
+  RAJA::MultiReduceSum<policy, Data_type> values(values_init_span);
 
 #define MULTI_REDUCE_FINALIZE_VALUES_RAJA(policy) \
-  values.get_all(values_final);
+  auto values_final_span = RAJA::make_span(values_final, num_bins); \
+  values.get_all(values_final_span);
 
 #define MULTI_REDUCE_GPU_FINALIZE_VALUES(hvalues, num_bins, replication) \
   for (Index_type b = 0; b < (num_bins); ++b) { \
@@ -129,8 +131,8 @@ private:
   RunParams::BinAssignmentAlgorithm m_bin_assignment_algorithm;
   Index_ptr m_bins;
   Data_ptr m_data;
-  std::vector<Data_type> m_values_init;
-  std::vector<Data_type> m_values_final;
+  Data_ptr m_values_init;
+  Data_ptr m_values_final;
 };
 
 } // end namespace basic

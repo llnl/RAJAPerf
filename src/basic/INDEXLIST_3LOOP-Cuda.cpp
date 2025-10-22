@@ -21,13 +21,6 @@ namespace rajaperf
 namespace basic
 {
 
-#define INDEXLIST_3LOOP_DATA_SETUP_CUDA \
-  Index_type* counts; \
-  allocData(DataSpace::CudaDevice, counts, iend+1);
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA \
-  deallocData(DataSpace::CudaDevice, counts);
-
 
 template < size_t block_size >
 __launch_bounds__(block_size)
@@ -71,7 +64,7 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
   if ( vid == Base_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
     Index_type* len;
     allocData(DataSpace::CudaPinned, len, 1);
@@ -130,11 +123,11 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     deallocData(DataSpace::CudaDevice, temp_storage);
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else if ( vid == RAJA_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
     Index_type* len;
     allocData(DataSpace::CudaPinned, len, 1);
@@ -172,7 +165,7 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else {
     getCout() << "\n  INDEXLIST_3LOOP : Unknown variant id = " << vid << std::endl;
