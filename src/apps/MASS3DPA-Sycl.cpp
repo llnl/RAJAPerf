@@ -43,13 +43,13 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
 
       qu->submit([&](::sycl::handler& h) {
 
-        constexpr int MQ1 = MPA_Q1D;
-        constexpr int MD1 = MPA_D1D;
-        constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+        constexpr Index_type MQ1 = MPA_Q1D;
+        constexpr Index_type MD1 = MPA_D1D;
+        constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-        auto sDQ_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MQ1 * MD1), h);
-        auto sm0_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
-        auto sm1_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
+        auto sDQ_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MQ1 * MD1), h);
+        auto sm0_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
+        auto sm1_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
 
         h.parallel_for
           (::sycl::nd_range<3>(gridSize, workGroupSize),
@@ -57,19 +57,19 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
 
              const Index_type e = itm.get_group(2);
 
-             double *sDQ = sDQ_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sDQ = sDQ_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
-             double(*Bsmem)[MD1] = (double(*)[MD1])sDQ;
-             double(*Btsmem)[MQ1] = (double(*)[MQ1])sDQ;
+             Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;
+             Real_type(*Btsmem)[MQ1] = (Real_type(*)[MQ1])sDQ;
 
-             double(*Xsmem)[MD1][MD1] = (double(*)[MD1][MD1])sm0;
-             double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1;
-             double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0;
-             double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1;
-             double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0;
-             double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
+             Real_type(*Xsmem)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;
+             Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;
+             Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;
+             Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;
+             Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;
+             Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
              SYCL_FOREACH_THREAD(dy, 1, MPA_D1D) {
                SYCL_FOREACH_THREAD(dx, 2, MPA_D1D){
@@ -150,12 +150,12 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
     //Caclulate amount of shared memory needed
     size_t shmem = 0;
     {
-      constexpr int MQ1 = MPA_Q1D;
-      constexpr int MD1 = MPA_D1D;
-      constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+      constexpr Index_type MQ1 = MPA_Q1D;
+      constexpr Index_type MD1 = MPA_D1D;
+      constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-      constexpr int no_mats = 2;
-      shmem += MQ1 * MD1 * no_mats * MDQ * MDQ * MDQ * sizeof(double);
+      constexpr Index_type no_mats = 2;
+      shmem += MQ1 * MD1 * no_mats * MDQ * MDQ * MDQ * sizeof(Real_type);
     }
 
     startTimer();
@@ -167,37 +167,37 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
         [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-            [&](int e) {
+            [&](Index_type e) {
 
              //Redefine inside the lambda to keep consistent with base version
-             constexpr int MQ1 = MPA_Q1D;
-             constexpr int MD1 = MPA_D1D;
-             constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+             constexpr Index_type MQ1 = MPA_Q1D;
+             constexpr Index_type MD1 = MPA_D1D;
+             constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-             double *sDQ = ctx.getSharedMemory<double>(MQ1 * MD1);
-             double *sm0 = ctx.getSharedMemory<double>(MDQ * MDQ * MDQ);
-             double *sm1 = ctx.getSharedMemory<double>(MDQ * MDQ * MDQ);
+             Real_ptr sDQ = ctx.getSharedMemory<Real_type>(MQ1 * MD1);
+             Real_ptr sm0 = ctx.getSharedMemory<Real_type>(MDQ * MDQ * MDQ);
+             Real_ptr sm1 = ctx.getSharedMemory<Real_type>(MDQ * MDQ * MDQ);
 
-             double(*Bsmem)[MD1] = (double(*)[MD1])sDQ;
-             double(*Btsmem)[MQ1] = (double(*)[MQ1])sDQ;
+             Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;
+             Real_type(*Btsmem)[MQ1] = (Real_type(*)[MQ1])sDQ;
 
-             double(*Xsmem)[MD1][MD1] = (double(*)[MD1][MD1])sm0;
-             double(*DDQ)[MD1][MQ1] = (double(*)[MD1][MQ1])sm1;
-             double(*DQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm0;
-             double(*QQQ)[MQ1][MQ1] = (double(*)[MQ1][MQ1])sm1;
-             double(*QQD)[MQ1][MD1] = (double(*)[MQ1][MD1])sm0;
-             double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
+             Real_type(*Xsmem)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;
+             Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;
+             Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;
+             Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;
+             Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;
+             Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                [&](int dy) {
+                [&](Index_type dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                    [&](int dx) {
+                    [&](Index_type dx) {
                       MASS3DPA_1
                     }
                   );  // RAJA::loop<inner_x>
 
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                    [&](int dx) {
+                    [&](Index_type dx) {
                       MASS3DPA_2
                     }
                   );  // RAJA::loop<inner_x>
@@ -207,9 +207,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                [&](int dy) {
+                [&](Index_type dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                    [&](int qx) {
+                    [&](Index_type qx) {
                       MASS3DPA_3
                     }
                   );  // RAJA::loop<inner_x>
@@ -219,9 +219,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                [&](int qy) {
+                [&](Index_type qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                    [&](int qx) {
+                    [&](Index_type qx) {
                       MASS3DPA_4
                     }
                   );  // RAJA::loop<inner_x>
@@ -231,9 +231,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                [&](int qy) {
+                [&](Index_type qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                    [&](int qx) {
+                    [&](Index_type qx) {
                       MASS3DPA_5
                     }
                   );  // RAJA::loop<inner_x>
@@ -243,9 +243,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                [&](int d) {
+                [&](Index_type d) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                    [&](int q) {
+                    [&](Index_type q) {
                       MASS3DPA_6
                     }
                   );  // RAJA::loop<inner_x>
@@ -255,9 +255,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_Q1D),
-                [&](int qy) {
+                [&](Index_type qy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                    [&](int dx) {
+                    [&](Index_type dx) {
                       MASS3DPA_7
                     }
                   );  // RAJA::loop<inner_x>
@@ -267,9 +267,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                [&](int dy) {
+                [&](Index_type dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                    [&](int dx) {
+                    [&](Index_type dx) {
                       MASS3DPA_8
                     }
                   );  // RAJA::loop<inner_x>
@@ -279,9 +279,9 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                [&](int dy) {
+                [&](Index_type dy) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MPA_D1D),
-                    [&](int dx) {
+                    [&](Index_type dx) {
                       MASS3DPA_9
                     }
                   );  // RAJA::loop<inner_x>

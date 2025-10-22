@@ -25,7 +25,7 @@ namespace basic
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_conditional(Real_ptr x,
-                                      Index_type* counts,
+                                      Index_ptr counts,
                                       Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -37,8 +37,8 @@ __global__ void indexlist_conditional(Real_ptr x,
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_make_list(Int_ptr list,
-                                    Index_type* counts,
-                                    Index_type* len,
+                                    Index_ptr counts,
+                                    Index_ptr len,
                                     Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -66,7 +66,7 @@ void INDEXLIST_3LOOP::runHipVariantImpl(VariantID vid)
 
     INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::HipDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::HipPinnedCoarse, len, 1);
 
     hipStream_t stream = res.get_stream();
@@ -151,7 +151,7 @@ void INDEXLIST_3LOOP::runHipVariantImpl(VariantID vid)
 
     INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::HipDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::HipPinnedCoarse, len, 1);
 
     startTimer();

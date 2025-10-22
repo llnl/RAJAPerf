@@ -59,6 +59,8 @@ using RepIndex_type = volatile int;
 using Index_type = RAJA::Index_type;
 ///
 using Index_ptr = Index_type*;
+///
+using Index_ptr_ptr = Index_type**;
 
 
 /*!
@@ -81,6 +83,8 @@ using Size_type = size_t;
 using Int_type = int;
 ///
 using Int_ptr = Int_type*;
+///
+using Int_ptr_ptr = Int_type**;
 
 
 /*!
@@ -120,6 +124,8 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
+///
+using Real_ptr_ptr = Real_type**;
 
 #if defined(RP_USE_COMPLEX)
 ///

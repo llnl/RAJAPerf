@@ -79,12 +79,12 @@ CONVECTION3DPA::~CONVECTION3DPA()
 void CONVECTION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B,  int(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt, int(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_G, int(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, int(CPA_Q1D*CPA_Q1D*CPA_Q1D*CPA_VDIM*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, int(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, int(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B,  Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt, Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_G, Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(CPA_Q1D*CPA_Q1D*CPA_Q1D*CPA_VDIM*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, Index_type(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, Index_type(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(0.0), vid);
 }
 
 void CONVECTION3DPA::updateChecksum(VariantID vid, size_t tune_idx)

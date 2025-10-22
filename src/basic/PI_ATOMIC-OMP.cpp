@@ -38,7 +38,7 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
         *pi = m_pi_init;
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-          double x = (double(i) + 0.5) * dx;
+          Real_type x = (Real_type(i) + 0.5) * dx;
           #pragma omp atomic
           *pi += dx / (1.0 + x * x);
         }
@@ -53,7 +53,7 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Lambda_OpenMP : {
 
       auto piatomic_base_lam = [=](Index_type i) {
-                                 double x = (double(i) + 0.5) * dx;
+                                 Real_type x = (Real_type(i) + 0.5) * dx;
                                  #pragma omp atomic
                                  *pi += dx / (1.0 + x * x);
                                };
@@ -84,7 +84,7 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
         *pi = m_pi_init;
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-            double x = (double(i) + 0.5) * dx;
+            Real_type x = (Real_type(i) + 0.5) * dx;
             RAJA::atomicAdd<RAJA::omp_atomic>(pi, dx / (1.0 + x * x));
         });
         m_pi_final = *pi * 4.0;

@@ -85,14 +85,14 @@ constexpr rajaperf::Index_type TL_SZ = 16;
  so it doesn't see these kind of problems.
  */
 #define MAT_MAT_SHARED_BODY_0_CLANG_HIP_CPU(tile_size)                         \
-  double As[tile_size][tile_size];                                             \
-  double Bs[tile_size][tile_size];                                             \
-  double Cs[tile_size][tile_size];
+  Real_type As[tile_size][tile_size];                                             \
+  Real_type Bs[tile_size][tile_size];                                             \
+  Real_type Cs[tile_size][tile_size];
 
 #define MAT_MAT_SHARED_BODY_0(tile_size)                                       \
-  RAJA_TEAM_SHARED double As[tile_size][tile_size];                            \
-  RAJA_TEAM_SHARED double Bs[tile_size][tile_size];                            \
-  RAJA_TEAM_SHARED double Cs[tile_size][tile_size];
+  RAJA_TEAM_SHARED Real_type As[tile_size][tile_size];                            \
+  RAJA_TEAM_SHARED Real_type Bs[tile_size][tile_size];                            \
+  RAJA_TEAM_SHARED Real_type Cs[tile_size][tile_size];
 
 #define MAT_MAT_SHARED_BODY_1(tile_size)        \
   Cs[ty][tx] = 0;

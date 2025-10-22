@@ -42,16 +42,16 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
 
       qu->submit([&](::sycl::handler& h) {
 
-        constexpr int max_D1D = CPA_D1D;
-        constexpr int max_Q1D = CPA_Q1D;
-        constexpr int max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
+        constexpr Index_type max_D1D = CPA_D1D;
+        constexpr Index_type max_Q1D = CPA_Q1D;
+        constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
 
-        auto sm0_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
-        auto sm1_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
-        auto sm2_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
-        auto sm3_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
-        auto sm4_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
-        auto sm5_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm0_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm1_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm2_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm3_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm4_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
+        auto sm5_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(max_DQ*max_DQ*max_DQ), h);
 
         h.parallel_for
           (::sycl::nd_range<3>(gridSize, workGroupSize),
@@ -59,25 +59,25 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
 
              const Index_type e = itm.get_group(2);
 
-             double *sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm2 = sm2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm3 = sm3_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm4 = sm4_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm5 = sm5_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm2 = sm2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm3 = sm3_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm4 = sm4_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm5 = sm5_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
-             double (*u)[max_D1D][max_D1D] = (double (*)[max_D1D][max_D1D]) sm0;
-             double (*Bu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm1;
-             double (*Gu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm2;
-             double (*BBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;
-             double (*GBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4;
-             double (*BGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm5;
-             double (*GBBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm0;
-             double (*BGBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm1;
-             double (*BBGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm2;
-             double (*DGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;
-             double (*BDGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4;
-             double (*BBDGu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm5;
+             Real_type (*u)[max_D1D][max_D1D] = (Real_type (*)[max_D1D][max_D1D]) sm0;
+             Real_type (*Bu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm1;
+             Real_type (*Gu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm2;
+             Real_type (*BBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
+             Real_type (*GBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4;
+             Real_type (*BGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm5;
+             Real_type (*GBBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm0;
+             Real_type (*BGBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm1;
+             Real_type (*BBGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm2;
+             Real_type (*DGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
+             Real_type (*BDGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4;
+             Real_type (*BBDGu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm5;
 
              SYCL_FOREACH_THREAD(dz,0,CPA_D1D)
              {
@@ -206,12 +206,12 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
     //Caclulate amount of shared memory needed
     size_t shmem = 0;
     {
-      constexpr int max_D1D = CPA_D1D;
-      constexpr int max_Q1D = CPA_Q1D;
-      constexpr int max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
+      constexpr Index_type max_D1D = CPA_D1D;
+      constexpr Index_type max_Q1D = CPA_Q1D;
+      constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
 
-      constexpr int no_mats = 6;
-      shmem += max_DQ*max_DQ*max_DQ  * no_mats * sizeof(double);
+      constexpr Index_type no_mats = 6;
+      shmem += max_DQ*max_DQ*max_DQ  * no_mats * sizeof(Real_type);
     }
 
     startTimer();
@@ -223,39 +223,39 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-            [&](int e) {
+            [&](Index_type e) {
 
               //Redefine inside the lambda to keep consistent with base version
-              constexpr int max_D1D = CPA_D1D;
-              constexpr int max_Q1D = CPA_Q1D;
-              constexpr int max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
+              constexpr Index_type max_D1D = CPA_D1D;
+              constexpr Index_type max_Q1D = CPA_Q1D;
+              constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
 
-              double * sm0 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
-              double * sm1 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
-              double * sm2 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
-              double * sm3 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
-              double * sm4 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
-              double * sm5 = ctx.getSharedMemory<double>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm0 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm1 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm2 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm3 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm4 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
+              Real_ptr sm5 = ctx.getSharedMemory<Real_type>(max_DQ*max_DQ*max_DQ);
 
-              double (*u)[max_D1D][max_D1D] = (double (*)[max_D1D][max_D1D]) sm0;
-              double (*Bu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm1;
-              double (*Gu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm2;
-              double (*BBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;
-              double (*GBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4;
-              double (*BGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm5;
-              double (*GBBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm0;
-              double (*BGBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm1;
-              double (*BBGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm2;
-              double (*DGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;
-              double (*BDGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4;
-              double (*BBDGu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm5;
+              Real_type (*u)[max_D1D][max_D1D] = (Real_type (*)[max_D1D][max_D1D]) sm0;
+              Real_type (*Bu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm1;
+              Real_type (*Gu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm2;
+              Real_type (*BBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
+              Real_type (*GBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4;
+              Real_type (*BGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm5;
+              Real_type (*GBBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm0;
+              Real_type (*BGBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm1;
+              Real_type (*BBGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm2;
+              Real_type (*DGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
+              Real_type (*BDGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4;
+              Real_type (*BBDGu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm5;
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                        [&](int dx) {
+                        [&](Index_type dx) {
 
                           CONVECTION3DPA_1;
 
@@ -269,11 +269,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           CONVECTION3DPA_2;
 
@@ -287,11 +287,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                    [&](int qx) {
+                    [&](Index_type qx) {
                       RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                        [&](int qy) {
+                        [&](Index_type qy) {
 
                           CONVECTION3DPA_3;
 
@@ -305,11 +305,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                [&](int qx) {
+                [&](Index_type qx) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                    [&](int qy) {
+                    [&](Index_type qy) {
                       RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                        [&](int qz) {
+                        [&](Index_type qz) {
 
                           CONVECTION3DPA_4;
 
@@ -323,11 +323,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                [&](int qz) {
+                [&](Index_type qz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                    [&](int qy) {
+                    [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           CONVECTION3DPA_5;
 
@@ -341,11 +341,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                [&](int qx) {
+                [&](Index_type qx) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                    [&](int qy) {
+                    [&](Index_type qy) {
                       RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                        [&](int dz) {
+                        [&](Index_type dz) {
 
                           CONVECTION3DPA_6;
 
@@ -359,11 +359,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
-                    [&](int qx) {
+                    [&](Index_type qx) {
                       RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                        [&](int dy) {
+                        [&](Index_type dy) {
 
                           CONVECTION3DPA_7;
 
@@ -377,11 +377,11 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
             ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_D1D),
-                        [&](int dx) {
+                        [&](Index_type dx) {
 
                           CONVECTION3DPA_8;
 

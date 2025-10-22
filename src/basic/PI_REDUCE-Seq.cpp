@@ -54,7 +54,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
     case Lambda_Seq : {
 
       auto pireduce_base_lam = [=](Index_type i) -> Real_type {
-                                 double x = (double(i) + 0.5) * dx;
+                                 Real_type x = (Real_type(i) + 0.5) * dx;
                                  return dx / (1.0 + x * x);
                                };
 
