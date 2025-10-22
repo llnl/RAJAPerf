@@ -37,7 +37,7 @@ void NODAL_ACCUMULATION_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           NODAL_ACCUMULATION_3D_BODY_INDEX;
-          NODAL_ACCUMULATION_3D_BODY;
+          NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
 
       }
@@ -51,7 +51,7 @@ void NODAL_ACCUMULATION_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_
 
       auto nodal_accumulation_3d_lam = [=](Index_type ii) {
                          NODAL_ACCUMULATION_3D_BODY_INDEX;
-                         NODAL_ACCUMULATION_3D_BODY;
+                         NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
                        };
 
       startTimer();
@@ -74,7 +74,7 @@ void NODAL_ACCUMULATION_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_
                                                res, RAJA::Unowned);
 
       auto nodal_accumulation_3d_lam = [=](Index_type i) {
-                         NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::seq_atomic);
+                         NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_SEQ);
                        };
 
       startTimer();

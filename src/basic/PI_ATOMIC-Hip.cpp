@@ -27,11 +27,10 @@ __global__ void pi_atomic(Real_ptr pi,
                           Real_type dx,
                           Index_type iend)
 {
-   Index_type i = blockIdx.x * block_size + threadIdx.x;
-   if (i < iend) {
-     Real_type x = (Real_type(i) + 0.5) * dx;
-     RAJA::atomicAdd<RAJA::hip_atomic>(pi, dx / (1.0 + x * x));
-   }
+  Index_type i = blockIdx.x * block_size + threadIdx.x;
+  if (i < iend) {
+    PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP);
+  }
 }
 
 
@@ -80,9 +79,8 @@ void PI_ATOMIC::runHipVariantImpl(VariantID vid)
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_pi_init, pi, hpi, 1, 1);
 
       auto pi_atomic_lambda = [=] __device__ (Index_type i) {
-          Real_type x = (Real_type(i) + 0.5) * dx;
-          RAJA::atomicAdd<RAJA::hip_atomic>(pi, dx / (1.0 + x * x));
-      };
+            PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP);
+          };
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -108,8 +106,7 @@ void PI_ATOMIC::runHipVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-          Real_type x = (Real_type(i) + 0.5) * dx;
-          RAJA::atomicAdd<RAJA::hip_atomic>(pi, dx / (1.0 + x * x));
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_HIP);
       });
 
       RAJAPERF_HIP_REDUCER_COPY_BACK(pi, hpi, 1, 1);

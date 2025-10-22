@@ -45,9 +45,7 @@ void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
       #pragma omp target is_device_ptr(pi)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        Real_type x = (Real_type(i) + 0.5) * dx;
-        #pragma omp atomic
-        *pi += dx / (1.0 + x * x);
+        PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
       getOpenMPDeviceData(&m_pi_final, pi, 1);
@@ -67,8 +65,7 @@ void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-          Real_type x = (Real_type(i) + 0.5) * dx;
-          RAJA::atomicAdd<RAJA::omp_atomic>(pi, dx / (1.0 + x * x));
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
       });
 
       getOpenMPDeviceData(&m_pi_final, pi, 1);

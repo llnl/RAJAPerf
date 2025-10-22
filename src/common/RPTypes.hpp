@@ -135,7 +135,64 @@ using Complex_ptr = Complex_type*;
 #endif
 
 
+#define RAJAPERF_STRINGIFY_HELPER(...) #__VA_ARGS__
+#define RAJAPERF_STRINGIFY(...) RAJAPERF_STRINGIFY_HELPER(__VA_ARGS__)
 
+#define RAJAPERF_CONCAT_HELPER(a, b) a##b
+#define RAJAPERF_CONCAT(a, b) RAJAPERF_CONCAT_HELPER(a, b)
+
+#define RAJAPERF_NAME_PER_LINE(name) RAJAPERF_CONCAT(name, __LINE__)
+
+#ifdef _WIN32
+#define RAJAPERF_PRAGMA(x) __pragma(x)
+#else
+#define RAJAPERF_PRAGMA(x) _Pragma(RAJAPERF_STRINGIFY(x))
+#endif
+
+#define RAJAPERF_ADD(lhs, rhs) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_SEQ(lhs, rhs) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_OMP(lhs, rhs) \
+      RAJAPERF_PRAGMA(omp atomic) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_CUDA(lhs, rhs) \
+      ::atomicAdd(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_CUDA(lhs, rhs) \
+      ::atomicMin(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_CUDA(lhs, rhs) \
+      ::atomicMax(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_HIP(lhs, rhs) \
+      ::atomicAdd(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_HIP(lhs, rhs) \
+      ::atomicMin(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_HIP(lhs, rhs) \
+      ::atomicMax(&(lhs), (rhs))
+
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_SEQ(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::seq_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_OMP(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::omp_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::cuda_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicMin<RAJA::cuda_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicMax<RAJA::cuda_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::hip_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicMin<RAJA::hip_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicMax<RAJA::hip_atomic>(&(lhs), (rhs))
 
 }  // closing brace for rajaperf namespace
 

@@ -61,9 +61,9 @@ __global__ void reduce3int(Int_ptr vec,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( vsum, psum[ 0 ] );
-    RAJA::atomicMin<RAJA::cuda_atomic>( vmin, pmin[ 0 ] );
-    RAJA::atomicMax<RAJA::cuda_atomic>( vmax, pmax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *vsum, psum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_CUDA( *vmin, pmin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_CUDA( *vmax, pmax[ 0 ] );
   }
 }
 

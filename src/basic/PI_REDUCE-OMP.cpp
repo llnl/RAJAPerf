@@ -52,10 +52,9 @@ void PI_REDUCE::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
     case Lambda_OpenMP : {
 
-      auto pireduce_base_lam = [=](Index_type i) -> Real_type {
-                                 Real_type x = (Real_type(i) + 0.5) * dx;
-                                 return dx / (1.0 + x * x);
-                               };
+      auto pireduce_base_lam = [=](Index_type i, Real_type& pi) {
+            PI_REDUCE_BODY;
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -64,7 +63,7 @@ void PI_REDUCE::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
         #pragma omp parallel for reduction(+:pi)
         for (Index_type i = ibegin; i < iend; ++i ) {
-          pi += pireduce_base_lam(i);
+          pireduce_base_lam(i, pi);
         }
 
         m_pi = 4.0 * pi;

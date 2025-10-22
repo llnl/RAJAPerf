@@ -63,11 +63,8 @@
   }
 
 
-#define MULTI_REDUCE_BODY \
-  values[bins[i]] += data[i];
-
-#define MULTI_REDUCE_RAJA_BODY(policy) \
-  RAJA::atomicAdd<policy>(&values[bins[i]], data[i]);
+#define MULTI_REDUCE_BODY(atomicAdd) \
+  atomicAdd(values[bins[i]], data[i]);
 
 
 #include "common/KernelBase.hpp"

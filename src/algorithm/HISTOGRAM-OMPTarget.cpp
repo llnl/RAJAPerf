@@ -47,8 +47,7 @@ void HISTOGRAM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
       #pragma omp target is_device_ptr(counts, bins)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        #pragma omp atomic
-        HISTOGRAM_BODY;
+        HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
       getOpenMPDeviceData(counts_final, counts, num_bins);

@@ -33,7 +33,7 @@ __global__ void atomic_replicate_thread(Real_ptr atomic,
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
   if (i < iend) {
-    ATOMIC_RAJA_BODY(RAJA::cuda_atomic, i, ATOMIC_VALUE);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA, i, ATOMIC_VALUE);
   }
 }
 
@@ -53,7 +53,7 @@ __global__ void atomic_replicate_warp(Real_ptr atomic,
   __shared__ typename WarpReduce::TempStorage warp_reduce_storage;
   val = WarpReduce(warp_reduce_storage).Sum(val);
   if ((threadIdx.x % warp_size) == 0) {
-    ATOMIC_RAJA_BODY(RAJA::cuda_atomic, i/warp_size, val);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA, i/warp_size, val);
   }
 }
 
@@ -73,7 +73,7 @@ __global__ void atomic_replicate_block(Real_ptr atomic,
   __shared__ typename BlockReduce::TempStorage block_reduce_storage;
   val = BlockReduce(block_reduce_storage).Sum(val);
   if (threadIdx.x == 0) {
-    ATOMIC_RAJA_BODY(RAJA::cuda_atomic, blockIdx.x, val);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA, blockIdx.x, val);
   }
 }
 
@@ -113,7 +113,7 @@ void ATOMIC::runCudaVariantReplicateGlobal(VariantID vid)
 
       RAJA::forall<RAJA::cuda_exec<block_size, true /*async*/>>( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-          ATOMIC_RAJA_BODY(RAJA::cuda_atomic, i, ATOMIC_VALUE);
+          ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_CUDA, i, ATOMIC_VALUE);
       });
 
     }

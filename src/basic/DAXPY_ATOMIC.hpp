@@ -22,11 +22,8 @@
   Real_ptr y = m_y; \
   Real_type a = m_a;
 
-#define DAXPY_ATOMIC_BODY  \
-  y[i] += a * x[i] ;
-
-#define DAXPY_ATOMIC_RAJA_BODY(policy)  \
-  RAJA::atomicAdd<policy>(&y[i], a * x[i]);
+#define DAXPY_ATOMIC_BODY(atomicAdd)  \
+  atomicAdd(y[i], a * x[i]);
 
 
 #include "common/KernelBase.hpp"

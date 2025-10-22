@@ -50,7 +50,7 @@ __global__ void pi_reduce(Real_type dx,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( pi, ppi[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *pi, ppi[ 0 ] );
   }
 }
 

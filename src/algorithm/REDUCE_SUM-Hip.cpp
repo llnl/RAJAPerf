@@ -56,7 +56,7 @@ __global__ void reduce_sum(Real_ptr x, Real_ptr sum, Real_type sum_init,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::hip_atomic>( sum, psum[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *sum, psum[ 0 ] );
   }
 }
 
