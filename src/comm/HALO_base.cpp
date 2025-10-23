@@ -324,11 +324,11 @@ void HALO_base::create_buffers(Index_ptr const& index_list_lengths,
 {
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
 
-  Size_type combined_buffer_size = 0;
+  Size_type combined_buffer_nbytes = 0;
   for (Index_type l = 0; l < num_neighbors; ++l) {
     Index_type buffer_len = num_vars * index_list_lengths[l];
-    Size_type buffer_size = getSizePaddedToDataAlignment(buffer_len*sizeof(Real_type));
-    combined_buffer_size += buffer_size;
+    Size_type buffer_nbytes = getNBytesPaddedToDataAlignment(buffer_len*sizeof(Real_type));
+    combined_buffer_nbytes += buffer_nbytes;
   }
 
   allocAndInitDataConst(DataSpace::Host, our_buffers, num_neighbors, nullptr);
@@ -336,18 +336,18 @@ void HALO_base::create_buffers(Index_ptr const& index_list_lengths,
 
   if (num_neighbors > 0) {
     if (separate_buffers) {
-      allocAndInitData(getDataSpace(vid), our_buffers[0], combined_buffer_size);
-      allocAndInitData(DataSpace::Host, mpi_buffers[0], combined_buffer_size);
+      allocAndInitData(getDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
+      allocAndInitData(DataSpace::Host, mpi_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
     } else {
-      allocAndInitData(getMPIDataSpace(vid), our_buffers[0], combined_buffer_size);
+      allocAndInitData(getMPIDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
       mpi_buffers[0] = our_buffers[0];
     }
 
     for (Index_type l = 1; l < num_neighbors; ++l) {
       Index_type last_buffer_len = num_vars * index_list_lengths[l-1];
-      Size_type last_buffer_size = getSizePaddedToDataAlignment(last_buffer_len*sizeof(Real_type));
-      our_buffers[l] = offsetPointer(our_buffers[l-1], last_buffer_size);
-      mpi_buffers[l] = offsetPointer(mpi_buffers[l-1], last_buffer_size);
+      Size_type last_buffer_nbytes = getNBytesPaddedToDataAlignment(last_buffer_len*sizeof(Real_type));
+      our_buffers[l] = offsetPointer(our_buffers[l-1], last_buffer_nbytes);
+      mpi_buffers[l] = offsetPointer(mpi_buffers[l-1], last_buffer_nbytes);
     }
   }
 }

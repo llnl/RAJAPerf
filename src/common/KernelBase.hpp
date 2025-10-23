@@ -308,7 +308,7 @@ public:
   }
 
   Size_type getDataAlignment() const;
-  Size_type getSizePaddedToDataAlignment(Size_type size) const;
+  Size_type getNBytesPaddedToDataAlignment(Size_type size) const;
 
   template <typename T>
   T offsetPointer(T ptr, Size_type num_bytes) const
