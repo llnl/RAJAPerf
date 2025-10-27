@@ -24,7 +24,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -76,7 +76,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                 const Real_ptr D, const Real_ptr X, Real_ptr Y, volatile Index_type runtime_block_size) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -128,7 +128,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                 const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -180,7 +180,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 

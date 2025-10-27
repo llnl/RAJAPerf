@@ -6,17 +6,13 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-// Uncomment to add compiler directives loop unrolling
-//#define USE_RAJAPERF_UNROLL
-
-// Uncomment to use direct policies
 #include "MASSVEC3DPA.hpp"
 
 #include "RAJA/RAJA.hpp"
 
-#if defined(RAJA_ENABLE_HIP)
+#if defined(RAJA_ENABLE_CUDA)
 
-#include "common/HipDataUtils.hpp"
+#include "common/CudaDataUtils.hpp"
 
 #include <iostream>
 
@@ -28,7 +24,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -78,9 +74,9 @@ __global__ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr B
 template < size_t block_size >
   __launch_bounds__(block_size)
 __global__ void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                const Real_ptr D, const Real_ptr X, Real_ptr Y, Index_type runtime_block_size) {
+                const Real_ptr D, const Real_ptr X, Real_ptr Y, volatile Index_type runtime_block_size) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -132,7 +128,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                 const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -184,7 +180,7 @@ template < size_t block_size >
 __global__ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
-  const int e = hipBlockIdx_x;
+  const int e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
@@ -232,26 +228,26 @@ __global__ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
 }
 
 template < size_t block_size >
-void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
+void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
   const Index_type run_reps = getRunReps();
 
-  auto res{getHipResource()};
+  auto res{getCudaResource()};
 
   MASSVEC3DPA_DATA_SETUP;
 
   switch (vid) {
 
-  case Base_HIP: {
+  case Base_CUDA: {
 
   if(tune_idx == 0) {
-     std::cout<<"MassVec3DPA_BLOCKDIM_LOOP_INC "<<std::endl;
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (MassVec3DPA_BLOCKDIM_LOOP_INC<block_size>),
+      RPlaunchCudaKernel( (MassVec3DPA_BLOCKDIM_LOOP_INC<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, Bt, D, X, Y );
@@ -261,17 +257,16 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
   //Loop constants
   } else if (tune_idx == 1) {
 
-  std::cout<<"MassVec3DPA_RUNTIME_LOOP_INC "<<std::endl;
     //Mark volatile because we want the value to be treated as a runtime value
     volatile Index_type runtime_loop_bounds = MVPA_Q1D;
-
+    
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (MassVec3DPA_RUNTIME_LOOP_INC<block_size>),
+      RPlaunchCudaKernel( (MassVec3DPA_RUNTIME_LOOP_INC<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, Bt, D, X, Y, runtime_loop_bounds );
@@ -280,14 +275,13 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
   } else if (tune_idx == 2) {
 
-  std::cout<<"MassVec3DPA_COMPILE_LOOP_INC "<<std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (MassVec3DPA_COMPILE_LOOP_INC<block_size>),
+      RPlaunchCudaKernel( (MassVec3DPA_COMPILE_LOOP_INC<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, Bt, D, X, Y );
@@ -296,14 +290,13 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
   } else if (tune_idx == 3) {
 
-    std::cout<<"MassVec3DPA_DIRECT "<<std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (MassVec3DPA_DIRECT<block_size>),
+      RPlaunchCudaKernel( (MassVec3DPA_DIRECT<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, Bt, D, X, Y);
@@ -315,21 +308,21 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
     break;
   }
 
-  case RAJA_HIP: {
+  case RAJA_CUDA: {
 
     constexpr bool async = true;
 
-    using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, MVPA_Q1D*MVPA_Q1D*MVPA_Q1D>>;
+    using launch_policy = RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, MVPA_Q1D*MVPA_Q1D*MVPA_Q1D>>;
 
-    using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
+    using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
 
     if(tune_idx == 0) {
 
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
+    using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
+    using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
+    using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -436,11 +429,11 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
     if(tune_idx == 1) {
 
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<MVPA_Q1D>>;
+    using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<MVPA_Q1D>>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<MVPA_Q1D>>;
+    using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<MVPA_Q1D>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;
+    using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<MVPA_Q1D>>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -547,11 +540,11 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
     if(tune_idx == 2) {
 
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_direct>;
+    using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_direct>;
+    using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_direct>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
+    using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_direct>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -661,26 +654,26 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
   default: {
 
-    getCout() << "\n MASSVEC3DPA : Unknown Hip variant id = " << vid << std::endl;
+    getCout() << "\n MASSVEC3DPA : Unknown Cuda variant id = " << vid << std::endl;
     break;
   }
   }
 }
 
-//RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASSVEC3DPA, Hip)
+//RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASSVEC3DPA, Cuda)
 
-void MASSVEC3DPA::runHipVariant(VariantID vid, size_t tune_idx)
+void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx)
 {
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
     setBlockSize(block_size);
-    runHipVariantImpl<block_size>(vid, tune_idx);
+    runCudaVariantImpl<block_size>(vid, tune_idx);
   });
 
 }
 
-void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid)
+void MASSVEC3DPA::setCudaTuningDefinitions(VariantID vid)
 {
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
@@ -688,13 +681,13 @@ void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid)
     if (run_params.numValidGPUBlockSize() == 0u ||
         run_params.validGPUBlockSize(block_size)) {
 
-      if (vid == RAJA_HIP) {
+      if (vid == RAJA_CUDA) {
         addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
         addVariantTuningName(vid, "COMPILE_LOOP_INC");
         addVariantTuningName(vid, "DIRECT");
       }
 
-      if(vid == Base_HIP) {
+      if(vid == Base_CUDA) {
         addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
         addVariantTuningName(vid, "RUNTIME_LOOP_INC");
         addVariantTuningName(vid, "COMPILE_LOOP_INC");
@@ -710,4 +703,4 @@ void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid)
 } // end namespace apps
 } // end namespace rajaperf
 
-#endif // RAJA_ENABLE_HIP
+#endif // RAJA_ENABLE_CUDA
