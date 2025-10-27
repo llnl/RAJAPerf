@@ -10,8 +10,6 @@
 //#define USE_RAJAPERF_UNROLL
 
 // Uncomment to use direct policies
-#define USE_DIRECT
-
 #include "MASSVEC3DPA.hpp"
 
 #include "RAJA/RAJA.hpp"
@@ -27,7 +25,7 @@ namespace apps {
 
 template < size_t block_size >
   __launch_bounds__(block_size)
-__global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
+__global__ void MassVec3DPA_BLOCKDIM_LOOP_BOUNDS(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
   const int e = hipBlockIdx_x;
@@ -78,7 +76,163 @@ __global__ void MassVec3DPA(const Real_ptr B, const Real_ptr Bt,
 }
 
 template < size_t block_size >
-void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
+  __launch_bounds__(block_size)
+__global__ void MassVec3DPA_RUNTIME_LOOP_BOUNDS(const Real_ptr B, const Real_ptr Bt,
+                const Real_ptr D, const Real_ptr X, Real_ptr Y, Index_type runtime_block_size) {
+
+  const int e = hipBlockIdx_x;
+
+  MASSVEC3DPA_0_GPU;
+
+  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, runtime_block_size) {
+    MASSVEC3DPA_1;
+  }
+
+  for (int c = 0; c < 3; ++c) {
+   GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D, runtime_block_size) {
+      MASSVEC3DPA_2;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D, runtime_block_size) {
+      MASSVEC3DPA_3;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D, runtime_block_size) {
+      MASSVEC3DPA_4;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D, runtime_block_size) {
+      MASSVEC3DPA_5;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D, runtime_block_size) {
+      MASSVEC3DPA_6;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D, runtime_block_size) {
+      MASSVEC3DPA_7;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D, runtime_block_size) {
+      MASSVEC3DPA_8;
+    }
+    __syncthreads();
+
+  } // (c) dimension loop
+}
+
+template < size_t block_size >
+  __launch_bounds__(block_size)
+__global__ void MassVec3DPA_COMPILE_LOOP_BOUNDS(const Real_ptr B, const Real_ptr Bt,
+                const Real_ptr D, const Real_ptr X, Real_ptr Y) {
+
+  const int e = hipBlockIdx_x;
+
+  MASSVEC3DPA_0_GPU;
+
+  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, block_size) {
+    MASSVEC3DPA_1;
+  }
+
+  for (int c = 0; c < 3; ++c) {
+   GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D, block_size) {
+      MASSVEC3DPA_2;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D, block_size) {
+      MASSVEC3DPA_3;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D, block_size) {
+      MASSVEC3DPA_4;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D, block_size) {
+      MASSVEC3DPA_5;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D, block_size) {
+      MASSVEC3DPA_6;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D, block_size) {
+      MASSVEC3DPA_7;
+    }
+    __syncthreads();
+
+    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D, block_size) {
+      MASSVEC3DPA_8;
+    }
+    __syncthreads();
+
+  } // (c) dimension loop
+}
+
+template < size_t block_size >
+  __launch_bounds__(block_size)
+__global__ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
+                         const Real_ptr D, const Real_ptr X, Real_ptr Y) {
+
+  const int e = hipBlockIdx_x;
+
+  MASSVEC3DPA_0_GPU;
+
+  GPU_SHARED_DIRECT_2D(q, d, MVPA_Q1D, MVPA_D1D) {
+    MASSVEC3DPA_1;
+  }
+
+  for (int c = 0; c < 3; ++c) {
+    GPU_SHARED_DIRECT_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+      MASSVEC3DPA_2;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D) {
+      MASSVEC3DPA_3;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D) {
+      MASSVEC3DPA_4;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
+      MASSVEC3DPA_5;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
+      MASSVEC3DPA_6;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
+      MASSVEC3DPA_7;
+    }
+    __syncthreads();
+
+    GPU_SHARED_DIRECT_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+      MASSVEC3DPA_8;
+    }
+    __syncthreads();
+
+  } // (c) dimension loop
+}
+
+template < size_t block_size >
+void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -89,19 +243,74 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
 
   case Base_HIP: {
 
+  if(tune_idx == 0) {
+     std::cout<<"MassVec3DPA_BLOCKDIM_LOOP_BOUNDS "<<std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (MassVec3DPA<block_size>),
+      RPlaunchHipKernel( (MassVec3DPA_BLOCKDIM_LOOP_BOUNDS<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, Bt, D, X, Y );
-
     }
     stopTimer();
+
+  //Loop constants
+  } else if (tune_idx == 1) {
+
+  std::cout<<"MassVec3DPA_RUNTIME_LOOP_BOUNDS "<<std::endl;
+    //Mark volatile because we want the value to be treated as a runtime value
+    volatile Index_type runtime_loop_bounds = MVPA_Q1D;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+
+      dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
+      constexpr size_t shmem = 0;
+
+      RPlaunchHipKernel( (MassVec3DPA_RUNTIME_LOOP_BOUNDS<block_size>),
+                         NE, nthreads_per_block,
+                         shmem, res.get_stream(),
+                         B, Bt, D, X, Y, runtime_loop_bounds );
+    }
+    stopTimer();
+
+  } else if (tune_idx == 2) {
+
+  std::cout<<"MassVec3DPA_COMPILE_LOOP_BOUNDS "<<std::endl;
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+
+      dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
+      constexpr size_t shmem = 0;
+
+      RPlaunchHipKernel( (MassVec3DPA_COMPILE_LOOP_BOUNDS<block_size>),
+                         NE, nthreads_per_block,
+                         shmem, res.get_stream(),
+                         B, Bt, D, X, Y );
+    }
+    stopTimer();
+
+  } else if (tune_idx == 3) {
+
+    std::cout<<"MassVec3DPA_DIRECT "<<std::endl;
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+
+      dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
+      constexpr size_t shmem = 0;
+
+      RPlaunchHipKernel( (MassVec3DPA_DIRECT<block_size>),
+                         NE, nthreads_per_block,
+                         shmem, res.get_stream(),
+                         B, Bt, D, X, Y);
+    }
+    stopTimer();
+
+  }
 
     break;
   }
@@ -115,7 +324,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
     /*Compile time loop bounds */
-    /*   
+    /*
 #if defined(USE_DIRECT)
     using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MVPA_Q1D>>;
 
@@ -256,7 +465,46 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASSVEC3DPA, Hip)
+//RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASSVEC3DPA, Hip)
+
+void MASSVEC3DPA::runHipVariant(VariantID vid, size_t tune_idx)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    setBlockSize(block_size);
+    runHipVariantImpl<block_size>(vid, tune_idx);
+  });
+
+}
+
+void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid)
+{
+
+  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+      if (vid == RAJA_HIP) {
+        addVariantTuningName(vid, "BLOCKDIM_LOOP_BOUNDS");
+        addVariantTuningName(vid, "RUNTIME_LOOP_BOUNDS");
+        addVariantTuningName(vid, "COMPILE_LOOP_BOUNDS");
+        addVariantTuningName(vid, "DIRECT");
+      }
+
+      if(vid == Base_HIP) {
+        addVariantTuningName(vid, "BLOCKDIM_LOOP_BOUNDS");
+        addVariantTuningName(vid, "RUNTIME_LOOP_BOUNDS");
+        addVariantTuningName(vid, "COMPILE_LOOP_BOUNDS");
+        addVariantTuningName(vid, "DIRECT");
+      }
+
+    }
+
+  });
+
+}
 
 } // end namespace apps
 } // end namespace rajaperf

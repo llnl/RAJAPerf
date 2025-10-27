@@ -171,9 +171,9 @@ public:
   void setSyclTuningDefinitions(VariantID vid);
 
   template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid);
+  void runCudaVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t block_size >
-  void runHipVariantImpl(VariantID vid);
+  void runHipVariantImpl(VariantID vid, size_t tune_idx);
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);
 

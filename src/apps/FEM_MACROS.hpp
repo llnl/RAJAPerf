@@ -42,29 +42,37 @@
 
 
 #if defined(RAJA_ENABLE_CUDA) || defined(RAJA_ENABLE_HIP)
-#if defined(USE_DIRECT)
-#define GPU_SHARED_LOOP_2D(tx, ty, Nx, Ny)  \
+#define GPU_SHARED_DIRECT_2D(tx, ty, Nx, Ny)  \
    if (threadIdx.z < 1)                        \
       if (const int ty = threadIdx.y; ty < Ny) \
          if (const int tx = threadIdx.x; tx < Nx)
 
-#define GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) \
+#define GPU_SHARED_DIRECT_3D(tx, ty, tz, Nx, Ny, Nz) \
    if (const int tz = threadIdx.z; tz < Nz)           \
       if (const int ty = threadIdx.y; ty < Ny)        \
          if (const int tx = threadIdx.x; tx < Nx)
-#else
-
-#define GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)          \
-   for (int tz = threadIdx.z; tz < Nz; tz += blockDim.z)    \
-      for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y) \
-         for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
 
 #define GPU_SHARED_LOOP_2D(tx, ty, Nx, Ny)                      \
    if (threadIdx.z < 1)                                     \
       for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y) \
          for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
 
-#endif
+#define GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz)          \
+   for (int tz = threadIdx.z; tz < Nz; tz += blockDim.z)    \
+      for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y) \
+         for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
+
+#define GPU_SHARED_LOOP_2D_INC(tx, ty, Nx, Ny, runtime_blocks_size)\
+   if (threadIdx.z < 1)                                     \
+      for (int ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size) \
+         for (int tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
+
+#define GPU_SHARED_LOOP_3D_INC(tx, ty, tz, Nx, Ny, Nz, runtime_blocks_size)   \
+   for (int tz = threadIdx.z; tz < Nz; tz += runtime_blocks_size)    \
+      for (int ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size) \
+         for (int tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
+
+
 #endif
 
 
