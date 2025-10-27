@@ -103,7 +103,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid) {
     break;
   }
 
-  case RAJA_HIP: {
+  case RAJA_CUDA: {
 
     constexpr bool async = true;
 
