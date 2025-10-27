@@ -6,10 +6,6 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-// Uncomment to add compiler directives loop unrolling
-//#define USE_RAJAPERF_UNROLL
-
-// Uncomment to use direct policies
 #include "MASSVEC3DPA.hpp"
 
 #include "RAJA/RAJA.hpp"
@@ -78,7 +74,7 @@ __global__ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr B
 template < size_t block_size >
   __launch_bounds__(block_size)
 __global__ void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                const Real_ptr D, const Real_ptr X, Real_ptr Y, Index_type runtime_block_size) {
+                const Real_ptr D, const Real_ptr X, Real_ptr Y, volatile Index_type runtime_block_size) {
 
   const int e = hipBlockIdx_x;
 
@@ -244,7 +240,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
   case Base_HIP: {
 
   if(tune_idx == 0) {
-     std::cout<<"MassVec3DPA_BLOCKDIM_LOOP_INC "<<std::endl;
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
@@ -261,10 +257,9 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
   //Loop constants
   } else if (tune_idx == 1) {
 
-  std::cout<<"MassVec3DPA_RUNTIME_LOOP_INC "<<std::endl;
     //Mark volatile because we want the value to be treated as a runtime value
     volatile Index_type runtime_loop_bounds = MVPA_Q1D;
-
+    
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
@@ -280,7 +275,6 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
   } else if (tune_idx == 2) {
 
-  std::cout<<"MassVec3DPA_COMPILE_LOOP_INC "<<std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
@@ -296,7 +290,6 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
 
   } else if (tune_idx == 3) {
 
-    std::cout<<"MassVec3DPA_DIRECT "<<std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
