@@ -55,7 +55,7 @@ rm -rf build_${BUILD_SUFFIX} >/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
 
-module load cmake/3.24.2
+module load cmake/3.29.2
 
 # unload rocm to avoid configuration problems where the loaded rocm and COMP_VER
 # are inconsistent causing the rocprim from the module to be used unexpectedly
@@ -63,6 +63,8 @@ module load cmake/3.24.2
 
 if [[ ${COMP_VER} =~ .*magic.* ]]; then
   ROCM_PATH="/usr/tce/packages/rocmcc/rocmcc-${COMP_VER}"
+elif [[ ${COMP_VER} =~ .*beta.* ]]; then
+  ROCM_PATH="/usr/tce/packages/rocbeta/rocm-${COMP_VER}"
 else
   ROCM_PATH="/usr/tce/packages/rocmcc-tce/rocmcc-${COMP_VER}"
 fi
