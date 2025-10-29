@@ -23,6 +23,39 @@
 #include <limits>
 
 
+namespace camp
+{
+
+namespace experimental
+{
+
+template<>
+struct StreamInsertHelper<::cub::Sum&>
+{
+  ::cub::Sum& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::cub::Sum";
+  }
+};
+///
+template<>
+struct StreamInsertHelper<::cub::Sum const&>
+{
+  ::cub::Sum const& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::cub::Sum";
+  }
+};
+
+}  // closing brace for experimental namespace
+
+}  // closing brace for camp namespace
+
+
 namespace rajaperf
 {
 namespace algorithm
@@ -77,14 +110,14 @@ void REDUCE_SUM::runCudaVariantCub(VariantID vid)
     // Determine temporary device storage requirements
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
-    cudaErrchk(::cub::DeviceReduce::Reduce(d_temp_storage,
-                                           temp_storage_bytes,
-                                           x+ibegin,
-                                           sum,
-                                           len,
-                                           ::cub::Sum(),
-                                           m_sum_init,
-                                           stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceReduce::Reduce,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        sum,
+        len,
+        ::cub::Sum(),
+        m_sum_init,
+        stream);
 
     // Allocate temporary storage
     unsigned char* temp_storage;
@@ -96,14 +129,14 @@ void REDUCE_SUM::runCudaVariantCub(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
-      cudaErrchk(::cub::DeviceReduce::Reduce(d_temp_storage,
-                                             temp_storage_bytes,
-                                             x+ibegin,
-                                             sum,
-                                             len,
-                                             ::cub::Sum(),
-                                             m_sum_init,
-                                             stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceReduce::Reduce,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          sum,
+          len,
+          ::cub::Sum(),
+          m_sum_init,
+          stream);
 
       RAJAPERF_CUDA_REDUCER_COPY_BACK(sum, hsum, 1, 1);
       m_sum = hsum[0];

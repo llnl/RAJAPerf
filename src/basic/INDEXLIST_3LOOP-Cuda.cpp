@@ -76,14 +76,14 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     int scan_size = iend+1 - ibegin;
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
-    cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                temp_storage_bytes,
-                                                counts+ibegin,
-                                                counts+ibegin,
-                                                binary_op,
-                                                init_val,
-                                                scan_size,
-                                                stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+        d_temp_storage, temp_storage_bytes,
+        counts+ibegin,
+        counts+ibegin,
+        binary_op,
+        init_val,
+        scan_size,
+        stream);
 
     unsigned char* temp_storage;
     allocData(DataSpace::CudaDevice, temp_storage, temp_storage_bytes);
@@ -100,21 +100,21 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
                           shmem, stream,
                           x, counts, iend );
 
-      cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                  temp_storage_bytes,
-                                                  counts+ibegin,
-                                                  counts+ibegin,
-                                                  binary_op,
-                                                  init_val,
-                                                  scan_size,
-                                                  stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+          d_temp_storage, temp_storage_bytes,
+          counts+ibegin,
+          counts+ibegin,
+          binary_op,
+          init_val,
+          scan_size,
+          stream);
 
       RPlaunchCudaKernel( (indexlist_make_list<block_size>),
                           grid_size, block_size,
                           shmem, stream,
                           list, counts, len, iend );
 
-      cudaErrchk( cudaStreamSynchronize(stream) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, stream );
       m_len = *len;
 
     }

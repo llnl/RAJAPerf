@@ -48,7 +48,8 @@ void MEMSET::runCudaVariantLibrary(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      cudaErrchk( cudaMemsetAsync(MEMSET_STD_ARGS, res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
+          MEMSET_STD_ARGS, res.get_stream() );
 
     }
     stopTimer();

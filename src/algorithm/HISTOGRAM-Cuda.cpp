@@ -100,15 +100,15 @@ void HISTOGRAM::runCudaVariantLibrary(VariantID vid)
     // Determine temporary device storage requirements
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
-    cudaErrchk(::cub::DeviceHistogram::HistogramEven(d_temp_storage,
-                                                     temp_storage_bytes,
-                                                     bins+ibegin,
-                                                     counts,
-                                                     static_cast<int>(num_bins+1),
-                                                     static_cast<Index_type>(0),
-                                                     num_bins,
-                                                     len,
-                                                     stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceHistogram::HistogramEven,
+        d_temp_storage, temp_storage_bytes,
+        bins+ibegin,
+        counts,
+        static_cast<int>(num_bins+1),
+        static_cast<Index_type>(0),
+        num_bins,
+        len,
+        stream);
 
     // Allocate temporary storage
     unsigned char* temp_storage;
@@ -119,15 +119,15 @@ void HISTOGRAM::runCudaVariantLibrary(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
-      cudaErrchk(::cub::DeviceHistogram::HistogramEven(d_temp_storage,
-                                                       temp_storage_bytes,
-                                                       bins+ibegin,
-                                                       counts,
-                                                       static_cast<int>(num_bins+1),
-                                                       static_cast<Index_type>(0),
-                                                       num_bins,
-                                                       len,
-                                                       stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceHistogram::HistogramEven,
+          d_temp_storage, temp_storage_bytes,
+          bins+ibegin,
+          counts,
+          static_cast<int>(num_bins+1),
+          static_cast<Index_type>(0),
+          num_bins,
+          len,
+          stream);
 
       RAJAPERF_CUDA_REDUCER_COPY_BACK(counts, hcounts, num_bins, 1);
       HISTOGRAM_GPU_FINALIZE_COUNTS(hcounts, num_bins, 1);
@@ -166,7 +166,7 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
     auto* func = &histogram_atomic_runtime<block_size>;
 
     cudaFuncAttributes func_attr;
-    cudaErrchk(cudaFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(cudaFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 

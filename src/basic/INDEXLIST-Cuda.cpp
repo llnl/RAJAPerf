@@ -105,8 +105,8 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      cudaErrchk( cudaMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size, 
-                                  res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
       RPlaunchCudaKernel( (indexlist_custom<block_size, items_per_thread>),
                           grid_size, block_size,
                           shmem_size, res.get_stream(),
@@ -114,7 +114,7 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
                           block_counts, grid_counts, block_readys,
                           len, iend-ibegin );
 
-      cudaErrchk( cudaStreamSynchronize( res.get_stream() ) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, res.get_stream() );
       m_len = *len;
 
     }

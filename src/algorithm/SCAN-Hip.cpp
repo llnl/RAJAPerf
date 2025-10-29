@@ -98,23 +98,23 @@ void SCAN::runHipVariantLibrary(VariantID vid)
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
 #if defined(__HIPCC__)
-    hipErrchk(::rocprim::exclusive_scan(d_temp_storage,
-                                        temp_storage_bytes,
-                                        x+ibegin,
-                                        y+ibegin,
-                                        init_val,
-                                        len,
-                                        binary_op,
-                                        stream));
+    CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::exclusive_scan,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        y+ibegin,
+        init_val,
+        len,
+        binary_op,
+        stream);
 #elif defined(__CUDACC__)
-    hipErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                               temp_storage_bytes,
-                                               x+ibegin,
-                                               y+ibegin,
-                                               binary_op,
-                                               init_val,
-                                               len,
-                                               stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        y+ibegin,
+        binary_op,
+        init_val,
+        len,
+        stream);
 #endif
 
     // Allocate temporary storage
@@ -127,23 +127,23 @@ void SCAN::runHipVariantLibrary(VariantID vid)
 
       // Run
 #if defined(__HIPCC__)
-      hipErrchk(::rocprim::exclusive_scan(d_temp_storage,
-                                          temp_storage_bytes,
-                                          x+ibegin,
-                                          y+ibegin,
-                                          init_val,
-                                          len,
-                                          binary_op,
-                                          stream));
+      CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::exclusive_scan,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          y+ibegin,
+          init_val,
+          len,
+          binary_op,
+          stream);
 #elif defined(__CUDACC__)
-      hipErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                 temp_storage_bytes,
-                                                 x+ibegin,
-                                                 y+ibegin,
-                                                 binary_op,
-                                                 init_val,
-                                                 len,
-                                                 stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          y+ibegin,
+          binary_op,
+          init_val,
+          len,
+          stream);
 #endif
 
     }
@@ -193,8 +193,8 @@ void SCAN::runHipVariantCustom(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
-                                res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
 
       RPlaunchHipKernel( (scan_custom<block_size, items_per_thread>),
                          grid_size, block_size,

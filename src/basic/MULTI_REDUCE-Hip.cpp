@@ -93,7 +93,7 @@ void MULTI_REDUCE::runHipVariantAtomicRuntime(VariantID vid)
     auto* func = &multi_reduce_atomic_runtime<block_size>;
 
     hipFuncAttributes func_attr;
-    hipErrchk(hipFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_HIP_API_INVOKE_AND_CHECK(hipFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 

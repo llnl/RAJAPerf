@@ -288,14 +288,14 @@ public:
     if ( running_variant == Base_CUDA ||
          running_variant == Lambda_CUDA ||
          running_variant == RAJA_CUDA ) {
-      cudaErrchk( cudaDeviceSynchronize() );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaDeviceSynchronize );
     }
 #endif
 #if defined(RAJA_ENABLE_HIP)
     if ( running_variant == Base_HIP ||
          running_variant == Lambda_HIP ||
          running_variant == RAJA_HIP ) {
-      hipErrchk( hipDeviceSynchronize() );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipDeviceSynchronize );
     }
 #endif
 #if defined(RAJA_ENABLE_SYCL)
