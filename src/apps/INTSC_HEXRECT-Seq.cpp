@@ -42,7 +42,7 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           INTSC_HEXRECT_SEQ ( i ) ;
@@ -58,7 +58,7 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin ; i < iend; ++i ) {
           intsc_hexrect_lam( i );
@@ -75,7 +75,7 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexrect_lam);
