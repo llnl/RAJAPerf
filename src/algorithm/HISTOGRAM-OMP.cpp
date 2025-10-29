@@ -41,8 +41,7 @@ void HISTOGRAM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-          #pragma omp atomic
-          HISTOGRAM_BODY;
+          HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_OMP);
         }
 
         HISTOGRAM_FINALIZE_COUNTS;
@@ -60,9 +59,8 @@ void HISTOGRAM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       HISTOGRAM_SETUP_COUNTS;
 
       auto histogram_base_lam = [=](Index_type i) {
-                                 #pragma omp atomic
-                                 HISTOGRAM_BODY;
-                               };
+            HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_OMP);
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -95,7 +93,7 @@ void HISTOGRAM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-            HISTOGRAM_BODY;
+            HISTOGRAM_BODY(RAJAPERF_ADD);
         });
 
         HISTOGRAM_FINALIZE_COUNTS_RAJA(RAJA::omp_multi_reduce);

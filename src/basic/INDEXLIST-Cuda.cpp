@@ -32,10 +32,10 @@ template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
 __global__ void indexlist_custom(Real_ptr x,
                                  Int_ptr list,
-                                 Index_type* block_counts,
-                                 Index_type* grid_counts,
+                                 Index_ptr block_counts,
+                                 Index_ptr grid_counts,
                                  unsigned* block_readys,
-                                 Index_type* len,
+                                 Index_ptr len,
                                  Index_type iend)
 {
   // blocks do start running in order in cuda, so a block with a higher
@@ -93,11 +93,11 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
     const size_t grid_size = RAJA_DIVIDE_CEILING_INT((iend-ibegin), block_size*items_per_thread);
     const size_t shmem_size = 0;
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
-    Index_type* block_counts;
+    Index_ptr block_counts;
     allocData(DataSpace::CudaDevice, block_counts, grid_size);
-    Index_type* grid_counts;
+    Index_ptr grid_counts;
     allocData(DataSpace::CudaDevice, grid_counts, grid_size);
     unsigned* block_readys;
     allocData(DataSpace::CudaDevice, block_readys, grid_size);

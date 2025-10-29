@@ -64,13 +64,13 @@
   \
   Index_type num_vars = m_num_vars; \
   \
-  std::vector<int> mpi_ranks = m_mpi_ranks; \
+  Int_ptr mpi_ranks = m_mpi_ranks; \
   \
   std::vector<MPI_Request> pack_mpi_requests(num_neighbors); \
   std::vector<MPI_Request> unpack_mpi_requests(num_neighbors); \
   \
-  std::vector<Real_ptr> send_buffers = m_send_buffers; \
-  std::vector<Real_ptr> recv_buffers = m_recv_buffers;
+  Real_ptr_ptr send_buffers = m_send_buffers; \
+  Real_ptr_ptr recv_buffers = m_recv_buffers;
 
 
 #include "HALO_base.hpp"

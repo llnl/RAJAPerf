@@ -89,11 +89,11 @@
 // Number of Dofs/Qpts in 1D
 #define MEA_D1D 4
 #define MEA_Q1D 5
-#define B_MEA_(x, y) B[x + MEA_Q1D * y]
-#define M_(i1, i2, i3, j1, j2, j3, e)                                   \
+#define MEA_B(x, y) B[x + MEA_Q1D * y]
+#define MEA_M(i1, i2, i3, j1, j2, j3, e)                                   \
   M[i1 + MEA_D1D * (i2 + MEA_D1D * (i3 + MEA_D1D * (j1 + MEA_D1D * (j2 + MEA_D1D * (j3 + MEA_D1D * e)))))]
 
-#define D_MEA_(qx, qy, qz, e)                                           \
+#define MEA_D(qx, qy, qz, e)                                           \
   D[qx + MEA_Q1D * qy + MEA_Q1D * MEA_Q1D * qz +                        \
     MEA_Q1D * MEA_Q1D * MEA_Q1D * e]
 
@@ -101,7 +101,7 @@
 
 #define MASS3DEA_0_CPU double s_B[MEA_Q1D][MEA_D1D];
 
-#define MASS3DEA_1 s_B[q][d] = B_MEA_(q, d);
+#define MASS3DEA_1 s_B[q][d] = MEA_B(q, d);
 
 #define MASS3DEA_2                                                      \
   RAJA_TEAM_SHARED double s_D[MEA_Q1D][MEA_Q1D][MEA_Q1D];
@@ -109,17 +109,17 @@
 #define MASS3DEA_2_CPU                                                  \
   double s_D[MEA_Q1D][MEA_Q1D][MEA_Q1D];
 
-#define MASS3DEA_3 s_D[k1][k2][k3] = D_MEA_(k1, k2, k3, e);
+#define MASS3DEA_3 s_D[k1][k2][k3] = MEA_D(k1, k2, k3, e);
 
 #define MASS3DEA_4                                                      \
-  for (int j1 = 0; j1 < MEA_D1D; ++j1) {                                \
-    for (int j2 = 0; j2 < MEA_D1D; ++j2) {                              \
-      for (int j3 = 0; j3 < MEA_D1D; ++j3) {                            \
+  for (Index_type j1 = 0; j1 < MEA_D1D; ++j1) {                                \
+    for (Index_type j2 = 0; j2 < MEA_D1D; ++j2) {                              \
+      for (Index_type j3 = 0; j3 < MEA_D1D; ++j3) {                            \
                                                                         \
-        double val = 0.0;                                               \
-        for (int k1 = 0; k1 < MEA_Q1D; ++k1) {                          \
-          for (int k2 = 0; k2 < MEA_Q1D; ++k2) {                        \
-            for (int k3 = 0; k3 < MEA_Q1D; ++k3) {                      \
+        Real_type val = 0.0;                                               \
+        for (Index_type k1 = 0; k1 < MEA_Q1D; ++k1) {                          \
+          for (Index_type k2 = 0; k2 < MEA_Q1D; ++k2) {                        \
+            for (Index_type k3 = 0; k3 < MEA_Q1D; ++k3) {                      \
                                                                         \
               val += s_B[k1][i1] * s_B[k1][j1] * s_B[k2][i2]            \
                 * s_B[k2][j2] *                                         \
@@ -127,7 +127,7 @@
             }                                                           \
           }                                                             \
         }                                                               \
-        M_(i1, i2, i3, j1, j2, j3, e) = val;                            \
+        MEA_M(i1, i2, i3, j1, j2, j3, e) = val;                            \
       }                                                                 \
     }                                                                   \
   }

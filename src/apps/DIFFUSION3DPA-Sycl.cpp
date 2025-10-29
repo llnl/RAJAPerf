@@ -43,18 +43,18 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
       qu->submit([&](::sycl::handler& h) {
 
-        constexpr int MQ1 = DPA_Q1D;
-        constexpr int MD1 = DPA_D1D;
-        constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+        constexpr Index_type MQ1 = DPA_Q1D;
+        constexpr Index_type MD1 = DPA_D1D;
+        constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-        auto sBG_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MQ1*MD1), h);
+        auto sBG_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MQ1*MD1), h);
 
-        auto sm0_0_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
-        auto sm0_1_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
-        auto sm0_2_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
-        auto sm1_0_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
-        auto sm1_1_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
-        auto sm1_2_vec = ::sycl::local_accessor<double, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm0_0_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm0_1_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm0_2_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm1_0_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm1_1_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
+        auto sm1_2_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ*MDQ*MDQ), h);
 
         h.parallel_for
           (::sycl::nd_range<3>(gridSize, workGroupSize),
@@ -62,35 +62,35 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              const Index_type e = itm.get_group(2);
 
-             double *sBG = sBG_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sBG = sBG_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
-             double *sm0_0 = sm0_0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm0_1 = sm0_1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm0_2 = sm0_2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm1_0 = sm1_0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm1_1 = sm1_1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
-             double *sm1_2 = sm1_2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0_0 = sm0_0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0_1 = sm0_1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0_2 = sm0_2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1_0 = sm1_0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1_1 = sm1_1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1_2 = sm1_2_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
-             double (*B)[MD1] = (double (*)[MD1]) sBG;
-             double (*G)[MD1] = (double (*)[MD1]) sBG;
-             double (*Bt)[MQ1] = (double (*)[MQ1]) sBG;
-             double (*Gt)[MQ1] = (double (*)[MQ1]) sBG;
+             Real_type (*B)[MD1] = (Real_type (*)[MD1]) sBG;
+             Real_type (*G)[MD1] = (Real_type (*)[MD1]) sBG;
+             Real_type (*Bt)[MQ1] = (Real_type (*)[MQ1]) sBG;
+             Real_type (*Gt)[MQ1] = (Real_type (*)[MQ1]) sBG;
 
-             double (*s_X)[MD1][MD1]    = (double (*)[MD1][MD1]) (sm0_2);
-             double (*DDQ0)[MD1][MQ1]   = (double (*)[MD1][MQ1]) (sm0_0);
-             double (*DDQ1)[MD1][MQ1]   = (double (*)[MD1][MQ1]) (sm0_1);
-             double (*DQQ0)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_0);
-             double (*DQQ1)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_1);
-             double (*DQQ2)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_2);
-             double (*QQQ0)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_0);
-             double (*QQQ1)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_1);
-             double (*QQQ2)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_2);
-             double (*QQD0)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_0);
-             double (*QQD1)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_1);
-             double (*QQD2)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_2);
-             double (*QDD0)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_0);
-             double (*QDD1)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_1);
-             double (*QDD2)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_2);
+             Real_type (*s_X)[MD1][MD1]    = (Real_type (*)[MD1][MD1]) (sm0_2);
+             Real_type (*DDQ0)[MD1][MQ1]   = (Real_type (*)[MD1][MQ1]) (sm0_0);
+             Real_type (*DDQ1)[MD1][MQ1]   = (Real_type (*)[MD1][MQ1]) (sm0_1);
+             Real_type (*DQQ0)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_0);
+             Real_type (*DQQ1)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_1);
+             Real_type (*DQQ2)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_2);
+             Real_type (*QQQ0)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_0);
+             Real_type (*QQQ1)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_1);
+             Real_type (*QQQ2)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_2);
+             Real_type (*QQD0)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_0);
+             Real_type (*QQD1)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_1);
+             Real_type (*QQD2)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_2);
+             Real_type (*QDD0)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_0);
+             Real_type (*QDD1)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_1);
+             Real_type (*QDD2)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_2);
 
              SYCL_FOREACH_THREAD(dz, 0, DPA_D1D) {
                SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
@@ -197,12 +197,12 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
     size_t shmem = 0;
     {
-      constexpr int MQ1 = DPA_Q1D;
-      constexpr int MD1 = DPA_D1D;
-      constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+      constexpr Index_type MQ1 = DPA_Q1D;
+      constexpr Index_type MD1 = DPA_D1D;
+      constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
       const size_t local_mats = 6;
-      shmem += MQ1*MD1*sizeof(double) + local_mats*MDQ*MDQ*MDQ*sizeof(double);
+      shmem += MQ1*MD1*sizeof(Real_type) + local_mats*MDQ*MDQ*MDQ*sizeof(Real_type);
     }
 
     startTimer();
@@ -216,48 +216,48 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
             const bool symmetric = true;
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-            [&](int e) {
+            [&](Index_type e) {
 
               //Redefine inside the lambda to keep consistent with base version
-              constexpr int MQ1 = DPA_Q1D;
-              constexpr int MD1 = DPA_D1D;
-              constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+              constexpr Index_type MQ1 = DPA_Q1D;
+              constexpr Index_type MD1 = DPA_D1D;
+              constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
-              double *sBG = ctx.getSharedMemory<double>(MQ1*MD1);
-              double *sm0_0 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
-              double *sm0_1 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
-              double *sm0_2 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
-              double *sm1_0 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
-              double *sm1_1 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
-              double *sm1_2 = ctx.getSharedMemory<double>(MDQ*MDQ*MDQ);
+              Real_ptr sBG = ctx.getSharedMemory<Real_type>(MQ1*MD1);
+              Real_ptr sm0_0 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
+              Real_ptr sm0_1 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
+              Real_ptr sm0_2 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
+              Real_ptr sm1_0 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
+              Real_ptr sm1_1 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
+              Real_ptr sm1_2 = ctx.getSharedMemory<Real_type>(MDQ*MDQ*MDQ);
 
-             double (*B)[MD1] = (double (*)[MD1]) sBG;
-             double (*G)[MD1] = (double (*)[MD1]) sBG;
-             double (*Bt)[MQ1] = (double (*)[MQ1]) sBG;
-             double (*Gt)[MQ1] = (double (*)[MQ1]) sBG;
+             Real_type (*B)[MD1] = (Real_type (*)[MD1]) sBG;
+             Real_type (*G)[MD1] = (Real_type (*)[MD1]) sBG;
+             Real_type (*Bt)[MQ1] = (Real_type (*)[MQ1]) sBG;
+             Real_type (*Gt)[MQ1] = (Real_type (*)[MQ1]) sBG;
 
-             double (*s_X)[MD1][MD1]    = (double (*)[MD1][MD1]) (sm0_2);
-             double (*DDQ0)[MD1][MQ1]   = (double (*)[MD1][MQ1]) (sm0_0);
-             double (*DDQ1)[MD1][MQ1]   = (double (*)[MD1][MQ1]) (sm0_1);
-             double (*DQQ0)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_0);
-             double (*DQQ1)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_1);
-             double (*DQQ2)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm1_2);
-             double (*QQQ0)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_0);
-             double (*QQQ1)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_1);
-             double (*QQQ2)[MQ1][MQ1]   = (double (*)[MQ1][MQ1]) (sm0_2);
-             double (*QQD0)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_0);
-             double (*QQD1)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_1);
-             double (*QQD2)[MQ1][MD1]   = (double (*)[MQ1][MD1]) (sm1_2);
-             double (*QDD0)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_0);
-             double (*QDD1)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_1);
-             double (*QDD2)[MD1][MD1]   = (double (*)[MD1][MD1]) (sm0_2);
+             Real_type (*s_X)[MD1][MD1]    = (Real_type (*)[MD1][MD1]) (sm0_2);
+             Real_type (*DDQ0)[MD1][MQ1]   = (Real_type (*)[MD1][MQ1]) (sm0_0);
+             Real_type (*DDQ1)[MD1][MQ1]   = (Real_type (*)[MD1][MQ1]) (sm0_1);
+             Real_type (*DQQ0)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_0);
+             Real_type (*DQQ1)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_1);
+             Real_type (*DQQ2)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm1_2);
+             Real_type (*QQQ0)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_0);
+             Real_type (*QQQ1)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_1);
+             Real_type (*QQQ2)[MQ1][MQ1]   = (Real_type (*)[MQ1][MQ1]) (sm0_2);
+             Real_type (*QQD0)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_0);
+             Real_type (*QQD1)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_1);
+             Real_type (*QQD2)[MQ1][MD1]   = (Real_type (*)[MQ1][MD1]) (sm1_2);
+             Real_type (*QDD0)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_0);
+             Real_type (*QDD1)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_1);
+             Real_type (*QDD2)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_2);
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                        [&](int dx) {
+                        [&](Index_type dx) {
 
                           DIFFUSION3DPA_1;
 
@@ -270,11 +270,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-                [&](int RAJA_UNUSED_ARG(dz)) {
+                [&](Index_type RAJA_UNUSED_ARG(dz)) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_2;
 
@@ -288,11 +288,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_3;
 
@@ -306,11 +306,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                    [&](int qy) {
+                    [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_4;
 
@@ -324,11 +324,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                   [&](int qy) {
+                   [&](Index_type qy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](int qx) {
+                       [&](Index_type qx) {
 
                          DIFFUSION3DPA_5;
 
@@ -342,11 +342,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-               [&](int RAJA_UNUSED_ARG(dz)) {
+               [&](Index_type RAJA_UNUSED_ARG(dz)) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int d) {
+                   [&](Index_type d) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](int q) {
+                       [&](Index_type q) {
 
                          DIFFUSION3DPA_6;
 
@@ -360,11 +360,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                   [&](int qy) {
+                   [&](Index_type qy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_7;
 
@@ -378,11 +378,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int dy) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_8;
 
@@ -396,11 +396,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-               [&](int dz) {
+               [&](Index_type dz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int dy) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_9;
 

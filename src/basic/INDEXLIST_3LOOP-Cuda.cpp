@@ -21,18 +21,11 @@ namespace rajaperf
 namespace basic
 {
 
-#define INDEXLIST_3LOOP_DATA_SETUP_CUDA \
-  Index_type* counts; \
-  allocData(DataSpace::CudaDevice, counts, iend+1);
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA \
-  deallocData(DataSpace::CudaDevice, counts);
-
 
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_conditional(Real_ptr x,
-                                      Index_type* counts,
+                                      Index_ptr counts,
                                       Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -44,8 +37,8 @@ __global__ void indexlist_conditional(Real_ptr x,
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_make_list(Int_ptr list,
-                                    Index_type* counts,
-                                    Index_type* len,
+                                    Index_ptr counts,
+                                    Index_ptr len,
                                     Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -71,9 +64,9 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
   if ( vid == Base_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
 
     cudaStream_t stream = res.get_stream();
@@ -130,13 +123,13 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     deallocData(DataSpace::CudaDevice, temp_storage);
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else if ( vid == RAJA_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
 
     startTimer();
@@ -172,7 +165,7 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else {
     getCout() << "\n  INDEXLIST_3LOOP : Unknown variant id = " << vid << std::endl;

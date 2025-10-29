@@ -66,11 +66,11 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Lambda_OpenMP : {
 
       auto reduce_struct_x_base_lam = [=](Index_type i) -> Real_type {
-                                   return points.x[i];
+                                   return x[i];
                                  };
 
       auto reduce_struct_y_base_lam = [=](Index_type i) -> Real_type {
-                                   return points.y[i];
+                                   return y[i];
                                  };
 
       startTimer();

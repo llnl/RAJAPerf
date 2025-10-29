@@ -40,24 +40,24 @@
 #define REDUCE_STRUCT_DATA_SETUP \
   PointsType points; \
   points.N = getActualProblemSize(); \
-  points.x = m_x; \
-  points.y = m_y; \
+  Real_ptr x = m_x; \
+  Real_ptr y = m_y;
 
 #define REDUCE_STRUCT_BODY  \
-  xsum += points.x[i] ; \
-  xmin = RAJA_MIN(xmin, points.x[i]) ; \
-  xmax = RAJA_MAX(xmax, points.x[i]) ; \
-  ysum += points.y[i] ; \
-  ymin = RAJA_MIN(ymin, points.y[i]) ; \
-  ymax = RAJA_MAX(ymax, points.y[i]) ;
+  xsum += x[i] ; \
+  xmin = RAJA_MIN(xmin, x[i]) ; \
+  xmax = RAJA_MAX(xmax, x[i]) ; \
+  ysum += y[i] ; \
+  ymin = RAJA_MIN(ymin, y[i]) ; \
+  ymax = RAJA_MAX(ymax, y[i]) ;
 
 #define REDUCE_STRUCT_BODY_RAJA  \
-  xsum += points.x[i] ; \
-  xmin.min(points.x[i]) ; \
-  xmax.max(points.x[i]) ; \
-  ysum += points.y[i] ; \
-  ymin.min(points.y[i]) ; \
-  ymax.max(points.y[i]) ;
+  xsum += x[i] ; \
+  xmin.min(x[i]) ; \
+  xmax.max(x[i]) ; \
+  ysum += y[i] ; \
+  ymin.min(y[i]) ; \
+  ymax.max(y[i]) ;
 
 
 #include "common/KernelBase.hpp"
@@ -108,7 +108,6 @@ public:
 
   struct PointsType {
     Index_type N;
-    Real_ptr x, y;
 
     Real_ptr GetCenter(){return &center[0];};
     Real_type GetXMax(){return xmax;};

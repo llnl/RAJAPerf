@@ -39,8 +39,8 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
 
     case Base_OpenMPTarget : {
 
-      Real_ptr xa = points.x;
-      Real_ptr ya = points.y;
+      Real_ptr xa = x;
+      Real_ptr ya = y;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {

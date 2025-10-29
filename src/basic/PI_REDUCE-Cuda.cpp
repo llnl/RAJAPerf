@@ -37,7 +37,7 @@ __global__ void pi_reduce(Real_type dx,
 
   ppi[ threadIdx.x ] = pi_init;
   for ( ; i < iend ; i += gridDim.x * block_size ) {
-    double x = (double(i) + 0.5) * dx;
+    Real_type x = (Real_type(i) + 0.5) * dx;
     ppi[ threadIdx.x ] += dx / (1.0 + x * x);
   }
   __syncthreads();
@@ -50,7 +50,7 @@ __global__ void pi_reduce(Real_type dx,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( pi, ppi[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *pi, ppi[ 0 ] );
   }
 }
 

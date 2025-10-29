@@ -71,9 +71,9 @@ void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
   for (Index_type l = 0; l < s_num_neighbors; ++l) {
     Index_type buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
     if (separate_buffers) {
-      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len);
     } else {
-      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len);
     }
   }
 }

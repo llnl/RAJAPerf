@@ -29,7 +29,7 @@ __global__ void daxpy_atomic(Real_ptr y, Real_ptr x,
 {
    Index_type i = blockIdx.x * blockDim.x + threadIdx.x;
    if (i < iend) {
-     DAXPY_ATOMIC_RAJA_BODY(RAJA::hip_atomic);
+     DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP);
    }
 }
 
@@ -67,7 +67,7 @@ void DAXPY_ATOMIC::runHipVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto daxpy_atomic_lambda = [=] __device__ (Index_type i) {
-        DAXPY_ATOMIC_RAJA_BODY(RAJA::hip_atomic);
+        DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP);
       };
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
@@ -89,7 +89,7 @@ void DAXPY_ATOMIC::runHipVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-        DAXPY_ATOMIC_RAJA_BODY(RAJA::hip_atomic);
+        DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_HIP);
       });
 
     }

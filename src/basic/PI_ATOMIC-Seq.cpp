@@ -35,8 +35,7 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
         *pi = m_pi_init;
         for (Index_type i = ibegin; i < iend; ++i ) {
-          double x = (double(i) + 0.5) * dx;
-          *pi += dx / (1.0 + x * x);
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
         m_pi_final = *pi * 4.0;
 
@@ -50,9 +49,8 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Lambda_Seq : {
 
       auto piatomic_base_lam = [=](Index_type i) {
-                                 double x = (double(i) + 0.5) * dx;
-                                 *pi += dx / (1.0 + x * x);
-                               };
+            PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -80,8 +78,7 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
         RAJA::forall<RAJA::seq_exec>(  res,
           RAJA::RangeSegment(ibegin, iend),
           [=](Index_type i) {
-            double x = (double(i) + 0.5) * dx;
-            RAJA::atomicAdd<RAJA::seq_atomic>(pi, dx / (1.0 + x * x));
+            PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_SEQ);
         });
         m_pi_final = *pi * 4.0;
 

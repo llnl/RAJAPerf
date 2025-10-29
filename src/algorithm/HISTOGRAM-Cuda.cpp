@@ -49,7 +49,7 @@ __global__ void histogram_atomic_runtime(HISTOGRAM::Data_ptr global_counts,
       Index_type i = blockIdx.x * block_size + threadIdx.x;
       for ( ; i < iend ; i += gridDim.x * block_size ) {
         Index_type offset = bins[i] * shared_replication + RAJA::power_of_2_mod(Index_type{threadIdx.x}, shared_replication);
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&shared_counts[offset], HISTOGRAM::Data_type(1));
+        RAJAPERF_ATOMIC_ADD_CUDA(shared_counts[offset], HISTOGRAM::Data_type(1));
       }
     }
 
@@ -61,7 +61,7 @@ __global__ void histogram_atomic_runtime(HISTOGRAM::Data_ptr global_counts,
       }
       if (block_sum != HISTOGRAM::Data_type(0)) {
         Index_type offset = bin + RAJA::power_of_2_mod(Index_type{blockIdx.x}, global_replication) * num_bins;
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&global_counts[offset], block_sum);
+        RAJAPERF_ATOMIC_ADD_CUDA(global_counts[offset], block_sum);
       }
     }
 
@@ -71,7 +71,7 @@ __global__ void histogram_atomic_runtime(HISTOGRAM::Data_ptr global_counts,
     Index_type warp = i / warp_size;
     for ( ; i < iend ; i += gridDim.x * block_size ) {
       Index_type offset = bins[i] + RAJA::power_of_2_mod(warp, global_replication) * num_bins;
-      RAJA::atomicAdd<RAJA::cuda_atomic>(&global_counts[offset], HISTOGRAM::Data_type(1));
+      RAJAPERF_ATOMIC_ADD_CUDA(global_counts[offset], HISTOGRAM::Data_type(1));
     }
   }
 }
@@ -240,7 +240,7 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
       RAJA::forall<exec_policy>( res,
           RAJA::RangeSegment(ibegin, iend),
           [=] __device__ (Index_type i) {
-        HISTOGRAM_BODY;
+        HISTOGRAM_BODY(RAJAPERF_ADD);
       });
 
       HISTOGRAM_FINALIZE_COUNTS_RAJA(multi_reduce_policy);

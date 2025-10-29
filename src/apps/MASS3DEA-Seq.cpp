@@ -31,7 +31,7 @@ void MASS3DEA::runSeqVariant(VariantID vid,
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (int e = 0; e < NE; ++e) {
+      for (Index_type e = 0; e < NE; ++e) {
 
         MASS3DEA_0_CPU
 
@@ -90,16 +90,16 @@ void MASS3DEA::runSeqVariant(VariantID vid,
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-              [&](int e) {
+              [&](Index_type e) {
 
                   MASS3DEA_0
 
                   RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-                    [&](int ) {
+                    [&](Index_type ) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                        [&](int d) {
+                        [&](Index_type d) {
                           RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                            [&](int q) {
+                            [&](Index_type q) {
                               MASS3DEA_1
                             }
                           ); // RAJA::loop<inner_y>
@@ -111,11 +111,11 @@ void MASS3DEA::runSeqVariant(VariantID vid,
                   MASS3DEA_2
 
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                    [&](int k1) {
+                    [&](Index_type k1) {
                       RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                        [&](int k2) {
+                        [&](Index_type k2) {
                           RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                            [&](int k3) {
+                            [&](Index_type k3) {
                               MASS3DEA_3
                             }
                           ); // RAJA::loop<inner_x>
@@ -127,11 +127,11 @@ void MASS3DEA::runSeqVariant(VariantID vid,
                   ctx.teamSync();
 
                   RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                    [&](int i1) {
+                    [&](Index_type i1) {
                       RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                        [&](int i2) {
+                        [&](Index_type i2) {
                           RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                            [&](int i3) {
+                            [&](Index_type i3) {
                               MASS3DEA_4
                             }
                           ); // RAJA::loop<inner_x>

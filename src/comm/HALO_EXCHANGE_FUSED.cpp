@@ -80,7 +80,7 @@ void HALO_EXCHANGE_FUSED::setUp(VariantID vid, size_t tune_idx)
 {
   setUp_base(m_my_mpi_rank, m_mpi_dims.data(), m_num_vars, vid, tune_idx);
 
-  m_vars.resize(m_num_vars, nullptr);
+  allocAndInitDataConst(DataSpace::Host, m_vars, m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
     auto reset_var = allocAndInitDataForInit(m_vars[v], m_var_size, vid);
 
@@ -94,8 +94,8 @@ void HALO_EXCHANGE_FUSED::setUp(VariantID vid, size_t tune_idx)
 
 void HALO_EXCHANGE_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  for (Real_ptr var : m_vars) {
-    checksum[vid][tune_idx] += calcChecksum(var, m_var_size, vid);
+  for (Index_type v = 0; v < m_num_vars; ++v) {
+    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
   }
 }
 
@@ -104,7 +104,7 @@ void HALO_EXCHANGE_FUSED::tearDown(VariantID vid, size_t tune_idx)
   for (int v = 0; v < m_num_vars; ++v) {
     deallocData(m_vars[v], vid);
   }
-  m_vars.clear();
+  deallocData(DataSpace::Host, m_vars);
 
   tearDown_base(vid, tune_idx);
 }
