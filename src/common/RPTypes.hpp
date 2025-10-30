@@ -83,8 +83,27 @@ using Size_type = size_t;
 using Int_type = int;
 ///
 using Int_ptr = Int_type*;
+using Int_const_ptr = Int_type const*;
 ///
 using Int_ptr_ptr = Int_type**;
+
+using Char_type = char;
+///
+using Char_ptr = Char_type*;
+using Char_const_ptr = Char_type const*;
+
+using Uchar_type = unsigned char;
+///
+using Uchar_ptr = Uchar_type*;
+
+/*!
+ ******************************************************************************
+ *
+ * \brief Boolean types used in kernels.
+ *
+ ******************************************************************************
+ */
+using Bool_type = bool;
 
 
 /*!
@@ -124,8 +143,10 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
+using Real_const_ptr = Real_type const *;
 ///
 using Real_ptr_ptr = Real_type**;
+using Real_const_ptr_ptr = Real_type const **;
 
 #if defined(RP_USE_COMPLEX)
 ///
