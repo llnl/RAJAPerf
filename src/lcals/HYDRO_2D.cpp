@@ -36,15 +36,21 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   m_jn = m_kn = std::sqrt(getTargetProblemSize()) + std::sqrt(2)-1;
   m_array_length = m_kn * m_jn;
 
-  setActualProblemSize( getTargetProblemSize() );
+  setActualProblemSize( m_array_length );
 
-  setItsPerRep( 3 * getActualProblemSize() );
+  setItsPerRep( 3 * (m_kn-2) * (m_jn-2) );
   setKernelsPerRep(3);
-  setBytesReadPerRep( 4*sizeof(Real_type ) * m_array_length +
-                      4*sizeof(Real_type ) * m_array_length +
+  setBytesReadPerRep( 4*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) +
+
+                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
+                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-1) +
+                      2*sizeof(Real_type ) * ((m_kn) * (m_jn) - 4) +
+
                       4*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
   setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
+
                          2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
+
                          2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((14 +

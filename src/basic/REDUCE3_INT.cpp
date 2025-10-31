@@ -37,7 +37,7 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
                       1*sizeof(Int_type) * getActualProblemSize() );
   setBytesWrittenPerRep( 3*sizeof(Int_type) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize() + 1);
+  setFLOPsPerRep(0);
 
   setComplexity(Complexity::N);
 

@@ -28,13 +28,13 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setDefaultProblemSize(m_NE_default*MEA_Q1D*MEA_Q1D*MEA_Q1D);
   setDefaultReps(1);
 
-  const int ea_mat_entries = MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D;
+  const Index_type ea_mat_entries = MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D*MEA_D1D;
 
   m_NE = std::max((getTargetProblemSize() + (ea_mat_entries)/2) / (ea_mat_entries), Index_type(1));
 
-  setActualProblemSize( m_NE*ea_mat_entries);
+  setActualProblemSize( m_NE*ea_mat_entries );
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( m_NE*MEA_Q1D*MEA_Q1D*MEA_Q1D );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 1*sizeof(Real_type) * MEA_Q1D*MEA_D1D + // B
@@ -77,9 +77,9 @@ MASS3DEA::~MASS3DEA()
 void MASS3DEA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, int(MEA_Q1D*MEA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, int(MEA_Q1D*MEA_Q1D*MEA_Q1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_M, int(MEA_D1D*MEA_D1D*MEA_D1D*
+  allocAndInitDataConst(m_B, Index_type(MEA_Q1D*MEA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(MEA_Q1D*MEA_Q1D*MEA_Q1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_M, Index_type(MEA_D1D*MEA_D1D*MEA_D1D*
                                  MEA_D1D*MEA_D1D*MEA_D1D*m_NE), Real_type(0.0), vid);
 }
 

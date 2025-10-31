@@ -27,11 +27,10 @@ __global__ void pi_atomic(Real_ptr pi,
                           Real_type dx,
                           Index_type iend)
 {
-   Index_type i = blockIdx.x * block_size + threadIdx.x;
-   if (i < iend) {
-     double x = (double(i) + 0.5) * dx;
-     RAJA::atomicAdd<RAJA::cuda_atomic>(pi, dx / (1.0 + x * x));
-   }
+  Index_type i = blockIdx.x * block_size + threadIdx.x;
+  if (i < iend) {
+    PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA);
+  }
 }
 
 
@@ -80,8 +79,7 @@ void PI_ATOMIC::runCudaVariantImpl(VariantID vid)
       RAJAPERF_CUDA_REDUCER_INITIALIZE(&m_pi_init, pi, hpi, 1, 1);
 
       auto pi_atomic_lambda = [=] __device__ (Index_type i) {
-        double x = (double(i) + 0.5) * dx;
-        RAJA::atomicAdd<RAJA::cuda_atomic>(pi, dx / (1.0 + x * x));
+        PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA);
       };
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
@@ -108,8 +106,7 @@ void PI_ATOMIC::runCudaVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-          double x = (double(i) + 0.5) * dx;
-          RAJA::atomicAdd<RAJA::cuda_atomic>(pi, dx / (1.0 + x * x));
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_CUDA);
       });
 
       RAJAPERF_CUDA_REDUCER_COPY_BACK(pi, hpi, 1, 1);

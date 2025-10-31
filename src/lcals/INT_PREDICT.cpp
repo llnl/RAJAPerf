@@ -94,8 +94,8 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
   DataSpace ds = getDataSpace(vid);
   DataSpace hds = rajaperf::hostCopyDataSpace(ds);
   if (ds != hds) {
-    rajaperf::allocData(hds, px_host, m_array_length, getDataAlignment());
-    rajaperf::copyData(hds, px_host, ds, m_px, m_array_length);
+    allocData(hds, px_host, m_array_length);
+    copyData(hds, px_host, ds, m_px, m_array_length);
   }
 
   for (Index_type i = 0; i < getActualProblemSize(); ++i) {
@@ -105,8 +105,8 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
   checksum[vid][tune_idx] += calcChecksum(px_host, getActualProblemSize(), vid);
 
   if (ds != hds) {
-    rajaperf::copyData(ds, m_px, hds, px_host, m_array_length);
-    rajaperf::deallocData(hds, px_host);
+    copyData(ds, m_px, hds, px_host, m_array_length);
+    deallocData(hds, px_host);
   }
 }
 

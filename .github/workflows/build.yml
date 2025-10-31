@@ -80,6 +80,7 @@ jobs:
 #       uses: threeal/ctest-action@v1.1.0
 #       with:
 #         build-config: Debug
+## Directly execute ctest command
       - name: Run tests
         timeout-minutes: 45
         run: | 

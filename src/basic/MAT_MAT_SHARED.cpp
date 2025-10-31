@@ -25,19 +25,18 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setDefaultReps(5);
 
   m_N = std::sqrt(getTargetProblemSize()) + std::sqrt(2)-1;
+  const Index_type num_tiles = RAJA_DIVIDE_CEILING_INT(m_N, TL_SZ);
 
   setActualProblemSize(m_N * m_N);
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( num_tiles*num_tiles * TL_SZ*TL_SZ );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N );
   setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  const Index_type no_tiles = RAJA_DIVIDE_CEILING_INT(m_N, TL_SZ);
-  const Index_type no_blocks = RAJA_DIVIDE_CEILING_INT(m_N, TL_SZ);
-  setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * no_tiles * no_blocks * no_blocks);
+  setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);
 
   checksum_scale_factor = 1e-6 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /

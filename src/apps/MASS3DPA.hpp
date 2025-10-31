@@ -33,11 +33,11 @@
 ///   for(int dy=0; dy<MPA_D1D; ++dy) {
 ///     for(int dx=0; dx<MPA_D1D; ++dx) {
 ///       for (int dz = 0; dz< MPA_D1D; ++dz) {
-///         Xsmem[dz][dy][dx] = X_(dx, dy, dz, e);
+///         Xsmem[dz][dy][dx] = MPA_X(dx, dy, dz, e);
 ///       }
 ///     }
 ///     for(int dx=0; dx<MPA_Q1D; ++dx) {
-///      Bsmem[dx][dy] = B_(dx, dy);
+///      Bsmem[dx][dy] = MPA_B(dx, dy);
 ///     }
 ///   }
 ///
@@ -87,14 +87,14 @@
 ///          }
 ///       }
 ///       for (int qz = 0; qz < MPA_Q1D; qz++) {
-///         QQQ[qz][qy][qx] = u[qz] * D_(qx, qy, qz, e);
+///         QQQ[qz][qy][qx] = u[qz] * MPA_D(qx, qy, qz, e);
 ///       }
 ///     }
 ///   }
 ///
 ///   for(int d=0; d<MPA_D1D; ++d) {
 ///     for(int q=0; q<MPA_Q1D; ++q) {
-///       Btsmem[d][q] = Bt_(q, d);
+///       Btsmem[d][q] = MPA_Bt(q, d);
 ///     }
 ///   }
 ///
@@ -144,7 +144,7 @@
 ///          }
 ///       }
 ///       for (int dz = 0; dz < MPA_D1D; ++dz) {
-///         Y_(dx, dy, dz, e) += u[dz];
+///         MPA_Y(dx, dy, dz, e) += u[dz];
 ///       }
 ///     }
 ///   }
@@ -171,13 +171,13 @@ Index_type NE = m_NE;
 //Number of Dofs/Qpts in 1D
 #define MPA_D1D 4
 #define MPA_Q1D 5
-#define B_(x, y) B[x + MPA_Q1D * y]
-#define Bt_(x, y) Bt[x + MPA_D1D * y]
-#define X_(dx, dy, dz, e)                                                      \
+#define MPA_B(x, y) B[x + MPA_Q1D * y]
+#define MPA_Bt(x, y) Bt[x + MPA_D1D * y]
+#define MPA_X(dx, dy, dz, e)                                                      \
   X[dx + MPA_D1D * dy + MPA_D1D * MPA_D1D * dz + MPA_D1D * MPA_D1D * MPA_D1D * e]
-#define Y_(dx, dy, dz, e)                                                      \
+#define MPA_Y(dx, dy, dz, e)                                                      \
   Y[dx + MPA_D1D * dy + MPA_D1D * MPA_D1D * dz + MPA_D1D * MPA_D1D * MPA_D1D * e]
-#define D_(qx, qy, qz, e)                                                      \
+#define MPA_D(qx, qy, qz, e)                                                      \
   D[qx + MPA_Q1D * qy + MPA_Q1D * MPA_Q1D * qz + MPA_Q1D * MPA_Q1D * MPA_Q1D * e]
 
 #define MASS3DPA_0_CPU           \
@@ -214,128 +214,128 @@ Index_type NE = m_NE;
 
 #define MASS3DPA_1 \
   RAJAPERF_UNROLL(MD1) \
-for (int dz = 0; dz< MPA_D1D; ++dz) { \
-Xsmem[dz][dy][dx] = X_(dx, dy, dz, e); \
+for (Index_type dz = 0; dz< MPA_D1D; ++dz) { \
+Xsmem[dz][dy][dx] = MPA_X(dx, dy, dz, e); \
 }
 
 #define MASS3DPA_2 \
-  Bsmem[dx][dy] = B_(dx, dy);
+  Bsmem[dx][dy] = MPA_B(dx, dy);
 
 // 2 * MPA_D1D * MPA_D1D * MPA_D1D * MPA_Q1D
 #define MASS3DPA_3 \
-  double u[MPA_D1D]; \
+  Real_type u[MPA_D1D]; \
 RAJAPERF_UNROLL(MD1) \
-for (int dz = 0; dz < MPA_D1D; dz++) { \
+for (Index_type dz = 0; dz < MPA_D1D; dz++) { \
 u[dz] = 0; \
 } \
 RAJAPERF_UNROLL(MD1) \
-for (int dx = 0; dx < MPA_D1D; ++dx) { \
+for (Index_type dx = 0; dx < MPA_D1D; ++dx) { \
 RAJAPERF_UNROLL(MD1) \
-for (int dz = 0; dz < MPA_D1D; ++dz) { \
+for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
 u[dz] += Xsmem[dz][dy][dx] * Bsmem[qx][dx]; \
 } \
 } \
 RAJAPERF_UNROLL(MD1) \
-for (int dz = 0; dz < MPA_D1D; ++dz) { \
+for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
 DDQ[dz][dy][qx] = u[dz]; \
 }
 
 //2 * MPA_D1D * MPA_D1D * MPA_Q1D * MPA_Q1D
 #define MASS3DPA_4 \
-            double u[MPA_D1D]; \
+            Real_type u[MPA_D1D]; \
             RAJAPERF_UNROLL(MD1) \
-            for (int dz = 0; dz < MPA_D1D; dz++) { \
+            for (Index_type dz = 0; dz < MPA_D1D; dz++) { \
               u[dz] = 0; \
             } \
             RAJAPERF_UNROLL(MD1) \
-            for (int dy = 0; dy < MPA_D1D; ++dy) { \
+            for (Index_type dy = 0; dy < MPA_D1D; ++dy) { \
               RAJAPERF_UNROLL(MD1) \
-              for (int dz = 0; dz < MPA_D1D; dz++) { \
+              for (Index_type dz = 0; dz < MPA_D1D; dz++) { \
                 u[dz] += DDQ[dz][dy][qx] * Bsmem[qy][dy]; \
               } \
             } \
             RAJAPERF_UNROLL(MD1) \
-            for (int dz = 0; dz < MPA_D1D; dz++) { \
+            for (Index_type dz = 0; dz < MPA_D1D; dz++) { \
               DQQ[dz][qy][qx] = u[dz]; \
             }
 
 //2 * MPA_D1D * MPA_Q1D * MPA_Q1D * MPA_Q1D + MPA_Q1D * MPA_Q1D * MPA_Q1D
 #define MASS3DPA_5 \
-            double u[MPA_Q1D]; \
+            Real_type u[MPA_Q1D]; \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qz = 0; qz < MPA_Q1D; qz++) { \
+            for (Index_type qz = 0; qz < MPA_Q1D; qz++) { \
               u[qz] = 0; \
             } \
             RAJAPERF_UNROLL(MD1) \
-            for (int dz = 0; dz < MPA_D1D; ++dz) { \
+            for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
               RAJAPERF_UNROLL(MQ1) \
-              for (int qz = 0; qz < MPA_Q1D; qz++) { \
+              for (Index_type qz = 0; qz < MPA_Q1D; qz++) { \
                 u[qz] += DQQ[dz][qy][qx] * Bsmem[qz][dz]; \
               } \
             } \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qz = 0; qz < MPA_Q1D; qz++) { \
-              QQQ[qz][qy][qx] = u[qz] * D_(qx, qy, qz, e); \
+            for (Index_type qz = 0; qz < MPA_Q1D; qz++) { \
+              QQQ[qz][qy][qx] = u[qz] * MPA_D(qx, qy, qz, e); \
             }
 
 #define MASS3DPA_6 \
-  Btsmem[d][q] = Bt_(q, d);
+  Btsmem[d][q] = MPA_Bt(q, d);
 
 //2 * MPA_Q1D * MPA_Q1D * MPA_Q1D * MPA_D1D
 #define MASS3DPA_7 \
-  double u[MPA_Q1D]; \
+  Real_type u[MPA_Q1D]; \
 RAJAPERF_UNROLL(MQ1) \
-for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
   u[qz] = 0; \
  } \
 RAJAPERF_UNROLL(MQ1) \
-for (int qx = 0; qx < MPA_Q1D; ++qx) { \
+for (Index_type qx = 0; qx < MPA_Q1D; ++qx) { \
   RAJAPERF_UNROLL(MQ1) \
-    for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+    for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
       u[qz] += QQQ[qz][qy][qx] * Btsmem[dx][qx]; \
     } \
  } \
 RAJAPERF_UNROLL(MQ1) \
-for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
   QQD[qz][qy][dx] = u[qz]; \
  }
 
 // 2 * MPA_Q1D * MPA_Q1D * MPA_D1D * MPA_D1D
 #define MASS3DPA_8 \
-            double u[MPA_Q1D]; \
+            Real_type u[MPA_Q1D]; \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+            for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
               u[qz] = 0; \
             } \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qy = 0; qy < MPA_Q1D; ++qy) { \
+            for (Index_type qy = 0; qy < MPA_Q1D; ++qy) { \
               RAJAPERF_UNROLL(MQ1) \
-              for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+              for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
                 u[qz] += QQD[qz][qy][dx] * Btsmem[dy][qy]; \
               } \
             } \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+            for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
               QDD[qz][dy][dx] = u[qz]; \
             }
 
 //2 * MPA_Q1D * MPA_D1D * MPA_D1D * MPA_D1D + MPA_D1D * MPA_D1D * MPA_D1D
 #define MASS3DPA_9 \
-            double u[MPA_D1D]; \
+            Real_type u[MPA_D1D]; \
             RAJAPERF_UNROLL(MD1) \
-            for (int dz = 0; dz < MPA_D1D; ++dz) { \
+            for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
               u[dz] = 0; \
             } \
             RAJAPERF_UNROLL(MQ1) \
-            for (int qz = 0; qz < MPA_Q1D; ++qz) { \
+            for (Index_type qz = 0; qz < MPA_Q1D; ++qz) { \
               RAJAPERF_UNROLL(MD1) \
-              for (int dz = 0; dz < MPA_D1D; ++dz) { \
+              for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
                 u[dz] += QDD[qz][dy][dx] * Btsmem[dz][qz]; \
               } \
             } \
             RAJAPERF_UNROLL(MD1) \
-            for (int dz = 0; dz < MPA_D1D; ++dz) { \
-              Y_(dx, dy, dz, e) += u[dz]; \
+            for (Index_type dz = 0; dz < MPA_D1D; ++dz) { \
+              MPA_Y(dx, dy, dz, e) += u[dz]; \
             }
 
 

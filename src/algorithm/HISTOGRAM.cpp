@@ -38,7 +38,7 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
                       1*sizeof(Index_type) * getActualProblemSize() );
   setBytesWrittenPerRep( 1*sizeof(Data_type) * m_num_bins );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize());
+  setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
   setComplexity(Complexity::N);
 
@@ -89,15 +89,15 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   if (init_even_sizes || init_random_sizes || init_all_one) {
     Real_ptr data = nullptr;
     if (init_even_sizes) {
-      allocData(data, m_num_bins, Base_Seq);
+      allocData(DataSpace::Host, data, m_num_bins);
       for (Index_type b = 0; b < m_num_bins; ++b) {
         data[b] = static_cast<Real_type>(b+1) / m_num_bins;
       }
     } else if (init_random_sizes) {
-      allocAndInitDataRandValue(data, m_num_bins, Base_Seq);
+      allocAndInitDataRandValue(DataSpace::Host, data, m_num_bins);
       std::sort(data, data+m_num_bins);
     } else if (init_all_one) {
-      allocData(data, m_num_bins, Base_Seq);
+      allocData(DataSpace::Host, data, m_num_bins);
       for (Index_type b = 0; b < m_num_bins; ++b) {
         data[b] = static_cast<Real_type>(0);
       }
@@ -113,11 +113,11 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       m_bins[i] = bin;
     }
 
-    deallocData(data, Base_Seq);
+    deallocData(DataSpace::Host, data);
 
   } else if (init_random_per_iterate) {
     Real_ptr data;
-    allocAndInitDataRandValue(data, getActualProblemSize(), Base_Seq);
+    allocAndInitDataRandValue(DataSpace::Host, data, getActualProblemSize());
 
     for (Index_type i = 0; i < getActualProblemSize(); ++i) {
       m_bins[i] = static_cast<Index_type>(data[i] * m_num_bins);
@@ -129,26 +129,26 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       }
     }
 
-    deallocData(data, Base_Seq);
+    deallocData(DataSpace::Host, data);
   } else {
     throw 1;
   }
 
-  m_counts_init.resize(m_num_bins, 0);
-  m_counts_final.resize(m_num_bins, 0);
+  allocAndInitDataConst(DataSpace::Host, m_counts_init, m_num_bins, static_cast<Data_type>(0));
+  allocAndInitDataConst(DataSpace::Host, m_counts_final, m_num_bins, static_cast<Data_type>(0));
 }
 
 void HISTOGRAM::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_counts_final.data(), m_num_bins, vid);
+  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_counts_final, m_num_bins);
 }
 
 void HISTOGRAM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   (void) vid;
   deallocData(m_bins, vid);
-  m_counts_init.clear(); m_counts_init.shrink_to_fit();
-  m_counts_final.clear(); m_counts_final.shrink_to_fit();
+  deallocData(DataSpace::Host, m_counts_init);
+  deallocData(DataSpace::Host, m_counts_final);
 }
 
 } // end namespace algorithm

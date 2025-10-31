@@ -40,7 +40,8 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
 
   setItsPerRep( m_ni * m_nj );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk +
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nj +
+                      1*sizeof(Real_type ) * m_ni * m_nk +
                       1*sizeof(Real_type ) * m_nj * m_nk );
   setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj);
   setBytesAtomicModifyWrittenPerRep( 0 );

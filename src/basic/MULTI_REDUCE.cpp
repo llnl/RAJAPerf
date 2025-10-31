@@ -136,13 +136,13 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     throw 1;
   }
 
-  m_values_init.resize(m_num_bins, 0.0);
-  m_values_final.resize(m_num_bins, 0.0);
+  allocAndInitDataConst(DataSpace::Host, m_values_init, m_num_bins, 0.0);
+  allocAndInitDataConst(DataSpace::Host, m_values_final, m_num_bins, 0.0);
 }
 
 void MULTI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_values_final.data(), m_num_bins, vid);
+  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_values_final, m_num_bins);
 }
 
 void MULTI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -150,8 +150,8 @@ void MULTI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   (void) vid;
   deallocData(m_bins, vid);
   deallocData(m_data, vid);
-  m_values_init.clear(); m_values_init.shrink_to_fit();
-  m_values_final.clear(); m_values_final.shrink_to_fit();
+  deallocData(DataSpace::Host, m_values_init);
+  deallocData(DataSpace::Host, m_values_final);
 }
 
 } // end namespace basic

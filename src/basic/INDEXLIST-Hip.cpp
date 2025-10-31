@@ -32,10 +32,10 @@ template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
 __global__ void indexlist_custom(Real_ptr x,
                                  Int_ptr list,
-                                 Index_type* block_counts,
-                                 Index_type* grid_counts,
+                                 Index_ptr block_counts,
+                                 Index_ptr grid_counts,
                                  unsigned* block_readys,
-                                 Index_type* len,
+                                 Index_ptr len,
                                  Index_type iend)
 {
   // It looks like blocks do not start running in order in hip, so a block
@@ -92,11 +92,11 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
     const size_t grid_size = RAJA_DIVIDE_CEILING_INT((iend-ibegin), block_size*items_per_thread);
     const size_t shmem_size = 0;
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::HipPinnedCoarse, len, 1);
-    Index_type* block_counts;
+    Index_ptr block_counts;
     allocData(DataSpace::HipDevice, block_counts, grid_size);
-    Index_type* grid_counts;
+    Index_ptr grid_counts;
     allocData(DataSpace::HipDevice, grid_counts, grid_size);
     unsigned* block_readys;
     allocData(DataSpace::HipDevice, block_readys, grid_size);
@@ -104,8 +104,8 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
-                                res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
 
       RPlaunchHipKernel( (indexlist_custom<block_size, items_per_thread>),
                          grid_size, block_size,
@@ -114,7 +114,7 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
                          block_counts, grid_counts, block_readys,
                          len, iend-ibegin );
 
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
       m_len = *len;
 
     }

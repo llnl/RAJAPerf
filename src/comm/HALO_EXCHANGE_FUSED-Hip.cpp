@@ -143,12 +143,12 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          hipErrchk( hipMemcpyAsync(send_buffers[l], pack_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
       }
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize,  res.get_stream() );
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = pack_index_list_lengths[l];
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
@@ -165,9 +165,9 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(unpack_buffers[l], recv_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -191,7 +191,7 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
                          unpack_list_ptrs,
                          unpack_var_ptrs,
                          unpack_len_ptrs);
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize,  res.get_stream() );
 
       MPI_Waitall(num_neighbors, pack_mpi_requests.data(), MPI_STATUSES_IGNORE);
 

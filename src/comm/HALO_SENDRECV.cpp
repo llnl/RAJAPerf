@@ -28,11 +28,12 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   m_num_vars = params.getHaloNumVars();
   m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( m_num_vars * (m_var_size - getActualProblemSize()) );
+  setItsPerRep( 0 );
   setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // send
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // recv
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
@@ -75,9 +76,9 @@ void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
   for (Index_type l = 0; l < s_num_neighbors; ++l) {
     Index_type buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
     if (separate_buffers) {
-      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len);
     } else {
-      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len);
     }
   }
 }

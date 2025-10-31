@@ -27,7 +27,7 @@
   Real_type dx = m_dx;
 
 #define PI_REDUCE_BODY \
-  double x = (double(i) + 0.5) * dx; \
+  Real_type x = (Real_type(i) + 0.5) * dx; \
   pi += dx / (1.0 + x * x);
 
 #include "common/KernelBase.hpp"

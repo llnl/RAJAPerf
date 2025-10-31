@@ -31,12 +31,12 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setActualProblemSize( m_N * m_N );
 
-  setItsPerRep( m_N*m_N );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N * m_N );
+  setItsPerRep( m_N * m_N*m_N );
+  setKernelsPerRep(m_N);
+  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
+  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * m_N*m_N*m_N );
+  setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
 
   checksum_scale_factor = 1.0 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /

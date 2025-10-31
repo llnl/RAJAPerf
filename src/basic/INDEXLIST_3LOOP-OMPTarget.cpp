@@ -25,13 +25,6 @@ namespace basic
   //
   const size_t threads_per_team = 256;
 
-#define INDEXLIST_3LOOP_DATA_SETUP_OMP_TARGET \
-  Index_type* counts = nullptr; \
-  allocData(DataSpace::OmpTarget, counts, iend+1);
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_OMP_TARGET \
-  deallocData(DataSpace::OmpTarget, counts);
-
 #endif
 
 
@@ -50,7 +43,7 @@ void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUS
 
     case Base_OpenMPTarget : {
 
-      INDEXLIST_3LOOP_DATA_SETUP_OMP_TARGET;
+      INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::OmpTarget);
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -85,7 +78,7 @@ void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUS
       }
       stopTimer();
 
-      INDEXLIST_3LOOP_DATA_TEARDOWN_OMP_TARGET;
+      INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::OmpTarget);
 
       break;
     }

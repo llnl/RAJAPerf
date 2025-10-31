@@ -76,7 +76,7 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   case Lambda_Seq: {
 
     startTimer();
-    for (Index_type irep = 0; irep < run_reps; ++irep) {
+    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       auto outer_y = [&](Index_type by) {
         auto outer_x = [&](Index_type bx) {

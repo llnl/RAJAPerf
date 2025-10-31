@@ -32,7 +32,7 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 
   setActualProblemSize( m_NE*MPA_Q1D*MPA_Q1D*MPA_Q1D );
 
-  setItsPerRep(getActualProblemSize());
+  setItsPerRep( m_NE*MPA_Q1D*MPA_Q1D );
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * MPA_Q1D*MPA_D1D + // B, Bt
@@ -81,11 +81,11 @@ MASS3DPA::~MASS3DPA()
 void MASS3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, int(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt,int(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, int(MPA_Q1D*MPA_Q1D*MPA_Q1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, int(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, int(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, Index_type(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt,Index_type(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(MPA_Q1D*MPA_Q1D*MPA_Q1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, Index_type(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, Index_type(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(0.0), vid);
 }
 
 void MASS3DPA::updateChecksum(VariantID vid, size_t tune_idx)

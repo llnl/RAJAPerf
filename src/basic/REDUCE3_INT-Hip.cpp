@@ -61,9 +61,9 @@ __global__ void reduce3int(Int_ptr vec,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::hip_atomic>( vsum, psum[ 0 ] );
-    RAJA::atomicMin<RAJA::hip_atomic>( vmin, pmin[ 0 ] );
-    RAJA::atomicMax<RAJA::hip_atomic>( vmax, pmax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *vsum, psum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_HIP( *vmin, pmin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_HIP( *vmax, pmax[ 0 ] );
   }
 }
 
@@ -105,9 +105,9 @@ void REDUCE3_INT::runHipVariantBase(VariantID vid)
                          iend );
 
       RAJAPERF_HIP_REDUCER_COPY_BACK(vmem, hvmem, 3, 1);
-      m_vsum += hvmem[0];
-      m_vmin = RAJA_MIN(m_vmin, hvmem[1]);
-      m_vmax = RAJA_MAX(m_vmax, hvmem[2]);
+      m_vsum = hvmem[0];
+      m_vmin = hvmem[1];
+      m_vmax = hvmem[2];
 
     }
     stopTimer();
@@ -152,9 +152,9 @@ void REDUCE3_INT::runHipVariantRAJA(VariantID vid)
         REDUCE3_INT_BODY_RAJA;
       });
 
-      m_vsum += static_cast<Int_type>(vsum.get());
-      m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(vmin.get()));
-      m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(vmax.get()));
+      m_vsum = static_cast<Int_type>(vsum.get());
+      m_vmin = static_cast<Int_type>(vmin.get());
+      m_vmax = static_cast<Int_type>(vmax.get());
 
     }
     stopTimer();
@@ -201,9 +201,9 @@ void REDUCE3_INT::runHipVariantRAJANewReduce(VariantID vid)
         }
       );
 
-      m_vsum += static_cast<Int_type>(tvsum);
-      m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(tvmin));
-      m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(tvmax));
+      m_vsum = static_cast<Int_type>(tvsum);
+      m_vmin = static_cast<Int_type>(tvmin);
+      m_vmax = static_cast<Int_type>(tvmax);
 
     }
     stopTimer();

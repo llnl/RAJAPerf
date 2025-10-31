@@ -48,9 +48,8 @@ void MEMCPY::runHipVariantLibrary(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      hipErrchk( hipMemcpyAsync(MEMCPY_STD_ARGS,
-                                hipMemcpyDefault,
-                                res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+          MEMCPY_STD_ARGS, hipMemcpyDefault, res.get_stream() );
 
     }
     stopTimer();

@@ -36,51 +36,47 @@ void POLYBENCH_ADI::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(n-2, work_group_size);
 
-        const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(n-2, work_group_size);
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
+                       [=] (sycl::nd_item<1> item) {
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
-                         [=] (sycl::nd_item<1> item) {
+          Index_type i = item.get_global_id(0) + 1;
 
-            Index_type i = item.get_global_id(0) + 1;
-
-            if (i < n-1) {
-              POLYBENCH_ADI_BODY2;
-              for (Index_type j = 1; j < n-1; ++j) {
-                 POLYBENCH_ADI_BODY3;
-              }
-              POLYBENCH_ADI_BODY4;
-              for (Index_type k = n-2; k >= 1; --k) {
-                 POLYBENCH_ADI_BODY5;
-              }
+          if (i < n-1) {
+            POLYBENCH_ADI_BODY2;
+            for (Index_type j = 1; j < n-1; ++j) {
+               POLYBENCH_ADI_BODY3;
             }
-
-          });
-        });
-
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
-                         [=] (sycl::nd_item<1> item) {
-
-            Index_type i = item.get_global_id(0) + 1;
-
-            if (i < n-1) {
-              POLYBENCH_ADI_BODY6;
-              for (Index_type j = 1; j < n-1; ++j) {
-                 POLYBENCH_ADI_BODY7;
-              }
-              POLYBENCH_ADI_BODY8;
-              for (Index_type k = n-2; k >= 1; --k) {
-                 POLYBENCH_ADI_BODY9;
-              }
+            POLYBENCH_ADI_BODY4;
+            for (Index_type k = n-2; k >= 1; --k) {
+               POLYBENCH_ADI_BODY5;
             }
+          }
 
-          });
         });
+      });
 
-      }  // tstep loop
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
+                       [=] (sycl::nd_item<1> item) {
+
+          Index_type i = item.get_global_id(0) + 1;
+
+          if (i < n-1) {
+            POLYBENCH_ADI_BODY6;
+            for (Index_type j = 1; j < n-1; ++j) {
+               POLYBENCH_ADI_BODY7;
+            }
+            POLYBENCH_ADI_BODY8;
+            for (Index_type k = n-2; k >= 1; --k) {
+               POLYBENCH_ADI_BODY9;
+            }
+          }
+
+        });
+      });
 
     }
     stopTimer();
@@ -108,49 +104,45 @@ void POLYBENCH_ADI::runSyclVariantImpl(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      for (Index_type t = 1; t <= tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY2_RAJA;
+        },
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY3_RAJA;
+        },
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY4_RAJA;
+        },
+        [=] (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY5_RAJA;
+        }
+      );
 
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY2_RAJA;
-          },
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY3_RAJA;
-          },
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY4_RAJA;
-          },
-          [=] (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY5_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeSegment{1, n-1},
+                         RAJA::RangeStrideSegment{n-2, 0, -1}),
+        res,
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeSegment{1, n-1},
-                           RAJA::RangeStrideSegment{n-2, 0, -1}),
-          res,
-
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY6_RAJA;
-          },
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_ADI_BODY7_RAJA;
-          },
-          [=] (Index_type i) {
-            POLYBENCH_ADI_BODY8_RAJA;
-          },
-          [=] (Index_type i, Index_type k) {
-            POLYBENCH_ADI_BODY9_RAJA;
-          }
-        );
-
-      }  // tstep loop
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY6_RAJA;
+        },
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_ADI_BODY7_RAJA;
+        },
+        [=] (Index_type i) {
+          POLYBENCH_ADI_BODY8_RAJA;
+        },
+        [=] (Index_type i, Index_type k) {
+          POLYBENCH_ADI_BODY9_RAJA;
+        }
+      );
 
     } // run_reps
     stopTimer();

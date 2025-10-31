@@ -9,15 +9,22 @@
 ///
 /// POLYBENCH_MVT kernel reference implementation:
 ///
+/// Note: The dot products are initialized to 0 to avoid
+///       excessively large checksums
+///
 /// for (int i = 0; i < N; i++) {
+///   Real_type dot = 0.0;
 ///   for (int j = 0; j < N; j++) {
-///     x1[i] += A[i][j] * y1[j];
+///     dot += A[i][j] * y1[j];
 ///   }
+///   x1[i] = dot;
 /// }
 /// for (int i = 0; i < N; i++) {
+///   Real_type dot = 0.0;
 ///   for (int j = 0; j < N; j++) {
-///     x2[i] += A[j][i] * y2[i];
+///     dot += A[j][i] * y2[i];
 ///   }
+///   x2[i] = dot;
 /// }
 
 
@@ -40,7 +47,7 @@
   dot += A[j + i*N] * y1[j];
 
 #define POLYBENCH_MVT_BODY3 \
-  x1[i] += dot;
+  x1[i] = dot;
 
 #define POLYBENCH_MVT_BODY4 \
   Real_type dot = 0.0;
@@ -49,7 +56,7 @@
   dot += A[i + j*N] * y2[i];
 
 #define POLYBENCH_MVT_BODY6 \
-  x2[i] += dot;
+  x2[i] = dot;
 
 
 #define POLYBENCH_MVT_BODY1_RAJA \
@@ -59,7 +66,7 @@
   dot += Aview(i, j) * y1view(j);
 
 #define POLYBENCH_MVT_BODY3_RAJA \
-  x1view(i) += dot;
+  x1view(i) = dot;
 
 #define POLYBENCH_MVT_BODY4_RAJA \
   dot = 0.0;
@@ -68,7 +75,7 @@
   dot += Aview(j, i) * y2view(i);
 
 #define POLYBENCH_MVT_BODY6_RAJA \
-  x2view(i) += dot;
+  x2view(i) = dot;
 
 
 #define POLYBENCH_MVT_VIEWS_RAJA \

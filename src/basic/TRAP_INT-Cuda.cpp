@@ -56,7 +56,7 @@ __global__ void trapint(Real_type x0, Real_type xp,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( sumx, psumx[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *sumx, psumx[ 0 ] );
   }
 }
 

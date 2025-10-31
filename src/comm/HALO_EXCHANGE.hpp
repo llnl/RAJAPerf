@@ -63,20 +63,20 @@
   HALO_BASE_DATA_SETUP \
   \
   Index_type num_vars = m_num_vars; \
-  std::vector<Real_ptr> vars = m_vars; \
+  Real_ptr_ptr vars = m_vars; \
   \
-  std::vector<int> mpi_ranks = m_mpi_ranks; \
+  Int_ptr mpi_ranks = m_mpi_ranks; \
   \
   std::vector<MPI_Request> pack_mpi_requests(num_neighbors); \
   std::vector<MPI_Request> unpack_mpi_requests(num_neighbors); \
   \
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy); \
   \
-  std::vector<Real_ptr> pack_buffers = m_pack_buffers; \
-  std::vector<Real_ptr> unpack_buffers = m_unpack_buffers; \
+  Real_ptr_ptr pack_buffers = m_pack_buffers; \
+  Real_ptr_ptr unpack_buffers = m_unpack_buffers; \
   \
-  std::vector<Real_ptr> send_buffers = m_send_buffers; \
-  std::vector<Real_ptr> recv_buffers = m_recv_buffers;
+  Real_ptr_ptr send_buffers = m_send_buffers; \
+  Real_ptr_ptr recv_buffers = m_recv_buffers;
 
 
 #include "HALO_base.hpp"
@@ -130,7 +130,7 @@ private:
   Index_type m_num_vars;
   Index_type m_var_size;
 
-  std::vector<Real_ptr> m_vars;
+  Real_ptr_ptr m_vars;
 };
 
 } // end namespace comm

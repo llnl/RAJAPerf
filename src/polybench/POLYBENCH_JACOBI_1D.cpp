@@ -24,25 +24,22 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
   Index_type N_default = 1000002;
 
   setDefaultProblemSize( N_default-2 );
-  setDefaultReps(100);
+  setDefaultReps(1600);
 
   m_N = getTargetProblemSize() + 2;
-  m_tsteps = 16;
 
 
   setActualProblemSize( m_N-2 );
 
-  setItsPerRep( m_tsteps * ( 2 * getActualProblemSize() ) );
-  setKernelsPerRep(m_tsteps * 2);
-  setBytesReadPerRep((1*sizeof(Real_type ) * m_N +
-
-                      1*sizeof(Real_type ) * m_N) * m_tsteps);
-  setBytesWrittenPerRep((1*sizeof(Real_type ) * (m_N-2) +
-
-                         1*sizeof(Real_type ) * (m_N-2)) * m_tsteps);
+  setItsPerRep( 2 * getActualProblemSize() );
+  setKernelsPerRep(2);
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +
+                      1*sizeof(Real_type ) * m_N );
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) +
+                         1*sizeof(Real_type ) * (m_N-2) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( m_tsteps * ( 3 * (m_N-2) +
-                               3 * (m_N-2) ) );
+  setFLOPsPerRep( 3 * (m_N-2) +
+                  3 * (m_N-2) );
 
   checksum_scale_factor = 0.0001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /

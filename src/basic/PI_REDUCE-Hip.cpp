@@ -37,7 +37,7 @@ __global__ void pi_reduce(Real_type dx,
 
   ppi[ threadIdx.x ] = pi_init;
   for ( ; i < iend ; i += gridDim.x * block_size ) {
-    double x = (double(i) + 0.5) * dx;
+    Real_type x = (Real_type(i) + 0.5) * dx;
     ppi[ threadIdx.x ] += dx / (1.0 + x * x);
   }
   __syncthreads();
@@ -50,7 +50,7 @@ __global__ void pi_reduce(Real_type dx,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::hip_atomic>( pi, ppi[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *pi, ppi[ 0 ] );
   }
 }
 
@@ -128,9 +128,9 @@ void PI_REDUCE::runHipVariantRAJA(VariantID vid)
       RAJA::ReduceSum<reduction_policy, Real_type> pi(m_pi_init);
 
       RAJA::forall<exec_policy>( res,
-         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-         PI_REDUCE_BODY;
-       });
+        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
+          PI_REDUCE_BODY;
+      });
 
       m_pi = static_cast<Real_type>(4) * static_cast<Real_type>(pi.get());
 

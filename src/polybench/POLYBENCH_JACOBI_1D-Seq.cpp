@@ -41,15 +41,11 @@ void POLYBENCH_JACOBI_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            POLYBENCH_JACOBI_1D_BODY1;
-          }
-          for (Index_type i = 1; i < N-1; ++i ) {
-            POLYBENCH_JACOBI_1D_BODY2;
-          }
-
+        for (Index_type i = 1; i < N-1; ++i ) {
+          POLYBENCH_JACOBI_1D_BODY1;
+        }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          POLYBENCH_JACOBI_1D_BODY2;
         }
 
       }
@@ -65,15 +61,11 @@ void POLYBENCH_JACOBI_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          for (Index_type i = 1; i < N-1; ++i ) {
-            poly_jacobi1d_lam1(i);
-          }
-          for (Index_type i = 1; i < N-1; ++i ) {
-            poly_jacobi1d_lam2(i);
-          }
-
+        for (Index_type i = 1; i < N-1; ++i ) {
+          poly_jacobi1d_lam1(i);
+        }
+        for (Index_type i = 1; i < N-1; ++i ) {
+          poly_jacobi1d_lam2(i);
         }
 
       }
@@ -89,19 +81,15 @@ void POLYBENCH_JACOBI_1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
+        RAJA::forall<RAJA::seq_exec> ( res,
+          RAJA::RangeSegment{1, N-1},
+          poly_jacobi1d_lam1
+        );
 
-          RAJA::forall<RAJA::seq_exec> ( res,
-            RAJA::RangeSegment{1, N-1},
-            poly_jacobi1d_lam1
-          );
-
-          RAJA::forall<RAJA::seq_exec> ( res,
-            RAJA::RangeSegment{1, N-1},
-            poly_jacobi1d_lam2
-          );
-
-        }
+        RAJA::forall<RAJA::seq_exec> ( res,
+          RAJA::RangeSegment{1, N-1},
+          poly_jacobi1d_lam2
+        );
 
       }
       stopTimer();

@@ -26,7 +26,7 @@ EOS::EOS(const RunParams& params)
 
   setActualProblemSize( getTargetProblemSize() );
 
-  m_array_length = getActualProblemSize() + 7;
+  m_array_length = getActualProblemSize() + 6;
 
   setItsPerRep( getActualProblemSize() );
   setItsPerRep( getActualProblemSize() );
@@ -79,9 +79,9 @@ EOS::~EOS()
 
 void EOS::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_x, m_array_length, 0.0, vid);
-  allocAndInitData(m_y, m_array_length, vid);
-  allocAndInitData(m_z, m_array_length, vid);
+  allocAndInitDataConst(m_x, getActualProblemSize(), 0.0, vid);
+  allocAndInitData(m_y, getActualProblemSize(), vid);
+  allocAndInitData(m_z, getActualProblemSize(), vid);
   allocAndInitData(m_u, m_array_length, vid);
 
   initData(m_q, vid);

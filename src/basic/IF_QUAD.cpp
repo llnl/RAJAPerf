@@ -31,7 +31,9 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() );
   setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(11 * getActualProblemSize()); // 1 sqrt
+  // estimate conditional true half of the time, 1 sqrt
+  setFLOPsPerRep(4 * getActualProblemSize() +
+                 7 * getActualProblemSize() / 2);
 
   checksum_scale_factor = 0.0001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
