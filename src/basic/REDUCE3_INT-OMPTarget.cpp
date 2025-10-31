@@ -53,9 +53,9 @@ void REDUCE3_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
         REDUCE3_INT_BODY;
       }
 
-      m_vsum += vsum;
-      m_vmin = RAJA_MIN(m_vmin, vmin);
-      m_vmax = RAJA_MAX(m_vmax, vmax);
+      m_vsum = vsum;
+      m_vmin = vmin;
+      m_vmax = vmax;
 
     }
     stopTimer();
@@ -84,9 +84,9 @@ void REDUCE3_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
         }
       );
 
-      m_vsum += static_cast<Int_type>(tvsum);
-      m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(tvmin));
-      m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(tvmax));
+      m_vsum = static_cast<Int_type>(tvsum);
+      m_vmin = static_cast<Int_type>(tvmin);
+      m_vmax = static_cast<Int_type>(tvmax);
 
     }
     stopTimer();

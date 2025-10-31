@@ -19,9 +19,9 @@
 ///   vmax = RAJA_MAX(vmax, vec[i]) ;
 /// }
 ///
-/// m_vsum += vsum;
-/// m_vmin = RAJA_MIN(m_vmin, vmin);
-/// m_vmax = RAJA_MAX(m_vmax, vmax);
+/// m_vsum = vsum;
+/// m_vmin = vmin;
+/// m_vmax = vmax;
 ///
 /// RAJA_MIN/MAX are macros that do what you would expect.
 ///
