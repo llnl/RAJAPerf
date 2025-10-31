@@ -536,7 +536,7 @@ void KernelBase::print(std::ostream& os) const
   os << "\t\t\t number_max_nested_loop_levels = " << num_nested_loops << std::endl;
   os << "\t\t\t max_array_dimensions = " << array_dimension << std::endl;
   os << "\t\t\t num_arrays = " << num_arrays << std::endl;
-  os << "\t\t\t batch_size = " << batch_size << std:endl;
+  os << "\t\t\t batch_size = " << batch_size << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
