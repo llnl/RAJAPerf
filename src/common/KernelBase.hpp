@@ -680,7 +680,7 @@ private:
   cali_id_t BlockSize_attr;
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t Complexity_attr;
-  cali_id_t MaxPerfectLoopDimensions_attr
+  cali_id_t MaxPerfectLoopDimensions_attr;
   cali_id_t MaxLoopDimensions_attr;
   cali_id_t MaxArrayDimensions_attr;
   cali_id_t NumArrays_attr;
