@@ -29,6 +29,20 @@ Real_type trap_int_func(Real_type x,
    denom = 1.0/sqrt(denom);
    return denom;
 }
+///
+RAJA_INLINE
+RAJA_HOST_DEVICE
+Real_type trap_int_opt_func(Real_type x,
+                            Real_type y,
+                            Real_type xp,
+                            Real_type yp)
+{
+   Real_type xmxp = x - xp;
+   Real_type ymyp = y - yp;
+   Real_type denom = xmxp*xmxp + ymyp*ymyp;
+   denom = 1.0/sqrt(denom);
+   return denom;
+}
 
 } // end namespace basic
 } // end namespace rajaperf

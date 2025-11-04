@@ -126,5 +126,66 @@ void POLYBENCH_GEMVER::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
   deallocData(m_z, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void POLYBENCH_GEMVER::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    POLYBENCH_GEMVER_DATA_SETUP
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < n; i++ )) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = 0; j < n; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY1);
+        }
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < n; i++ )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY2);
+        RAJAPERF_COUNTERS_SEQ_LOOP(for (Index_type j = 0; j < n; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY3);
+        }
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY4);
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < n; i++ )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY5);
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < n; i++ )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY6);
+        RAJAPERF_COUNTERS_SEQ_LOOP(for (Index_type j = 0; j < n; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY7);
+        }
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_GEMVER_BODY8);
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace basic
 } // end namespace rajaperf

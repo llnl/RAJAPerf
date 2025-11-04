@@ -41,6 +41,10 @@
   Real_type x = x0 + i*h; \
   sumx += trap_int_func(x, y, xp, yp);
 
+#define TRAP_INT_OPT_BODY \
+  Real_type x = x0 + i*h; \
+  sumx += trap_int_opt_func(x, y, xp, yp);
+
 
 #include "common/KernelBase.hpp"
 
@@ -63,6 +67,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineOpenMPTargetVariantTunings();
   void defineKokkosVariantTunings();

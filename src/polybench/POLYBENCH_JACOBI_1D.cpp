@@ -93,5 +93,50 @@ void POLYBENCH_JACOBI_1D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   deallocData(m_B, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void POLYBENCH_JACOBI_1D::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    POLYBENCH_JACOBI_1D_DATA_SETUP;
+
+    const Index_type iend = N-1;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 1; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_JACOBI_1D_BODY1);
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 1; i < iend; ++i)) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_JACOBI_1D_BODY2);
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, 0);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace polybench
 } // end namespace rajaperf

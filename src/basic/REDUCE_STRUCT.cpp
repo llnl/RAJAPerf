@@ -102,5 +102,64 @@ void REDUCE_STRUCT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   deallocData(m_y, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void REDUCE_STRUCT::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = getActualProblemSize();
+
+    REDUCE_STRUCT_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
+      Real_type xmin = m_init_min; Real_type ymin = m_init_min;
+      Real_type xmax = m_init_max; Real_type ymax = m_init_max;
+      );
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(REDUCE_STRUCT_BODY);
+      }
+
+      RAJAPERF_COUNTERS_PAR_SYNC();
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      points.SetCenter(xsum/(points.N), ysum/(points.N));
+      points.SetXMin(xmin);
+      points.SetXMax(xmax);
+      points.SetYMin(ymin);
+      points.SetYMax(ymax);
+      m_points = points;
+      );
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace basic
 } // end namespace rajaperf

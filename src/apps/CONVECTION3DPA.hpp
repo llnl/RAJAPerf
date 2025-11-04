@@ -233,50 +233,50 @@ constexpr RAJA::Index_type VDIM = 3;
     conv::VDIM * conv::Q1D * conv::Q1D * conv::Q1D * e]
 
 #define CONVECTION3DPA_0_GPU                                                   \
-  constexpr Index_type max_D1D = conv::D1D;                                    \
-  constexpr Index_type max_Q1D = conv::Q1D;                                    \
-  constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;       \
-  RAJA_TEAM_SHARED Real_type sm0[max_DQ * max_DQ * max_DQ];                    \
-  RAJA_TEAM_SHARED Real_type sm1[max_DQ * max_DQ * max_DQ];                    \
-  RAJA_TEAM_SHARED Real_type sm2[max_DQ * max_DQ * max_DQ];                    \
-  RAJA_TEAM_SHARED Real_type sm3[max_DQ * max_DQ * max_DQ];                    \
-  RAJA_TEAM_SHARED Real_type sm4[max_DQ * max_DQ * max_DQ];                    \
-  RAJA_TEAM_SHARED Real_type sm5[max_DQ * max_DQ * max_DQ];                    \
-  Real_type(*u)[max_D1D][max_D1D] = (Real_type(*)[max_D1D][max_D1D])sm0;       \
-  Real_type(*Bu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm1;      \
-  Real_type(*Gu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm2;      \
-  Real_type(*BBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm3;     \
-  Real_type(*GBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm4;     \
-  Real_type(*BGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm5;     \
-  Real_type(*GBBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm0;    \
-  Real_type(*BGBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm1;    \
-  Real_type(*BBGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm2;    \
-  Real_type(*DGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm3;     \
-  Real_type(*BDGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm4;    \
-  Real_type(*BBDGu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm5;
+  constexpr auto max_D1D = conv::D1D;                                          \
+  constexpr auto max_Q1D = conv::Q1D;                                          \
+  constexpr auto max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;             \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm0;                    \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm1;                    \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm2;                    \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm3;                    \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm4;                    \
+  RAJA_TEAM_SHARED Real_array3<max_DQ, max_DQ, max_DQ> sm5;                    \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> u( sm0);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> Bu(sm1);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> Gu(sm2);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBu(sm3);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> GBu(sm4);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BGu(sm5);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> GBBu(sm0);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BGBu(sm1);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBGu(sm2);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> DGu(sm3);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BDGu(sm4);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBDGu(sm5);
 
 #define CONVECTION3DPA_0_CPU                                                   \
-  constexpr Index_type max_D1D = conv::D1D;                                    \
-  constexpr Index_type max_Q1D = conv::Q1D;                                    \
-  constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;       \
-  Real_type sm0[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type sm1[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type sm2[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type sm3[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type sm4[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type sm5[max_DQ * max_DQ * max_DQ];                                     \
-  Real_type(*u)[max_D1D][max_D1D] = (Real_type(*)[max_D1D][max_D1D])sm0;       \
-  Real_type(*Bu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm1;      \
-  Real_type(*Gu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm2;      \
-  Real_type(*BBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm3;     \
-  Real_type(*GBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm4;     \
-  Real_type(*BGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm5;     \
-  Real_type(*GBBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm0;    \
-  Real_type(*BGBu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm1;    \
-  Real_type(*BBGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm2;    \
-  Real_type(*DGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm3;     \
-  Real_type(*BDGu)[max_Q1D][max_Q1D] = (Real_type(*)[max_Q1D][max_Q1D])sm4;    \
-  Real_type(*BBDGu)[max_D1D][max_Q1D] = (Real_type(*)[max_D1D][max_Q1D])sm5;
+  constexpr auto max_D1D = conv::D1D;                                          \
+  constexpr auto max_Q1D = conv::Q1D;                                          \
+  constexpr auto max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;             \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm0;                                     \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm1;                                     \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm2;                                     \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm3;                                     \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm4;                                     \
+  Real_array3<max_DQ, max_DQ, max_DQ> sm5;                                     \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> u( sm0);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> Bu(sm1);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> Gu(sm2);                             \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBu(sm3);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> GBu(sm4);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BGu(sm5);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> GBBu(sm0);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BGBu(sm1);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBGu(sm2);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> DGu(sm3);                            \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BDGu(sm4);                           \
+  Real_array3_ref<max_DQ, max_DQ, max_DQ> BBDGu(sm5);
 
 #define CONVECTION3DPA_1 u[dz][dy][dx] = CPA_X(dx, dy, dz, e);
 
@@ -371,6 +371,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

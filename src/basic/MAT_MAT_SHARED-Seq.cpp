@@ -53,7 +53,9 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
 
             for (Index_type ty = 0; ty < TL_SZ; ++ty) {
               for (Index_type tx = 0; tx < TL_SZ; ++tx) {
-                MAT_MAT_SHARED_BODY_3(TL_SZ)
+                for (Index_type n = 0; n < TL_SZ; ++n) {
+                  MAT_MAT_SHARED_BODY_3(TL_SZ)
+                }
               }
             }
 
@@ -114,7 +116,11 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
             }
 
             auto inner_y_3 = [&](Index_type ty) {
-              auto inner_x_3 = [&](Index_type tx) { MAT_MAT_SHARED_BODY_3(TL_SZ) };
+              auto inner_x_3 = [&](Index_type tx) {
+                    for (Index_type n = 0; n < TL_SZ; ++n) {
+                      MAT_MAT_SHARED_BODY_3(TL_SZ)
+                    }
+                  };
 
               for (Index_type tx = 0; tx < TL_SZ; ++tx) {
                 inner_x_3(tx);
@@ -127,7 +133,9 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
           }
 
           auto inner_y_4 = [&](Index_type ty) {
-            auto inner_x_4 = [&](Index_type tx) { MAT_MAT_SHARED_BODY_4(TL_SZ) };
+            auto inner_x_4 = [&](Index_type tx) {
+                  MAT_MAT_SHARED_BODY_4(TL_SZ)
+                };
 
             for (Index_type tx = 0; tx < TL_SZ; ++tx) {
               inner_x_4(tx);
@@ -213,7 +221,9 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
                       [&](Index_type ty) {
                         RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, TL_SZ),
                           [&](Index_type tx) {
-                            MAT_MAT_SHARED_BODY_3(TL_SZ)
+                            for (Index_type n = 0; n < TL_SZ; ++n) {
+                              MAT_MAT_SHARED_BODY_3(TL_SZ)
+                            }
                           }
                         );  // RAJA::loop<inner_x>
                       }

@@ -32,6 +32,12 @@
   w[i] = x[i] / ( exp( y[i] ) - 1.0 );
 
 
+#define PLANCKIAN_OPT_BODY  \
+  Real_type tmp; \
+  y[i] = tmp = u[i] / v[i]; \
+  w[i] = x[i] / ( exp( tmp ) - 1.0 );
+
+
 #include "common/KernelBase.hpp"
 
 namespace rajaperf
@@ -53,6 +59,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

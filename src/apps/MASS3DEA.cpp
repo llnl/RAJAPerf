@@ -95,5 +95,73 @@ void MASS3DEA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_M, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void MASS3DEA::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    MASS3DEA_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type e = 0; e < NE; ++e)) {
+        RAJAPERF_COUNTERS_TEAM_CONTEXT();
+
+        RAJAPERF_COUNTERS_LOOP_BODY(MASS3DEA_0_CPU);
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(d, x, mea::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(q, y, mea::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DEA_1);
+          }
+        }
+
+        RAJAPERF_COUNTERS_LOOP_BODY(MASS3DEA_2_CPU);
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(k1, x, mea::Q1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(k2, y, mea::Q1D)) {
+            RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(k3, z, mea::Q1D)) {
+              RAJAPERF_COUNTERS_LOOP_BODY(MASS3DEA_3);
+            }
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(i1, x, mea::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(i2, y, mea::D1D)) {
+            RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(i3, z, mea::D1D)) {
+              RAJAPERF_COUNTERS_LOOP_BODY(MASS3DEA_4);
+            }
+          }
+        }
+
+      } // element loop
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace apps
 } // end namespace rajaperf

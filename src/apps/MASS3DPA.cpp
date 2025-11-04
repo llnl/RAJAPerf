@@ -100,5 +100,112 @@ void MASS3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_Y, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void MASS3DPA::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    MASS3DPA_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type e = 0; e < NE; ++e)) {
+        RAJAPERF_COUNTERS_TEAM_CONTEXT();
+
+        RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_0_CPU);
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dy, y, mpa::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dx, x, mpa::D1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_1);
+          }
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dx, x, mpa::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_2);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dy, y, mpa::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qx, x, mpa::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_3);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qy, y, mpa::Q1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qx, x, mpa::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_4);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qy, y, mpa::Q1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qx, x, mpa::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_5);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(d, y, mpa::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(q, x, mpa::Q1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_6);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(qy, y, mpa::Q1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dx, x, mpa::D1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_7);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dy, y, mpa::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dx, x, mpa::D1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_8);
+          }
+        }
+
+        RAJAPERF_COUNTERS_TEAM_SYNC();
+
+        RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dy, y, mpa::D1D)) {
+          RAJAPERF_COUNTERS_PAR_LOOP(CPU_FOREACH(dx, x, mpa::D1D)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(MASS3DPA_9);
+          }
+        }
+
+      } // element loop
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace apps
 } // end namespace rajaperf

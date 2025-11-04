@@ -128,7 +128,7 @@ protected:
     Index_type k_max;
   };
 
-  static const int s_num_neighbors = 26;
+  static inline constexpr int s_num_neighbors = 26;
   static const int s_boundary_offsets[s_num_neighbors][3];
 
   static Index_type s_grid_dims_default[3];

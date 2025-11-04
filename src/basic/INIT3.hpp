@@ -29,6 +29,12 @@
 #define INIT3_BODY  \
   out1[i] = out2[i] = out3[i] = - in1[i] - in2[i] ;
 
+#define INIT3_OPT_BODY  \
+  Real_type tmp = - in1[i] - in2[i]; \
+  out1[i] = tmp ; \
+  out2[i] = tmp ; \
+  out3[i] = tmp ;
+
 
 #include "common/KernelBase.hpp"
 
@@ -51,6 +57,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

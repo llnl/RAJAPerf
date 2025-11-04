@@ -162,35 +162,35 @@ constexpr RAJA::Index_type Q1D = 4;
     mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * e]
 
 #define MASS3DPA_ATOMIC_0_CPU                                                  \
-  constexpr Index_type MQ1 = mpa_at::Q1D;                                      \
-  constexpr Index_type MD1 = mpa_at::D1D;                                      \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  Real_type sm_B[MQ1][MD1];                                                    \
-  Real_type sm_Bt[MD1][MQ1];                                                   \
-  Real_type sm0[MDQ * MDQ * MDQ];                                              \
-  Real_type sm1[MDQ * MDQ * MDQ];                                              \
-  Real_type(*sm_X)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                    \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
-  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;                     \
+  constexpr auto MQ1 = mpa_at::Q1D;                                            \
+  constexpr auto MD1 = mpa_at::D1D;                                            \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  Real_array2<MQ1, MD1> sm_B;                                                  \
+  Real_array2<MD1, MQ1> sm_Bt;                                                 \
+  Real_array3<MDQ, MDQ, MDQ> sm0;                                              \
+  Real_array3<MDQ, MDQ, MDQ> sm1;                                              \
+  Real_array3_ref<MDQ, MDQ, MDQ> sm_X(sm0);                                    \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD(sm1);                                     \
   Index_type thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_0_GPU                                                  \
-  constexpr Index_type MQ1 = mpa_at::Q1D;                                      \
-  constexpr Index_type MD1 = mpa_at::D1D;                                      \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  RAJA_TEAM_SHARED Real_type sm_B[MQ1][MD1];                                   \
-  RAJA_TEAM_SHARED Real_type sm_Bt[MD1][MQ1];                                  \
-  RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                             \
-  RAJA_TEAM_SHARED Real_type sm1[MDQ * MDQ * MDQ];                             \
-  Real_type(*sm_X)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                    \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
-  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;                     \
+  constexpr auto MQ1 = mpa_at::Q1D;                                            \
+  constexpr auto MD1 = mpa_at::D1D;                                            \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  RAJA_TEAM_SHARED Real_array2<MQ1, MD1> sm_B;                                 \
+  RAJA_TEAM_SHARED Real_array2<MD1, MQ1> sm_Bt;                                \
+  RAJA_TEAM_SHARED Real_array3<MDQ, MDQ, MDQ> sm0;                             \
+  RAJA_TEAM_SHARED Real_array3<MDQ, MDQ, MDQ> sm1;                             \
+  Real_array3_ref<MDQ, MDQ, MDQ> sm_X(sm0);                                    \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD(sm1);                                     \
   RAJA_TEAM_SHARED Index_type thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_1                                                      \

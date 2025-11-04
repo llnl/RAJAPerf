@@ -90,5 +90,49 @@ void GEN_LIN_RECUR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   deallocData(m_sb, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void GEN_LIN_RECUR::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    GEN_LIN_RECUR_DATA_SETUP;
+    const Index_type iend = N+1;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type k = 0; k < N; ++k )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(GEN_LIN_RECUR_OPT_BODY1);
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 1; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(GEN_LIN_RECUR_OPT_BODY2);
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace lcals
 } // end namespace rajaperf

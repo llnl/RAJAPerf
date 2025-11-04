@@ -123,6 +123,49 @@
   U[i * n + k] = P[i * n + k] * U[i * n + k +1] + Q[i * n + k];
 
 
+#define POLYBENCH_ADI_OPT_BODY2 \
+  V[0 * n + i] = 1.0; \
+  Real_type last_P = 0.0; \
+  Real_type last_Q = 1.0; \
+  P[i * n + 0] = last_P; \
+  Q[i * n + 0] = last_Q;
+
+#define POLYBENCH_ADI_OPT_BODY3 \
+  Real_type tmp_div = a * last_P + b; \
+  P[i * n + j] = last_P = -c / tmp_div; \
+  Q[i * n + j] = last_Q = (-d * U[j * n + i-1] + (1.0 + 2.0*d) * U[j * n + i] - \
+                          f * U[j * n + i + 1] - a * last_Q) / \
+                              tmp_div;
+
+#define POLYBENCH_ADI_OPT_BODY4 \
+  Real_type last_V = 1.0; \
+  V[(n-1) * n + i] = last_V;
+
+#define POLYBENCH_ADI_OPT_BODY5 \
+  V[k * n + i] = last_V = P[i * n + k] * last_V + Q[i * n + k];
+
+#define POLYBENCH_ADI_OPT_BODY6 \
+  U[i * n + 0] = 1.0; \
+  Real_type last_P = 0.0; \
+  Real_type last_Q = 1.0; \
+  P[i * n + 0] = last_P; \
+  Q[i * n + 0] = last_Q;
+
+#define POLYBENCH_ADI_OPT_BODY7 \
+  Real_type tmp_div = d * last_P + e; \
+  P[i * n + j] = last_P = -f / tmp_div; \
+  Q[i * n + j] = last_Q = (-a * V[(i-1) * n + j] + (1.0 + 2.0*a) * V[i * n + j] - \
+                          c * V[(i + 1) * n + j] - d * last_Q) / \
+                             tmp_div;
+
+#define POLYBENCH_ADI_OPT_BODY8 \
+  Real_type last_U = 1.0; \
+  U[i * n + n-1] = last_U;
+
+#define POLYBENCH_ADI_OPT_BODY9 \
+  U[i * n + k] = last_U = P[i * n + k] * last_U + Q[i * n + k];
+
+
 #define POLYBENCH_ADI_BODY2_RAJA \
   Vview(0, i) = 1.0; \
   Pview(i, 0) = 0.0; \
@@ -190,6 +233,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

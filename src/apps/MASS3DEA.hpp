@@ -106,15 +106,17 @@ constexpr RAJA::Index_type Q1D = 5;
   D[qx + mea::Q1D * qy + mea::Q1D * mea::Q1D * qz +                            \
     mea::Q1D * mea::Q1D * mea::Q1D * e]
 
-#define MASS3DEA_0 RAJA_TEAM_SHARED Real_type s_B[mea::Q1D][mea::D1D];
+#define MASS3DEA_0 RAJA_TEAM_SHARED Real_array2<mea::Q1D, mea::D1D> s_B;
 
-#define MASS3DEA_0_CPU Real_type s_B[mea::Q1D][mea::D1D];
+#define MASS3DEA_0_CPU Real_array2<mea::Q1D, mea::D1D> s_B;
 
 #define MASS3DEA_1 s_B[q][d] = MEA_B(q, d);
 
-#define MASS3DEA_2 RAJA_TEAM_SHARED Real_type s_D[mea::Q1D][mea::Q1D][mea::Q1D];
+#define MASS3DEA_2                                                             \
+  RAJA_TEAM_SHARED Real_array3<mea::Q1D, mea::Q1D, mea::Q1D> s_D;
 
-#define MASS3DEA_2_CPU Real_type s_D[mea::Q1D][mea::Q1D][mea::Q1D];
+#define MASS3DEA_2_CPU                                                         \
+  Real_array3<mea::Q1D, mea::Q1D, mea::Q1D> s_D;
 
 #define MASS3DEA_3 s_D[k1][k2][k3] = MEA_D(k1, k2, k3, e);
 
@@ -153,6 +155,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();
