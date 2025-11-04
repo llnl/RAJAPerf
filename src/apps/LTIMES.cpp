@@ -37,6 +37,8 @@ LTIMES::LTIMES(const RunParams& params)
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
 
+  std::cout << m_philen << " " << m_elllen << " " << m_psilen << " " << m_num_z << std::enl;
+
   setActualProblemSize( m_psilen );
 
   setItsPerRep( m_philen );
