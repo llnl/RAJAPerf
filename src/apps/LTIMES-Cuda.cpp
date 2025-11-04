@@ -131,7 +131,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   } else if ( vid == RAJA_CUDA ) {
 
     if (tune_idx == 0) {
-
+      getCout() << "\n LTIMES : Using custom exec policy " << std::endl;
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
