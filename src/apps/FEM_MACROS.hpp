@@ -24,6 +24,11 @@
   for (Index_type i = threadIdx.k; i < N; i += blockDim.k)
 #endif
 
+#if defined(RAJA_ENABLE_CUDA) || defined(RAJA_ENABLE_HIP)
+#define GPU_FOREACH_THREAD_DIRECT(i, k, N)  \
+  if(int i = threadIdx.k; i <  N)
+#endif
+
 #if defined(RAJA_ENABLE_SYCL)
 #define SYCL_FOREACH_THREAD(i, k, N) \
   for (Index_type i = itm.get_local_id(k); i < N; i += itm.get_local_range(k))

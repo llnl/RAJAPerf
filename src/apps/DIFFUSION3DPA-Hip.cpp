@@ -23,7 +23,7 @@ namespace rajaperf {
 namespace apps {
 
 template < size_t block_size >
-  __launch_bounds__(block_size)
+__launch_bounds__(block_size)
 __global__ void Diffusion3DPA(const Real_ptr Basis,
                               const Real_ptr dBasis, const Real_ptr D,
                               const Real_ptr X, Real_ptr Y, bool symmetric) {
@@ -32,73 +32,73 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
 
   DIFFUSION3DPA_0_GPU;
 
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, DPA_D1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, DPA_D1D) {
         DIFFUSION3DPA_1;
       }
     }
   }
 
   if (threadIdx.z == 0) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, DPA_Q1D) {
         DIFFUSION3DPA_2;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, DPA_D1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, DPA_Q1D) {
         DIFFUSION3DPA_3;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, DPA_D1D) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, DPA_Q1D) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, DPA_Q1D) {
         DIFFUSION3DPA_4;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, DPA_Q1D) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, DPA_Q1D) {
         DIFFUSION3DPA_5;
       }
     }
   }
   __syncthreads();
   if (threadIdx.z == 0) {
-    GPU_FOREACH_THREAD(d, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(q, x, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(d, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(q, x, DPA_Q1D) {
         DIFFUSION3DPA_6;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, DPA_Q1D) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, DPA_D1D) {
         DIFFUSION3DPA_7;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, DPA_D1D) {
         DIFFUSION3DPA_8;
       }
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, DPA_D1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, DPA_D1D) {
         DIFFUSION3DPA_9;
       }
     }
@@ -144,13 +144,13 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
     using inner_x =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<DPA_Q1D>>;
 
     using inner_y =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<DPA_Q1D>>;
 
     using inner_z =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<DPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<DPA_Q1D>>;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
