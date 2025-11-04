@@ -130,14 +130,14 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
   } else if ( vid == RAJA_HIP ) {
 
     if (tune_idx == 0) {
-
+      getCout() << "\n LTIMES : Using custom exec policy " << vid << std::endl;
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::HipKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
-            RAJA::statement::For<1, RAJA::hip_global_size_z_direct<z_block_sz>,     //z
-              RAJA::statement::For<2, RAJA::hip_global_size_y_direct<g_block_sz>,   //g
-                RAJA::statement::For<3, RAJA::hip_global_size_x_direct<m_block_sz>, //m
-                  RAJA::statement::For<0, RAJA::seq_exec,          //d
+            RAJA::statement::For<2, RAJA::hip_global_size_z_direct<z_block_sz>,     //g
+              RAJA::statement::For<3, RAJA::hip_global_size_y_direct<g_block_sz>,   //m
+                RAJA::statement::For<0, RAJA::hip_global_size_x_direct<m_block_sz>, //d
+                  RAJA::statement::For<1, RAJA::seq_exec,          //z
                     RAJA::statement::Lambda<0>
                   >
                 >
