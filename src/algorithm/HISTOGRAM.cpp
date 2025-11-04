@@ -145,5 +145,63 @@ void HISTOGRAM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(DataSpace::Host, m_counts_final);
 }
 
+
+// // Only define setCountedAttributes functions past this point
+// // BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void HISTOGRAM::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = getActualProblemSize();
+
+    HISTOGRAM_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    HISTOGRAM_SETUP_COUNTS;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      HISTOGRAM_INIT_COUNTS;
+      );
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_COUNTING));
+      }
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      HISTOGRAM_FINALIZE_COUNTS;
+      );
+
+    }
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    HISTOGRAM_TEARDOWN_COUNTS;
+    );
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, 0);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace algorithm
 } // end namespace rajaperf

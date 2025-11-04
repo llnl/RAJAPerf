@@ -99,5 +99,48 @@ void NODAL_ACCUMULATION_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   deallocData(m_real_zones, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void NODAL_ACCUMULATION_3D::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = m_domain->n_real_zones;
+
+    NODAL_ACCUMULATION_3D_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type ii = ibegin ; ii < iend ; ++ii )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(NODAL_ACCUMULATION_3D_BODY_INDEX);
+        RAJAPERF_COUNTERS_LOOP_BODY(NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_COUNTING));
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, 0);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace apps
 } // end namespace rajaperf

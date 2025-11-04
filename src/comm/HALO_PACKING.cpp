@@ -114,5 +114,99 @@ void HALO_PACKING::tearDown(VariantID vid, size_t tune_idx)
   tearDown_base(vid, tune_idx);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void HALO_PACKING::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    HALO_PACKING_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_OUTER_LOOP(for (Index_type l = 0; l < num_neighbors; ++l)) {
+        RAJAPERF_COUNTERS_LOOP_BODY(
+        Real_ptr buffer = pack_buffers[l];
+        Int_ptr list = pack_index_lists[l];
+        Index_type len = pack_index_list_lengths[l];
+        );
+        RAJAPERF_COUNTERS_OUTER_LOOP(for (Index_type v = 0; v < num_vars; ++v)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          Real_ptr var = vars[v];
+          );
+          RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < len; i++)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(HALO_PACK_BODY);
+          }
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          buffer += len;
+          );
+        }
+
+        RAJAPERF_COUNTERS_IF(if (separate_buffers)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          Real_ptr send_buffer = send_buffers[l];
+          );
+          RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < len*num_vars; i++)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(send_buffer[i] = buffer[i]);
+          }
+        }
+
+        RAJAPERF_COUNTERS_PAR_SYNC();
+      }
+
+      RAJAPERF_COUNTERS_OUTER_LOOP(for (Index_type l = 0; l < num_neighbors; ++l)) {
+        RAJAPERF_COUNTERS_LOOP_BODY(
+        Real_ptr buffer = unpack_buffers[l];
+        Int_ptr list = unpack_index_lists[l];
+        Index_type len = unpack_index_list_lengths[l];
+        );
+        RAJAPERF_COUNTERS_IF(if (separate_buffers)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          Real_ptr recv_buffer = recv_buffers[l];
+          );
+          RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < len*num_vars; i++)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(buffer[i] = recv_buffer[i]);
+          }
+        }
+
+        RAJAPERF_COUNTERS_OUTER_LOOP(for (Index_type v = 0; v < num_vars; ++v)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          Real_ptr var = vars[v];
+          );
+          RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < len; i++)) {
+            RAJAPERF_COUNTERS_LOOP_BODY(HALO_UNPACK_BODY);
+          }
+          RAJAPERF_COUNTERS_LOOP_BODY(
+          buffer += len;
+          );
+        }
+      }
+      RAJAPERF_COUNTERS_PAR_SYNC();
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, 0);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace comm
 } // end namespace rajaperf

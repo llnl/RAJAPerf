@@ -88,5 +88,77 @@ void INDEXLIST_3LOOP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
   deallocData(m_list, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void INDEXLIST_3LOOP::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = getActualProblemSize();
+
+    INDEXLIST_3LOOP_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(counts[i] = (INDEXLIST_3LOOP_CONDITIONAL) ? 1 : 0);
+      }
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      Index_type count = 0;
+      );
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend+1; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(
+        Index_type inc = counts[i];
+        counts[i] = count;
+        count += inc;
+        );
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(INDEXLIST_3LOOP_MAKE_LIST);
+      }
+
+      RAJAPERF_COUNTERS_PAR_SYNC();
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      m_len = counts[iend];
+      );
+
+    }
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::Host);
+    );
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace basic
 } // end namespace rajaperf

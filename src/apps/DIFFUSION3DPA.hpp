@@ -257,58 +257,58 @@ constexpr RAJA::Index_type DPA_SYM = 6;
 #define DPA_sign(q, d) (((q) <= (d)) ? -1.0 : 1.0)
 
 #define DIFFUSION3DPA_0_GPU                                                    \
-  constexpr Index_type MQ1 = diff::Q1D;                                        \
-  constexpr Index_type MD1 = diff::D1D;                                        \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  RAJA_TEAM_SHARED Real_type sBG[MQ1 * MD1];                                   \
-  Real_type(*B)[MD1] = (Real_type(*)[MD1])sBG;                                 \
-  Real_type(*G)[MD1] = (Real_type(*)[MD1])sBG;                                 \
-  Real_type(*Bt)[MQ1] = (Real_type(*)[MQ1])sBG;                                \
-  Real_type(*Gt)[MQ1] = (Real_type(*)[MQ1])sBG;                                \
-  RAJA_TEAM_SHARED Real_type sm0[3][MDQ * MDQ * MDQ];                          \
-  RAJA_TEAM_SHARED Real_type sm1[3][MDQ * MDQ * MDQ];                          \
-  Real_type(*s_X)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 2);               \
-  Real_type(*DDQ0)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])(sm0 + 0);              \
-  Real_type(*DDQ1)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])(sm0 + 1);              \
-  Real_type(*DQQ0)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 0);              \
-  Real_type(*DQQ1)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 1);              \
-  Real_type(*DQQ2)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 2);              \
-  Real_type(*QQQ0)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 0);              \
-  Real_type(*QQQ1)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 1);              \
-  Real_type(*QQQ2)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 2);              \
-  Real_type(*QQD0)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 0);              \
-  Real_type(*QQD1)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 1);              \
-  Real_type(*QQD2)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 2);              \
-  Real_type(*QDD0)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 0);              \
-  Real_type(*QDD1)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 1);              \
-  Real_type(*QDD2)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 2);
+  constexpr auto MQ1 = diff::Q1D;                                              \
+  constexpr auto MD1 = diff::D1D;                                              \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  RAJA_TEAM_SHARED Real_array2<MDQ, MDQ> sBG;                                  \
+  Real_array2_ref<MDQ, MDQ> B(sBG);                                            \
+  Real_array2_ref<MDQ, MDQ> G(sBG);                                            \
+  Real_array2_ref<MDQ, MDQ> Bt(sBG);                                           \
+  Real_array2_ref<MDQ, MDQ> Gt(sBG);                                           \
+  RAJA_TEAM_SHARED Real_array4<3, MDQ, MDQ, MDQ> sm0;                          \
+  RAJA_TEAM_SHARED Real_array4<3, MDQ, MDQ, MDQ> sm1;                          \
+  Real_array3_ref<MDQ, MDQ, MDQ> s_X(sm0[2]);                                  \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ0(sm1[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ1(sm1[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ2(sm1[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ2(sm0[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD0(sm1[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD1(sm1[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD2(sm1[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD2(sm0[2]);
 
 #define DIFFUSION3DPA_0_CPU                                                    \
-  constexpr Index_type MQ1 = diff::Q1D;                                        \
-  constexpr Index_type MD1 = diff::D1D;                                        \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  Real_type sBG[MQ1 * MD1];                                                    \
-  Real_type(*B)[MD1] = (Real_type(*)[MD1])sBG;                                 \
-  Real_type(*G)[MD1] = (Real_type(*)[MD1])sBG;                                 \
-  Real_type(*Bt)[MQ1] = (Real_type(*)[MQ1])sBG;                                \
-  Real_type(*Gt)[MQ1] = (Real_type(*)[MQ1])sBG;                                \
-  Real_type sm0[3][MDQ * MDQ * MDQ];                                           \
-  Real_type sm1[3][MDQ * MDQ * MDQ];                                           \
-  Real_type(*s_X)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 2);               \
-  Real_type(*DDQ0)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])(sm0 + 0);              \
-  Real_type(*DDQ1)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])(sm0 + 1);              \
-  Real_type(*DQQ0)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 0);              \
-  Real_type(*DQQ1)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 1);              \
-  Real_type(*DQQ2)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm1 + 2);              \
-  Real_type(*QQQ0)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 0);              \
-  Real_type(*QQQ1)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 1);              \
-  Real_type(*QQQ2)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])(sm0 + 2);              \
-  Real_type(*QQD0)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 0);              \
-  Real_type(*QQD1)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 1);              \
-  Real_type(*QQD2)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])(sm1 + 2);              \
-  Real_type(*QDD0)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 0);              \
-  Real_type(*QDD1)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 1);              \
-  Real_type(*QDD2)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 2);
+  constexpr auto MQ1 = diff::Q1D;                                              \
+  constexpr auto MD1 = diff::D1D;                                              \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  Real_array2<MDQ, MDQ> sBG;                                                   \
+  Real_array2_ref<MDQ, MDQ> B(sBG);                                            \
+  Real_array2_ref<MDQ, MDQ> G(sBG);                                            \
+  Real_array2_ref<MDQ, MDQ> Bt(sBG);                                           \
+  Real_array2_ref<MDQ, MDQ> Gt(sBG);                                           \
+  Real_array4<3, MDQ, MDQ, MDQ> sm0;                                           \
+  Real_array4<3, MDQ, MDQ, MDQ> sm1;                                           \
+  Real_array3_ref<MDQ, MDQ, MDQ> s_X(sm0[2]);                                  \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ0(sm1[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ1(sm1[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ2(sm1[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ2(sm0[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD0(sm1[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD1(sm1[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD2(sm1[2]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD0(sm0[0]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD1(sm0[1]);                                 \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD2(sm0[2]);
 
 #define DIFFUSION3DPA_1 s_X[dz][dy][dx] = DPA_X(dx, dy, dz, e);
 
@@ -419,6 +419,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

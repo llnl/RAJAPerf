@@ -98,5 +98,50 @@ void LTIMES_NOVIEW::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   deallocData(m_psidat, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void LTIMES_NOVIEW::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    LTIMES_NOVIEW_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type z = 0; z < num_z; ++z )) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type g = 0; g < num_g; ++g )) {
+          RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type m = 0; m < num_m; ++m )) {
+            RAJAPERF_COUNTERS_SEQ_LOOP(for (Index_type d = 0; d < num_d; ++d )) {
+              RAJAPERF_COUNTERS_LOOP_BODY(LTIMES_NOVIEW_BODY);
+            }
+          }
+        }
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace apps
 } // end namespace rajaperf

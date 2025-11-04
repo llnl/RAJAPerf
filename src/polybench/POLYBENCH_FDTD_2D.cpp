@@ -119,5 +119,61 @@ void POLYBENCH_FDTD_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
   deallocData(m_hz, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void POLYBENCH_FDTD_2D::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    POLYBENCH_FDTD_2D_DATA_SETUP
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = 0; j < ny; j++)) {
+        RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_FDTD_2D_BODY1);
+      }
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 1; i < nx; i++)) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = 0; j < ny; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_FDTD_2D_BODY2);
+        }
+      }
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < nx; i++)) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = 1; j < ny; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_FDTD_2D_BODY3);
+        }
+      }
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = 0; i < nx - 1; i++)) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = 0; j < ny - 1; j++)) {
+          RAJAPERF_COUNTERS_LOOP_BODY(POLYBENCH_FDTD_2D_BODY4);
+        }
+      }
+
+      t = (t+1) % m_tsteps;
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace polybench
 } // end namespace rajaperf

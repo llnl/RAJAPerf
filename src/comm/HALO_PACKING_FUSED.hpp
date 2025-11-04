@@ -59,9 +59,9 @@
   Real_ptr_ptr recv_buffers = m_recv_buffers;
 
 #define HALO_PACKING_FUSED_MANUAL_FUSER_SETUP \
-  ptr_holder* pack_ptr_holders = nullptr; \
+  RAJAPERF_WRAPPER(ptr_holder*) pack_ptr_holders = nullptr; \
   Index_ptr pack_lens = nullptr; \
-  ptr_holder* unpack_ptr_holders = nullptr; \
+  RAJAPERF_WRAPPER(ptr_holder*) unpack_ptr_holders = nullptr; \
   Index_ptr unpack_lens = nullptr; \
   allocData(DataSpace::Host, pack_ptr_holders, num_neighbors * num_vars); \
   allocData(DataSpace::Host, pack_lens, num_neighbors * num_vars); \
@@ -132,6 +132,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

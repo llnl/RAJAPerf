@@ -51,6 +51,20 @@
   stb5[k] = b5[k+kb5i] - stb5[k];
 
 
+#define GEN_LIN_RECUR_OPT_BODY1  \
+  Real_type tmp; \
+  Real_type stb = stb5[k]; \
+  b5[k+kb5i] = tmp = sa[k] + stb*sb[k]; \
+  stb5[k] = tmp - stb;
+
+#define GEN_LIN_RECUR_OPT_BODY2  \
+  Index_type k = N - i ; \
+  Real_type tmp; \
+  Real_type stb = stb5[k]; \
+  b5[k+kb5i] = tmp = sa[k] + stb*sb[k]; \
+  stb5[k] = tmp - stb;
+
+
 #include "common/KernelBase.hpp"
 
 namespace rajaperf
@@ -72,6 +86,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

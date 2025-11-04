@@ -45,6 +45,13 @@
   if ( vnewc[i] >= eosvmax ) p_new[i] = 0.0 ; \
   if ( p_new[i] < pmin ) p_new[i] = pmin ;
 
+#define PRESSURE_OPT_BODY2 \
+  Real_type p = bvc[i] * e_old[i] ; \
+  if ( fabs(p) < p_cut ) p = 0.0 ; \
+  if ( vnewc[i] >= eosvmax ) p = 0.0 ; \
+  if ( p < pmin ) p = pmin ; \
+  p_new[i] = p;
+
 
 #include "common/KernelBase.hpp"
 
@@ -67,6 +74,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();
