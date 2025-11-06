@@ -135,8 +135,8 @@ void LTIMES::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
-            RAJA::statement::For<2, RAJA::cuda_global_size_z_direct<8>,     //g
-              RAJA::statement::For<3, RAJA::cuda_global_size_y_direct<8>,   //m
+            RAJA::statement::For<2, RAJA::cuda_global_size_z_direct<2>,     //g
+              RAJA::statement::For<3, RAJA::cuda_global_size_y_direct<4>,   //m
                 RAJA::statement::For<0, RAJA::cuda_global_size_x_direct<32>, //d
                   RAJA::statement::For<1, RAJA::seq_exec,           //z
                     RAJA::statement::Lambda<0>
