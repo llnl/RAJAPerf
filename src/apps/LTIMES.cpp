@@ -31,13 +31,17 @@ LTIMES::LTIMES(const RunParams& params)
   setDefaultProblemSize(m_num_d * m_num_g * num_z_default);
   setDefaultReps(50);
 
-  m_num_z = 256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+  m_num_z = getTargetProblemSize()/m_num_d/m_num_g ;//256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
 
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
 
   std::cout << "testout123: " << m_philen << " " << m_elllen << " " << m_psilen << " " << m_num_z << std::endl;
+
+  adiak::value("unknowns", m_psilen);
+  adiak::value("groups", m_num_g);
+  adiak::value("zones", m_num_z);
 
   setActualProblemSize( m_psilen );
 
