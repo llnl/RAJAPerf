@@ -32,6 +32,7 @@ push_to_registry=${PUSH_TO_REGISTRY:-true}
 perf_artifact_dir=${PERF_ARTIFACT_DIR:-""}
 perf_tests=${PERF_TESTS:-false}
 perf_kernels=${PERF_KERNELS:-""}
+perf_exclude_kernels=${PERF_EXCLUDE_KERNELS:-""}
 perf_variants=${PERF_VARIANTS:-""}
 perf_run_opts=${PERF_RUN_OPTS:-""}
 perf_mpi_exec=${PERF_MPI_EXEC:-""}
@@ -302,7 +303,7 @@ then
 
     timed_message "Performance tests for RAJA Perf Suite"
 
-    raja_perf_command="${build_dir}/bin/raja-perf.exe --kernels ${perf_kernels} --variants ${perf_variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
+    raja_perf_command="${build_dir}/bin/raja-perf.exe --kernels ${perf_kernels} --exclude-kernels ${perf_exclude_kernels} --variants ${perf_variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
 
     if [[ -n ${perf_mpi_exec} ]]
     then
