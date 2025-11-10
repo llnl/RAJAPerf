@@ -28,6 +28,7 @@
 
 # We define the following GitLab pipeline variables:
 variables:
+  ON_CORONA: "OFF"
 ##### LC GITLAB CONFIGURATION
 # Use an LLNL service user to run CI. This prevents from running pipelines as
 # an actual user.
