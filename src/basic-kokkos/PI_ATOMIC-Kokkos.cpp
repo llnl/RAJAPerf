@@ -41,7 +41,7 @@ void PI_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
           "PI_ATOMIC-Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
           KOKKOS_LAMBDA(Index_type i) {
-            double x = (double(i) + 0.5) * dx;
+            Real_type x = (Real_type(i) + 0.5) * dx;
             // Make a reference to the 0th element of a 1D view with one
             // element
             Kokkos::atomic_add(&pi_view(0), dx / (1.0 + x * x));

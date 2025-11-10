@@ -37,8 +37,7 @@ void DAXPY_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-          #pragma omp atomic
-          y[i] += a * x[i] ;
+          DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP);
         }
 
       }
@@ -50,9 +49,8 @@ void DAXPY_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     case Lambda_OpenMP : {
 
       auto daxpy_atomic_lam = [=](Index_type i) {
-                         #pragma omp atomic
-                         y[i] += a * x[i] ;
-                       };
+            DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP);
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -77,7 +75,7 @@ void DAXPY_ATOMIC::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-          DAXPY_ATOMIC_RAJA_BODY(RAJA::omp_atomic);
+          DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
         });
 
       }

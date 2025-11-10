@@ -34,6 +34,10 @@
 #define PI_ATOMIC_GPU_DATA_SETUP \
   Real_type dx = m_dx;
 
+#define PI_ATOMIC_BODY(atomicAdd) \
+  Real_type x = (Real_type(i) + 0.5) * dx; \
+  atomicAdd(*pi, dx / (1.0 + x * x));
+
 
 #include "common/KernelBase.hpp"
 

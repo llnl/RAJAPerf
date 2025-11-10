@@ -28,21 +28,22 @@ HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
 
   m_num_vars = params.getHaloNumVars();
   m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( m_num_vars * (m_var_size - getActualProblemSize()) );
+  setItsPerRep( 2 * m_num_vars * halo_size );
   setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
-  setBytesReadPerRep( 1*sizeof(Int_type) * getItsPerRep() +   // pack
-                      1*sizeof(Real_type) * getItsPerRep() +  // pack
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                      1*sizeof(Real_type) * getItsPerRep() +  // send
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // send
 
-                      1*sizeof(Int_type) * getItsPerRep() +   // unpack
-                      1*sizeof(Real_type) * getItsPerRep() ); // unpack
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() +  // pack
+                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack
+                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                         1*sizeof(Real_type) * getItsPerRep() +  // recv
+                         1*sizeof(Real_type) * m_num_vars * halo_size +  // recv
 
-                         1*sizeof(Real_type) * getItsPerRep() ); // unpack
+                         1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
@@ -79,7 +80,7 @@ void HALO_EXCHANGE::setUp(VariantID vid, size_t tune_idx)
 {
   setUp_base(m_my_mpi_rank, m_mpi_dims.data(), m_num_vars, vid, tune_idx);
 
-  m_vars.resize(m_num_vars, nullptr);
+  allocAndInitDataConst(DataSpace::Host, m_vars, m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
     auto reset_var = allocAndInitDataForInit(m_vars[v], m_var_size, vid);
 
@@ -93,8 +94,8 @@ void HALO_EXCHANGE::setUp(VariantID vid, size_t tune_idx)
 
 void HALO_EXCHANGE::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  for (Real_ptr var : m_vars) {
-    checksum[vid][tune_idx] += calcChecksum(var, m_var_size, vid);
+  for (Index_type v = 0; v < m_num_vars; ++v) {
+    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
   }
 }
 
@@ -103,7 +104,7 @@ void HALO_EXCHANGE::tearDown(VariantID vid, size_t tune_idx)
   for (int v = 0; v < m_num_vars; ++v) {
     deallocData(m_vars[v], vid);
   }
-  m_vars.clear();
+  deallocData(DataSpace::Host, m_vars);
 
   tearDown_base(vid, tune_idx);
 }

@@ -33,7 +33,7 @@
 ///     {
 ///       for(int dx = 0; dx < CPA_D1D; ++dx)
 ///       {
-///         u[dz][dy][dx] = cpaX_(dx,dy,dz,e);
+///         u[dz][dy][dx] = CPA_X(dx,dy,dz,e);
 ///       }
 ///     }
 ///   }
@@ -50,8 +50,8 @@
 ///         double Gu_ = 0.0;
 ///         for(int dx = 0; dx < CPA_D1D; ++dx)
 ///         {
-///           const double bx = cpa_B(qx,dx);
-///           const double gx = cpa_G(qx,dx);
+///           const double bx = CPA_B(qx,dx);
+///           const double gx = CPA_G(qx,dx);
 ///           const double x = u[dz][dy][dx];
 ///           Bu_ += bx * x;
 ///           Gu_ += gx * x;
@@ -76,8 +76,8 @@
 ///         double BGu_ = 0.0;
 ///         for(int dy = 0; dy < CPA_D1D; ++dy)
 ///         {
-///           const double bx = cpa_B(qy,dy);
-///           const double gx = cpa_G(qy,dy);
+///           const double bx = CPA_B(qy,dy);
+///           const double gx = CPA_G(qy,dy);
 ///           BBu_ += bx * Bu[dz][dy][qx];
 ///           GBu_ += gx * Bu[dz][dy][qx];
 ///           BGu_ += bx * Gu[dz][dy][qx];
@@ -103,8 +103,8 @@
 ///         double BBGu_ = 0.0;
 ///         for(int dz = 0; dz < CPA_D1D; ++dz)
 ///         {
-///           const double bx = cpa_B(qz,dz);
-///           const double gx = cpa_G(qz,dz);
+///           const double bx = CPA_B(qz,dz);
+///           const double gx = CPA_G(qz,dz);
 ///           GBBu_ += gx * BBu[dz][qy][qx];
 ///           BGBu_ += bx * GBu[dz][qy][qx];
 ///           BBGu_ += bx * BGu[dz][qy][qx];
@@ -123,9 +123,9 @@
 ///     {
 ///       for(int qx = 0; qx < CPA_Q1D; ++qx)
 ///       {
-///         const double O1 = cpa_op(qx,qy,qz,0,e);
-///         const double O2 = cpa_op(qx,qy,qz,1,e);
-///         const double O3 = cpa_op(qx,qy,qz,2,e);
+///         const double O1 = CPA_op(qx,qy,qz,0,e);
+///         const double O2 = CPA_op(qx,qy,qz,1,e);
+///         const double O3 = CPA_op(qx,qy,qz,2,e);
 ///
 ///         const double gradX = BBGu[qz][qy][qx];
 ///         const double gradY = BGBu[qz][qy][qx];
@@ -146,7 +146,7 @@
 ///          double BDGu_ = 0.0;
 ///          for(int qz = 0; qz < CPA_Q1D; ++qz)
 ///          {
-///             const double w = cpa_Bt(dz,qz);
+///             const double w = CPA_Bt(dz,qz);
 ///             BDGu_ += w * DGu[qz][qy][qx];
 ///          }
 ///          BDGu[dz][qy][qx] = BDGu_;
@@ -164,7 +164,7 @@
 ///            double BBDGu_ = 0.0;
 ///            for(int qy = 0; qy < CPA_Q1D; ++qy)
 ///            {
-///              const double w = cpa_Bt(dy,qy);
+///              const double w = CPA_Bt(dy,qy);
 ///              BBDGu_ += w * BDGu[dz][qy][qx];
 ///           }
 ///           BBDGu[dz][dy][qx] = BBDGu_;
@@ -181,10 +181,10 @@
 ///         double BBBDGu = 0.0;
 ///         for(int qx = 0; qx < CPA_Q1D; ++qx)
 ///         {
-///           const double w = cpa_Bt(dx,qx);
+///           const double w = CPA_Bt(dx,qx);
 ///           BBBDGu += w * BBDGu[dz][dy][qx];
 ///         }
-///         cpaY_(dx,dy,dz,e) += BBBDGu;
+///         CPA_Y(dx,dy,dz,e) += BBBDGu;
 ///       }
 ///     }
 ///   }
@@ -212,14 +212,14 @@ Index_type NE = m_NE;
 #define CPA_D1D 3
 #define CPA_Q1D 4
 #define CPA_VDIM 3
-#define cpa_B(x, y) Basis[x + CPA_Q1D * y]
-#define cpa_Bt(x, y) tBasis[x + CPA_D1D * y]
-#define cpa_G(x, y) dBasis[x + CPA_Q1D * y]
-#define cpaX_(dx, dy, dz, e)                                                     \
+#define CPA_B(x, y) Basis[x + CPA_Q1D * y]
+#define CPA_Bt(x, y) tBasis[x + CPA_D1D * y]
+#define CPA_G(x, y) dBasis[x + CPA_Q1D * y]
+#define CPA_X(dx, dy, dz, e)                                                     \
   X[dx + CPA_D1D * dy + CPA_D1D * CPA_D1D * dz + CPA_D1D * CPA_D1D * CPA_D1D * e]
-#define cpaY_(dx, dy, dz, e)                                                      \
+#define CPA_Y(dx, dy, dz, e)                                                      \
   Y[dx + CPA_D1D * dy + CPA_D1D * CPA_D1D * dz + CPA_D1D * CPA_D1D * CPA_D1D * e]
-#define cpa_op(qx, qy, qz, d, e)                                       \
+#define CPA_op(qx, qy, qz, d, e)                                       \
   D[qx + CPA_Q1D * qy + CPA_Q1D * CPA_Q1D * qz + CPA_Q1D * CPA_Q1D * CPA_Q1D * d  +  CPA_VDIM * CPA_Q1D * CPA_Q1D * CPA_Q1D * e]
 
 #define CONVECTION3DPA_0_GPU \
@@ -270,16 +270,16 @@ Index_type NE = m_NE;
   double (*BBDGu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm5;
 
 #define CONVECTION3DPA_1 \
-  u[dz][dy][dx] = cpaX_(dx,dy,dz,e);
+  u[dz][dy][dx] = CPA_X(dx,dy,dz,e);
 
 #define CONVECTION3DPA_2 \
-  double Bu_ = 0.0; \
-  double Gu_ = 0.0; \
-  for (int dx = 0; dx < CPA_D1D; ++dx) \
+  Real_type Bu_ = 0.0; \
+  Real_type Gu_ = 0.0; \
+  for (Index_type dx = 0; dx < CPA_D1D; ++dx) \
   { \
-    const double bx = cpa_B(qx,dx); \
-    const double gx = cpa_G(qx,dx); \
-    const double x = u[dz][dy][dx]; \
+    const Real_type bx = CPA_B(qx,dx); \
+    const Real_type gx = CPA_G(qx,dx); \
+    const Real_type x = u[dz][dy][dx]; \
     Bu_ += bx * x; \
     Gu_ += gx * x; \
   } \
@@ -287,13 +287,13 @@ Index_type NE = m_NE;
   Gu[dz][dy][qx] = Gu_;
 
 #define CONVECTION3DPA_3 \
-  double BBu_ = 0.0; \
-  double GBu_ = 0.0; \
-  double BGu_ = 0.0; \
-  for (int dy = 0; dy < CPA_D1D; ++dy) \
+  Real_type BBu_ = 0.0; \
+  Real_type GBu_ = 0.0; \
+  Real_type BGu_ = 0.0; \
+  for (Index_type dy = 0; dy < CPA_D1D; ++dy) \
   { \
-    const double bx = cpa_B(qy,dy); \
-    const double gx = cpa_G(qy,dy); \
+    const Real_type bx = CPA_B(qy,dy); \
+    const Real_type gx = CPA_G(qy,dy); \
     BBu_ += bx * Bu[dz][dy][qx]; \
     GBu_ += gx * Bu[dz][dy][qx]; \
     BGu_ += bx * Gu[dz][dy][qx]; \
@@ -303,13 +303,13 @@ Index_type NE = m_NE;
   BGu[dz][qy][qx] = BGu_;
 
 #define CONVECTION3DPA_4 \
-  double GBBu_ = 0.0; \
-  double BGBu_ = 0.0; \
-  double BBGu_ = 0.0; \
-  for (int dz = 0; dz < CPA_D1D; ++dz) \
+  Real_type GBBu_ = 0.0; \
+  Real_type BGBu_ = 0.0; \
+  Real_type BBGu_ = 0.0; \
+  for (Index_type dz = 0; dz < CPA_D1D; ++dz) \
   { \
-    const double bx = cpa_B(qz,dz); \
-    const double gx = cpa_G(qz,dz); \
+    const Real_type bx = CPA_B(qz,dz); \
+    const Real_type gx = CPA_G(qz,dz); \
     GBBu_ += gx * BBu[dz][qy][qx]; \
     BGBu_ += bx * GBu[dz][qy][qx]; \
     BBGu_ += bx * BGu[dz][qy][qx]; \
@@ -319,40 +319,40 @@ Index_type NE = m_NE;
   BBGu[qz][qy][qx] = BBGu_;
 
 #define CONVECTION3DPA_5 \
-  const double O1 = cpa_op(qx,qy,qz,0,e); \
-  const double O2 = cpa_op(qx,qy,qz,1,e); \
-  const double O3 = cpa_op(qx,qy,qz,2,e); \
-  const double gradX = BBGu[qz][qy][qx]; \
-  const double gradY = BGBu[qz][qy][qx]; \
-  const double gradZ = GBBu[qz][qy][qx]; \
+  const Real_type O1 = CPA_op(qx,qy,qz,0,e); \
+  const Real_type O2 = CPA_op(qx,qy,qz,1,e); \
+  const Real_type O3 = CPA_op(qx,qy,qz,2,e); \
+  const Real_type gradX = BBGu[qz][qy][qx]; \
+  const Real_type gradY = BGBu[qz][qy][qx]; \
+  const Real_type gradZ = GBBu[qz][qy][qx]; \
   DGu[qz][qy][qx] = (O1 * gradX) + (O2 * gradY) + (O3 * gradZ);
 
 #define CONVECTION3DPA_6 \
-  double BDGu_ = 0.0; \
-  for (int qz = 0; qz < CPA_Q1D; ++qz) \
+  Real_type BDGu_ = 0.0; \
+  for (Index_type qz = 0; qz < CPA_Q1D; ++qz) \
   { \
-    const double w = cpa_Bt(dz,qz); \
+    const Real_type w = CPA_Bt(dz,qz); \
     BDGu_ += w * DGu[qz][qy][qx]; \
    } \
    BDGu[dz][qy][qx] = BDGu_;
 
 #define CONVECTION3DPA_7 \
-  double BBDGu_ = 0.0; \
-  for (int qy = 0; qy < CPA_Q1D; ++qy) \
+  Real_type BBDGu_ = 0.0; \
+  for (Index_type qy = 0; qy < CPA_Q1D; ++qy) \
   { \
-    const double w = cpa_Bt(dy,qy); \
+    const Real_type w = CPA_Bt(dy,qy); \
     BBDGu_ += w * BDGu[dz][qy][qx]; \
   } \
   BBDGu[dz][dy][qx] = BBDGu_; \
 
 #define CONVECTION3DPA_8 \
-  double BBBDGu = 0.0; \
-  for (int qx = 0; qx < CPA_Q1D; ++qx) \
+  Real_type BBBDGu = 0.0; \
+  for (Index_type qx = 0; qx < CPA_Q1D; ++qx) \
   { \
-    const double w = cpa_Bt(dx,qx); \
+    const Real_type w = CPA_Bt(dx,qx); \
     BBBDGu += w * BBDGu[dz][dy][qx]; \
   } \
-  cpaY_(dx,dy,dz,e) += BBBDGu;
+  CPA_Y(dx,dy,dz,e) += BBBDGu;
 
 namespace rajaperf
 {

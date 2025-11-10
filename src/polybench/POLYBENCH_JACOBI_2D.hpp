@@ -9,17 +9,14 @@
 ///
 /// POLYBENCH_JACOBI_2D kernel reference implementation:
 ///
-/// for (t = 0; t < TSTEPS; t++)
-/// {
-///   for (i = 1; i < N - 1; i++) {
-///     for (j = 1; j < N - 1; j++) {
-///       B[i][j] = 0.2 * (A[i][j] + A[i][j-1] + A[i][j+1] + A[i+1][j] + A[i-1][j]);
-///     }
+/// for (i = 1; i < N - 1; i++) {
+///   for (j = 1; j < N - 1; j++) {
+///     B[i][j] = 0.2 * (A[i][j] + A[i][j-1] + A[i][j+1] + A[i+1][j] + A[i-1][j]);
 ///   }
-///   for (i = 1; i < N - 1; i++) {
-///     for (j = 1; j < N - 1; j++) {
-///       A[i][j] = 0.2 * (B[i][j] + B[i][j-1] + B[i][j+1] + B[i+1][j] + B[i-1][j]);
-///     }
+/// }
+/// for (i = 1; i < N - 1; i++) {
+///   for (j = 1; j < N - 1; j++) {
+///     A[i][j] = 0.2 * (B[i][j] + B[i][j-1] + B[i][j+1] + B[i+1][j] + B[i-1][j]);
 ///   }
 /// }
 
@@ -34,8 +31,7 @@
   copyData(getDataSpace(vid), A, getDataSpace(vid), m_Ainit, m_N*m_N); \
   copyData(getDataSpace(vid), B, getDataSpace(vid), m_Binit, m_N*m_N); \
   \
-  const Index_type N = m_N; \
-  const Index_type tsteps = m_tsteps;
+  const Index_type N = m_N;
 
 
 #define POLYBENCH_JACOBI_2D_BODY1 \
@@ -106,7 +102,6 @@ private:
                                                          integer::MultipleOf<32>>;
 
   Index_type m_N;
-  Index_type m_tsteps;
 
   Real_ptr m_A;
   Real_ptr m_B;

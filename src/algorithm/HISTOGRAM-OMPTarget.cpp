@@ -42,16 +42,15 @@ void HISTOGRAM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      initOpenMPDeviceData(counts, counts_init.data(), num_bins);
+      initOpenMPDeviceData(counts, counts_init, num_bins);
 
       #pragma omp target is_device_ptr(counts, bins)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        #pragma omp atomic
-        HISTOGRAM_BODY;
+        HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
-      getOpenMPDeviceData(counts_final.data(), counts, num_bins);
+      getOpenMPDeviceData(counts_final, counts, num_bins);
 
     }
     stopTimer();

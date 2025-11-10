@@ -38,8 +38,7 @@ void ATOMIC::runOpenMPVariantReplicate(VariantID vid)
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-          #pragma omp atomic
-          ATOMIC_BODY(i, ATOMIC_VALUE);
+          ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP, i, ATOMIC_VALUE);
         }
 
       }
@@ -51,8 +50,7 @@ void ATOMIC::runOpenMPVariantReplicate(VariantID vid)
     case Lambda_OpenMP : {
 
       auto atomic_base_lam = [=](Index_type i) {
-                                 #pragma omp atomic
-                                 ATOMIC_BODY(i, ATOMIC_VALUE);
+                                 ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP, i, ATOMIC_VALUE);
                                };
 
       startTimer();
@@ -78,7 +76,7 @@ void ATOMIC::runOpenMPVariantReplicate(VariantID vid)
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-            ATOMIC_RAJA_BODY(RAJA::omp_atomic, i, ATOMIC_VALUE);
+            ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP, i, ATOMIC_VALUE);
         });
 
       }

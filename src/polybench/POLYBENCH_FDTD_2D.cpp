@@ -23,27 +23,27 @@ namespace polybench
 
 POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
   : KernelBase(rajaperf::Polybench_FDTD_2D, params)
+  , m_tsteps(40)
 {
   Index_type nx_default = 1000;
   Index_type ny_default = 1000;
 
   setDefaultProblemSize( std::max( (nx_default-1) * ny_default,
                                     nx_default * (ny_default-1) ) );
-  setDefaultReps(8);
+  setDefaultReps(8 * m_tsteps);
 
   m_nx = std::sqrt( getTargetProblemSize() ) + 1 + std::sqrt(2)-1;
   m_ny = m_nx;
-  m_tsteps = 40;
 
 
   setActualProblemSize( std::max( (m_nx-1)*m_ny, m_nx*(m_ny-1) ) );
 
-  setItsPerRep( m_tsteps * ( m_ny +
-                             (m_nx-1)*m_ny +
-                             m_nx*(m_ny-1) +
-                             (m_nx-1)*(m_ny-1) ) );
-  setKernelsPerRep(m_tsteps * 4);
-  setBytesReadPerRep((1*sizeof(Real_type ) +
+  setItsPerRep( m_ny +
+                (m_nx-1)*m_ny +
+                m_nx*(m_ny-1) +
+                (m_nx-1)*(m_ny-1) );
+  setKernelsPerRep(4);
+  setBytesReadPerRep( 1*sizeof(Real_type ) +
 
                       1*sizeof(Real_type ) * (m_nx-1) * m_ny +
                       1*sizeof(Real_type ) * m_nx * m_ny +
@@ -53,19 +53,19 @@ POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
 
                       1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) +
                       1*sizeof(Real_type ) * (m_nx-1) * m_ny +
-                      1*sizeof(Real_type ) * m_nx * (m_ny-1)) * m_tsteps );
-  setBytesWrittenPerRep((1*sizeof(Real_type ) * m_ny +
+                      1*sizeof(Real_type ) * m_nx * (m_ny-1) );
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ny +
 
                          1*sizeof(Real_type ) * (m_nx-1) * m_ny +
 
                          1*sizeof(Real_type ) * m_nx * (m_ny-1) +
 
-                         1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1)) * m_tsteps );
+                         1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( m_tsteps * ( 0 * m_ny +
-                               3 * (m_nx-1)*m_ny +
-                               3 * m_nx*(m_ny-1) +
-                               5 * (m_nx-1)*(m_ny-1) ) );
+  setFLOPsPerRep( 0 * m_ny +
+                  3 * (m_nx-1)*m_ny +
+                  3 * m_nx*(m_ny-1) +
+                  5 * (m_nx-1)*(m_ny-1) );
 
   checksum_scale_factor = 0.001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /

@@ -34,7 +34,7 @@ void DAXPY_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
-          DAXPY_ATOMIC_BODY;
+          DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
 
       }
@@ -47,8 +47,8 @@ void DAXPY_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     case Lambda_Seq : {
 
       auto daxpy_atomic_lam = [=](Index_type i) {
-                     DAXPY_ATOMIC_BODY;
-                   };
+            DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -73,7 +73,7 @@ void DAXPY_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
           [=](Index_type i) {
-            DAXPY_ATOMIC_RAJA_BODY(RAJA::seq_atomic);
+            DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_SEQ);
         });
 
       }

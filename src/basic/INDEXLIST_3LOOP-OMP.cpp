@@ -17,12 +17,6 @@ namespace rajaperf
 namespace basic
 {
 
-#define INDEXLIST_3LOOP_DATA_SETUP_OMP \
-  Index_type* counts = new Index_type[iend+1];
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_OMP \
-  delete[] counts; counts = nullptr;
-
 
 void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
@@ -38,7 +32,7 @@ void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
 
     case Base_OpenMP : {
 
-      INDEXLIST_3LOOP_DATA_SETUP_OMP;
+      INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
 #if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
 #else
@@ -107,14 +101,14 @@ void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
       }
       stopTimer();
 
-      INDEXLIST_3LOOP_DATA_TEARDOWN_OMP;
+      INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::Host);
 
       break;
     }
 
     case Lambda_OpenMP : {
 
-      INDEXLIST_3LOOP_DATA_SETUP_OMP;
+      INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       auto indexlist_conditional_lam = [=](Index_type i) {
                                   counts[i] = (INDEXLIST_3LOOP_CONDITIONAL) ? 1 : 0;
@@ -191,7 +185,7 @@ void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
       }
       stopTimer();
 
-      INDEXLIST_3LOOP_DATA_TEARDOWN_OMP;
+      INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::Host);
 
       break;
     }
@@ -200,7 +194,7 @@ void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
 
       auto res{getHostResource()};
 
-      INDEXLIST_3LOOP_DATA_SETUP_OMP;
+      INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -227,7 +221,7 @@ void INDEXLIST_3LOOP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
       }
       stopTimer();
 
-      INDEXLIST_3LOOP_DATA_TEARDOWN_OMP;
+      INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::Host);
 
       break;
     }

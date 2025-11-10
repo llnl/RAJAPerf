@@ -47,7 +47,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
       Index_type i = blockIdx.x * block_size + threadIdx.x;
       for ( ; i < iend ; i += gridDim.x * block_size ) {
         Index_type offset = bins[i] * shared_replication + RAJA::power_of_2_mod(Index_type{threadIdx.x}, shared_replication);
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&shared_values[offset], data[i]);
+        RAJAPERF_ATOMIC_ADD_CUDA(shared_values[offset], data[i]);
       }
     }
 
@@ -59,7 +59,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
       }
       if (block_sum != MULTI_REDUCE::Data_type(0)) {
         Index_type offset = bin + RAJA::power_of_2_mod(Index_type{blockIdx.x}, global_replication) * num_bins;
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&global_values[offset], block_sum);
+        RAJAPERF_ATOMIC_ADD_CUDA(global_values[offset], block_sum);
       }
     }
 
@@ -69,7 +69,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
     Index_type warp = i / warp_size;
     for ( ; i < iend ; i += gridDim.x * block_size ) {
       Index_type offset = bins[i] + RAJA::power_of_2_mod(warp, global_replication) * num_bins;
-      RAJA::atomicAdd<RAJA::cuda_atomic>(&global_values[offset], data[i]);
+      RAJAPERF_ATOMIC_ADD_CUDA(global_values[offset], data[i]);
     }
   }
 }
@@ -93,7 +93,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
     auto* func = &multi_reduce_atomic_runtime<block_size>;
 
     cudaFuncAttributes func_attr;
-    cudaErrchk(cudaFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(cudaFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 
@@ -168,7 +168,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
       RAJA::forall<exec_policy>( res,
           RAJA::RangeSegment(ibegin, iend),
           [=] __device__ (Index_type i) {
-        MULTI_REDUCE_BODY;
+        MULTI_REDUCE_BODY(RAJAPERF_ADD);
       });
 
       MULTI_REDUCE_FINALIZE_VALUES_RAJA(multi_reduce_policy);

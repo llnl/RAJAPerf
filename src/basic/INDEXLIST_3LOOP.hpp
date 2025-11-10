@@ -36,6 +36,13 @@
   Real_ptr x = m_x; \
   Int_ptr list = m_list;
 
+#define INDEXLIST_3LOOP_COUNTS_SETUP(dataSpace) \
+  Index_ptr counts = nullptr; \
+  allocData((dataSpace), counts, iend+1);
+
+#define INDEXLIST_3LOOP_COUNTS_TEARDOWN(dataSpace) \
+  deallocData((dataSpace), counts);
+
 #define INDEXLIST_3LOOP_CONDITIONAL \
   x[i] < 0.0
 

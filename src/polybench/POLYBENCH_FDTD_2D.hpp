@@ -9,28 +9,28 @@
 ///
 /// POLYBENCH_FDTD_2D kernel reference implementation:
 ///
-/// for (t = 0; t < TSTEPS; t++)
-/// {
+/// // removed loop [0, TSTEPS)
+///
+/// for (j = 0; j < ny; j++) {
+///   ey[0][j] = fict[t];
+/// }
+/// for (i = 1; i < nx; i++) {
 ///   for (j = 0; j < ny; j++) {
-///     ey[0][j] = fict[t];
-///   }
-///   for (i = 1; i < nx; i++) {
-///     for (j = 0; j < ny; j++) {
-///       ey[i][j] = ey[i][j] - 0.5*(hz[i][j]-hz[i-1][j]);
-///     }
-///   }
-///   for (i = 0; i < nx; i++) {
-///     for (j = 1; j < ny; j++) {
-///       ex[i][j] = ex[i][j] - 0.5*(hz[i][j]-hz[i][j-1]);
-///     }
-///   }
-///   for (i = 0; i < nx - 1; i++) {
-///     for (j = 0; j < ny - 1; j++) {
-///       hz[i][j] = hz[i][j] - 0.7*(ex[i][j+1] - ex[i][j] +
-///                                  ey[i+1][j] - ey[i][j]);
-///     }
+///     ey[i][j] = ey[i][j] - 0.5*(hz[i][j]-hz[i-1][j]);
 ///   }
 /// }
+/// for (i = 0; i < nx; i++) {
+///   for (j = 1; j < ny; j++) {
+///     ex[i][j] = ex[i][j] - 0.5*(hz[i][j]-hz[i][j-1]);
+///   }
+/// }
+/// for (i = 0; i < nx - 1; i++) {
+///   for (j = 0; j < ny - 1; j++) {
+///     hz[i][j] = hz[i][j] - 0.7*(ex[i][j+1] - ex[i][j] +
+///                                ey[i+1][j] - ey[i][j]);
+///   }
+/// }
+/// // removed end loop
 
 
 #ifndef RAJAPerf_POLYBENCH_FDTD_2D_HPP
@@ -41,7 +41,6 @@
   Index_type t = 0; \
   const Index_type nx = m_nx; \
   const Index_type ny = m_ny; \
-  const Index_type tsteps = m_tsteps; \
 \
   Real_ptr fict = m_fict; \
   Real_ptr ex = m_ex; \

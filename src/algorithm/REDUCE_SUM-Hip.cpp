@@ -28,6 +28,62 @@
 #include <limits>
 
 
+namespace camp
+{
+
+namespace experimental
+{
+#if defined(__HIPCC__)
+template<typename R>
+struct StreamInsertHelper<::rocprim::plus<R>&>
+{
+  ::rocprim::plus<R>& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::rocprim::plus";
+  }
+};
+///
+template<typename R>
+struct StreamInsertHelper<::rocprim::plus<R> const&>
+{
+  ::rocprim::plus<R> const& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::rocprim::plus";
+  }
+};
+#elif defined(__CUDACC__)
+template<>
+struct StreamInsertHelper<::cub::Sum&>
+{
+  ::cub::Sum& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::cub::Sum";
+  }
+};
+///
+template<>
+struct StreamInsertHelper<::cub::Sum const&>
+{
+  ::cub::Sum const& m_val;
+
+  std::ostream& operator()(std::ostream& str) const
+  {
+    return str << "::cub::Sum";
+  }
+};
+#endif
+
+}  // closing brace for experimental namespace
+
+}  // closing brace for camp namespace
+
+
 namespace rajaperf
 {
 namespace algorithm
@@ -56,7 +112,7 @@ __global__ void reduce_sum(Real_ptr x, Real_ptr sum, Real_type sum_init,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::hip_atomic>( sum, psum[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *sum, psum[ 0 ] );
   }
 }
 
@@ -83,23 +139,23 @@ void REDUCE_SUM::runHipVariantRocprim(VariantID vid)
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
 #if defined(__HIPCC__)
-    hipErrchk(::rocprim::reduce(d_temp_storage,
-                                temp_storage_bytes,
-                                x+ibegin,
-                                sum,
-                                m_sum_init,
-                                len,
-                                rocprim::plus<Real_type>(),
-                                stream));
+    CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::reduce,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        sum,
+        m_sum_init,
+        len,
+        ::rocprim::plus<Real_type>(),
+        stream);
 #elif defined(__CUDACC__)
-    hipErrchk(::cub::DeviceReduce::Reduce(d_temp_storage,
-                                          temp_storage_bytes,
-                                          x+ibegin,
-                                          sum,
-                                          len,
-                                          ::cub::Sum(),
-                                          m_sum_init,
-                                          stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceReduce::Reduce,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        sum,
+        len,
+        ::cub::Sum(),
+        m_sum_init,
+        stream);
 #endif
 
     // Allocate temporary storage
@@ -113,23 +169,23 @@ void REDUCE_SUM::runHipVariantRocprim(VariantID vid)
 
       // Run
 #if defined(__HIPCC__)
-      hipErrchk(::rocprim::reduce(d_temp_storage,
-                                  temp_storage_bytes,
-                                  x+ibegin,
-                                  sum,
-                                  m_sum_init,
-                                  len,
-                                  rocprim::plus<Real_type>(),
-                                  stream));
+      CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::reduce,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          sum,
+          m_sum_init,
+          len,
+          ::rocprim::plus<Real_type>(),
+          stream);
 #elif defined(__CUDACC__)
-      hipErrchk(::cub::DeviceReduce::Reduce(d_temp_storage,
-                                            temp_storage_bytes,
-                                            x+ibegin,
-                                            sum,
-                                            len,
-                                            ::cub::Sum(),
-                                            m_sum_init,
-                                            stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceReduce::Reduce,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          sum,
+          len,
+          ::cub::Sum(),
+          m_sum_init,
+          stream);
 #endif
 
       RAJAPERF_HIP_REDUCER_COPY_BACK(sum, hsum, 1, 1);

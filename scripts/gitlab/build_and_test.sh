@@ -217,7 +217,7 @@ then
     timed_message "Cleaning working directory"
 
     # Map CPU core allocations
-    declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
+    declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48 ["matrix"]=48)
 
     # If using Multi-project, set up the submodule
     if [[ -n ${raja_version} ]]

@@ -47,8 +47,7 @@ void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
       #pragma omp target is_device_ptr(values, bins, data)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        #pragma omp atomic
-        MULTI_REDUCE_BODY;
+        MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
       getOpenMPDeviceData(values_final.data(), values, num_bins);

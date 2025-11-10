@@ -92,14 +92,14 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
     // Determine temporary device storage requirements
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
-    cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                temp_storage_bytes,
-                                                x+ibegin,
-                                                y+ibegin,
-                                                binary_op,
-                                                init_val,
-                                                len,
-                                                stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        y+ibegin,
+        binary_op,
+        init_val,
+        len,
+        stream);
 
     // Allocate temporary storage
     unsigned char* temp_storage;
@@ -110,14 +110,14 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
       // Run
-      cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                  temp_storage_bytes,
-                                                  x+ibegin,
-                                                  y+ibegin,
-                                                  binary_op,
-                                                  init_val,
-                                                  len,
-                                                  stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          y+ibegin,
+          binary_op,
+          init_val,
+          len,
+          stream);
 
     }
     stopTimer();
@@ -166,8 +166,8 @@ void SCAN::runCudaVariantCustom(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      cudaErrchk( cudaMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
-                                  res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
       RPlaunchCudaKernel( (scan_custom<block_size, items_per_thread>),
                           grid_size, block_size,
                           shmem_size, res.get_stream(),
