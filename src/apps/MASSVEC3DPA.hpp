@@ -25,8 +25,8 @@ Real_ptr X = m_X; \
 Real_ptr Y = m_Y; \
 Index_type NE = m_NE;
 
-#include "common/KernelBase.hpp"
 #include "FEM_MACROS.hpp"
+#include "common/KernelBase.hpp"
 
 #include "RAJA/RAJA.hpp"
 

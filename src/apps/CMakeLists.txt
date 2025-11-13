@@ -96,7 +96,6 @@ blt_add_library(
           MASS3DPA-OMP.cpp
           MASS3DPA-OMPTarget.cpp
           MASS3DPA-Sycl.cpp
-          #
           MASSVEC3DPA.cpp
           MASSVEC3DPA-Cuda.cpp
           MASSVEC3DPA-Hip.cpp
