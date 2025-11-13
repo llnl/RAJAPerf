@@ -74,12 +74,12 @@ Index_type NE = m_NE;
       double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1 \
-  smB[q][d]  = mvpaB_(q, d); \
-  smBt[d][q] = smB[q][d]; 
+  double r_smB = mvpaB_(q, d) \
+  smB[q][d]  = r_smB; \
+  smBt[d][q] = r_smB; \
 
 #define MASSVEC3DPA_2 \
   smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
-
 
 #define MASSVEC3DPA_3 \
   double u = 0.0; \
@@ -114,7 +114,7 @@ QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
   { \
     u += QQQ[qz][qy][qx] * smBt[dx][qx]; \
   } \
-  QQD[qz][qy][dx] = u;  
+  QQD[qz][qy][dx] = u;
 
 
 //2 * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D
@@ -135,10 +135,6 @@ QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
     u += QDD[qz][dy][dx] * smBt[dz][qz]; \
   } \
   mvpaY_(dx, dy, dz, c, e) = u;
-
-//2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D + MVPA_D1D * MVPA_D1D * MVPA_D1D
-#define MASSVEC3DPA_9 \
-
 
 namespace rajaperf
 {
