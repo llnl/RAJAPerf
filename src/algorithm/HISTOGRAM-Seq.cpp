@@ -38,7 +38,7 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
         HISTOGRAM_INIT_COUNTS;
 
         for (Index_type i = ibegin; i < iend; ++i ) {
-          HISTOGRAM_BODY;
+          HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
 
         HISTOGRAM_FINALIZE_COUNTS;
@@ -57,7 +57,7 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       HISTOGRAM_SETUP_COUNTS;
 
       auto histogram_base_lam = [=](Index_type i) {
-                                 HISTOGRAM_BODY;
+                                  HISTOGRAM_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
                                };
 
       startTimer();
@@ -91,7 +91,7 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
           [=](Index_type i) {
-            HISTOGRAM_BODY;
+            HISTOGRAM_BODY(RAJAPERF_ADD);
         });
 
         HISTOGRAM_FINALIZE_COUNTS_RAJA(RAJA::seq_multi_reduce);

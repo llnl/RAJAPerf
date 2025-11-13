@@ -76,17 +76,17 @@ void REDUCE3_INT::runSyclVariantImpl(VariantID vid)
       Int_type lsum;
       Int_ptr plsum = &lsum;
       getSyclDeviceData(plsum, hsum, 1, qu);
-      m_vsum += lsum;
+      m_vsum = lsum;
 
       Int_type lmin;
       Int_ptr plmin = &lmin;
       getSyclDeviceData(plmin, hmin, 1, qu);
-      m_vmin = RAJA_MIN(m_vmin, lmin);
+      m_vmin = lmin;
 
       Int_type lmax;
       Int_ptr plmax = &lmax;
       getSyclDeviceData(plmax, hmax, 1, qu);
-      m_vmax = RAJA_MAX(m_vmax, lmax);
+      m_vmax = lmax;
 
     } // for (RepIndex_type irep = ...
     stopTimer();
@@ -118,9 +118,9 @@ void REDUCE3_INT::runSyclVariantImpl(VariantID vid)
         }
       );
 
-      m_vsum += static_cast<Int_type>(tvsum);
-      m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(tvmin));
-      m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(tvmax));
+      m_vsum = static_cast<Int_type>(tvsum);
+      m_vmin = static_cast<Int_type>(tvmin);
+      m_vmax = static_cast<Int_type>(tvmax);
 
     }
     stopTimer();

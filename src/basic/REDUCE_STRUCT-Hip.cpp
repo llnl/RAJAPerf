@@ -88,13 +88,13 @@ __global__ void reduce_struct(Real_ptr x, Real_ptr y,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::hip_atomic>( xsum, pxsum[ 0 ] );
-    RAJA::atomicMin<RAJA::hip_atomic>( xmin, pxmin[ 0 ] );
-    RAJA::atomicMax<RAJA::hip_atomic>( xmax, pxmax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *xsum, pxsum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_HIP( *xmin, pxmin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_HIP( *xmax, pxmax[ 0 ] );
 
-    RAJA::atomicAdd<RAJA::hip_atomic>( ysum, pysum[ 0 ] );
-    RAJA::atomicMin<RAJA::hip_atomic>( ymin, pymin[ 0 ] );
-    RAJA::atomicMax<RAJA::hip_atomic>( ymax, pymax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_HIP( *ysum, pysum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_HIP( *ymin, pymin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_HIP( *ymax, pymax[ 0 ] );
   }
 }
 
@@ -128,7 +128,7 @@ void REDUCE_STRUCT::runHipVariantBase(VariantID vid)
       RPlaunchHipKernel( (reduce_struct<block_size>),
                          grid_size, block_size,
                          shmem, res.get_stream(),
-                         points.x, points.y,
+                         x, y,
                          mem, mem+1, mem+2,    // xcenter,xmin,xmax
                          mem+3, mem+4, mem+5,  // ycenter,ymin,ymax
                          m_init_sum, m_init_min, m_init_max,

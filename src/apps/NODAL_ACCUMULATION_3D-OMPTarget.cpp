@@ -47,25 +47,7 @@ void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
         NODAL_ACCUMULATION_3D_BODY_INDEX;
-
-        Real_type val = 0.125 * vol[i];
-
-        #pragma omp atomic
-        x0[i] += val;
-        #pragma omp atomic
-        x1[i] += val;
-        #pragma omp atomic
-        x2[i] += val;
-        #pragma omp atomic
-        x3[i] += val;
-        #pragma omp atomic
-        x4[i] += val;
-        #pragma omp atomic
-        x5[i] += val;
-        #pragma omp atomic
-        x6[i] += val;
-        #pragma omp atomic
-        x7[i] += val;
+        NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
     }
@@ -83,7 +65,7 @@ void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         zones, [=](Index_type i) {
-        NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::omp_atomic);
+        NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
       });
 
     }

@@ -9,6 +9,11 @@
 ///
 /// POLYBENCH_GEMM kernel reference implementation:
 ///
+/// Note: The dot product is initialized to 0 to avoid
+///       excessively large checksums
+/// Note: The compiler should optimize out "C[i][j] *= beta" below as C[i][j] is
+///       overwritten further down, so the answer does not depend on beta
+///
 /// for (Index_type i = 0; i < NI; i++) {
 ///   for (Index_type j = 0; j < NJ; j++) {
 ///     C[i][j] *= beta;

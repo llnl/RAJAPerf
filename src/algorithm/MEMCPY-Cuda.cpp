@@ -48,9 +48,8 @@ void MEMCPY::runCudaVariantLibrary(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
 
-      cudaErrchk( cudaMemcpyAsync(MEMCPY_STD_ARGS,
-                                  cudaMemcpyDefault,
-                                  res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemcpyAsync,
+          MEMCPY_STD_ARGS, cudaMemcpyDefault, res.get_stream() );
 
     }
     stopTimer();

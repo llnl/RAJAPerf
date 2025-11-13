@@ -22,17 +22,18 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
 
   m_num_vars = params.getHaloNumVars();
   m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( m_num_vars * (m_var_size - getActualProblemSize()) );
+  setItsPerRep( 2 * m_num_vars * halo_size );
   setKernelsPerRep( 2 );
-  setBytesReadPerRep( 1*sizeof(Int_type) * getItsPerRep() +   // pack
-                      1*sizeof(Real_type) * getItsPerRep() +  // pack
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                      1*sizeof(Int_type) * getItsPerRep() +   // unpack
-                      1*sizeof(Real_type) * getItsPerRep() ); // unpack
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() +  // pack
+                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack
+                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
 
-                         1*sizeof(Real_type) * getItsPerRep() ); // unpack
+                         1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
@@ -68,7 +69,7 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
   const int mpi_dims[3] = {1,1,1};
   setUp_base(my_mpi_rank, mpi_dims, m_num_vars, vid, tune_idx);
 
-  m_vars.resize(m_num_vars, nullptr);
+  allocAndInitDataConst(DataSpace::Host, m_vars, m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
     auto reset_var = allocAndInitDataForInit(m_vars[v], m_var_size, vid);
 
@@ -82,8 +83,8 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
 
 void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  for (Real_ptr var : m_vars) {
-    checksum[vid][tune_idx] += calcChecksum(var, m_var_size, vid);
+  for (Index_type v = 0; v < m_num_vars; ++v) {
+    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
   }
 
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
@@ -91,9 +92,9 @@ void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
   for (Index_type l = 0; l < s_num_neighbors; ++l) {
     Index_type buffer_len = m_num_vars * m_pack_index_list_lengths[l];
     if (separate_buffers) {
-      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_send_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_send_buffers[l], buffer_len);
     } else {
-      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_send_buffers[l], buffer_len, vid);
+      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_send_buffers[l], buffer_len);
     }
   }
 }
@@ -103,7 +104,7 @@ void HALO_PACKING_FUSED::tearDown(VariantID vid, size_t tune_idx)
   for (int v = 0; v < m_num_vars; ++v) {
     deallocData(m_vars[v], vid);
   }
-  m_vars.clear();
+  deallocData(DataSpace::Host, m_vars);
 
   tearDown_base(vid, tune_idx);
 }

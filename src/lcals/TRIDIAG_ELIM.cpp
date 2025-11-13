@@ -24,16 +24,16 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1000);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setActualProblemSize( std::max(getTargetProblemSize(), Index_type(2)) );
 
-  m_N = getActualProblemSize() + 1;
+  m_N = getActualProblemSize();
 
-  setItsPerRep( getActualProblemSize() );
+  setItsPerRep( m_N-1 );
   setKernelsPerRep(1);
   setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) );
   setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * (getActualProblemSize()-1));
+  setFLOPsPerRep(2 * (m_N-1));
 
   setComplexity(Complexity::N);
 
@@ -76,7 +76,7 @@ void TRIDIAG_ELIM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void TRIDIAG_ELIM::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_xout, getActualProblemSize(), vid);
+  checksum[vid][tune_idx] += calcChecksum(m_xout, m_N, vid);
 }
 
 void TRIDIAG_ELIM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

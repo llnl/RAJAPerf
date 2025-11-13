@@ -18,7 +18,7 @@
 #include "RPTypes.hpp"
 
 #include <limits>
-#include <new>
+#include <cstring>
 #include <type_traits>
 
 #if defined(RAJA_ENABLE_CUDA)
@@ -97,18 +97,19 @@ void initData(Int_ptr& ptr, Size_type len);
 void initData(Real_ptr& ptr, Size_type len);
 
 /*!
- * \brief Initialize Real_type data array.
+ * \brief Initialize data array.
  *
  * Array entries are set to given constant value.
  */
-void initDataConst(Real_ptr& ptr, Size_type len, Real_type val);
+template < typename T, typename V >
+void initDataConst(T*& ptr, Size_type len, V val)
+{
+  for (Size_type i = 0; i < len; ++i) {
+    ptr[i] = val;
+  };
 
-/*!
- * \brief Initialize Index_type data array.
- *
- * Array entries are set to given constant value.
- */
-void initDataConst(Index_type*& ptr, Size_type len, Index_type val);
+  incDataInitCount();
+}
 
 /*!
  * \brief Initialize Real_type data array with random sign.
@@ -204,7 +205,7 @@ inline void allocData(DataSpace dataSpace, T*& ptr_ref, Size_type len, Size_type
     // perform first touch on Omp Data
     #pragma omp parallel for
     for (Size_type i = 0; i < len; ++i) {
-      ptr[i] = T{};
+      std::memset(static_cast<void*>(&ptr[i]), 0, sizeof(T));
     };
   }
 #endif
@@ -332,9 +333,9 @@ inline void allocAndInitData(DataSpace dataSpace, T*& ptr, Size_type len, Size_t
  *
  * Array entries are initialized using the method initDataConst.
  */
-template <typename T>
+template <typename T, typename V>
 inline void allocAndInitDataConst(DataSpace dataSpace, T*& ptr, Size_type len, Size_type align,
-                                  T val)
+                                  V val)
 {
   DataSpace init_dataSpace = hostCopyDataSpace(dataSpace);
 

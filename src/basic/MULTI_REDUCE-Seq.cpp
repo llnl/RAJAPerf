@@ -38,7 +38,7 @@ void MULTI_REDUCE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
         MULTI_REDUCE_INIT_VALUES;
 
         for (Index_type i = ibegin; i < iend; ++i ) {
-          MULTI_REDUCE_BODY;
+          MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
 
         MULTI_REDUCE_FINALIZE_VALUES;
@@ -57,8 +57,8 @@ void MULTI_REDUCE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
       MULTI_REDUCE_SETUP_VALUES;
 
       auto multi_reduce_base_lam = [=](Index_type i) {
-                                 MULTI_REDUCE_BODY;
-                               };
+            MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -90,7 +90,7 @@ void MULTI_REDUCE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-            MULTI_REDUCE_BODY;
+            MULTI_REDUCE_BODY(RAJAPERF_ADD);
         });
 
         MULTI_REDUCE_FINALIZE_VALUES_RAJA(RAJA::seq_multi_reduce);

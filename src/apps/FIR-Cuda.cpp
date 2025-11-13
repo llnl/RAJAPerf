@@ -31,8 +31,11 @@ __constant__ Real_type coeff[FIR_COEFFLEN];
 
 #define FIR_DATA_SETUP_CUDA \
   Real_type *dcoeff_addr; \
-  cudaErrchk( cudaGetSymbolAddress((void**)&dcoeff_addr, coeff) ); \
-  cudaErrchk( cudaMemcpyAsync(dcoeff_addr, coeff_array, FIR_COEFFLEN * sizeof(Real_type), cudaMemcpyHostToDevice, res.get_stream()) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaGetSymbolAddress, \
+      (void**)&dcoeff_addr, coeff ); \
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemcpyAsync, \
+      dcoeff_addr, coeff_array, FIR_COEFFLEN * sizeof(Real_type), \
+      cudaMemcpyHostToDevice, res.get_stream() );
 
 
 #define FIR_DATA_TEARDOWN_CUDA

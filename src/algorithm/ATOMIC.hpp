@@ -29,26 +29,23 @@
     DataSpace ds = getDataSpace(vid); \
     DataSpace hds = rajaperf::hostCopyDataSpace(ds); \
     if (ds != hds) { \
-      rajaperf::allocData(hds, atomic_host, replication, getDataAlignment()); \
-      rajaperf::copyData(hds, atomic_host, ds, atomic, replication); \
+      allocData(hds, atomic_host, replication); \
+      copyData(hds, atomic_host, ds, atomic, replication); \
     } \
     m_final = init; \
     for (size_t r = 0; r < replication; ++r ) { \
       m_final += atomic_host[r]; \
     } \
     if (ds != hds) { \
-      rajaperf::deallocData(hds, atomic_host); \
+      deallocData(hds, atomic_host); \
     } \
   } \
   deallocData(atomic, vid);
 
 #define ATOMIC_VALUE 1.0
 
-#define ATOMIC_BODY(i, val) \
-  atomic[(i)%replication] += (val)
-
-#define ATOMIC_RAJA_BODY(policy, i, val) \
-  RAJA::atomicAdd<policy>(&atomic[(i)%replication], (val))
+#define ATOMIC_BODY(ATOMIC_ADD, i, val) \
+  ATOMIC_ADD(atomic[(i)%replication], (val))
 
 
 #include "common/KernelBase.hpp"

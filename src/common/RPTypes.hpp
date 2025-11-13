@@ -59,6 +59,8 @@ using RepIndex_type = volatile int;
 using Index_type = RAJA::Index_type;
 ///
 using Index_ptr = Index_type*;
+///
+using Index_ptr_ptr = Index_type**;
 
 
 /*!
@@ -81,6 +83,27 @@ using Size_type = size_t;
 using Int_type = int;
 ///
 using Int_ptr = Int_type*;
+using Int_const_ptr = Int_type const*;
+///
+using Int_ptr_ptr = Int_type**;
+
+using Char_type = char;
+///
+using Char_ptr = Char_type*;
+using Char_const_ptr = Char_type const*;
+
+using Uchar_type = unsigned char;
+///
+using Uchar_ptr = Uchar_type*;
+
+/*!
+ ******************************************************************************
+ *
+ * \brief Boolean types used in kernels.
+ *
+ ******************************************************************************
+ */
+using Bool_type = bool;
 
 
 /*!
@@ -120,6 +143,10 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
+using Real_const_ptr = Real_type const *;
+///
+using Real_ptr_ptr = Real_type**;
+using Real_const_ptr_ptr = Real_type const **;
 
 #if defined(RP_USE_COMPLEX)
 ///
@@ -129,7 +156,64 @@ using Complex_ptr = Complex_type*;
 #endif
 
 
+#define RAJAPERF_STRINGIFY_HELPER(...) #__VA_ARGS__
+#define RAJAPERF_STRINGIFY(...) RAJAPERF_STRINGIFY_HELPER(__VA_ARGS__)
 
+#define RAJAPERF_CONCAT_HELPER(a, b) a##b
+#define RAJAPERF_CONCAT(a, b) RAJAPERF_CONCAT_HELPER(a, b)
+
+#define RAJAPERF_NAME_PER_LINE(name) RAJAPERF_CONCAT(name, __LINE__)
+
+#ifdef _WIN32
+#define RAJAPERF_PRAGMA(x) __pragma(x)
+#else
+#define RAJAPERF_PRAGMA(x) _Pragma(RAJAPERF_STRINGIFY(x))
+#endif
+
+#define RAJAPERF_ADD(lhs, rhs) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_SEQ(lhs, rhs) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_OMP(lhs, rhs) \
+      RAJAPERF_PRAGMA(omp atomic) \
+      (lhs) += (rhs)
+
+#define RAJAPERF_ATOMIC_ADD_CUDA(lhs, rhs) \
+      ::atomicAdd(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_CUDA(lhs, rhs) \
+      ::atomicMin(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_CUDA(lhs, rhs) \
+      ::atomicMax(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_HIP(lhs, rhs) \
+      ::atomicAdd(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_HIP(lhs, rhs) \
+      ::atomicMin(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_HIP(lhs, rhs) \
+      ::atomicMax(&(lhs), (rhs))
+
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_SEQ(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::seq_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_OMP(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::omp_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::cuda_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicMin<RAJA::cuda_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_RAJA_CUDA(lhs, rhs) \
+      RAJA::atomicMax<RAJA::cuda_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::hip_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MIN_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicMin<RAJA::hip_atomic>(&(lhs), (rhs))
+#define RAJAPERF_ATOMIC_MAX_RAJA_HIP(lhs, rhs) \
+      RAJA::atomicMax<RAJA::hip_atomic>(&(lhs), (rhs))
 
 }  // closing brace for rajaperf namespace
 

@@ -21,15 +21,15 @@
 // builds.
 #if defined(RAJA_ENABLE_CUDA) || defined(RAJA_ENABLE_HIP)
 #define GPU_FOREACH_THREAD(i, k, N)                    \
-  for (int i = threadIdx.k; i < N; i += blockDim.k)
+  for (Index_type i = threadIdx.k; i < N; i += blockDim.k)
 #endif
 
 #if defined(RAJA_ENABLE_SYCL)
 #define SYCL_FOREACH_THREAD(i, k, N) \
-  for (int i = itm.get_local_id(k); i < N; i += itm.get_local_range(k))
+  for (Index_type i = itm.get_local_id(k); i < N; i += itm.get_local_range(k))
 #endif
 
-#define CPU_FOREACH(i, k, N) for (int i = 0; i < N; i++)
+#define CPU_FOREACH(i, k, N) for (Index_type i = 0; i < N; i++)
 
 #define SHARED_LOOP_2D(tx, ty, Nx, Ny) \
    for (int ty = 0; ty < Ny; ty++)     \

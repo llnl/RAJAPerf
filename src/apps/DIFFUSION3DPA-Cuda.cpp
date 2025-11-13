@@ -28,7 +28,7 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
                               const Real_ptr dBasis, const Real_ptr D,
                               const Real_ptr X, Real_ptr Y, bool symmetric) {
 
-  const int e = blockIdx.x;
+  const Index_type e = blockIdx.x;
 
   DIFFUSION3DPA_0_GPU;
 
@@ -161,16 +161,16 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-            [&](int e) {
+            [&](Index_type e) {
 
               DIFFUSION3DPA_0_GPU;
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                        [&](int dx) {
+                        [&](Index_type dx) {
 
                           DIFFUSION3DPA_1;
 
@@ -184,11 +184,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-                [&](int RAJA_UNUSED_ARG(dz)) {
+                [&](Index_type RAJA_UNUSED_ARG(dz)) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_2;
 
@@ -202,11 +202,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                    [&](int dy) {
+                    [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_3;
 
@@ -220,11 +220,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
               ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                [&](int dz) {
+                [&](Index_type dz) {
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                    [&](int qy) {
+                    [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                        [&](int qx) {
+                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_4;
 
@@ -238,11 +238,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                   [&](int qy) {
+                   [&](Index_type qy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](int qx) {
+                       [&](Index_type qx) {
 
                          DIFFUSION3DPA_5;
 
@@ -256,11 +256,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-               [&](int RAJA_UNUSED_ARG(dz)) {
+               [&](Index_type RAJA_UNUSED_ARG(dz)) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int d) {
+                   [&](Index_type d) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](int q) {
+                       [&](Index_type q) {
 
                          DIFFUSION3DPA_6;
 
@@ -274,11 +274,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                   [&](int qy) {
+                   [&](Index_type qy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_7;
 
@@ -292,11 +292,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-               [&](int qz) {
+               [&](Index_type qz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int dy) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_8;
 
@@ -310,11 +310,11 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              ctx.teamSync();
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-               [&](int dz) {
+               [&](Index_type dz) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](int dy) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                       [&](int dx) {
+                       [&](Index_type dx) {
 
                          DIFFUSION3DPA_9;
 

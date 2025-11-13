@@ -37,7 +37,7 @@ __global__ void nodal_accumulation_3d(Real_ptr vol,
    Index_type i = ii + ibegin;
    if (i < iend) {
      NODAL_ACCUMULATION_3D_BODY_INDEX;
-     NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::cuda_atomic);
+     NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_CUDA);
    }
 }
 
@@ -82,7 +82,7 @@ void NODAL_ACCUMULATION_3D::runCudaVariantImpl(VariantID vid)
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         zones, [=] __device__ (Index_type i) {
-          NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::cuda_atomic);
+          NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_CUDA);
       });
 
     }

@@ -31,12 +31,12 @@ POLYBENCH_ATAX::POLYBENCH_ATAX(const RunParams& params)
 
   setActualProblemSize( m_N * m_N );
 
-  setItsPerRep( m_N + m_N );
+  setItsPerRep( 2 * m_N + m_N );
   setKernelsPerRep(2);
   setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +
                       1*sizeof(Real_type ) * m_N * m_N +
 
-                      1*sizeof(Real_type ) * m_N +
+                      2*sizeof(Real_type ) * m_N +
                       1*sizeof(Real_type ) * m_N * m_N );
   setBytesWrittenPerRep( 2*sizeof(Real_type ) * m_N +
                          1*sizeof(Real_type ) * m_N);

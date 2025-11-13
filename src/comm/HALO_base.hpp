@@ -15,12 +15,16 @@
 
 #define HALO_BASE_DATA_SETUP \
   Index_type num_neighbors = s_num_neighbors; \
-  std::vector<int> send_tags = m_send_tags; \
-  std::vector<Int_ptr> pack_index_lists = m_pack_index_lists; \
-  std::vector<Index_type> pack_index_list_lengths = m_pack_index_list_lengths; \
-  std::vector<int> recv_tags = m_recv_tags; \
-  std::vector<Int_ptr> unpack_index_lists = m_unpack_index_lists; \
-  std::vector<Index_type> unpack_index_list_lengths = m_unpack_index_list_lengths;
+  Int_ptr send_tags = m_send_tags; \
+  Int_ptr_ptr pack_index_lists = m_pack_index_lists; \
+  Index_ptr pack_index_list_lengths = m_pack_index_list_lengths; \
+  Int_ptr recv_tags = m_recv_tags; \
+  Int_ptr_ptr unpack_index_lists = m_unpack_index_lists; \
+  Index_ptr unpack_index_list_lengths = m_unpack_index_list_lengths; \
+  RAJAPERF_UNUSED_VAR(send_tags); \
+  RAJAPERF_UNUSED_VAR(pack_index_lists); \
+  RAJAPERF_UNUSED_VAR(recv_tags); \
+  RAJAPERF_UNUSED_VAR(unpack_index_lists);
 
 #define HALO_PACK_BODY \
   buffer[i] = var[list[i]];
@@ -32,8 +36,6 @@
 #include "common/KernelBase.hpp"
 
 #include "RAJA/RAJA.hpp"
-
-#include <vector>
 
 namespace rajaperf
 {
@@ -135,19 +137,19 @@ protected:
   Index_type m_grid_plus_halo_dims[3];
   Index_type m_grid_plus_halo_size;
 
-  std::vector<int> m_mpi_ranks;
+  Int_ptr m_mpi_ranks;
 
-  std::vector<int> m_send_tags;
-  std::vector<Int_ptr> m_pack_index_lists;
-  std::vector<Index_type > m_pack_index_list_lengths;
-  std::vector<Real_ptr> m_pack_buffers;
-  std::vector<Real_ptr> m_send_buffers;
+  Int_ptr m_send_tags;
+  Int_ptr_ptr m_pack_index_lists;
+  Index_ptr m_pack_index_list_lengths;
+  Real_ptr_ptr m_pack_buffers;
+  Real_ptr_ptr m_send_buffers;
 
-  std::vector<int> m_recv_tags;
-  std::vector<Int_ptr> m_unpack_index_lists;
-  std::vector<Index_type > m_unpack_index_list_lengths;
-  std::vector<Real_ptr> m_unpack_buffers;
-  std::vector<Real_ptr> m_recv_buffers;
+  Int_ptr m_recv_tags;
+  Int_ptr_ptr m_unpack_index_lists;
+  Index_ptr m_unpack_index_list_lengths;
+  Real_ptr_ptr m_unpack_buffers;
+  Real_ptr_ptr m_recv_buffers;
 
   Extent make_boundary_extent(
     const message_type msg_type,
@@ -157,34 +159,34 @@ protected:
   void create_lists(
       int my_mpi_rank,
       const int* mpi_dims,
-      std::vector<int>& mpi_ranks,
-      std::vector<int>& send_tags,
-      std::vector<Int_ptr>& pack_index_lists,
-      std::vector<Index_type >& pack_index_list_lengths,
-      std::vector<int>& recv_tags,
-      std::vector<Int_ptr>& unpack_index_lists,
-      std::vector<Index_type >& unpack_index_list_lengths,
+      Int_ptr& mpi_ranks,
+      Int_ptr& send_tags,
+      Int_ptr_ptr& pack_index_lists,
+      Index_ptr& pack_index_list_lengths,
+      Int_ptr& recv_tags,
+      Int_ptr_ptr& unpack_index_lists,
+      Index_ptr& unpack_index_list_lengths,
       const Index_type halo_width, const Index_type* grid_dims,
       const Index_type num_neighbors,
       VariantID vid);
 
   void destroy_lists(
-      std::vector<Int_ptr>& pack_index_lists,
-      std::vector<Int_ptr>& unpack_index_lists,
+      Int_ptr_ptr& pack_index_lists,
+      Int_ptr_ptr& unpack_index_lists,
       const Index_type num_neighbors,
       VariantID vid);
 
   void create_buffers(
-      std::vector<Index_type> const& index_list_lengths,
-      std::vector<Real_ptr>& our_buffers,
-      std::vector<Real_ptr>& mpi_buffers,
+      Index_ptr const& index_list_lengths,
+      Real_ptr_ptr& our_buffers,
+      Real_ptr_ptr& mpi_buffers,
       const Index_type num_neighbors,
       const Index_type num_vars,
       VariantID vid);
 
   void destroy_buffers(
-      std::vector<Real_ptr>& our_buffers,
-      std::vector<Real_ptr>& mpi_buffers,
+      Real_ptr_ptr& our_buffers,
+      Real_ptr_ptr& mpi_buffers,
       const Index_type num_neighbors,
       VariantID vid);
 };

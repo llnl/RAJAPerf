@@ -49,7 +49,7 @@ __global__ void dot(Real_ptr a, Real_ptr b,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( dprod, pdot[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *dprod, pdot[ 0 ] );
   }
 }
 

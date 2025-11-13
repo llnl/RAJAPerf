@@ -88,13 +88,13 @@ __global__ void reduce_struct(Real_ptr x, Real_ptr y,
   }
 
   if ( threadIdx.x == 0 ) {
-    RAJA::atomicAdd<RAJA::cuda_atomic>( xsum, pxsum[ 0 ] );
-    RAJA::atomicMin<RAJA::cuda_atomic>( xmin, pxmin[ 0 ] );
-    RAJA::atomicMax<RAJA::cuda_atomic>( xmax, pxmax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *xsum, pxsum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_RAJA_CUDA( *xmin, pxmin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_RAJA_CUDA( *xmax, pxmax[ 0 ] );
 
-    RAJA::atomicAdd<RAJA::cuda_atomic>( xsum, pysum[ 0 ] );
-    RAJA::atomicMin<RAJA::cuda_atomic>( ymin, pymin[ 0 ] );
-    RAJA::atomicMax<RAJA::cuda_atomic>( ymax, pymax[ 0 ] );
+    RAJAPERF_ATOMIC_ADD_CUDA( *xsum, pysum[ 0 ] );
+    RAJAPERF_ATOMIC_MIN_RAJA_CUDA( *ymin, pymin[ 0 ] );
+    RAJAPERF_ATOMIC_MAX_RAJA_CUDA( *ymax, pymax[ 0 ] );
   }
 }
 
@@ -128,7 +128,7 @@ void REDUCE_STRUCT::runCudaVariantBase(VariantID vid)
       RPlaunchCudaKernel( (reduce_struct<block_size>),
                           grid_size, block_size,
                           shmem, res.get_stream(),
-                          points.x, points.y,
+                          x, y,
                           mem, mem+1, mem+2,    // xcenter,xmin,xmax
                           mem+3, mem+4, mem+5,  // ycenter,ymin,ymax
                           m_init_sum, m_init_min, m_init_max,

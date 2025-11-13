@@ -53,10 +53,9 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
 #if defined(RUN_RAJA_SEQ)
     case Lambda_Seq : {
 
-      auto pireduce_base_lam = [=](Index_type i) -> Real_type {
-                                 double x = (double(i) + 0.5) * dx;
-                                 return dx / (1.0 + x * x);
-                               };
+      auto pireduce_base_lam = [=](Index_type i, Real_type& pi) {
+            PI_REDUCE_BODY;
+          };
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -64,7 +63,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
         Real_type pi = m_pi_init;
 
         for (Index_type i = ibegin; i < iend; ++i ) {
-          pi += pireduce_base_lam(i);
+          pireduce_base_lam(i, pi);
         }
 
         m_pi = 4.0 * pi;
