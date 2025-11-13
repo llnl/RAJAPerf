@@ -18,7 +18,7 @@
 namespace rajaperf {
 namespace apps {
 
-void DIFFUSION3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -322,6 +322,8 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

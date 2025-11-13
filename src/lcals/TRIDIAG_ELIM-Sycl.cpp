@@ -24,6 +24,8 @@ namespace lcals
 template <size_t work_group_size >
 void TRIDIAG_ELIM::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = m_N;
@@ -75,7 +77,7 @@ void TRIDIAG_ELIM::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace lcals
 } // end namespace rajaperf

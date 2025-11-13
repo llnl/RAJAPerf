@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -95,6 +95,8 @@ void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -43,16 +43,8 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   setUsesFeature(MPI);
 
   if (params.validMPI3DDivision()) {
-    setVariantDefined( Base_Seq );
-
-    setVariantDefined( Base_OpenMP );
-
-    setVariantDefined( Base_OpenMPTarget );
-
-    setVariantDefined( Base_CUDA );
-
-    setVariantDefined( Base_HIP );
-  }
+    addVariantTunings();
+}
 }
 
 HALO_SENDRECV::~HALO_SENDRECV()

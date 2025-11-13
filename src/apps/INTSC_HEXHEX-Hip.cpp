@@ -209,7 +209,7 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

@@ -46,23 +46,7 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
   setUsesFeature(Forall);
   setUsesFeature(Atomic);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 MULTI_REDUCE::~MULTI_REDUCE()

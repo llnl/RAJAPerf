@@ -77,6 +77,8 @@ void MEMSET::runCudaVariantLibrary(VariantID vid)
 template < size_t block_size >
 void MEMSET::runCudaVariantBlock(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -146,56 +148,33 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
 
 }
 
-void MEMSET::runCudaVariant(VariantID vid, size_t tune_idx)
+
+void MEMSET::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_CUDA || vid == RAJA_CUDA) {
+  for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_CUDA || vid == RAJA_CUDA) {
 
-      runCudaVariantLibrary(vid);
+      addVariantTuning<&MEMSET::runCudaVariantLibrary>(
+          vid, "library");
 
     }
 
-    t += 1;
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-  }
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      if (tune_idx == t) {
-        setBlockSize(block_size);
-        runCudaVariantBlock<block_size>(vid);
+        addVariantTuning<&MEMSET::runCudaVariantBlock<block_size>>(
+            vid, "block_"+std::to_string(block_size));
 
       }
 
-      t += 1;
+    });
 
-    }
-
-  });
-}
-
-void MEMSET::setCudaTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_CUDA || vid == RAJA_CUDA) {
-    addVariantTuningName(vid, "library");
   }
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      addVariantTuningName(vid, "block_"+std::to_string(block_size));
-
-    }
-
-  });
 }
 
 } // end namespace algorithm

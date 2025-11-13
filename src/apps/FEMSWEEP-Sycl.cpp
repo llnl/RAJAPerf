@@ -21,7 +21,7 @@ namespace rajaperf
 namespace apps
 {
 
-void FEMSWEEP::runSyclVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runSyclVariant(VariantID vid)
 {
   switch ( vid ) {
 

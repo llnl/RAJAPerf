@@ -37,6 +37,8 @@ __global__ void eos(Real_ptr x, Real_ptr y, Real_ptr z, Real_ptr u,
 template < size_t block_size >
 void EOS::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -83,7 +85,7 @@ void EOS::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(EOS, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(EOS, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

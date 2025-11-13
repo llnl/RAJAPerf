@@ -19,7 +19,8 @@ namespace apps
 
 using namespace ltimes_idx;
 
-void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void LTIMES::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -80,7 +81,7 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
                             LTIMES_BODY;
@@ -114,7 +115,7 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         using launch_policy = RAJA::LaunchPolicy<RAJA::seq_launch_t>;
 
@@ -172,14 +173,26 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void LTIMES::setSeqTuningDefinitions(VariantID vid)
+void LTIMES::defineSeqVariantTunings()
 {
 
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "kernel");
-    addVariantTuningName(vid, "launch");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&LTIMES::runSeqVariant<0>>(
+          vid, "kernel");
+
+      addVariantTuning<&LTIMES::runSeqVariant<1>>(
+          vid, "launch");
+
+    } else {
+
+      addVariantTuning<&LTIMES::runSeqVariant<0>>(
+          vid, "default");
+
+    }
+
   }
 
 }

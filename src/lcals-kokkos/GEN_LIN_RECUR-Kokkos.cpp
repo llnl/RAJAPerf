@@ -14,8 +14,7 @@
 namespace rajaperf {
 namespace lcals {
 
-void GEN_LIN_RECUR::runKokkosVariant(VariantID vid,
-                                     size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void GEN_LIN_RECUR::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = getActualProblemSize();
@@ -75,6 +74,8 @@ void GEN_LIN_RECUR::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(sb, sb_view, iend);
   moveDataToHostFromKokkosView(stb5, stb5_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Kokkos, Kokkos_Lambda)
 
 } // end namespace lcals
 } // end namespace rajaperf

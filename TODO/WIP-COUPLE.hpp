@@ -162,15 +162,26 @@ public:
   ~COUPLE();
 
   void setUp(VariantID vid, size_t tune_idx);
-  void runKernel(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {(void) vid;}
-  void runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {(void) vid;}
-  void runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {(void) vid;}
-  void runHipVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {(void) vid;}
-  void runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {(void) vid;}
+  void runSeqVariant(VariantID vid);
+  void defineSeqVariantTunings();
+  void runOpenMPVariant(VariantID vid);
+  void defineOpenMPVariantTunings();
+
+  void runCudaVariant(VariantID vid)
+  {
+    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
+  }
+  void runHipVariant(VariantID vid)
+  {
+    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
+  }
+  void runOpenMPTargetVariant(VariantID vid)
+  {
+    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
+  }
 
 private:
   Complex_ptr m_t0;

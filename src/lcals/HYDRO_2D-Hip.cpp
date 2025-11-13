@@ -91,6 +91,8 @@ __global__ void hydro_2d3(Real_ptr zroutdat, Real_ptr zzoutdat,
 template < size_t block_size >
 void HYDRO_2D::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type kbeg = 1;
   const Index_type kend = m_kn - 1;
@@ -192,7 +194,7 @@ void HYDRO_2D::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

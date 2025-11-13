@@ -27,7 +27,7 @@ namespace comm
   const size_t threads_per_team = 256;
 
 
-void HALO_SENDRECV::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_SENDRECV::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -62,6 +62,8 @@ void HALO_SENDRECV::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
      getCout() << "\n HALO_SENDRECV : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_SENDRECV, OpenMPTarget, Base_OpenMPTarget)
 
 } // end namespace comm
 } // end namespace rajaperf

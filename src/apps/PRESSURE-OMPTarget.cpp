@@ -27,7 +27,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PRESSURE::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -85,6 +85,8 @@ void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     getCout() << "\n  PRESSURE : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PRESSURE, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

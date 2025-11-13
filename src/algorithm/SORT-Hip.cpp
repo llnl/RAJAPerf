@@ -22,7 +22,7 @@ namespace algorithm
 {
 
 
-void SORT::runHipVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORT::runHipVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -47,6 +47,8 @@ void SORT::runHipVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
      getCout() << "\n  SORT : Unknown Hip variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORT, Hip, RAJA_HIP)
 
 } // end namespace algorithm
 } // end namespace rajaperf

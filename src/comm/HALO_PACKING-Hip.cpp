@@ -49,6 +49,8 @@ __global__ void halo_packing_unpack(Real_ptr buffer, Int_ptr list, Real_ptr var,
 template < size_t block_size >
 void HALO_PACKING::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -172,7 +174,7 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace comm
 } // end namespace rajaperf

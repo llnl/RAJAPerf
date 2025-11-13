@@ -27,7 +27,7 @@ namespace lcals
   const size_t threads_per_team = 256;
 
 
-void TRIDIAG_ELIM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRIDIAG_ELIM::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
@@ -70,6 +70,8 @@ void TRIDIAG_ELIM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
      getCout() << "\n  TRIDIAG_ELIM : Unknown OMP Tagretvariant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace lcals
 } // end namespace rajaperf

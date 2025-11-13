@@ -22,7 +22,7 @@ namespace algorithm
 {
 
 
-void SORT::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORT::runCudaVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -47,6 +47,8 @@ void SORT::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
      getCout() << "\n  SORT : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORT, Cuda, RAJA_CUDA)
 
 } // end namespace algorithm
 } // end namespace rajaperf

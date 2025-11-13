@@ -19,7 +19,7 @@
 namespace rajaperf {
 namespace apps {
 
-void MASS3DEA::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MASS3DEA::runOpenMPTargetVariant(VariantID vid)
 {
   if ( vid == Base_OpenMPTarget ) {
 

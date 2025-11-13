@@ -18,7 +18,7 @@ namespace stream
 {
 
 // _add_run_seq_start
-void ADD::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ADD::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -93,6 +93,8 @@ void ADD::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 }
 // _add_run_seq_end
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ADD, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace stream
 } // end namespace rajaperf

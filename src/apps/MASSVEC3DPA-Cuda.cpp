@@ -250,9 +250,11 @@ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
   } // (c) dimension loop
 }
 
-template <size_t block_size>
-void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
+template <size_t block_size, size_t tune_idx>
+void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
 {
+
+  setBlockSize(block_size);
 
   const Index_type run_reps = getRunReps();
 
@@ -264,7 +266,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
 
   case Base_CUDA: {
 
-    if (tune_idx == 0) {
+    if constexpr (tune_idx == 0) {
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
@@ -280,7 +282,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       stopTimer();
 
       // Loop constants
-    } else if (tune_idx == 1) {
+    } else if constexpr (tune_idx == 1) {
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
@@ -295,7 +297,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       }
       stopTimer();
 
-    } else if (tune_idx == 2) {
+    } else if constexpr (tune_idx == 2) {
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
@@ -310,7 +312,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       }
       stopTimer();
 
-    } else if (tune_idx == 3) {
+    } else if constexpr (tune_idx == 3) {
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
@@ -338,7 +340,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
 
     using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
 
-    if (tune_idx == 0) {
+    if constexpr (tune_idx == 0) {
 
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
@@ -499,7 +501,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       stopTimer();
     }
 
-    if (tune_idx == 1) {
+    if constexpr (tune_idx == 1) {
 
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<MVPA_Q1D>>;
 
@@ -661,7 +663,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       stopTimer();
     }
 
-    if (tune_idx == 2) {
+    if constexpr (tune_idx == 2) {
 
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
 
@@ -833,43 +835,52 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx)
+
+void MASSVEC3DPA::defineCudaVariantTunings()
 {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-    setBlockSize(block_size);
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-        runCudaVariantImpl<block_size>(vid, tune_idx);
-    }
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-  });
-}
+        if (vid == Base_CUDA) {
 
-void MASSVEC3DPA::setCudaTuningDefinitions(VariantID vid)
-{
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 0>>(
+              vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
+              vid, "ARGUMENT_LOOP_INC_"+std::to_string(block_size));
 
-      if (vid == Base_CUDA) {
-        addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
-        addVariantTuningName(vid, "ARGUMENT_LOOP_INC");
-        addVariantTuningName(vid, "COMPILE_LOOP_INC");
-        addVariantTuningName(vid, "DIRECT");
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
+              vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
+
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 3>>(
+              vid, "DIRECT_"+std::to_string(block_size));
+
+        }
+
+        if (vid == RAJA_CUDA) {
+
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 0>>(
+              vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
+
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
+              vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
+
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
+              vid, "DIRECT_"+std::to_string(block_size));
+
+        }
+
       }
 
-      if (vid == RAJA_CUDA) {
-        addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
-        addVariantTuningName(vid, "COMPILE_LOOP_INC");
-        addVariantTuningName(vid, "DIRECT");
-      }
+    });
 
-    }
-  });
+  }
+
 }
 
 } // end namespace apps

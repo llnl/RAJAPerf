@@ -39,6 +39,8 @@ __global__ void initview1d_offset(Real_ptr a,
 template < size_t block_size >
 void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = getActualProblemSize()+1;
@@ -108,7 +110,7 @@ void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace basic
 } // end namespace rajaperf

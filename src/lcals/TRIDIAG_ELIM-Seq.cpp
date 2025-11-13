@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void TRIDIAG_ELIM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRIDIAG_ELIM::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
@@ -92,6 +92,8 @@ void TRIDIAG_ELIM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace lcals
 } // end namespace rajaperf

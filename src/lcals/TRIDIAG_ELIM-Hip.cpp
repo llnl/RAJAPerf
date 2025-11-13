@@ -37,6 +37,8 @@ __global__ void tridiag_elim(Real_ptr xout, Real_ptr xin,
 template < size_t block_size >
 void TRIDIAG_ELIM::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = m_N;
@@ -83,7 +85,7 @@ void TRIDIAG_ELIM::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(TRIDIAG_ELIM, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

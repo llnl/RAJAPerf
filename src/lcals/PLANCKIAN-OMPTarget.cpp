@@ -28,7 +28,7 @@ namespace lcals
   const size_t threads_per_team = 256;
 
 
-void PLANCKIAN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PLANCKIAN::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -71,6 +71,8 @@ void PLANCKIAN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
      getCout() << "\n  PLANCKIAN : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PLANCKIAN, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace lcals
 } // end namespace rajaperf

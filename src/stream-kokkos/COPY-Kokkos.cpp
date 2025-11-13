@@ -14,8 +14,7 @@
 namespace rajaperf {
 namespace stream {
 
-void COPY::runKokkosVariant(VariantID vid,
-                            size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void COPY::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -53,6 +52,8 @@ void COPY::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(a, a_view, iend);
   moveDataToHostFromKokkosView(c, c_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(COPY, Kokkos, Kokkos_Lambda)
 
 } // end namespace stream
 } // end namespace rajaperf

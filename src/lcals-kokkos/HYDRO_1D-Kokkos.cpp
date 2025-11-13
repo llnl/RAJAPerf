@@ -14,8 +14,7 @@
 namespace rajaperf {
 namespace lcals {
 
-void HYDRO_1D::runKokkosVariant(VariantID vid,
-                                size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void HYDRO_1D::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -61,6 +60,8 @@ void HYDRO_1D::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(y, y_view, iend + 12);
   moveDataToHostFromKokkosView(z, z_view, iend + 12);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HYDRO_1D, Kokkos, Kokkos_Lambda)
 
 } // end namespace lcals
 } // end namespace rajaperf

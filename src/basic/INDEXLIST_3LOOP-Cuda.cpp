@@ -54,6 +54,8 @@ __global__ void indexlist_make_list(Int_ptr list,
 template < size_t block_size >
 void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -174,7 +176,7 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

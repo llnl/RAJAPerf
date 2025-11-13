@@ -20,7 +20,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_3MM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_3MM::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -248,6 +248,8 @@ void POLYBENCH_3MM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_3MM, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

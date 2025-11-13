@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void INIT_VIEW1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INIT_VIEW1D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -96,6 +96,8 @@ void INIT_VIEW1D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

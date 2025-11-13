@@ -18,7 +18,7 @@ namespace apps
 {
 
 
-void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -79,6 +79,8 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

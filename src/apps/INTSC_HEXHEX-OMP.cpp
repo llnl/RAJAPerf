@@ -19,8 +19,7 @@ namespace rajaperf
 namespace apps
 {
 
-void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
-                                    Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -134,6 +133,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

@@ -21,7 +21,7 @@ namespace algorithm
 {
 
 
-void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORTPAIRS::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -87,6 +87,8 @@ void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORTPAIRS, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace algorithm
 } // end namespace rajaperf

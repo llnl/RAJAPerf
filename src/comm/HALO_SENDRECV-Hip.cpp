@@ -22,7 +22,7 @@ namespace comm
 {
 
 
-void HALO_SENDRECV::runHipVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_SENDRECV::runHipVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -57,6 +57,8 @@ void HALO_SENDRECV::runHipVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
      getCout() << "\n HALO_SENDRECV : Unknown Hip variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_SENDRECV, Hip, Base_HIP)
 
 } // end namespace comm
 } // end namespace rajaperf

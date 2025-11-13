@@ -23,7 +23,7 @@ namespace apps
 
 using namespace ltimes_idx;
 
-void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void LTIMES::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -88,13 +88,23 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   }
 }
 
-void LTIMES::setOpenMPTargetTuningDefinitions(VariantID vid)
+void LTIMES::defineOpenMPTargetVariantTunings()
 {
 
-  if (vid == RAJA_OpenMPTarget) {
-    addVariantTuningName(vid, "kernel");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
+
+    if (vid == RAJA_OpenMPTarget) {
+
+      addVariantTuning<&LTIMES::runOpenMPTargetVariant>(
+        vid, "kernel");
+
+    } else {
+
+      addVariantTuning<&LTIMES::runOpenMPTargetVariant>(
+        vid, "default");
+
+    }
+
   }
 
 }

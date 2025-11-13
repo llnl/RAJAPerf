@@ -14,7 +14,7 @@
 namespace rajaperf {
 namespace basic {
 
-void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -63,6 +63,8 @@ void ARRAY_OF_PTRS::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
 
   moveDataToHostFromKokkosView(y, y_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

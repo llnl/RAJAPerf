@@ -13,7 +13,7 @@
 namespace rajaperf {
 namespace basic {
 
-void MAT_MAT_SHARED::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
 
   const Index_type run_reps = getRunReps();
   const Index_type N = m_N;
@@ -254,6 +254,8 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   }
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

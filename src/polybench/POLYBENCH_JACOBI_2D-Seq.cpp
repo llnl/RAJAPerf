@@ -19,7 +19,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps= getRunReps();
 
@@ -137,6 +137,8 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

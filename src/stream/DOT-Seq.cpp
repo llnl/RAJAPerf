@@ -17,8 +17,8 @@ namespace rajaperf
 namespace stream
 {
 
-
-void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void DOT::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -80,7 +80,7 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -98,7 +98,7 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -136,12 +136,24 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void DOT::setSeqTuningDefinitions(VariantID vid)
+
+void DOT::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&DOT::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&DOT::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace stream

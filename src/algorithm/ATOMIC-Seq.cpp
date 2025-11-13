@@ -98,47 +98,17 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
 }
 
 
-void ATOMIC::runSeqVariant(VariantID vid, size_t tune_idx)
+void ATOMIC::defineSeqVariantTunings()
 {
-  size_t t = 0;
-
-  if ( vid == Base_Seq || vid == Lambda_Seq || vid == RAJA_Seq ) {
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
     seq_for(cpu_atomic_replications_type{}, [&](auto replication) {
 
       if (run_params.numValidAtomicReplication() == 0u ||
           run_params.validAtomicReplication(replication)) {
 
-        if (tune_idx == t) {
-
-          runSeqVariantReplicate<replication>(vid);
-
-        }
-
-        t += 1;
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  ATOMIC : Unknown OMP Target variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void ATOMIC::setSeqTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_Seq || vid == Lambda_Seq || vid == RAJA_Seq ) {
-
-    seq_for(cpu_atomic_replications_type{}, [&](auto replication) {
-
-      if (run_params.numValidAtomicReplication() == 0u ||
-          run_params.validAtomicReplication(replication)) {
-
-        addVariantTuningName(vid, "replicate_"+std::to_string(replication));
+        addVariantTuning<&ATOMIC::runSeqVariantReplicate<replication>>(
+            vid, "replicate_"+std::to_string(replication));
 
       }
 

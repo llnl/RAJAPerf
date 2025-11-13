@@ -49,6 +49,8 @@ __global__ void halo_packing_unpack(Real_ptr buffer, Int_ptr list, Real_ptr var,
 template < size_t block_size >
 void HALO_PACKING::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -172,7 +174,7 @@ void HALO_PACKING::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace comm
 } // end namespace rajaperf

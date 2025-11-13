@@ -19,7 +19,7 @@
 namespace rajaperf {
 namespace basic {
 
-void MAT_MAT_SHARED::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) 
+void MAT_MAT_SHARED::runOpenMPTargetVariant(VariantID vid)
 {
   if ( vid == Base_OpenMPTarget ) {
 

@@ -18,8 +18,8 @@ namespace rajaperf
 namespace basic
 {
 
-
-void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void REDUCE_STRUCT::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -104,7 +104,7 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -133,7 +133,7 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -191,12 +191,23 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
   }
 }
 
-void REDUCE_STRUCT::setSeqTuningDefinitions(VariantID vid)
+void REDUCE_STRUCT::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&REDUCE_STRUCT::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&REDUCE_STRUCT::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace basic

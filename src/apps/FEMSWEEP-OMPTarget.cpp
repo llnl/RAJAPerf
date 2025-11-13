@@ -22,7 +22,7 @@ namespace apps
 {
 
 
-void FEMSWEEP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runOpenMPTargetVariant(VariantID vid)
 {
   switch ( vid ) {
 

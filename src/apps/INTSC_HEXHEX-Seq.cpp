@@ -23,8 +23,7 @@ namespace apps
 
 
 
-void INTSC_HEXHEX::runSeqVariant(VariantID vid,
-                                 Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
@@ -112,6 +111,8 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

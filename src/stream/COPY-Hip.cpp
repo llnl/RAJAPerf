@@ -36,6 +36,8 @@ __global__ void copy(Real_ptr c, Real_ptr a,
 template < size_t block_size >
 void COPY::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -102,7 +104,7 @@ void COPY::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(COPY, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(COPY, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace stream
 } // end namespace rajaperf

@@ -34,6 +34,8 @@ struct reduce_pair {
 template <size_t work_group_size >
 void FIRST_MIN::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -113,7 +115,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_MIN, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_MIN, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace lcals
 } // end namespace rajaperf

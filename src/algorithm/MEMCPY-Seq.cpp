@@ -144,38 +144,19 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
 
 }
 
-void MEMCPY::runSeqVariant(VariantID vid, size_t tune_idx)
+void MEMCPY::defineSeqVariantTunings()
 {
-  size_t t = 0;
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-  if (vid == Base_Seq || vid == RAJA_Seq) {
+    if (vid == Base_Seq || vid == RAJA_Seq) {
 
-    if (tune_idx == t) {
-
-      runSeqVariantLibrary(vid);
+      addVariantTuning<&MEMCPY::runSeqVariantLibrary>(vid, "library");
 
     }
 
-    t += 1;
+    addVariantTuning<&MEMCPY::runSeqVariantDefault>(vid, "default");
 
   }
-
-  if (tune_idx == t) {
-
-    runSeqVariantDefault(vid);
-
-  }
-
-  t += 1;
-}
-
-void MEMCPY::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == RAJA_Seq) {
-    addVariantTuningName(vid, "library");
-  }
-
-  addVariantTuningName(vid, "default");
 }
 
 } // end namespace algorithm

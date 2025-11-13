@@ -18,7 +18,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps= getRunReps();
 
@@ -121,6 +121,8 @@ void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUS
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_FLOYD_WARSHALL, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

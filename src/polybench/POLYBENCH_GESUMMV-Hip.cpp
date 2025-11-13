@@ -43,6 +43,8 @@ __global__ void poly_gesummv(Real_ptr x, Real_ptr y,
 template < size_t block_size >
 void POLYBENCH_GESUMMV::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -119,7 +121,7 @@ void POLYBENCH_GESUMMV::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GESUMMV, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GESUMMV, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace polybench
 } // end namespace rajaperf
