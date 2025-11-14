@@ -20,7 +20,7 @@ namespace apps {
 MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASSVEC3DPA, params) {
 
-  const Index_type NE_initial = 64000;
+  const Index_type NE_initial = 15625;
 
   setDefaultProblemSize(NE_initial * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D);
   setDefaultReps(50);
