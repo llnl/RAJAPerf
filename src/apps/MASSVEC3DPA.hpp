@@ -269,10 +269,6 @@ public:
   void setHipTuningDefinitions(VariantID vid);
   void setSyclTuningDefinitions(VariantID vid);
 
-  template <typename outer_x, typename inner_z, typename inner_y,
-            typename inner_x>
-  void runRAJATuning();
-
   template <size_t block_size>
   void runCudaVariantImpl(VariantID vid, size_t tune_idx);
   template <size_t block_size>
