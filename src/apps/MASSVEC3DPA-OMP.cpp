@@ -47,38 +47,32 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
             MASSVEC3DPA_2;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D) {
 
             MASSVEC3DPA_3;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D) {
             MASSVEC3DPA_4;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
             MASSVEC3DPA_5;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
             MASSVEC3DPA_6;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
             MASSVEC3DPA_7;
           }
-          /*TEAM_SYNC;*/
 
           SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
             MASSVEC3DPA_8;
           }
-          /*TEAM_SYNC;*/
+          
         } //(c) dimension loop
 
       } // element loop

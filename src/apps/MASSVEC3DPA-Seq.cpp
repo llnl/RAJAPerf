@@ -84,7 +84,6 @@ void MASSVEC3DPA::runSeqVariant(VariantID vid,
 
     auto res{getHostResource()};
 
-    // Currently Teams requires two policies if compiled with a device
     using launch_policy = RAJA::LaunchPolicy<RAJA::seq_launch_t>;
 
     using outer_x = RAJA::LoopPolicy<RAJA::seq_exec>;
