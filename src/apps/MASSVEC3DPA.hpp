@@ -47,7 +47,7 @@
 ///        for (int qx = 0; qx < MVPA_Q1D; ++qx) {
 ///
 ///          double u = 0.0;
-///          for (int dx = 0; dx < D1D; ++dx) {
+///          for (int dx = 0; dx < MVPA_D1D; ++dx) {
 ///            u += X[dz][dy][dx] * B[qx][dx];
 ///          }
 ///          DDQ[dz][dy][qx] = u;
@@ -60,7 +60,7 @@
 ///        for (int qx = 0; qx < MVPA_Q1D; ++qx) {
 ///
 ///          double u = 0.0;
-///          for (int dy = 0; dy < D1D; ++dy) {
+///          for (int dy = 0; dy < MVPA_D1D; ++dy) {
 ///            u += DDQ[dz][dy][qx] * B[qy][dy];
 ///          }
 ///          DQQ[dz][qy][qx] = u;
@@ -73,7 +73,7 @@
 ///        for (int qx = 0; qx < MVPA_Q1D; ++qx) {
 ///
 ///          double u = 0.0;
-///          for (int dz = 0; dz < D1D; ++dz) {
+///          for (int dz = 0; dz < MVPA_D1D; ++dz) {
 ///            u += DQQ[dz][qy][qx] * B[qz][dz];
 ///          }
 ///          QQQ[qz][qy][qx] = u * D(qx, qy, qz, e);
@@ -86,7 +86,7 @@
 ///        for (int dx = 0; dx < MVPA_D1D; ++dx) {
 ///
 ///          double u = 0.0;
-///          for (int qx = 0; qx < Q1D; ++qx) {
+///          for (int qx = 0; qx < MVPA_Q1D; ++qx) {
 ///            u += QQQ[qz][qy][qx] * Bt[dx][qx];
 ///          }
 ///          QQD[qz][qy][dx] = u;
@@ -99,7 +99,7 @@
 ///        for (int dx = 0; dx < MVPA_D1D; ++dx) {
 ///
 ///          double u = 0.0;
-///          for (int qy = 0; qy < Q1D; ++qy) {
+///          for (int qy = 0; qy < MVPA_Q1D; ++qy) {
 ///            u += QQD[qz][qy][dx] * Bt[dy][qy];
 ///          }
 ///          QDD[qz][dy][dx] = u;
@@ -112,7 +112,7 @@
 ///        for (int dx = 0; dx < MVPA_D1D; ++dx) {
 ///
 ///          double u = 0.0;
-///          for (int qz = 0; qz < Q1D; ++qz) {
+///          for (int qz = 0; qz < MVPA_Q1D; ++qz) {
 ///            u += QDD[qz][dy][dx] * Bt[dz][qz];
 ///          }
 ///          mvpaY_(dx, dy, dz, c, e) = u;
@@ -193,6 +193,7 @@
 
 #define MASSVEC3DPA_2 smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
 
+// 2 * MVPA_D1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_3                                                          \
   double u = 0.0;                                                              \
   for (int dx = 0; dx < MVPA_D1D; ++dx) {                                      \
@@ -200,7 +201,7 @@
   }                                                                            \
   DDQ[dz][dy][qx] = u;
 
-// 2 * MVPA_D1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D
+// 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D
 #define MASSVEC3DPA_4                                                          \
   double u = 0.0;                                                              \
   for (int dy = 0; dy < MVPA_D1D; ++dy) {                                      \
@@ -208,8 +209,7 @@
   }                                                                            \
   DQQ[dz][qy][qx] = u;
 
-// 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D + MVPA_Q1D * MVPA_Q1D *
-// MVPA_Q1D
+// 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D + MVPA_Q1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_5                                                          \
   double u = 0.0;                                                              \
   for (int dz = 0; dz < MVPA_D1D; ++dz) {                                      \
@@ -217,6 +217,7 @@
   }                                                                            \
   QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
 
+// 2 * MVPA_Q1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_6                                                          \
   double u = 0.0;                                                              \
   for (int qx = 0; qx < MVPA_Q1D; ++qx) {                                      \
@@ -224,7 +225,7 @@
   }                                                                            \
   QQD[qz][qy][dx] = u;
 
-// 2 * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D
+// 2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D
 #define MASSVEC3DPA_7                                                          \
   double u = 0.0;                                                              \
   for (int qy = 0; qy < MVPA_Q1D; ++qy) {                                      \
@@ -232,7 +233,7 @@
   }                                                                            \
   QDD[qz][dy][dx] = u;
 
-// 2 * MVPA_Q1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D
+// 2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_8                                                          \
   double u = 0.0;                                                              \
   for (int qz = 0; qz < MVPA_Q1D; ++qz) {                                      \
