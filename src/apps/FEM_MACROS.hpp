@@ -8,6 +8,8 @@
 #ifndef RAJAPerf_FEM_MACROS_HPP
 #define RAJAPerf_FEM_MACROS_HPP
 
+#include "RAJA/RAJA.hpp"
+
 #if defined(USE_RAJAPERF_UNROLL)
 // If enabled uses RAJA's RAJA_UNROLL_COUNT which is always on
 #define RAJAPERF_UNROLL(N) RAJA_UNROLL_COUNT(N)
