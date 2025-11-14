@@ -23,7 +23,8 @@ template <size_t block_size>
 __launch_bounds__(block_size) __global__
 void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                                    const Real_ptr D, const Real_ptr X,
-                                   Real_ptr Y) {
+                                   Real_ptr Y)
+{
 
   const Index_type e = blockIdx.x;
 
@@ -74,10 +75,11 @@ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                                  const Real_ptr D, const Real_ptr X,
-                                  Real_ptr Y,
-                                  volatile Index_type runtime_block_size) {
+void MassVec3DPA_ARG_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
+                              const Real_ptr D, const Real_ptr X,
+                              Real_ptr Y,
+                              const Index_type runtime_block_size)
+{
 
   const Index_type e = blockIdx.x;
 
@@ -137,7 +139,8 @@ template <size_t block_size>
 __launch_bounds__(block_size) __global__
 void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                                   const Real_ptr D, const Real_ptr X,
-                                  Real_ptr Y) {
+                                  Real_ptr Y)
+{
 
   const Index_type e = blockIdx.x;
 
@@ -246,7 +249,8 @@ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
 }
 
 template <size_t block_size>
-void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
+void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
+{
 
   const Index_type run_reps = getRunReps();
 
@@ -267,17 +271,13 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
         constexpr size_t shmem = 0;
 
         RPlaunchCudaKernel((MassVec3DPA_BLOCKDIM_LOOP_INC<block_size>), NE,
-                          nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
-                          X, Y);
+                           nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
+                           X, Y);
       }
       stopTimer();
 
       // Loop constants
     } else if (tune_idx == 1) {
-
-      // Mark volatile because we want the value to be treated as a runtime
-      // value
-      volatile Index_type runtime_loop_bounds = MVPA_Q1D;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
@@ -285,9 +285,9 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchCudaKernel((MassVec3DPA_RUNTIME_LOOP_INC<block_size>), NE,
-                          nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
-                          X, Y, runtime_loop_bounds);
+        RPlaunchCudaKernel((MassVec3DPA_ARG_LOOP_INC<block_size>), NE,
+                           nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
+                           X, Y, static_cast<Index_type>(MVPA_Q1D));
       }
       stopTimer();
 
@@ -300,8 +300,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
         constexpr size_t shmem = 0;
 
         RPlaunchCudaKernel((MassVec3DPA_COMPILE_LOOP_INC<block_size>), NE,
-                          nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
-                          X, Y);
+                           nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
+                           X, Y);
       }
       stopTimer();
 
@@ -828,7 +828,13 @@ void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx) {
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
     setBlockSize(block_size);
-    runCudaVariantImpl<block_size>(vid, tune_idx);
+
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+
+        runCudaVariantImpl<block_size>(vid, tune_idx);
+    }
+
   });
 }
 
