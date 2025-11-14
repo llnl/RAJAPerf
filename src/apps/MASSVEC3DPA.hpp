@@ -143,17 +143,17 @@
 #define MVPA_D1D 3
 #define MVPA_Q1D 4
 #define MVPA_DIM 3
-#define mvpaB_(x, y) B[x + MVPA_Q1D * y]
-#define mvpaBt_(x, y) Bt[x + MVPA_D1D * y]
-#define mvpaX_(dx, dy, dz, c, e)                                               \
+#define MVPA_B(x, y) B[x + MVPA_Q1D * y]
+#define MVPA_Bt(x, y) Bt[x + MVPA_D1D * y]
+#define MVPA_X(dx, dy, dz, c, e)                                               \
   X[dx + MVPA_D1D * dy + MVPA_D1D * MVPA_D1D * dz +                            \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * c +                                       \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * e]
-#define mvpaY_(dx, dy, dz, c, e)                                               \
+#define MVPA_Y(dx, dy, dz, c, e)                                               \
   Y[dx + MVPA_D1D * dy + MVPA_D1D * MVPA_D1D * dz +                            \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * c +                                       \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * e]
-#define mvpaD_(qx, qy, qz, e)                                                  \
+#define MVPA_D(qx, qy, qz, e)                                                  \
   D[qx + MVPA_Q1D * qy + MVPA_Q1D * MVPA_Q1D * qz +                            \
     MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * e]
 
@@ -188,11 +188,11 @@
   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1                                                          \
-  Real_type r_smB = mvpaB_(q, d);                                              \
+  Real_type r_smB = MVPA_B(q, d);                                              \
   smB[q][d] = r_smB;                                                           \
   smBt[d][q] = r_smB;
 
-#define MASSVEC3DPA_2 smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
+#define MASSVEC3DPA_2 smX[dz][dy][dx] = MVPA_X(dx, dy, dz, c, e);
 
 // 2 * MVPA_D1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_3                                                          \
@@ -217,7 +217,7 @@
   for (Index_type dz = 0; dz < MVPA_D1D; ++dz) {                               \
     u += DQQ[dz][qy][qx] * smB[qz][dz];                                        \
   }                                                                            \
-  QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
+  QQQ[qz][qy][qx] = u * MVPA_D(qx, qy, qz, e);
 
 // 2 * MVPA_Q1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_6                                                          \
@@ -241,7 +241,7 @@
   for (Index_type qz = 0; qz < MVPA_Q1D; ++qz) {                               \
     u += QDD[qz][dy][dx] * smBt[dz][qz];                                       \
   }                                                                            \
-  mvpaY_(dx, dy, dz, c, e) = u;
+  MVPA_Y(dx, dy, dz, c, e) = u;
 
 namespace rajaperf {
 class RunParams;
