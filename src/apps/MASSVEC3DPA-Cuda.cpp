@@ -200,7 +200,8 @@ template <size_t block_size>
 __launch_bounds__(block_size) __global__
 void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
                         const Real_ptr D, const Real_ptr X,
-                        Real_ptr Y) {
+                        Real_ptr Y)
+{
 
   const Index_type e = blockIdx.x;
 
@@ -825,7 +826,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx) {
+void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx)
+{
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
     setBlockSize(block_size);
@@ -839,7 +841,8 @@ void MASSVEC3DPA::runCudaVariant(VariantID vid, size_t tune_idx) {
   });
 }
 
-void MASSVEC3DPA::setCudaTuningDefinitions(VariantID vid) {
+void MASSVEC3DPA::setCudaTuningDefinitions(VariantID vid)
+{
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
     if (run_params.numValidGPUBlockSize() == 0u ||

@@ -840,7 +840,8 @@ void MASSVEC3DPA::runHipVariant(VariantID vid, size_t tune_idx)
   });
 }
 
-void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid) {
+void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid)
+{
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
     if (run_params.numValidGPUBlockSize() == 0u ||

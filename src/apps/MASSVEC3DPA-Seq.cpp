@@ -19,7 +19,9 @@ namespace rajaperf {
 namespace apps {
 
 void MASSVEC3DPA::runSeqVariant(VariantID vid,
-                                size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+                                size_t RAJAPERF_UNUSED_ARG(tune_idx))
+{
+
   const Index_type run_reps = getRunReps();
 
   MASSVEC3DPA_DATA_SETUP;

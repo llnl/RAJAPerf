@@ -18,7 +18,8 @@ namespace rajaperf {
 namespace apps {
 
 MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
-    : KernelBase(rajaperf::Apps_MASSVEC3DPA, params) {
+    : KernelBase(rajaperf::Apps_MASSVEC3DPA, params)
+{
 
   const Index_type NE_initial = 15625;
 
@@ -76,7 +77,8 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
 
 MASSVEC3DPA::~MASSVEC3DPA() {}
 
-void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+{
 
   allocAndInitDataConst(m_B, MVPA_Q1D * MVPA_D1D, 1.0, vid);
   allocAndInitDataConst(m_Bt, MVPA_Q1D * MVPA_D1D, 1.0, vid);
@@ -88,13 +90,15 @@ void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
 
 }
 
-void MASSVEC3DPA::updateChecksum(VariantID vid, size_t tune_idx) {
+void MASSVEC3DPA::updateChecksum(VariantID vid, size_t tune_idx)
+{
   checksum[vid][tune_idx] +=
       calcChecksum(m_Y, MVPA_DIM * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
 }
 
 void MASSVEC3DPA::tearDown(VariantID vid,
-                           size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+                           size_t RAJAPERF_UNUSED_ARG(tune_idx))
+{
   (void)vid;
 
   deallocData(m_B, vid);

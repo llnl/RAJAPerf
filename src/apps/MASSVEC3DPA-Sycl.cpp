@@ -23,7 +23,9 @@ namespace rajaperf {
 namespace apps {
 
 template < size_t work_group_size >
-void MASSVEC3DPA::runSyclVariantImpl(VariantID vid) {
+void MASSVEC3DPA::runSyclVariantImpl(VariantID vid)
+{
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
