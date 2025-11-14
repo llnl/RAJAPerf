@@ -277,7 +277,8 @@ public:
   void runCudaVariantImpl(VariantID vid, size_t tune_idx);
   template <size_t block_size>
   void runHipVariantImpl(VariantID vid, size_t tune_idx);
-  template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
+  template <size_t work_group_size>
+  void runSyclVariantImpl(VariantID vid);
 
 private:
   static const size_t default_gpu_block_size = MVPA_Q1D * MVPA_Q1D * MVPA_Q1D;
