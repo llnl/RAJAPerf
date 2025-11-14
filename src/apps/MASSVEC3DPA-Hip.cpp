@@ -360,7 +360,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                         [&](Index_type d) {
                           RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                             [&](Index_type q) {
-                            MASSVEC3DPA_1;
+                              MASSVEC3DPA_1;
                             } // lambda (q)
                           ); // RAJA::loop<inner_x>
                         } // lambda (d)
@@ -392,7 +392,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_3;
+                                  MASSVEC3DPA_3;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
@@ -424,7 +424,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type qy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_5;
+                                  MASSVEC3DPA_5;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (qy)
@@ -472,7 +472,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                                 [&](Index_type dx) {
-                                MASSVEC3DPA_8;
+                                  MASSVEC3DPA_8;
                                 } // lambda (dx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
@@ -520,7 +520,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                         [&](Index_type d) {
                           RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                             [&](Index_type q) {
-                            MASSVEC3DPA_1;
+                              MASSVEC3DPA_1;
                             } // lambda (q)
                           ); // RAJA::loop<inner_x>
                         } // lambda (d)
@@ -552,7 +552,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_3;
+                                  MASSVEC3DPA_3;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
@@ -584,7 +584,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type qy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_5;
+                                  MASSVEC3DPA_5;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (qy)
@@ -632,7 +632,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                                 [&](Index_type dx) {
-                                MASSVEC3DPA_8;
+                                  MASSVEC3DPA_8;
                                 } // lambda (dx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
@@ -680,7 +680,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                         [&](Index_type d) {
                           RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                             [&](Index_type q) {
-                            MASSVEC3DPA_1;
+                              MASSVEC3DPA_1;
                             } // lambda (q)
                           ); // RAJA::loop<inner_x>
                         } // lambda (d)
@@ -712,7 +712,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_3;
+                                  MASSVEC3DPA_3;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
@@ -744,7 +744,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type qy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
                                 [&](Index_type qx) {
-                                MASSVEC3DPA_5;
+                                  MASSVEC3DPA_5;
                                 } // lambda (qx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (qy)
@@ -792,7 +792,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx) {
                             [&](Index_type dy) {
                               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
                                 [&](Index_type dx) {
-                                MASSVEC3DPA_8;
+                                  MASSVEC3DPA_8;
                                 } // lambda (dx)
                               ); // RAJA::loop<inner_x>
                             } // lambda (dy)
