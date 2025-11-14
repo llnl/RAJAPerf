@@ -29,7 +29,9 @@ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) { MASSVEC3DPA_1; }
+  GPU_SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
+    MASSVEC3DPA_1;
+  }
 
   for (Index_type c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
@@ -200,7 +202,9 @@ void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_DIRECT_2D(q, d, MVPA_Q1D, MVPA_D1D) { MASSVEC3DPA_1; }
+  GPU_SHARED_DIRECT_2D(q, d, MVPA_Q1D, MVPA_D1D) {
+    MASSVEC3DPA_1;
+  }
 
   for (Index_type c = 0; c < 3; ++c) {
     GPU_SHARED_DIRECT_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
