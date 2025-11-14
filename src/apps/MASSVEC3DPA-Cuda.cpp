@@ -76,9 +76,9 @@ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
 void MassVec3DPA_ARGUMENT_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                              const Real_ptr D, const Real_ptr X,
-                              Real_ptr Y,
-                              const Index_type runtime_block_size)
+                                   const Real_ptr D, const Real_ptr X,
+                                   Real_ptr Y,
+                                   const Index_type runtime_block_size)
 {
 
   const Index_type e = blockIdx.x;
