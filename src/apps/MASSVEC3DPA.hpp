@@ -188,7 +188,8 @@
   double(*QDD)[MD1][MD1] = (double(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1                                                          \
-  double r_smB = mvpaB_(q, d); smB[q][d] = r_smB;                              \
+  double r_smB = mvpaB_(q, d);                                          \
+  smB[q][d] = r_smB;                                                    \
   smBt[d][q] = r_smB;
 
 #define MASSVEC3DPA_2 smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
