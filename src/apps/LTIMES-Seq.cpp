@@ -84,25 +84,12 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
                             LTIMES_BODY;
                           };
 
-        // using EXEC_POL =
-        //   RAJA::KernelPolicy<
-        //     RAJA::statement::For<1, RAJA::seq_exec,       // z
-        //       RAJA::statement::For<2, RAJA::seq_exec,     // g
-        //         RAJA::statement::For<3, RAJA::seq_exec,   // m
-        //           RAJA::statement::For<0, RAJA::seq_exec, // d
-        //             RAJA::statement::Lambda<0>
-        //           >
-        //         >
-        //       >
-        //     >
-        //   >;
-
         using EXEC_POL =
           RAJA::KernelPolicy<
-            RAJA::statement::For<0, RAJA::seq_exec,       // d
+            RAJA::statement::For<1, RAJA::seq_exec,       // z
               RAJA::statement::For<2, RAJA::seq_exec,     // g
                 RAJA::statement::For<3, RAJA::seq_exec,   // m
-                  RAJA::statement::For<1, RAJA::seq_exec, // z
+                  RAJA::statement::For<0, RAJA::seq_exec, // d
                     RAJA::statement::Lambda<0>
                   >
                 >
