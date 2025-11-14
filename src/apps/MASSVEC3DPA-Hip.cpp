@@ -824,7 +824,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void MASSVEC3DPA::runHipVariant(VariantID vid, size_t tune_idx) {
+void MASSVEC3DPA::runHipVariant(VariantID vid, size_t tune_idx)
+{
 
   seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
     setBlockSize(block_size);
