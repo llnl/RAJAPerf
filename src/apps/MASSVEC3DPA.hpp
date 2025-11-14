@@ -9,7 +9,7 @@
 ///
 /// Action of 3D mass matrix via partial assembly on a block vector (3 blocks)
 ///
-///for (int e = 0; e < NE; ++e) {
+/// for (int e = 0; e < NE; ++e) {
 ///
 ///  double B[MQ1][MD1];
 ///  double Bt[MD1][MQ1];
@@ -161,138 +161,139 @@
   constexpr int MQ1 = MVPA_Q1D;                                                \
   constexpr int MD1 = MVPA_D1D;                                                \
   constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
-  /*RAJA_TEAM_SHARED*/ Real_type smB[MQ1][MD1];                                   \
-  /*RAJA_TEAM_SHARED*/ Real_type smBt[MD1][MQ1];                                  \
-  /*RAJA_TEAM_SHARED*/ Real_type sm0[MDQ * MDQ * MDQ];                            \
-  /*RAJA_TEAM_SHARED*/ Real_type sm1[MDQ * MDQ * MDQ];                            \
-  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                           \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                           \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                           \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                           \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                           \
+  /*RAJA_TEAM_SHARED*/ Real_type smB[MQ1][MD1];                                \
+  /*RAJA_TEAM_SHARED*/ Real_type smBt[MD1][MQ1];                               \
+  /*RAJA_TEAM_SHARED*/ Real_type sm0[MDQ * MDQ * MDQ];                         \
+  /*RAJA_TEAM_SHARED*/ Real_type sm1[MDQ * MDQ * MDQ];                         \
+  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                     \
+  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
+  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
+  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
+  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_0_GPU                                                      \
   constexpr int MQ1 = MVPA_Q1D;                                                \
   constexpr int MD1 = MVPA_D1D;                                                \
   constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
-  RAJA_TEAM_SHARED Real_type smB[MQ1][MD1];                                       \
-  RAJA_TEAM_SHARED Real_type smBt[MD1][MQ1];                                      \
-  RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                                \
-  RAJA_TEAM_SHARED Real_type sm1[MDQ * MDQ * MDQ];                                \
-  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                           \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                           \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                           \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                           \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                           \
+  RAJA_TEAM_SHARED Real_type smB[MQ1][MD1];                                    \
+  RAJA_TEAM_SHARED Real_type smBt[MD1][MQ1];                                   \
+  RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                             \
+  RAJA_TEAM_SHARED Real_type sm1[MDQ * MDQ * MDQ];                             \
+  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                     \
+  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
+  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
+  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
+  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_1                                                          \
-  Real_type r_smB = mvpaB_(q, d);                                          \
-  smB[q][d] = r_smB;                                                    \
+  Real_type r_smB = mvpaB_(q, d);                                              \
+  smB[q][d] = r_smB;                                                           \
   smBt[d][q] = r_smB;
 
 #define MASSVEC3DPA_2 smX[dz][dy][dx] = mvpaX_(dx, dy, dz, c, e);
 
 // 2 * MVPA_D1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_3                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type dx = 0; dx < MVPA_D1D; ++dx) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type dx = 0; dx < MVPA_D1D; ++dx) {                               \
     u += smX[dz][dy][dx] * smB[qx][dx];                                        \
   }                                                                            \
   DDQ[dz][dy][qx] = u;
 
 // 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D
 #define MASSVEC3DPA_4                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type dy = 0; dy < MVPA_D1D; ++dy) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type dy = 0; dy < MVPA_D1D; ++dy) {                               \
     u += DDQ[dz][dy][qx] * smB[qy][dy];                                        \
   }                                                                            \
   DQQ[dz][qy][qx] = u;
 
-// 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D + MVPA_Q1D * MVPA_Q1D * MVPA_Q1D
+// 2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D + MVPA_Q1D * MVPA_Q1D *
+// MVPA_Q1D
 #define MASSVEC3DPA_5                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type dz = 0; dz < MVPA_D1D; ++dz) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type dz = 0; dz < MVPA_D1D; ++dz) {                               \
     u += DQQ[dz][qy][qx] * smB[qz][dz];                                        \
   }                                                                            \
   QQQ[qz][qy][qx] = u * mvpaD_(qx, qy, qz, e);
 
 // 2 * MVPA_Q1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D
 #define MASSVEC3DPA_6                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type qx = 0; qx < MVPA_Q1D; ++qx) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type qx = 0; qx < MVPA_Q1D; ++qx) {                               \
     u += QQQ[qz][qy][qx] * smBt[dx][qx];                                       \
   }                                                                            \
   QQD[qz][qy][dx] = u;
 
 // 2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D
 #define MASSVEC3DPA_7                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type qy = 0; qy < MVPA_Q1D; ++qy) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type qy = 0; qy < MVPA_Q1D; ++qy) {                               \
     u += QQD[qz][qy][dx] * smBt[dy][qy];                                       \
   }                                                                            \
   QDD[qz][dy][dx] = u;
 
 // 2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D
 #define MASSVEC3DPA_8                                                          \
-  Real_type u = 0.0;                                                              \
-  for (Index_type qz = 0; qz < MVPA_Q1D; ++qz) {                                      \
+  Real_type u = 0.0;                                                           \
+  for (Index_type qz = 0; qz < MVPA_Q1D; ++qz) {                               \
     u += QDD[qz][dy][dx] * smBt[dz][qz];                                       \
   }                                                                            \
   mvpaY_(dx, dy, dz, c, e) = u;
 
-  namespace rajaperf {
-  class RunParams;
+namespace rajaperf {
+class RunParams;
 
-  namespace apps {
+namespace apps {
 
-  class MASSVEC3DPA : public KernelBase {
-  public:
-    MASSVEC3DPA(const RunParams &params);
+class MASSVEC3DPA : public KernelBase {
+public:
+  MASSVEC3DPA(const RunParams &params);
 
-    ~MASSVEC3DPA();
+  ~MASSVEC3DPA();
 
-    void setUp(VariantID vid, size_t tune_idx);
-    void updateChecksum(VariantID vid, size_t tune_idx);
-    void tearDown(VariantID vid, size_t tune_idx);
+  void setUp(VariantID vid, size_t tune_idx);
+  void updateChecksum(VariantID vid, size_t tune_idx);
+  void tearDown(VariantID vid, size_t tune_idx);
 
-    void runSeqVariant(VariantID vid, size_t tune_idx);
-    void runOpenMPVariant(VariantID vid, size_t tune_idx);
-    void runCudaVariant(VariantID vid, size_t tune_idx);
-    void runHipVariant(VariantID vid, size_t tune_idx);
-    void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-    void runSyclVariant(VariantID vid, size_t tune_idx);
+  void runSeqVariant(VariantID vid, size_t tune_idx);
+  void runOpenMPVariant(VariantID vid, size_t tune_idx);
+  void runCudaVariant(VariantID vid, size_t tune_idx);
+  void runHipVariant(VariantID vid, size_t tune_idx);
+  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void runSyclVariant(VariantID vid, size_t tune_idx);
 
-    void setCudaTuningDefinitions(VariantID vid);
-    void setHipTuningDefinitions(VariantID vid);
-    void setSyclTuningDefinitions(VariantID vid);
+  void setCudaTuningDefinitions(VariantID vid);
+  void setHipTuningDefinitions(VariantID vid);
+  void setSyclTuningDefinitions(VariantID vid);
 
-    template <typename outer_x, typename inner_z, typename inner_y,
-              typename inner_x>
-    void runRAJATuning();
+  template <typename outer_x, typename inner_z, typename inner_y,
+            typename inner_x>
+  void runRAJATuning();
 
-    template <size_t block_size>
-    void runCudaVariantImpl(VariantID vid, size_t tune_idx);
-    template <size_t block_size>
-    void runHipVariantImpl(VariantID vid, size_t tune_idx);
-    template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
+  template <size_t block_size>
+  void runCudaVariantImpl(VariantID vid, size_t tune_idx);
+  template <size_t block_size>
+  void runHipVariantImpl(VariantID vid, size_t tune_idx);
+  template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
-  private:
-    static const size_t default_gpu_block_size = MVPA_Q1D * MVPA_Q1D * MVPA_Q1D;
-    using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
+private:
+  static const size_t default_gpu_block_size = MVPA_Q1D * MVPA_Q1D * MVPA_Q1D;
+  using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
-    Real_ptr m_B;
-    Real_ptr m_Bt;
-    Real_ptr m_D;
-    Real_ptr m_X;
-    Real_ptr m_Y;
+  Real_ptr m_B;
+  Real_ptr m_Bt;
+  Real_ptr m_D;
+  Real_ptr m_X;
+  Real_ptr m_Y;
 
-    Index_type m_NE;
-    Index_type m_NE_default;
-  };
+  Index_type m_NE;
+  Index_type m_NE_default;
+};
 
-  } // end namespace apps
-  } // end namespace rajaperf
+} // end namespace apps
+} // end namespace rajaperf
 
 #endif // closing endif for header file include guard
