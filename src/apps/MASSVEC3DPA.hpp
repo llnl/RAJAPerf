@@ -142,17 +142,17 @@
 // Number of Dofs/Qpts in 1D
 #define MVPA_D1D 3
 #define MVPA_Q1D 4
-#define MVDIM 3
+#define MVPA_DIM 3
 #define mvpaB_(x, y) B[x + MVPA_Q1D * y]
 #define mvpaBt_(x, y) Bt[x + MVPA_D1D * y]
 #define mvpaX_(dx, dy, dz, c, e)                                               \
   X[dx + MVPA_D1D * dy + MVPA_D1D * MVPA_D1D * dz +                            \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * c +                                       \
-    MVPA_D1D * MVPA_D1D * MVPA_D1D * MVDIM * e]
+    MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * e]
 #define mvpaY_(dx, dy, dz, c, e)                                               \
   Y[dx + MVPA_D1D * dy + MVPA_D1D * MVPA_D1D * dz +                            \
     MVPA_D1D * MVPA_D1D * MVPA_D1D * c +                                       \
-    MVPA_D1D * MVPA_D1D * MVPA_D1D * MVDIM * e]
+    MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * e]
 #define mvpaD_(qx, qy, qz, e)                                                  \
   D[qx + MVPA_Q1D * qy + MVPA_Q1D * MVPA_Q1D * qz +                            \
     MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * e]

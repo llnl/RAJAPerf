@@ -36,15 +36,15 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
 
   setBytesReadPerRep(2 * sizeof(Real_type) * MVPA_Q1D * MVPA_D1D + // B, Bt
                      3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
-                         MVDIM * m_NE + // X (3 components)
+                         MVPA_DIM * m_NE + // X (3 components)
                      1 * sizeof(Real_type) * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D *
                          m_NE); // D
   setBytesWrittenPerRep(3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
-                        MVDIM * m_NE); // Y (3 components)
+                        MVPA_DIM * m_NE); // Y (3 components)
   setBytesAtomicModifyWrittenPerRep(0);
 
   //3 for the dimension loop
-  setFLOPsPerRep(m_NE * 3 *
+  setFLOPsPerRep(m_NE * MVPA_DIM *
                  (2 * MVPA_D1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D +
                   2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D +
                   2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D +
@@ -77,19 +77,19 @@ MASSVEC3DPA::~MASSVEC3DPA() {}
 
 void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
 
-  allocAndInitDataConst(m_B, int(MVPA_Q1D * MVPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt, int(MVPA_Q1D * MVPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, int(MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * m_NE),
-                        Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, int(MVPA_D1D * MVPA_D1D * MVPA_D1D * MVDIM * m_NE),
-                        Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, int(MVPA_D1D * MVPA_D1D * MVPA_D1D * MVDIM * m_NE),
-                        Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, MVPA_Q1D * MVPA_D1D, 1.0, vid);
+  allocAndInitDataConst(m_Bt, MVPA_Q1D * MVPA_D1D, 1.0, vid);
+  allocAndInitDataConst(m_D, MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * m_NE, 1.0, vid);
+
+  allocAndInitDataConst(m_X, MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * m_NE, 1.0, vid);
+
+  allocAndInitDataConst(m_Y, MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * m_NE, 0.0, vid);
+
 }
 
 void MASSVEC3DPA::updateChecksum(VariantID vid, size_t tune_idx) {
   checksum[vid][tune_idx] +=
-      calcChecksum(m_Y, 3 * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
+      calcChecksum(m_Y, MVPA_DIM * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
 }
 
 void MASSVEC3DPA::tearDown(VariantID vid,
