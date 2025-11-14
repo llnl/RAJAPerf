@@ -77,8 +77,6 @@ void MASSVEC3DPA::runSyclVariantImpl(VariantID vid) {
                MASSVEC3DPA_1;
              }
 
-             itm.barrier(::sycl::access::fence_space::local_space);
-
              for (int c = 0; c < 3; ++c) {
                SYCL_SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
 
