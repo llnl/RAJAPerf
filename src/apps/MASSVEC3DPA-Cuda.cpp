@@ -21,9 +21,9 @@ namespace apps {
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-    void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                                       const Real_ptr D, const Real_ptr X,
-                                       Real_ptr Y) {
+void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
+                                   const Real_ptr D, const Real_ptr X,
+                                   Real_ptr Y) {
 
   const Index_type e = blockIdx.x;
 
@@ -72,10 +72,10 @@ __launch_bounds__(block_size) __global__
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-    void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                                      const Real_ptr D, const Real_ptr X,
-                                      Real_ptr Y,
-                                      volatile Index_type runtime_block_size) {
+void MassVec3DPA_RUNTIME_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
+                                  const Real_ptr D, const Real_ptr X,
+                                  Real_ptr Y,
+                                  volatile Index_type runtime_block_size) {
 
   const Index_type e = blockIdx.x;
 
@@ -133,9 +133,9 @@ __launch_bounds__(block_size) __global__
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-    void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                                      const Real_ptr D, const Real_ptr X,
-                                      Real_ptr Y) {
+void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
+                                  const Real_ptr D, const Real_ptr X,
+                                  Real_ptr Y) {
 
   const Index_type e = blockIdx.x;
 
@@ -193,8 +193,8 @@ __launch_bounds__(block_size) __global__
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-    void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
-                            const Real_ptr D, const Real_ptr X, Real_ptr Y) {
+void MassVec3DPA_DIRECT(const Real_ptr B, const Real_ptr Bt,
+                        const Real_ptr D, const Real_ptr X, Real_ptr Y) {
 
   const Index_type e = blockIdx.x;
 
@@ -243,6 +243,7 @@ __launch_bounds__(block_size) __global__
 
 template <size_t block_size>
 void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx) {
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
