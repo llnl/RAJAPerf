@@ -31,7 +31,7 @@
   for (Index_type i = itm.get_local_id(k); i < N; i += itm.get_local_range(k))
 #endif
 
-//#if defined(RAJA_ENABLE_SYCL)
+#if defined(RAJA_ENABLE_SYCL)
 #define SYCL_SHARED_LOOP_2D(tx, ty, Nx, Ny) \
   if (itm.get_local_id(0) < 1)                                          \
     for (Index_type ty = itm.get_local_id(1); ty < Ny; ty += itm.get_local_range(1)) \
@@ -42,7 +42,7 @@
       for (Index_type ty = itm.get_local_id(1); ty < Ny; ty += itm.get_local_range(1)) \
         for (Index_type tx = itm.get_local_id(2); tx < Nx; tx += itm.get_local_range(2))
 
-//#endif
+#endif
 
 #define CPU_FOREACH(i, k, N) for (Index_type i = 0; i < N; i++)
 
