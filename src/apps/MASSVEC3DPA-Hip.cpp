@@ -838,18 +838,19 @@ void MASSVEC3DPA::setHipTuningDefinitions(VariantID vid) {
     if (run_params.numValidGPUBlockSize() == 0u ||
         run_params.validGPUBlockSize(block_size)) {
 
-      if (vid == RAJA_HIP) {
-        addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
-        addVariantTuningName(vid, "COMPILE_LOOP_INC");
-        addVariantTuningName(vid, "DIRECT");
-      }
-
       if (vid == Base_HIP) {
         addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
         addVariantTuningName(vid, "RUNTIME_LOOP_INC");
         addVariantTuningName(vid, "COMPILE_LOOP_INC");
         addVariantTuningName(vid, "DIRECT");
       }
+
+      if (vid == RAJA_HIP) {
+        addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
+        addVariantTuningName(vid, "COMPILE_LOOP_INC");
+        addVariantTuningName(vid, "DIRECT");
+      }
+
     }
   });
 }
