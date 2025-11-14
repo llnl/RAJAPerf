@@ -43,12 +43,90 @@ void MASSVEC3DPA::runSyclVariantImpl(VariantID vid) {
 
       qu->submit([&](::sycl::handler& h) {
 
+        constexpr Index_type MQ1 = MVPA_Q1D;
+        constexpr Index_type MD1 = MVPA_D1D;
+        constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+
+        auto smB_vec  = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MQ1 * MD1), h);
+        auto smBt_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MD1 * MQ1), h);
+        auto sm0_vec  = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
+        auto sm1_vec  = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MDQ * MDQ * MDQ), h);
+
         h.parallel_for
           (::sycl::nd_range<3>(gridSize, workGroupSize),
            [=] (::sycl::nd_item<3> itm) {
 
              const Index_type e = itm.get_group(2);
 
+             Real_ptr smB = smB_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr smBt = smBt_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+             Real_ptr sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
+
+             Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;
+             Real_type(*Btsmem)[MQ1] = (Real_type(*)[MQ1])sDQ;
+
+             Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;
+             Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;
+             Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;
+             Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;
+             Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;
+             Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
+
+             SYCL_FOREACH_THREAD(dy, 1, MVPA_D1D) {
+               SYCL_FOREACH_THREAD(dx, 2, MVPA_D1D){
+                 MASS3DPA_1
+               }
+               SYCL_FOREACH_THREAD(dx, 2, MVPA_Q1D) {
+                 MASS3DPA_2
+               }
+             }
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(dy, 1, MVPA_D1D) {
+               SYCL_FOREACH_THREAD(qx, 2, MVPA_Q1D) {
+                 MASS3DPA_3
+               }
+             }
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(qy, 1, MVPA_Q1D) {
+               SYCL_FOREACH_THREAD(qx, 2, MVPA_Q1D) {
+                 MASS3DPA_4
+               }
+             }
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(qy, 1, MVPA_Q1D) {
+               SYCL_FOREACH_THREAD(qx, 2, MVPA_Q1D) {
+                 MASS3DPA_5
+               }
+             }
+
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(d, 1, MVPA_D1D) {
+               SYCL_FOREACH_THREAD(q, 2, MVPA_Q1D) {
+                 MASS3DPA_6
+               }
+             }
+
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(qy, 1, MVPA_Q1D) {
+               SYCL_FOREACH_THREAD(dx, 2, MVPA_D1D) {
+                 MASS3DPA_7
+               }
+             }
+             itm.barrier(::sycl::access::fence_space::local_space);
+
+             SYCL_FOREACH_THREAD(dy, 1, MVPA_D1D) {
+               SYCL_FOREACH_THREAD(dx, 2, MVPA_D1D) {
+                 MASS3DPA_8
+               }
+             }
+
+             itm.barrier(::sycl::access::fence_space::local_space);
+             SYCL_FOREACH_THREAD(dy, 1, MVPA_D1D) {
+               SYCL_FOREACH_THREAD(dx, 2, MVPA_D1D) {
+                 MASS3DPA_9
+               }
+             }
 
            });
       });
