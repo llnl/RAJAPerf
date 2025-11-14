@@ -75,7 +75,7 @@ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-void MassVec3DPA_ARG_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
+void MassVec3DPA_ARGUMENT_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                               const Real_ptr D, const Real_ptr X,
                               Real_ptr Y,
                               const Index_type runtime_block_size)
@@ -285,7 +285,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchCudaKernel((MassVec3DPA_ARG_LOOP_INC<block_size>), NE,
+        RPlaunchCudaKernel((MassVec3DPA_ARGUMENT_LOOP_INC<block_size>), NE,
                            nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
                            X, Y, static_cast<Index_type>(MVPA_Q1D));
       }
@@ -846,7 +846,7 @@ void MASSVEC3DPA::setCudaTuningDefinitions(VariantID vid) {
 
       if (vid == Base_CUDA) {
         addVariantTuningName(vid, "BLOCKDIM_LOOP_INC");
-        addVariantTuningName(vid, "RUNTIME_LOOP_INC");
+        addVariantTuningName(vid, "ARGUMENT_LOOP_INC");
         addVariantTuningName(vid, "COMPILE_LOOP_INC");
         addVariantTuningName(vid, "DIRECT");
       }
