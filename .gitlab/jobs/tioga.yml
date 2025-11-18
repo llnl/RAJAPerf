@@ -36,7 +36,7 @@ rocmcc_6_4_1_hip:
 
 cce_20_0_0:
   variables:
-    SPEC: "~shared +openmp +vectorization +tests %cce@=20.0.0 ^blt@develop"
+    SPEC: "~shared +openmp %cce@=20.0.0 ^blt@develop"
   extends: .job_on_tioga
 
 rocmcc_6_4_1_hip_openmp:
