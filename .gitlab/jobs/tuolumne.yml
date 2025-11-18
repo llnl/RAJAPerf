@@ -25,7 +25,7 @@
 rocmcc_6_4_1_hip:
   variables:
     ON_TUOLUMNE: "OFF"
-  extends: .job_on_tioga
+  extends: .job_on_tuolumne
 
 ############
 # Extra jobs
