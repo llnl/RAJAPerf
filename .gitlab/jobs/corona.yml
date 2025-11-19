@@ -16,9 +16,9 @@
 ########################
 # We duplicate the shared jobs description and add necessary changes for RAJA.
 # We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS} So that
-# the comparison with the original job is easier.
+# the comparison with the original job is easier.a
 
-# No overridden jobs so far.
+## rocm 5.7.1 job is in the shared RSC set of jobs
 
 ############
 # Extra jobs
@@ -27,9 +27,9 @@
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
 
-clang_22_0_0_sycl_gcc_10_3_1_rocmcc_6_4_2_hip:
+clang_22_0_0_sycl_gcc_10_3_1_rocmcc_6_4_2:
   variables:
-    SPEC: " ~shared +sycl ~openmp tests=basic cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" %sycl-clang-22-gcc-10 ^blt@develop"
+    SPEC: " ~shared +sycl ~openmp cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" %sycl-clang-22-gcc-10 ^blt@develop"
     MODULE_LIST: "rocm/6.4.2"
     SYCL_PATH: "/usr/workspace/raja-dev/clang_sycl_16b7bcb09915_hip_gcc10.3.1_rocm6.4.2"
     LD_LIBRARY_PATH: "${SYCL_PATH}/lib:${SYCL_PATH}/lib64:${LD_LIBRARY_PATH}"
