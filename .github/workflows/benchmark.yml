@@ -1,16 +1,15 @@
 name: Process Benchmark
 
-on:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      benchmark_data:
-        description: 'Base64 encoded benchmark data'
-        required: true
-      benchmark_name:
-        description: 'Name for benchmark group on the dashboard'
-        required: false
-        default: 'RAJAPerf benchmarks'
+on: push
+#  workflow_dispatch:
+#    inputs:
+#      benchmark_data:
+#        description: 'Base64 encoded benchmark data'
+#        required: true
+#      benchmark_name:
+#        description: 'Name for benchmark group on the dashboard'
+#        required: false
+#        default: 'RAJAPerf benchmarks'
 
 jobs:
   check-performance:
