@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <limits>
+#include <algorithm>
 
 namespace rajaperf {
 namespace basic {
@@ -55,8 +56,8 @@ void REDUCE3_INT::runKokkosVariant(VariantID vid,
           Kokkos::Max<Int_type>(max_value), Kokkos::Min<Int_type>(min_value),
           sum);
       m_vsum += static_cast<Int_type>(sum);
-      m_vmin = Kokkos::min(m_vmin, static_cast<Int_type>(min_value));
-      m_vmax = Kokkos::max(m_vmax, static_cast<Int_type>(max_value));
+      m_vmin = std::min(m_vmin, static_cast<Int_type>(min_value));
+      m_vmax = std::max(m_vmax, static_cast<Int_type>(max_value));
     }
     Kokkos::fence();
     stopTimer();
