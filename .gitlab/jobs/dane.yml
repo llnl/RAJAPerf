@@ -14,23 +14,29 @@
 ########################
 # Overridden shared jobs
 ########################
-# We duplicate the shared jobs description and add necessary changes for RAJA.
-# We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS} So that
-# the comparison with the original job is easier.
+# We duplicate the shared jobs description and add necessary changes for this
+# project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
+# when possible so that the comparison with the original job is easier.
 
-# Shared job uses %clang-14-gcc-11
-clang_14_0_6:
-  variables:
-    SPEC: " ~shared +openmp +omptask %llvm@=14.0.6 ${PROJECT_DANE_DEPS}"
+# Shared job uses %clang-14-gcc-11, replaced with %clang-14 below
+clang_14_0_6_gcc_11_3_1:
   extends: .job_on_dane
+  variables:
+    ON_DANE: "OFF"
 
-## gcc 11.2.1 job is in the shared RSC set of jobs
+# Shared job uses %clang-19-gcc-13, replaced with %clang-19 below
+clang_19_1_3_gcc_13_3_1:
+  extends: .job_on_dane
+  variables:
+    ON_DANE: "OFF"
+
+## gcc 13.3.1 job is in the shared RSC set of jobs
 
 # custom variant
 oneapi_2023_2_1:
+  extends: .job_on_dane
   variables:
     ON_DANE: "OFF"
-  extends: .job_on_dane
 
 ############
 # Extra jobs
@@ -38,6 +44,11 @@ oneapi_2023_2_1:
 # We do not recommend using ${PROJECT_<MACHINE>_VARIANTS} and
 # ${PROJECT_<MACHINE>_DEPS} in the extra jobs. There is no reason not to fully
 # describe the spec here.
+
+clang_14_0_6:
+  variables:
+    SPEC: " ~shared +openmp +omptask %llvm@=14.0.6 ^blt@develop"
+  extends: .job_on_dane
 
 clang_19_1_3:
   variables:
@@ -54,19 +65,9 @@ gcc_12_1_1:
     SPEC: " ~shared +openmp %gcc@=12.1.1 ^blt@develop"
   extends: .job_on_dane
 
-gcc_13_3_1:
-  variables:
-    SPEC: " ~shared +openmp %gcc@=13.3.1 ^blt@develop"
-  extends: .job_on_dane
-
 oneapi_2025_2_0:
   variables:
     SPEC: "~shared +openmp cxxflags==-fp-model=precise %oneapi@=2025.2.0 ^blt@develop"
-  extends: .job_on_dane
-
-oneapi_2023_2_1_mpi:
-  variables:
-    SPEC: "~shared +openmp +mpi +lowopttest cxxflags==-fp-model=precise %oneapi@=2023.2.1 ^mvapich2 ^blt@develop"
   extends: .job_on_dane
 
 oneapi_2025_2_0_mpi:
