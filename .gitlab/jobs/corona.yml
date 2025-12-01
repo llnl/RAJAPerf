@@ -29,7 +29,7 @@
 
 clang_22_0_0_sycl_gcc_10_3_1_rocmcc_6_4_2:
   variables:
-    SPEC: " ~shared +sycl ~openmp cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" %sycl-clang-22-gcc-10 ^blt@develop"
+    SPEC: " ~shared +sycl ~openmp cxxflags==\"-w -fsycl -fsycl-unnamed-lambda -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx906\" %sycl-clang-22-gcc-10"
     MODULE_LIST: "rocm/6.4.2"
     SYCL_PATH: "/usr/workspace/raja-dev/clang_sycl_16b7bcb09915_hip_gcc10.3.1_rocm6.4.2"
     LD_LIBRARY_PATH: "${SYCL_PATH}/lib:${SYCL_PATH}/lib64:${LD_LIBRARY_PATH}"

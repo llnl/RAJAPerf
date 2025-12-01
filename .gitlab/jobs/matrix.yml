@@ -18,7 +18,7 @@
 # We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS} So that
 # the comparison with the original job is easier.
 
-## clang 18.1.1 + CUDA 12.6.0 job is in the shared RSC set of jobs 
+## clang 18.1.1 + CUDA 12.6.0 job is in the shared RSC set of jobs
 
 ############
 # Extra jobs
