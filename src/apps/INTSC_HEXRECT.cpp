@@ -336,8 +336,8 @@ void INTSC_HEXRECT::setUp(VariantID vid,
 
   // which zones to intersect.  Computed by hand for this test of
   // the geometry kernel.
-  allocDataForInit ( m_intsc_d, m_nrecords, vid ) ;
-  allocDataForInit ( m_intsc_t, m_nrecords, vid ) ;
+  auto a_id = allocDataForInit ( m_intsc_d, m_nrecords, vid ) ;
+  auto a_it = allocDataForInit ( m_intsc_t, m_nrecords, vid ) ;
 
   setupIntscPairs
       ( ncord, ndx, ndy, ndz, m_intsc_d, m_intsc_t ) ;
