@@ -149,6 +149,7 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
 }
 
 
+// _memset_define_cuda_start
 void MEMSET::defineCudaVariantTunings()
 {
 
@@ -176,6 +177,7 @@ void MEMSET::defineCudaVariantTunings()
   }
 
 }
+// _memset_define_cuda_end
 
 } // end namespace algorithm
 } // end namespace rajaperf

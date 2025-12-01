@@ -102,14 +102,19 @@ destructor.
 Several methods in the ``KernelBase`` class are pure virtual and the derived
 kernel class must provide implementations of those methods. These methods
 take a ``VariantID`` argument and a tuning index. They include: ``setUp``,
-``updateChecksum``, and ``tearDown``, and methods to run the different kernel
-variants. While these method names are descriptive of what they do, we'll 
-provide more details about them when we describe the class implementation in
-the next section.
+``updateChecksum``, and ``tearDown``.
 
-Other methods in the code above, such as ``setCudaTuningDefinitions`` are 
+Other methods in the code above, such as ``defineCudaVariantTunings`` are
 virtual in the ``KernelBase`` class and so they may be provided optionally by 
-the kernel class for kernel specific operations.
+the kernel class for kernel specific operations. The ``define*VariantTunings``
+methods specify which variants and define the tunings available for this kernel.
+
+Some other methods in the code above, such as ``runSeqVariant`` and
+``runCudaVariantImpl`` are unique to each kernel but the names are expected
+by the boilerplate macros.
+
+While these method names are descriptive of what they do, we'll provide more
+details about them when we describe the class implementation in the next section.
 
 Lastly, any data members used in the class implementation are defined, 
 typically in a ``private`` member section so they don't *bleed* out of the

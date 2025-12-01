@@ -92,9 +92,9 @@ void ADD::runSeqVariant(VariantID vid)
   }
 
 }
-// _add_run_seq_end
 
 RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ADD, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
+// _add_run_seq_end
 
 } // end namespace stream
 } // end namespace rajaperf

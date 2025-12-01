@@ -171,10 +171,10 @@ described above.
 Adding a variant to the Suite involves four main steps:
 
 #. Add a unique variant ID and a unique variant name to the Suite.
-#. Add the pure virtual method to execute the variant to the ``KernelBase``
+#. Add the virtual method to define the variant tunings to the ``KernelBase``
    class header file. For example::
 
-     virtual void run<variant-name>Variant(VariantID vid, size_t tune_idx) = 0;
+     virtual void define<variant-name>VariantTunings() {}
 
 #. For the kernel(s) to which the variant applies, provide kernel variant
    implementations in associated ``<kernel-name>-<variant-name>.cpp`` files.
@@ -207,13 +207,8 @@ Adding kernel variant implementations
 
 In the classes containing kernels to which a new variant applies, add 
 implementations for the variant in kernel execution methods in files named
-``<kernen-name>-<variant-name>.cpp``. This is described in detail in 
+``<kernel-name>-<variant-name>.cpp``. This is described in detail in
 :ref:`kernel_class_impl_exec-label`. 
-
-.. note:: Make sure to enable the variant for those kernels in the kernel 
-          class constructors by calling the ``KernelBase`` class  method
-          ``setVariantDefined(VariantID vid))`` so that the variant can be 
-          run. 
 
 .. _structure_addtuning-label:
 
@@ -221,13 +216,11 @@ implementations for the variant in kernel execution methods in files named
 Adding a Tuning
 ================
 
-For kernels to which a new tuning applies, add implementations for the tuning 
-in the kernel execution and tuning naming methods as needed. Note that the 
-tuning indices are determined by the order that the tuning names are added 
-in the ``set<backend-name>TuningDefinitions(VariantID vid)`` method which is
-virtual in the ``KernelBase`` class. 
+When adding a new tuning to a kernel follow these steps. Add implementations
+for the tuning in ``run<variant-name>Variant<tuning-name>`` method(s) or in an
+existing ``run<variant-name>Variant`` method(s). Then, define the new variant
+tunings in the ``define<variant-name>VariantTunings`` method(s) as needed.
 
-.. note:: ``run<backend-name>Variant(VariantID vid, size_t tune_idx) methods 
-          should have similar logic to the 
-          ``set<backend-name>TuningDefinitions(VariantID vid)`` method so that
-          the correct tuning will be run based on the index.
+.. note:: If a tuning is added to a kernel backend currently using one of the
+          tuning definition boilerplates then you will have to add a custom
+          ``define<variant-name>VariantTunings`` method.
