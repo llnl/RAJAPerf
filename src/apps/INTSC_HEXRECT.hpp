@@ -113,6 +113,10 @@ public:
 
   void runSeqVariant(VariantID vid, Size_type tune_idx);
   void runOpenMPVariant(VariantID vid, Size_type tune_idx);
+  void runOpenMPTargetVariant(VariantID vid, size_t)
+  {
+    getCout() << "\n INTSC_HEXRECT : Unknown OMP Target variant id = " << vid << std::endl;
+  }
   void runCudaVariant(VariantID vid, Size_type tune_idx);
   void runHipVariant(VariantID vid, Size_type tune_idx);
 
