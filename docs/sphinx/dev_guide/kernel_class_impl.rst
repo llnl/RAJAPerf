@@ -235,9 +235,8 @@ Kernel tuning definition methods
 --------------------------------
 
 Following on from the previous section the **ADD** :ref:`kernel_class-label`
-the per back-end files also have *define* methods declared in the
-**ADD** :ref:`kernel_class_header-label` to define the variants and tunings for
-the variants.
+back-end files also contain *define* methods which add tuning definitions
+for the variants of the kernel in the same back-end file.
 
 By convention each of the *define* methods takes no arguments. Each kernel must
 provide a *define* method for each of the back-ends that it implements. This
