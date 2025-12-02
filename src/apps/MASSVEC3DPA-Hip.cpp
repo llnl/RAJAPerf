@@ -78,56 +78,66 @@ __launch_bounds__(block_size) __global__
 void MassVec3DPA_ARGUMENT_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
                               const Real_ptr D, const Real_ptr X,
                               Real_ptr Y,
-                              const Index_type runtime_block_size)
+                              const Index_type runtime_block_size_x,
+                              const Index_type runtime_block_size_y,
+                              const Index_type runtime_block_size_z)
 {
 
   const Index_type e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, runtime_block_size) {
+  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D,
+                        runtime_block_size_x, runtime_block_size_y) {
     MASSVEC3DPA_1;
   }
 
   for (Index_type c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_2;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_3;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_4;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_5;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_6;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_7;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           runtime_block_size) {
+                           runtime_block_size_x, runtime_block_size_y,
+                           runtime_block_size_z) {
       MASSVEC3DPA_8;
     }
     __syncthreads();
@@ -138,62 +148,61 @@ void MassVec3DPA_ARGUMENT_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
 void MassVec3DPA_BLOCKDIM_COPY_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
-                              const Real_ptr D, const Real_ptr X,
-                              Real_ptr Y,
-                              const Index_type runtime_block_size)
+                                        const Real_ptr D, const Real_ptr X,
+                                        Real_ptr Y)
 {
 
   const Index_type e = blockIdx.x;
 
-  const int bdx = blockDim.x; //block size is the same for xyz...
-  //const int bdy = blockDim.y;
-  //const int bdz = blockDim.z;
+  const int bdx = blockDim.x;
+  const int bdy = blockDim.y;
+  const int bdz = blockDim.z;
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, bdx) {
+  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, bdx, bdy) {
     MASSVEC3DPA_1;
   }
 
   for (Index_type c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_2;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_3;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_4;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_5;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_6;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_7;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           bdx) {
+                           bdx, bdy, bdz) {
       MASSVEC3DPA_8;
     }
     __syncthreads();
@@ -212,49 +221,49 @@ void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B, const Real_ptr Bt,
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, block_size) {
+  GPU_SHARED_LOOP_2D_INC(q, d, MVPA_Q1D, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
     MASSVEC3DPA_1;
   }
 
   for (Index_type c = 0; c < 3; ++c) {
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_2;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_3;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_4;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_5;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_6;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_7;
     }
     __syncthreads();
 
     GPU_SHARED_LOOP_3D_INC(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D,
-                           block_size) {
+                           MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
       MASSVEC3DPA_8;
     }
     __syncthreads();
@@ -514,7 +523,9 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx)
 
         RPlaunchHipKernel((MassVec3DPA_ARGUMENT_LOOP_INC<block_size>), NE,
                            nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
-                           X, Y, static_cast<Index_type>(MVPA_Q1D));
+                           X, Y, static_cast<Index_type>(MVPA_Q1D),
+                           static_cast<Index_type>(MVPA_Q1D),
+                           static_cast<Index_type>(MVPA_Q1D));
       }
       stopTimer();
 
@@ -528,7 +539,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid, size_t tune_idx)
 
         RPlaunchHipKernel((MassVec3DPA_BLOCKDIM_COPY_LOOP_INC<block_size>), NE,
                            nthreads_per_block, shmem, res.get_stream(), B, Bt, D,
-                           X, Y, static_cast<Index_type>(MVPA_Q1D));
+                           X, Y);
       }
       stopTimer();
 

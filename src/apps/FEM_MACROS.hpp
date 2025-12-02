@@ -81,15 +81,17 @@
     for (int ty = threadIdx.y; ty < Ny; ty += blockDim.y)                      \
       for (int tx = threadIdx.x; tx < Nx; tx += blockDim.x)
 
-#define GPU_SHARED_LOOP_2D_INC(tx, ty, Nx, Ny, runtime_blocks_size)            \
+#define GPU_SHARED_LOOP_2D_INC(tx, ty, Nx, Ny, runtime_block_size_x,           \
+                               runtime_block_size_y)                           \
   if (threadIdx.z < 1)                                                         \
-    for (int ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size)             \
-      for (int tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
+    for (int ty = threadIdx.y; ty < Ny; ty += runtime_block_size_y)            \
+      for (int tx = threadIdx.x; tx < Nx; tx += runtime_block_size_x)
 
-#define GPU_SHARED_LOOP_3D_INC(tx, ty, tz, Nx, Ny, Nz, runtime_blocks_size)    \
-  for (int tz = threadIdx.z; tz < Nz; tz += runtime_blocks_size)               \
-    for (int ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size)             \
-      for (int tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
+#define GPU_SHARED_LOOP_3D_INC(tx, ty, tz, Nx, Ny, Nz, runtime_block_size_x,   \
+                               runtime_block_size_y, runtime_block_size_z)     \
+  for (int tz = threadIdx.z; tz < Nz; tz += runtime_block_size_z)              \
+    for (int ty = threadIdx.y; ty < Ny; ty += runtime_block_size_y)            \
+      for (int tx = threadIdx.x; tx < Nx; tx += runtime_block_size_x)
 
 #endif
 
