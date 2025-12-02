@@ -44,19 +44,16 @@ blt_add_executable(
   apps/AppsData.cpp
   apps/CONVECTION3DPA.cpp
   apps/CONVECTION3DPA-Seq.cpp
-  apps/CONVECTION3DPA-OMPTarget.cpp
   apps/DEL_DOT_VEC_2D.cpp
   apps/DEL_DOT_VEC_2D-Seq.cpp
   apps/DEL_DOT_VEC_2D-OMPTarget.cpp
   apps/DIFFUSION3DPA.cpp
   apps/DIFFUSION3DPA-Seq.cpp
-  apps/DIFFUSION3DPA-OMPTarget.cpp
   apps/ENERGY.cpp
   apps/ENERGY-Seq.cpp
   apps/ENERGY-OMPTarget.cpp
   apps/FEMSWEEP.cpp
   apps/FEMSWEEP-Seq.cpp
-  apps/FEMSWEEP-OMPTarget.cpp
   apps/FIR.cpp
   apps/FIR-Seq.cpp
   apps/FIR-OMPTarget.cpp
@@ -71,10 +68,8 @@ blt_add_executable(
   apps/LTIMES_NOVIEW-OMPTarget.cpp
   apps/MASS3DEA.cpp
   apps/MASS3DEA-Seq.cpp
-  apps/MASS3DEA-OMPTarget.cpp  
   apps/MASS3DPA.cpp
   apps/MASS3DPA-Seq.cpp
-  apps/MASS3DPA-OMPTarget.cpp
   apps/MATVEC_3D_STENCIL.cpp
   apps/MATVEC_3D_STENCIL-Seq.cpp
   apps/MATVEC_3D_STENCIL-OMPTarget.cpp
@@ -122,7 +117,6 @@ blt_add_executable(
   basic/INIT_VIEW1D_OFFSET-OMPTarget.cpp
   basic/MAT_MAT_SHARED.cpp
   basic/MAT_MAT_SHARED-Seq.cpp
-  basic/MAT_MAT_SHARED-OMPTarget.cpp
   basic/MULADDSUB.cpp
   basic/MULADDSUB-Seq.cpp
   basic/MULADDSUB-OMPTarget.cpp
