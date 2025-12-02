@@ -216,10 +216,13 @@ implementations for the variant in kernel execution methods in files named
 Adding a Tuning
 ================
 
-When adding a new tuning to a kernel follow these steps. Add implementations
-for the tuning in ``run<variant-name>Variant<tuning-name>`` method(s) or in an
-existing ``run<variant-name>Variant`` method(s). Then, define the new variant
-tunings in the ``define<variant-name>VariantTunings`` method(s) as needed.
+When adding a new tuning to a kernel follow these steps.
+
+#. Add implementations for the tuning in the appropriate back-end file(s).
+   Adding them to a new tuning specific ``run<variant-name>Variant<tuning-name>``
+   method or in an existing ``run<variant-name>Variant<tune_idx>`` method.
+#. Define the new tuning in the ``define<variant-name>VariantTunings`` method
+   for the appropriate variant(s) as needed.
 
 .. note:: If a tuning is added to a kernel backend currently using one of the
           tuning definition boilerplates then you will have to add a custom
