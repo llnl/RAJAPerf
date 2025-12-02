@@ -263,10 +263,14 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
 void HISTOGRAM::defineCudaVariantTunings()
 {
 
-  addVariantTuning<&HISTOGRAM::runCudaVariantLibrary>(
-      Base_CUDA, "cub");
-
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
+
+    if (vid == Base_CUDA) {
+
+      addVariantTuning<&HISTOGRAM::runCudaVariantLibrary>(
+          vid, "cub");
+
+    }
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 

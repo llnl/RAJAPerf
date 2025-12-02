@@ -137,7 +137,7 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
 void INDEXLIST::defineHipVariantTunings()
 {
 
-  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
+  for (VariantID vid : {Base_HIP}) {
 
     if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 

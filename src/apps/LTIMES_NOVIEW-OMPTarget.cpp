@@ -91,11 +91,15 @@ void LTIMES_NOVIEW::defineOpenMPTargetVariantTunings()
   for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
 
     if (vid == RAJA_OpenMPTarget) {
+
       addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
           vid, "kernel");
+
     } else {
+
       addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
           vid, "default");
+
     }
 
   }

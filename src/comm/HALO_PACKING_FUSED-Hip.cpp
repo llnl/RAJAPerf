@@ -303,7 +303,7 @@ void HALO_PACKING_FUSED::runHipVariantWorkGroup(VariantID vid)
 void HALO_PACKING_FUSED::defineHipVariantTunings()
 {
 
-  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
     if (vid == Base_HIP) {
 

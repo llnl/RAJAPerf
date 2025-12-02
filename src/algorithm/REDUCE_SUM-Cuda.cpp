@@ -305,7 +305,7 @@ void REDUCE_SUM::runCudaVariantRAJANewReduce(VariantID vid)
 void REDUCE_SUM::defineCudaVariantTunings()
 {
 
-  for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     if ( vid == Base_CUDA ) {
 
@@ -314,60 +314,56 @@ void REDUCE_SUM::defineCudaVariantTunings()
 
     }
 
-    if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-        if (run_params.numValidGPUBlockSize() == 0u ||
-            run_params.validGPUBlockSize(block_size)) {
+        seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
 
-          seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
+          if ( vid == Base_CUDA ) {
 
-            if ( vid == Base_CUDA ) {
+            auto algorithm_helper = gpu_algorithm::block_atomic_helper{};
 
-              auto algorithm_helper = gpu_algorithm::block_atomic_helper{};
+            addVariantTuning<&REDUCE_SUM::runCudaVariantBase<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
+            RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
-              addVariantTuning<&REDUCE_SUM::runCudaVariantBase<
+          } else if ( vid == RAJA_CUDA ) {
+
+            seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
+
+              addVariantTuning<&REDUCE_SUM::runCudaVariantRAJA<
                                    decltype(block_size){},
+                                   decltype(algorithm_helper),
                                    decltype(mapping_helper)>>(
                   vid, decltype(algorithm_helper)::get_name()+"_"+
                        decltype(mapping_helper)::get_name()+"_"+
                        std::to_string(block_size));
-              RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
-            } else if ( vid == RAJA_CUDA ) {
+            });
 
-              seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
+            auto algorithm_helper = gpu_algorithm::block_device_helper{};
 
-                addVariantTuning<&REDUCE_SUM::runCudaVariantRAJA<
-                                     decltype(block_size){},
-                                     decltype(algorithm_helper),
-                                     decltype(mapping_helper)>>(
-                    vid, decltype(algorithm_helper)::get_name()+"_"+
-                         decltype(mapping_helper)::get_name()+"_"+
-                         std::to_string(block_size));
+            addVariantTuning<&REDUCE_SUM::runCudaVariantRAJANewReduce<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     "new_"+std::to_string(block_size));
+            RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
-              });
+          }
 
-              auto algorithm_helper = gpu_algorithm::block_device_helper{};
+        });
 
-              addVariantTuning<&REDUCE_SUM::runCudaVariantRAJANewReduce<
-                                   decltype(block_size){},
-                                   decltype(mapping_helper)>>(
-                  vid, decltype(algorithm_helper)::get_name()+"_"+
-                       decltype(mapping_helper)::get_name()+"_"+
-                       "new_"+std::to_string(block_size));
-              RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
+      }
 
-            }
-
-          });
-
-        }
-
-      });
-
-    }
+    });
 
   }
 

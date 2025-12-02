@@ -303,7 +303,7 @@ void HALO_PACKING_FUSED::runCudaVariantWorkGroup(VariantID vid)
 void HALO_PACKING_FUSED::defineCudaVariantTunings()
 {
 
-  for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     if (vid == Base_CUDA) {
 

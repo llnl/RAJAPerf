@@ -292,10 +292,14 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
 void HISTOGRAM::defineHipVariantTunings()
 {
 
-  addVariantTuning<&HISTOGRAM::runHipVariantLibrary>(
-      Base_HIP, "rocprim");
-
   for (VariantID vid : {Base_HIP, RAJA_HIP}) {
+
+    if (vid == Base_HIP) {
+
+      addVariantTuning<&HISTOGRAM::runHipVariantLibrary>(
+          vid, "rocprim");
+
+    }
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 

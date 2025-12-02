@@ -137,7 +137,7 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
 void INDEXLIST::defineCudaVariantTunings()
 {
 
-  for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
+  for (VariantID vid : {Base_CUDA}) {
 
     if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
 
