@@ -288,10 +288,6 @@ public:
   void defineSeqVariantTunings();
   void runOpenMPVariant(VariantID vid);
   void defineOpenMPVariantTunings();
-  void runOpenMPTargetVariant(VariantID vid);
-  // void defineOpenMPTargetVariantTunings();
-  void runSyclVariant(VariantID vid);
-  // void defineSyclVariantTunings();
 
   void defineCudaVariantTunings();
   void defineHipVariantTunings();
