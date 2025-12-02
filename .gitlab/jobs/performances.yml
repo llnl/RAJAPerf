@@ -53,7 +53,7 @@ process_results:
     - clang_14_0_6_openmp_caliper
     - gcc_10_3_1_openmp_caliper
     - clang_14_0_6_mpi_caliper
-#    - rocmcc_6_4_1_hip_openmp_caliper
+    - rocmcc_6_4_1_hip_openmp_caliper
 
 report_results:
   extends: .report_to_gh_benchmark
