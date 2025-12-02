@@ -107,7 +107,7 @@ take a ``VariantID`` argument and a tuning index. They include: ``setUp``,
 Other methods in the code above, such as ``defineCudaVariantTunings`` are
 virtual in the ``KernelBase`` class and so they may be provided optionally by 
 the kernel class for kernel specific operations. The ``define*VariantTunings``
-methods specify which variants and define the tunings available for this kernel.
+methods specify which variants and define the tunings that are available for this kernel.
 
 Some other methods in the code above, such as ``runSeqVariant`` and
 ``runCudaVariantImpl`` are unique to each kernel but the names are expected

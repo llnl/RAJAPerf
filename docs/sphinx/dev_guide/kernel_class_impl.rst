@@ -215,7 +215,7 @@ Notable differences with the sequential variant file are:
   * A CUDA GPU kernel ``add`` is implemented for the ``Base_CUDA`` variant.
   * The method to execute the CUDA kernel variants ``ADD::runCudaVariantImpl``
     is templated on a ``block_size`` parameter, which represents the 
-    *tuning parameter*, and is passes to the kernel launch methods. The
+    *tuning parameter*, and is passed to the kernel launch methods. The
     ``setBlockSize`` function is called to provide this block_size to caliper.
   * The ``RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE`` macro is
     used outside the method implementation, to define "block_size" tunings for
@@ -240,9 +240,9 @@ the per back-end files also have *define* methods declared in the
 the variants.
 
 By convention each of the *define* methods takes no arguments. Each kernel must
-define a *define* method for each of the back-ends that it implements. This
+provide a *define* method for each of the back-ends that it implements. This
 method defines the variants and tunings for that backend. Each method is
-responsible for defines the variants and tunings for that back-end which
+responsible for defining the variants and tunings for that back-end which
 involves calling the ``addVariantTuning`` kernel base class method for each
 variant and tuning:
 
@@ -251,7 +251,7 @@ variant and tuning:
   * The first argument is the variant id
   * The second argument is the name of the tuning
 
-For example, here is the method to define cuda GPU variants of the **MEMSET**
+For example, here is the method to define CUDA GPU variants of the **MEMSET**
 kernel in the ``MEMSET-Cuda.cpp`` file:
 
 .. literalinclude:: ../../../src/algorithm/MEMSET-Cuda.cpp
