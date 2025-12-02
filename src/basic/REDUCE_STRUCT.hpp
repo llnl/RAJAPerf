@@ -81,13 +81,13 @@ public:
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runOpenMPTargetVariant(VariantID vid);
   void defineOpenMPTargetVariantTunings();
-
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();
   void defineCudaVariantTunings();
   void defineHipVariantTunings();
+
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t tune_idx >
   void runSeqVariant(VariantID vid);

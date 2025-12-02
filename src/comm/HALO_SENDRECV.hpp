@@ -99,16 +99,17 @@ public:
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid);
   void defineSeqVariantTunings();
-  void runOpenMPVariant(VariantID vid);
   void defineOpenMPVariantTunings();
-  void runCudaVariant(VariantID vid);
   void defineCudaVariantTunings();
-  void runHipVariant(VariantID vid);
   void defineHipVariantTunings();
-  void runOpenMPTargetVariant(VariantID vid);
   void defineOpenMPTargetVariantTunings();
+
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runCudaVariant(VariantID vid);
+  void runHipVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
 private:
   int m_mpi_size = -1;
