@@ -39,7 +39,8 @@ LTIMES::LTIMES(const RunParams& params)
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
 
-  std::cout << "testout123: " << m_philen << " " << m_elllen << " " << m_psilen << " " << m_num_z << std::endl;
+  std::cout << "d=" << m_num_d << " g=" << m_num_g << " m=" << m_num_m << " z=" << m_num_z << std::endl;
+  std::cout << "psi=" << m_psilen << " phi=" << m_philen << " ell=" << m_elllen << " zones=" << m_num_z << std::endl;
 
   adiak::value("unknowns", m_psilen);
   adiak::value("groups", m_num_g);
