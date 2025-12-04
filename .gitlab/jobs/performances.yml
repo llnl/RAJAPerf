@@ -70,7 +70,7 @@ clang_14_0_6_mpi_caliper:
 
 rocmcc_6_4_1_hip_openmp_caliper:
   variables:
-    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"
+    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared~mpi ^papi~shared"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_HIP"
     # Exclude unstable tests (~20% variability):
