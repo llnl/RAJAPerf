@@ -9,6 +9,7 @@
 set(RAJA_PERFSUITE_TEST_EXECUTABLE_DEPENDS
     common
     apps
+    apps-kokkos
     basic
     basic-kokkos
     lcals
