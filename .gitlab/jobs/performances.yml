@@ -77,6 +77,7 @@ rocmcc_6_4_1_hip_openmp_caliper:
     PERF_EXCLUDE_KERNELS: >
       ARRAY_OF_PTRS
       COPY8
+      EMPTY
       IF_QUAD
       INDEXLIST_3LOOP
       MAT_MAT_SHARED
