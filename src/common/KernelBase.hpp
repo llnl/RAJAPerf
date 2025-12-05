@@ -547,14 +547,14 @@ public:
 #endif
 
 #if defined(RAJA_ENABLE_SYCL)
-  virtual void runSyclVariant(VariantID vid, RAJA_UNUSED_ARG(size_t))
+  virtual void runSyclVariant(VariantID vid, size_t RAJA_UNUSED_ARG(tune_idx))
   {
      getCout() << "\n KernelBase: Unimplemented Sycl variant id = " << vid << std::endl;
   }
 #endif
 
 #if defined(RUN_KOKKOS)
-  virtual void runKokkosVariant(VariantID vid, RAJA_UNUSED_ARG(size_t))
+  virtual void runKokkosVariant(VariantID vid, size_t RAJA_UNUSED_ARG(tune_idx))
   {
      getCout() << "\n KernelBase: Unimplemented Kokkos variant id = " << vid << std::endl;
   }
