@@ -18,25 +18,19 @@
 # project. We keep ${PROJECT_<MACHINE>_VARIANTS} and ${PROJECT_<MACHINE>_DEPS}
 # when possible so that the comparison with the original job is easier.
 
-# Shared job uses %clang-14-gcc-11, replaced with %clang-14 below
-clang_14_0_6_gcc_11_3_1:
-  extends: .job_on_dane
-  variables:
-    ON_DANE: "OFF"
-
 # Shared job uses %clang-19-gcc-13, replaced with %clang-19 below
 clang_19_1_3_gcc_13_3_1:
   extends: .job_on_dane
   variables:
     ON_DANE: "OFF"
 
-## gcc 13.3.1 job is in the shared RSC set of jobs
-
-# custom variant
-oneapi_2023_2_1:
+# Shared job uses %oneapi-2025-gcc-10, replaced with %oneapi@=2025.2 below
+oneapi_2025_2_0_gcc_10_3_1:
   extends: .job_on_dane
   variables:
     ON_DANE: "OFF"
+
+## gcc 13.3.1 job is in the shared RSC set of jobs
 
 ############
 # Extra jobs
