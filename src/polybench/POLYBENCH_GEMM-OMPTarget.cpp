@@ -30,7 +30,8 @@ void POLYBENCH_GEMM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSE
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(A,B,C) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
@@ -68,7 +69,8 @@ void POLYBENCH_GEMM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSE
       >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
 

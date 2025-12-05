@@ -44,7 +44,8 @@ void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     case Base_OpenMPTarget : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Index_type count = 0;
         #pragma omp target is_device_ptr(x, list) device( did )

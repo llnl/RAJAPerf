@@ -29,7 +29,8 @@ void LTIMES_NOVIEW::runSeqVariant(VariantID vid, size_t tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type z = 0; z < num_z; ++z ) {
           for (Index_type g = 0; g < num_g; ++g ) {
@@ -56,7 +57,8 @@ void LTIMES_NOVIEW::runSeqVariant(VariantID vid, size_t tune_idx)
                               };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type z = 0; z < num_z; ++z ) {
           for (Index_type g = 0; g < num_g; ++g ) {
@@ -99,7 +101,8 @@ void LTIMES_NOVIEW::runSeqVariant(VariantID vid, size_t tune_idx)
           >;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
                                                             RAJA::RangeSegment(0, num_z),
@@ -125,7 +128,8 @@ void LTIMES_NOVIEW::runSeqVariant(VariantID vid, size_t tune_idx)
         using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::launch<launch_policy>( res,
               RAJA::LaunchParams(),

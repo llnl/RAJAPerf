@@ -116,7 +116,8 @@ void HISTOGRAM::runCudaVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       // Run
       CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceHistogram::HistogramEven,
@@ -183,7 +184,8 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(Data_ptr, counts, hcounts, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJAPERF_CUDA_REDUCER_INITIALIZE(counts_init, counts, hcounts, num_bins, global_replication);
 
@@ -233,7 +235,8 @@ void HISTOGRAM::runCudaVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       HISTOGRAM_INIT_COUNTS_RAJA(multi_reduce_policy);
 

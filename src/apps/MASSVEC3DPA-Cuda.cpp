@@ -267,7 +267,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
     if (tune_idx == 0) {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -282,7 +283,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
     } else if (tune_idx == 1) {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -296,7 +298,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
     } else if (tune_idx == 2) {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -310,7 +313,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
     } else if (tune_idx == 3) {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -343,7 +347,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::launch<launch_policy>(
             res,
@@ -503,7 +508,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<MVPA_Q1D>>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::launch<launch_policy>(
             res,
@@ -664,7 +670,8 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_direct>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::launch<launch_policy>(
             res,

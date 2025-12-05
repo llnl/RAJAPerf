@@ -35,7 +35,8 @@ void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(P,Q,U,V) device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
@@ -87,7 +88,8 @@ void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{1, n-1},

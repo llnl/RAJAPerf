@@ -33,7 +33,8 @@ void FIRST_MIN::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp declare reduction(minloc : MyMinLoc : \
                                       omp_out = MinLoc_compare(omp_out, omp_in)) \
@@ -61,7 +62,8 @@ void FIRST_MIN::runOpenMPVariant(VariantID vid, size_t tune_idx)
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp declare reduction(minloc : MyMinLoc : \
                                       omp_out = MinLoc_compare(omp_out, omp_in)) \
@@ -92,7 +94,8 @@ void FIRST_MIN::runOpenMPVariant(VariantID vid, size_t tune_idx)
       if (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
   
           RAJA::ReduceMinLoc<RAJA::omp_reduce,
                              Real_type, Index_type> minloc(m_xmin_init,
@@ -111,7 +114,8 @@ void FIRST_MIN::runOpenMPVariant(VariantID vid, size_t tune_idx)
       } else if (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                             m_initloc);

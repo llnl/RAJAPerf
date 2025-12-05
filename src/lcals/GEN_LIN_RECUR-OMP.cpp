@@ -38,7 +38,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type k = 0; k < N; ++k ) {
@@ -59,7 +60,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type k = 0; k < N; ++k ) {
@@ -82,7 +84,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(0, N), genlinrecur_lam1);

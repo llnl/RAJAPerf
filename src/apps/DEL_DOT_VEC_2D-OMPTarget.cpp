@@ -42,7 +42,8 @@ void DEL_DOT_VEC_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSE
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(x1,x2,x3,x4, y1,y2,y3,y4, \
                                        fx1,fx2,fx3,fx4, fy1,fy2,fy3,fy4, \
@@ -64,7 +65,8 @@ void DEL_DOT_VEC_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSE
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type ii) {

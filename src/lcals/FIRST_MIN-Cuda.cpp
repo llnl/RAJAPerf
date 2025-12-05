@@ -82,7 +82,8 @@ void FIRST_MIN::runCudaVariantBase(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(MyMinLoc*, dminloc, mymin_block, grid_size, 1);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       FIRST_MIN_MINLOC_INIT;
       RAJAPERF_CUDA_REDUCER_INITIALIZE_VALUE(mymin, dminloc, mymin_block, grid_size, 1);
@@ -129,7 +130,8 @@ void FIRST_MIN::runCudaVariantRAJA(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
        RAJA::ReduceMinLoc<RAJA::cuda_reduce,
                           Real_type, Index_type> minloc(m_xmin_init,
@@ -168,7 +170,8 @@ void FIRST_MIN::runCudaVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                         m_initloc);

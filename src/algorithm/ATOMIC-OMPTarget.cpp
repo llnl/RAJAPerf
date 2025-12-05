@@ -38,7 +38,8 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(atomic)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
@@ -54,7 +55,8 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {

@@ -31,7 +31,8 @@ void INIT_VIEW1D_OFFSET::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           INIT_VIEW1D_OFFSET_BODY;
@@ -51,7 +52,8 @@ void INIT_VIEW1D_OFFSET::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
                                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           initview1doffset_base_lam(i);
@@ -74,7 +76,8 @@ void INIT_VIEW1D_OFFSET::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
                                   };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), initview1doffset_lam);

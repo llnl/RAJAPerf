@@ -34,7 +34,8 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(N, work_group_size);
 
@@ -70,7 +71,8 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::sycl_exec<work_group_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall<EXEC_POL> ( res, RAJA::RangeSegment{1, N-1},
         [=] (Index_type i) {

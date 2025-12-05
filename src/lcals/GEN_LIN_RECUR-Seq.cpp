@@ -38,7 +38,8 @@ void GEN_LIN_RECUR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type k = 0; k < N; ++k ) {
           GEN_LIN_RECUR_BODY1;
@@ -58,7 +59,8 @@ void GEN_LIN_RECUR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type k = 0; k < N; ++k ) {
           genlinrecur_lam1(k);
@@ -79,7 +81,8 @@ void GEN_LIN_RECUR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(0, N), genlinrecur_lam1);

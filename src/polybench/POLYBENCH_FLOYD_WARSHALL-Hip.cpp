@@ -77,7 +77,8 @@ void POLYBENCH_FLOYD_WARSHALL::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       for (Index_type k = 0; k < N; ++k) {
 
@@ -99,7 +100,8 @@ void POLYBENCH_FLOYD_WARSHALL::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       for (Index_type k = 0; k < N; ++k) {
 
@@ -142,7 +144,8 @@ void POLYBENCH_FLOYD_WARSHALL::runHipVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{0, N},

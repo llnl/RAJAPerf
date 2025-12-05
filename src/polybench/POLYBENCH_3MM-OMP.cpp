@@ -40,7 +40,8 @@ void POLYBENCH_3MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
 #if defined(USE_OMP_COLLAPSE)
         #pragma omp parallel for collapse(2)
@@ -121,7 +122,8 @@ void POLYBENCH_3MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
 #if defined(USE_OMP_COLLAPSE)
         #pragma omp parallel for collapse(2)
@@ -242,7 +244,8 @@ void POLYBENCH_3MM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, ni},

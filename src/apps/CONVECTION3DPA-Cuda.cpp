@@ -139,7 +139,8 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
   case Base_CUDA: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       dim3 nthreads_per_block(CPA_Q1D, CPA_Q1D, CPA_Q1D);
       constexpr size_t shmem = 0;
@@ -174,7 +175,8 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<CPA_Q1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),

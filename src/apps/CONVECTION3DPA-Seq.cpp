@@ -25,7 +25,8 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   case Base_Seq: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       for (Index_type e = 0; e < NE; ++e) {
 
@@ -142,7 +143,8 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       // Grid is empty as the host does not need a compute grid to be specified
       RAJA::launch<launch_policy>( res,

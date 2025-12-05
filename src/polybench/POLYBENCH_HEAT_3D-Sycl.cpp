@@ -42,7 +42,8 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       sycl::range<3> global_dim(i_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, i_wg_sz),
                                 j_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, j_wg_sz),
@@ -102,7 +103,8 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{1, N-1},

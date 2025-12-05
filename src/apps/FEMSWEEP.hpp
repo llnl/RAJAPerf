@@ -21,7 +21,7 @@
 ///   double A[ND * ND], b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
-///   double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
+///   double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
 ///   for (int hp = 0; hp < nhp; ++hp) // loop over hyperplanes
 ///   {
 ///      // number of element in this hyperplane
@@ -63,7 +63,7 @@
 ///                  // data can result in exponential growth instead. A specific trick of 
 ///                  // multiplying by zero, without the compiler optimizing it away, is 
 ///                  // necessary to prevent unbounded growth and avoid computing NaNs.
-///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
+///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
 ///               } // i
 ///               b[djs % ND] -= F;
 ///            } // j

@@ -38,7 +38,8 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
   case Base_SYCL: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       qu->submit([&](::sycl::handler& h) {
 
@@ -215,7 +216,8 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
     }
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),

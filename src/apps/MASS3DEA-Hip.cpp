@@ -70,7 +70,8 @@ void MASS3DEA::runHipVariantImpl(VariantID vid) {
   case Base_HIP: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       dim3 nthreads_per_block(MEA_D1D, MEA_D1D, MEA_D1D);
       constexpr size_t shmem = 0;
@@ -100,7 +101,8 @@ void MASS3DEA::runHipVariantImpl(VariantID vid) {
     using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MEA_D1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

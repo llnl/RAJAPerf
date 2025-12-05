@@ -34,7 +34,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Int_type vsum = m_vsum_init;
         Int_type vmin = m_vmin_init;
@@ -64,7 +65,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
                                  };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Int_type vsum = m_vsum_init;
         Int_type vmin = m_vmin_init;
@@ -96,7 +98,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
       if (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::ReduceSum<RAJA::omp_reduce, Int_type> vsum(m_vsum_init);
           RAJA::ReduceMin<RAJA::omp_reduce, Int_type> vmin(m_vmin_init);
@@ -117,7 +120,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
       } else if (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           Int_type tvsum = m_vsum_init;
           Int_type tvmin = m_vmin_init;

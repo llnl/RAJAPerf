@@ -29,7 +29,8 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type j = 0; j < ny; j++) {
           POLYBENCH_FDTD_2D_BODY1;
@@ -79,7 +80,8 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type j = 0; j < ny; j++) {
           poly_fdtd2d_base_lam1(j);
@@ -143,7 +145,8 @@ void POLYBENCH_FDTD_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<EXEC_POL1>(res,
            RAJA::RangeSegment(0, ny),
