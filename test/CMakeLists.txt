@@ -10,9 +10,12 @@ set(RAJA_PERFSUITE_TEST_EXECUTABLE_DEPENDS
     common
     apps
     basic
+    basic-kokkos
     lcals
+    lcals-kokkos
     polybench
     stream
+    stream-kokkos
     algorithm
     comm)
 list(APPEND RAJA_PERFSUITE_TEST_EXECUTABLE_DEPENDS ${RAJA_PERFSUITE_DEPENDS})
