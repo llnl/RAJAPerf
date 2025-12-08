@@ -33,7 +33,8 @@ void TRIDIAG_ELIM::runKokkosVariant(VariantID vid,
 
     Kokkos::fence();
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       Kokkos::parallel_for(
           "TRIDIAG_ELIM_Kokkos Kokkos_Lambda",

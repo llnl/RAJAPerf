@@ -29,7 +29,8 @@ void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUS
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type k = 0; k < N; ++k) {
           for (Index_type i = 0; i < N; ++i) {
@@ -55,7 +56,8 @@ void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUS
                                          };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type k = 0; k < N; ++k) {
           for (Index_type i = 0; i < N; ++i) {
@@ -94,7 +96,8 @@ void POLYBENCH_FLOYD_WARSHALL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUS
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{0, N},

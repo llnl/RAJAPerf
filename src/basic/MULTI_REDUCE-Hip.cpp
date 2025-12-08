@@ -110,7 +110,8 @@ void MULTI_REDUCE::runHipVariantAtomicRuntime(VariantID vid)
     RAJAPERF_HIP_REDUCER_SETUP(Data_ptr, values, hvalues, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(values_init, values, hvalues, num_bins, global_replication);
 
@@ -161,7 +162,8 @@ void MULTI_REDUCE::runHipVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       MULTI_REDUCE_INIT_VALUES_RAJA(multi_reduce_policy);
 

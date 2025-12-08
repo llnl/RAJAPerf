@@ -48,7 +48,8 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
     const size_t global_size234 = work_group_size * RAJA_DIVIDE_CEILING_INT(n, work_group_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim1, wkgroup_dim1),
@@ -142,7 +143,8 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
     using EXEC_POL3 = RAJA::sycl_exec<work_group_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::kernel_resource<EXEC_POL1>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},

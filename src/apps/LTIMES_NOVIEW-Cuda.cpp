@@ -84,7 +84,8 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       LTIMES_NOVIEW_THREADS_PER_BLOCK_CUDA;
       LTIMES_NOVIEW_NBLOCKS_CUDA;
@@ -103,7 +104,8 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid, size_t tune_idx)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       auto ltimes_noview_lambda = 
         [=] __device__ (Index_type z, Index_type g, Index_type m) {
@@ -147,7 +149,8 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid, size_t tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -185,7 +188,8 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid, size_t tune_idx)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),

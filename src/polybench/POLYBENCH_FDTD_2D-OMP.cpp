@@ -31,7 +31,8 @@ void POLYBENCH_FDTD_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type j = 0; j < ny; j++) {
@@ -84,7 +85,8 @@ void POLYBENCH_FDTD_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type j = 0; j < ny; j++) {
@@ -152,7 +154,8 @@ void POLYBENCH_FDTD_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<EXEC_POL1>( res,
           RAJA::RangeSegment(0, ny),

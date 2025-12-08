@@ -36,7 +36,8 @@ void MULADDSUB::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       // If SIMD really matters , consider using Kokkos SIMD
       Kokkos::parallel_for(

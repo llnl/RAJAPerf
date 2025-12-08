@@ -65,7 +65,8 @@ void EMPTY::runHipVariantImpl(VariantID vid)
         MappingHelper, func, block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t normal_grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       const size_t grid_size = std::min(normal_grid_size, max_grid_size);
@@ -93,7 +94,8 @@ void EMPTY::runHipVariantImpl(VariantID vid)
         MappingHelper, func, block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t normal_grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       const size_t grid_size = std::min(normal_grid_size, max_grid_size);
@@ -113,7 +115,8 @@ void EMPTY::runHipVariantImpl(VariantID vid)
         RAJA::hip_exec_occ_calc<block_size, true /*async*/>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall< exec_policy >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {

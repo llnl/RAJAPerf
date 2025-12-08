@@ -34,7 +34,8 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Real_type dot = m_dot_init;
 
@@ -58,7 +59,8 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
                           };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Real_type dot = m_dot_init;
 
@@ -81,7 +83,8 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
       if (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> dot(m_dot_init);
   
@@ -98,7 +101,8 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
       } else if (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           Real_type tdot = m_dot_init;
 
