@@ -166,22 +166,10 @@ public:
   void tearDown(VariantID vid, size_t tune_idx);
 
   void runSeqVariant(VariantID vid);
-  void defineSeqVariantTunings();
   void runOpenMPVariant(VariantID vid);
-  void defineOpenMPVariantTunings();
 
-  void runCudaVariant(VariantID vid)
-  {
-    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
-  }
-  void runHipVariant(VariantID vid)
-  {
-    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
-  }
-  void runOpenMPTargetVariant(VariantID vid)
-  {
-    getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
-  }
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
 
 private:
   Complex_ptr m_t0;
