@@ -20,7 +20,7 @@ namespace apps
 {
 
 
-void VOL3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void VOL3D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = m_domain->fpz;
@@ -94,6 +94,8 @@ void VOL3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(VOL3D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

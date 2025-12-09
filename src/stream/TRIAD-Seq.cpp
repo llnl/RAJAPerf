@@ -18,7 +18,7 @@ namespace stream
 {
 
 
-void TRIAD::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRIAD::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -92,6 +92,8 @@ void TRIAD::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRIAD, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace stream
 } // end namespace rajaperf

@@ -26,7 +26,7 @@ namespace polybench
   //
   const size_t threads_per_team = 256;
 
-void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -79,6 +79,8 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_1D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

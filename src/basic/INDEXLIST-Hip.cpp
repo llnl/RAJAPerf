@@ -79,6 +79,8 @@ __global__ void indexlist_custom(Real_ptr x,
 template < size_t block_size, size_t items_per_thread >
 void INDEXLIST::runHipVariantCustom(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -132,96 +134,54 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
 }
 
 
-void INDEXLIST::runHipVariant(VariantID vid, size_t tune_idx)
+void INDEXLIST::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
+  for (VariantID vid : {Base_HIP}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-        using hip_items_per_thread = hip_items_per_thread_type<block_size>;
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-        if (camp::size<hip_items_per_thread>::value == 0) {
+          using hip_items_per_thread = hip_items_per_thread_type<block_size>;
 
-          if (tune_idx == t) {
+          if (camp::size<hip_items_per_thread>::value == 0) {
 
-            runHipVariantCustom<decltype(block_size)::value,
-                               detail::hip::grid_scan_default_items_per_thread<
-                                  Real_type, block_size, RAJA_PERFSUITE_TUNING_HIP_ARCH>::value
-                               >(vid);
+            addVariantTuning<&INDEXLIST::runHipVariantCustom<
+                                 decltype(block_size)::value,
+                                 detail::hip::grid_scan_default_items_per_thread<
+                                     Real_type, block_size,
+                                     RAJA_PERFSUITE_TUNING_HIP_ARCH>::value>>(
+                vid, "block_"+std::to_string(block_size));
 
           }
 
-          t += 1;
+          seq_for(hip_items_per_thread{}, [&](auto items_per_thread) {
 
-        }
+            if (run_params.numValidItemsPerThread() == 0u ||
+                run_params.validItemsPerThread(block_size)) {
 
-        seq_for(hip_items_per_thread{}, [&](auto items_per_thread) {
-
-          if (run_params.numValidItemsPerThread() == 0u ||
-              run_params.validItemsPerThread(block_size)) {
-
-            if (tune_idx == t) {
-
-              runHipVariantCustom<block_size, items_per_thread>(vid);
+                addVariantTuning<&INDEXLIST::runHipVariantCustom<
+                                     block_size,
+                                     items_per_thread>>(
+                    vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
+                         "block_"+std::to_string(block_size));
 
             }
 
-            t += 1;
-
-          }
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  INDEXLIST : Unknown Hip variant id = " << vid << std::endl;
-
-  }
-}
-
-void INDEXLIST::setHipTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        using hip_items_per_thread = hip_items_per_thread_type<block_size>;
-
-        if (camp::size<hip_items_per_thread>::value == 0) {
-
-          addVariantTuningName(vid, "block_"+std::to_string(block_size));
+          });
 
         }
 
-        seq_for(hip_items_per_thread{}, [&](auto items_per_thread) {
+      });
 
-          if (run_params.numValidItemsPerThread() == 0u ||
-              run_params.validItemsPerThread(block_size)) {
-
-              addVariantTuningName(vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
-                                        "block_"+std::to_string(block_size));
-
-          }
-
-        });
-
-      }
-
-    });
+    }
 
   }
+
 }
 
 } // end namespace basic

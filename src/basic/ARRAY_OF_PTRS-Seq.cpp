@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void ARRAY_OF_PTRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ARRAY_OF_PTRS::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -92,6 +92,8 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

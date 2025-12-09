@@ -15,7 +15,7 @@
 namespace rajaperf {
 namespace apps {
 
-void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void CONVECTION3DPA::runSeqVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
 
   CONVECTION3DPA_DATA_SETUP;
@@ -315,6 +315,8 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
               << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(CONVECTION3DPA, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

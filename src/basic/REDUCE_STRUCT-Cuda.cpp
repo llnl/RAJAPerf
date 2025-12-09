@@ -101,6 +101,8 @@ __global__ void reduce_struct(Real_ptr x, Real_ptr y,
 template < size_t block_size, typename MappingHelper >
 void REDUCE_STRUCT::runCudaVariantBase(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -157,6 +159,8 @@ void REDUCE_STRUCT::runCudaVariantBase(VariantID vid)
 template < size_t block_size, typename AlgorithmHelper, typename MappingHelper >
 void REDUCE_STRUCT::runCudaVariantRAJA(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using reduction_policy = std::conditional_t<AlgorithmHelper::atomic,
       RAJA::cuda_reduce_atomic,
       RAJA::cuda_reduce>;
@@ -211,6 +215,8 @@ void REDUCE_STRUCT::runCudaVariantRAJA(VariantID vid)
 template < size_t block_size, typename MappingHelper >
 void REDUCE_STRUCT::runCudaVariantRAJANewReduce(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using exec_policy = std::conditional_t<MappingHelper::direct,
       RAJA::cuda_exec<block_size, true /*async*/>,
       RAJA::cuda_exec_occ_calc<block_size, true /*async*/>>;
@@ -272,77 +278,11 @@ void REDUCE_STRUCT::runCudaVariantRAJANewReduce(VariantID vid)
 
 }
 
-void REDUCE_STRUCT::runCudaVariant(VariantID vid, size_t tune_idx)
+
+void REDUCE_STRUCT::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
-
-          if ( vid == Base_CUDA ) {
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantBase<decltype(block_size){},
-                                 decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          } else if ( vid == RAJA_CUDA ) {
-
-            seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
-
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runCudaVariantRAJA<decltype(block_size){},
-                                   decltype(algorithm_helper),
-                                   decltype(mapping_helper)>(vid);
-
-              }
-
-              t += 1;
-
-            });
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantRAJANewReduce<decltype(block_size){},
-                                          decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          }
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  REDUCE_STRUCT : Unknown Cuda variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void REDUCE_STRUCT::setCudaTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -355,26 +295,36 @@ void REDUCE_STRUCT::setCudaTuningDefinitions(VariantID vid)
 
             auto algorithm_helper = gpu_algorithm::block_atomic_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      std::to_string(block_size));
+            addVariantTuning<&REDUCE_STRUCT::runCudaVariantBase<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
             RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
           } else if ( vid == RAJA_CUDA ) {
 
             seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
 
-              addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                        decltype(mapping_helper)::get_name()+"_"+
-                                        std::to_string(block_size));
+              addVariantTuning<&REDUCE_STRUCT::runCudaVariantRAJA<
+                                   decltype(block_size){},
+                                   decltype(algorithm_helper),
+                                   decltype(mapping_helper)>>(
+                  vid, decltype(algorithm_helper)::get_name()+"_"+
+                       decltype(mapping_helper)::get_name()+"_"+
+                       std::to_string(block_size));
 
             });
 
             auto algorithm_helper = gpu_algorithm::block_device_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      "new_"+std::to_string(block_size));
+            addVariantTuning<&REDUCE_STRUCT::runCudaVariantRAJANewReduce<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     "new_"+std::to_string(block_size));
             RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
           }

@@ -26,7 +26,7 @@ namespace polybench
   //
   const size_t threads_per_team = 256;
 
-void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -138,6 +138,8 @@ void POLYBENCH_ADI::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
      getCout() << "\n  POLYBENCH_ADI : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_ADI, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

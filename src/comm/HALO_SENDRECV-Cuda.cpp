@@ -22,7 +22,7 @@ namespace comm
 {
 
 
-void HALO_SENDRECV::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_SENDRECV::runCudaVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -57,6 +57,8 @@ void HALO_SENDRECV::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
      getCout() << "\n HALO_SENDRECV : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_SENDRECV, Cuda, Base_CUDA)
 
 } // end namespace comm
 } // end namespace rajaperf

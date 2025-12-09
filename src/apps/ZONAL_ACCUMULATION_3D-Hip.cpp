@@ -45,6 +45,8 @@ __global__ void zonal_accumulation_3d(Real_ptr vol,
 template < size_t block_size >
 void ZONAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = m_domain->n_real_zones;
@@ -95,7 +97,7 @@ void ZONAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(ZONAL_ACCUMULATION_3D, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(ZONAL_ACCUMULATION_3D, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

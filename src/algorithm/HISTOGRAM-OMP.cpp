@@ -10,6 +10,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+
 #include <iostream>
 
 namespace rajaperf
@@ -17,11 +19,8 @@ namespace rajaperf
 namespace algorithm
 {
 
-
-void HISTOGRAM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HISTOGRAM::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -115,10 +114,11 @@ void HISTOGRAM::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 
   HISTOGRAM_DATA_TEARDOWN;
 
-#else
-  RAJA_UNUSED_VAR(vid);
-#endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HISTOGRAM, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace algorithm
 } // end namespace rajaperf
+
+#endif  // RAJA_ENABLE_OPENMP

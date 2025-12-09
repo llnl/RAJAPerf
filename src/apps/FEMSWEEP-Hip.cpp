@@ -48,6 +48,8 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
 template < size_t block_size >
 void FEMSWEEP::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -131,7 +133,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
 
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

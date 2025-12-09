@@ -37,6 +37,8 @@ __global__ void array_of_ptrs(Real_ptr y, ARRAY_OF_PTRS_Array x_array,
 template < size_t block_size >
 void ARRAY_OF_PTRS::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -105,7 +107,7 @@ void ARRAY_OF_PTRS::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace basic
 } // end namespace rajaperf

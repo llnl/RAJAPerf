@@ -36,6 +36,8 @@ __global__ void first_diff(Real_ptr x, Real_ptr y,
 template < size_t block_size >
 void FIRST_DIFF::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -81,7 +83,7 @@ void FIRST_DIFF::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_DIFF, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_DIFF, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

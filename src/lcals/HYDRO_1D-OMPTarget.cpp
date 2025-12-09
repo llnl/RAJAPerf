@@ -26,7 +26,7 @@ namespace lcals
   //
   const size_t threads_per_team = 256;
 
-void HYDRO_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HYDRO_1D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -69,6 +69,8 @@ void HYDRO_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
      getCout() << "\n  HYDRO_1D : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HYDRO_1D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace lcals
 } // end namespace rajaperf

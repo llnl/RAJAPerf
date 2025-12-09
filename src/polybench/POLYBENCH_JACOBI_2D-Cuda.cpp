@@ -79,6 +79,8 @@ __global__ void poly_jacobi_2D_lam(Index_type N, Lambda body)
 template < size_t block_size >
 void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -192,7 +194,7 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace polybench
 } // end namespace rajaperf

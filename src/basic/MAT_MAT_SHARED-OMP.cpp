@@ -15,7 +15,7 @@
 namespace rajaperf {
 namespace basic {
 
-void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid) {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
   const Index_type run_reps = getRunReps();
@@ -262,6 +262,8 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

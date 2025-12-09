@@ -18,7 +18,7 @@ namespace algorithm
 {
 
 
-void SORT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORT::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -67,6 +67,8 @@ void SORT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORT, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace algorithm
 } // end namespace rajaperf

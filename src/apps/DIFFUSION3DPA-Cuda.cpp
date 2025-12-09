@@ -107,6 +107,8 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
 
 template < size_t block_size >
 void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -348,7 +350,7 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

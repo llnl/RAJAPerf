@@ -31,6 +31,8 @@ namespace basic
 template <size_t work_group_size >
 void NESTED_INIT::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -103,7 +105,7 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace basic
 } // end namespace rajaperf

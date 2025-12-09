@@ -74,6 +74,8 @@ __global__ void nested_init_lam(Index_type ni, Index_type nj, Index_type nk,
 template < size_t block_size >
 void NESTED_INIT::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -163,7 +165,7 @@ void NESTED_INIT::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace basic
 } // end namespace rajaperf

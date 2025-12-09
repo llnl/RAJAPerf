@@ -21,7 +21,7 @@ namespace rajaperf
 namespace lcals
 {
 
-void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HYDRO_2D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type kbeg = 1;
@@ -116,6 +116,8 @@ void HYDRO_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
      getCout() << "\n  HYDRO_2D : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace lcals
 } // end namespace rajaperf

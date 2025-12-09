@@ -27,7 +27,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void IF_QUAD::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void IF_QUAD::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -70,6 +70,8 @@ void IF_QUAD::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
      getCout() << "\n  IF_QUAD : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(IF_QUAD, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

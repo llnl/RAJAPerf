@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void INT_PREDICT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INT_PREDICT::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -92,6 +92,8 @@ void INT_PREDICT::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INT_PREDICT, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace lcals
 } // end namespace rajaperf

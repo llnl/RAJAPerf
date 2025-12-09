@@ -141,7 +141,7 @@ void INTSC_HEXRECT::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INTSC_HEXRECT, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INTSC_HEXRECT, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

@@ -14,7 +14,7 @@
 namespace rajaperf {
 namespace basic {
 
-void IF_QUAD::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void IF_QUAD::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -72,6 +72,8 @@ void IF_QUAD::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
   moveDataToHostFromKokkosView(x1, x1_view, iend);
   moveDataToHostFromKokkosView(x2, x2_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(IF_QUAD, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -145,38 +145,24 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
 
 }
 
-void MEMSET::runSeqVariant(VariantID vid, size_t tune_idx)
+
+void MEMSET::defineSeqVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_Seq || vid == RAJA_Seq) {
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_Seq || vid == RAJA_Seq) {
 
-      runSeqVariantLibrary(vid);
+      addVariantTuning<&MEMSET::runSeqVariantLibrary>(
+          vid, "library");
 
     }
 
-    t += 1;
+    addVariantTuning<&MEMSET::runSeqVariantDefault>(
+        vid, "default");
 
   }
 
-  if (tune_idx == t) {
-
-    runSeqVariantDefault(vid);
-
-  }
-
-  t += 1;
-}
-
-void MEMSET::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == RAJA_Seq) {
-    addVariantTuningName(vid, "library");
-  }
-
-  addVariantTuningName(vid, "default");
 }
 
 } // end namespace algorithm

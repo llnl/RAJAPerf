@@ -24,6 +24,8 @@ namespace apps
 template <size_t work_group_size >
 void PRESSURE::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -100,7 +102,7 @@ void PRESSURE::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(PRESSURE, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(PRESSURE, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace apps
 } // end namespace rajaperf

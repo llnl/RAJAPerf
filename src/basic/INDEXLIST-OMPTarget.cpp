@@ -28,7 +28,7 @@ namespace basic
 #endif
 
 
-void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST::runOpenMPTargetVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
  && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
@@ -80,6 +80,13 @@ void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
+ && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST, OpenMPTarget, Base_OpenMPTarget)
+#else
+void INDEXLIST::defineOpenMPTargetVariantTunings() {}
+#endif
 
 } // end namespace basic
 } // end namespace rajaperf

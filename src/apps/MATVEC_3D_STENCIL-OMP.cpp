@@ -20,7 +20,7 @@ namespace apps
 {
 
 
-void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -107,6 +107,8 @@ void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

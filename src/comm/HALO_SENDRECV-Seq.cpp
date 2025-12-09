@@ -20,7 +20,7 @@ namespace comm
 {
 
 
-void HALO_SENDRECV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_SENDRECV::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -63,6 +63,8 @@ void HALO_SENDRECV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_SENDRECV, Seq, Base_Seq)
 
 } // end namespace comm
 } // end namespace rajaperf

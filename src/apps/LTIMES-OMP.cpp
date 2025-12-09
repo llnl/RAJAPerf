@@ -10,6 +10,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+
 #include <iostream>
 
 namespace rajaperf
@@ -19,10 +21,9 @@ namespace apps
 
 using namespace ltimes_idx;
 
-void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void LTIMES::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-
   const Index_type run_reps = getRunReps();
 
   LTIMES_DATA_SETUP;
@@ -85,7 +86,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
                             LTIMES_BODY;
@@ -119,7 +120,7 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         using launch_policy = RAJA::LaunchPolicy<RAJA::omp_launch_t>;
 
@@ -174,22 +175,33 @@ void LTIMES::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-#endif
 }
 
-void LTIMES::setOpenMPTuningDefinitions(VariantID vid)
+void LTIMES::defineOpenMPVariantTunings()
 {
 
-  if (vid == RAJA_OpenMP) {
-    addVariantTuningName(vid, "kernel");
-    addVariantTuningName(vid, "launch");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
+
+    if (vid == RAJA_OpenMP) {
+
+      addVariantTuning<&LTIMES::runOpenMPVariant<0>>(
+          vid, "kernel");
+
+      addVariantTuning<&LTIMES::runOpenMPVariant<1>>(
+          vid, "launch");
+
+    } else {
+
+      addVariantTuning<&LTIMES::runOpenMPVariant<0>>(
+          vid, "default");
+
+    }
+
   }
 
 }
 
 } // end namespace apps
 } // end namespace rajaperf
+
+#endif

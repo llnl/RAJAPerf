@@ -17,8 +17,7 @@
 namespace rajaperf {
 namespace basic {
 
-void REDUCE3_INT::runKokkosVariant(VariantID vid,
-                                   size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void REDUCE3_INT::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -73,6 +72,8 @@ void REDUCE3_INT::runKokkosVariant(VariantID vid,
 
   moveDataToHostFromKokkosView(vec, vec_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(REDUCE3_INT, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

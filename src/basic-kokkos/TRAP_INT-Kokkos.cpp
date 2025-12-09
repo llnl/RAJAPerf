@@ -27,7 +27,7 @@ Real_type trap_int_func(Real_type x, Real_type y, Real_type xp, Real_type yp) {
   return denom;
 }
 
-void TRAP_INT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void TRAP_INT::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -64,6 +64,8 @@ void TRAP_INT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
   }
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRAP_INT, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

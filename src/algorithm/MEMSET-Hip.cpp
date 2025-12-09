@@ -77,6 +77,8 @@ void MEMSET::runHipVariantLibrary(VariantID vid)
 template < size_t block_size >
 void MEMSET::runHipVariantBlock(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -146,57 +148,32 @@ void MEMSET::runHipVariantBlock(VariantID vid)
 
 }
 
-void MEMSET::runHipVariant(VariantID vid, size_t tune_idx)
+
+void MEMSET::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_HIP || vid == RAJA_HIP) {
+  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_HIP || vid == RAJA_HIP) {
 
-      runHipVariantLibrary(vid);
+      addVariantTuning<&MEMSET::runHipVariantLibrary>(
+          vid, "library");
 
     }
 
-    t += 1;
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-  }
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      if (tune_idx == t) {
-        setBlockSize(block_size);
-        runHipVariantBlock<block_size>(vid);
+        addVariantTuning<&MEMSET::runHipVariantBlock<block_size>>(
+            vid, "block_"+std::to_string(block_size));
 
       }
 
-      t += 1;
+    });
 
-    }
-
-  });
-
-}
-
-void MEMSET::setHipTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_HIP || vid == RAJA_HIP) {
-    addVariantTuningName(vid, "library");
   }
-
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      addVariantTuningName(vid, "block_"+std::to_string(block_size));
-
-    }
-
-  });
 
 }
 

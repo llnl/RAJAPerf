@@ -73,9 +73,11 @@ __global__ void ltimes_lam(IM num_m, IG num_g, IZ num_z,
 }
 
 
-template < size_t block_size >
-void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
+template < size_t block_size, size_t tune_idx >
+void LTIMES::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -131,7 +133,7 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
 
   } else if ( vid == RAJA_HIP ) {
 
-    if (tune_idx == 0) {
+    if constexpr (tune_idx == 0) {
 
       using EXEC_POL =
         RAJA::KernelPolicy<
@@ -166,7 +168,7 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
       }
       stopTimer();
 
-    } else if (tune_idx == 1) {
+    } else if constexpr (tune_idx == 1) {
 
       constexpr bool async = true;
 
@@ -225,67 +227,32 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void LTIMES::runHipVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      if (vid == RAJA_HIP) {
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 0);
-
-        }
-
-        t += 1;
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 1);
-
-        }
-
-        t += 1;
-
-      } else {
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 0);
-
-        }
-
-        t += 1;
-      }
-
-    }
-
-  });
-}
-
-void LTIMES::setHipTuningDefinitions(VariantID vid)
+void LTIMES::defineHipVariantTunings()
 {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-      if (vid == RAJA_HIP) {
-        addVariantTuningName(vid, "kernel_"+std::to_string(block_size));
-        addVariantTuningName(vid, "launch_"+std::to_string(block_size));
-      } else {
-        addVariantTuningName(vid, "block_"+std::to_string(block_size));
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
+
+        if (vid == RAJA_HIP) {
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+              vid, "kernel_"+std::to_string(block_size));
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 1>>(
+              vid, "launch_"+std::to_string(block_size));
+        } else {
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+              vid, "block_"+std::to_string(block_size));
+        }
+
       }
 
-    }
+    });
 
-  });
+  }
 
 }
 

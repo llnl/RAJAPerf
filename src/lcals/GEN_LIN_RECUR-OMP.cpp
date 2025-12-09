@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -109,6 +109,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace lcals
 } // end namespace rajaperf

@@ -75,6 +75,8 @@ __global__ void poly_gemm_lam(Index_type ni, Index_type nj,
 template < size_t block_size >
 void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -187,7 +189,7 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMM, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMM, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace polybench
 } // end namespace rajaperf

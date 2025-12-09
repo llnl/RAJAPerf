@@ -27,7 +27,7 @@ namespace lcals
   const size_t threads_per_team = 256;
 
 
-void EOS::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void EOS::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -70,6 +70,8 @@ void EOS::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
      getCout() << "\n  EOS : Unknown OMP Tagretvariant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(EOS, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace lcals
 } // end namespace rajaperf

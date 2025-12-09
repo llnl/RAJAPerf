@@ -69,6 +69,8 @@ __global__ void poly_atax_lam(Index_type N,
 template < size_t block_size >
 void POLYBENCH_ATAX::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -217,7 +219,7 @@ void POLYBENCH_ATAX::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_ATAX, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_ATAX, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace polybench
 } // end namespace rajaperf

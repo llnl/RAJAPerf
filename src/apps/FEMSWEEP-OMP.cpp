@@ -18,7 +18,7 @@ namespace apps
 {
 
 
-void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -86,6 +86,8 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
 #endif
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

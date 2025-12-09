@@ -15,7 +15,7 @@
 namespace rajaperf {
 namespace basic {
 
-void NESTED_INIT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void NESTED_INIT::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
 
   NESTED_INIT_DATA_SETUP;
@@ -73,6 +73,8 @@ void NESTED_INIT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   }
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

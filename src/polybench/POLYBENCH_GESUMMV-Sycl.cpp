@@ -25,6 +25,8 @@ namespace polybench
 template < size_t work_group_size >
 void POLYBENCH_GESUMMV::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -110,7 +112,7 @@ void POLYBENCH_GESUMMV::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GESUMMV, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GESUMMV, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace polybench
 } // end namespace rajaperf

@@ -46,6 +46,8 @@ __global__ void empty_grid_stride(Index_type iend)
 template < size_t block_size, typename MappingHelper >
 void EMPTY::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -131,53 +133,32 @@ void EMPTY::runHipVariantImpl(VariantID vid)
   }
 }
 
-void EMPTY::runHipVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      seq_for(gpu_mapping::forall_helpers{}, [&](auto mapping_helper) {
-
-        if (tune_idx == t) {
-
-          setBlockSize(block_size);
-          runHipVariantImpl<decltype(block_size){},
-                             decltype(mapping_helper)>(vid);
-
-        }
-
-        t += 1;
-
-      });
-
-    }
-
-  });
-
-}
-
-void EMPTY::setHipTuningDefinitions(VariantID vid)
+void EMPTY::defineHipVariantTunings()
 {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-      seq_for(gpu_mapping::forall_helpers{}, [&](auto mapping_helper) {
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-          addVariantTuningName(vid, decltype(mapping_helper)::get_name()+"_"+
-                                    std::to_string(block_size));
+        seq_for(gpu_mapping::forall_helpers{}, [&](auto mapping_helper) {
 
-      });
+            addVariantTuning<&EMPTY::runHipVariantImpl<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
 
-    }
+        });
 
-  });
+      }
+
+    });
+
+  }
 
 }
 

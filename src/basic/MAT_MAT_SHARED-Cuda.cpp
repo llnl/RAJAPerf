@@ -50,6 +50,8 @@ __global__ void mat_mat_shared(Index_type N, Real_ptr C, Real_ptr A,
 template < size_t block_size >
 void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   constexpr Index_type tile_size = integer::sqrt(block_size);
   static_assert(tile_size*tile_size == block_size, "Invalid block_size");
 
@@ -281,7 +283,7 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -14,8 +14,7 @@
 namespace rajaperf {
 namespace stream {
 
-void DOT::runKokkosVariant(VariantID vid,
-                           size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DOT::runKokkosVariant(VariantID vid) {
 
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -62,6 +61,8 @@ void DOT::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(a, a_view, iend);
   moveDataToHostFromKokkosView(b, b_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DOT, Kokkos, Kokkos_Lambda)
 
 } // end namespace stream
 } // end namespace rajaperf

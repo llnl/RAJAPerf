@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void HYDRO_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HYDRO_2D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type kbeg = 1;
@@ -165,6 +165,8 @@ void HYDRO_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace lcals
 } // end namespace rajaperf

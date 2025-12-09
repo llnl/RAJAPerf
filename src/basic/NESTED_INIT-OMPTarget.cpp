@@ -22,7 +22,7 @@ namespace basic
 {
 
 
-void NESTED_INIT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void NESTED_INIT::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -79,6 +79,8 @@ void NESTED_INIT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
      getCout() << "\n  NESTED_INIT : Unknown variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

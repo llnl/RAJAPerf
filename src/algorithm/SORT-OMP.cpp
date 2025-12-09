@@ -18,7 +18,7 @@ namespace algorithm
 {
 
 
-void SORT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORT::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -56,6 +56,8 @@ void SORT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORT, OpenMP, RAJA_OpenMP)
 
 } // end namespace algorithm
 } // end namespace rajaperf

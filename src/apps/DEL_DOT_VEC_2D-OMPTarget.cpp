@@ -31,7 +31,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void DEL_DOT_VEC_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void DEL_DOT_VEC_2D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -81,6 +81,8 @@ void DEL_DOT_VEC_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSE
      getCout() << "\n  DEL_DOT_VEC_2D : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DEL_DOT_VEC_2D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

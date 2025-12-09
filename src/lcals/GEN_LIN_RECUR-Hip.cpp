@@ -51,6 +51,8 @@ __global__ void genlinrecur2(Real_ptr b5, Real_ptr stb5,
 template < size_t block_size >
 void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -112,7 +114,7 @@ void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

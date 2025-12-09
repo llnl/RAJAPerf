@@ -23,7 +23,7 @@ struct DaxpyFunctor {
   void operator()(Index_type i) const { DAXPY_BODY; }
 };
 
-void DAXPY::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DAXPY::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -64,6 +64,8 @@ void DAXPY::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   moveDataToHostFromKokkosView(x, x_view, iend);
   moveDataToHostFromKokkosView(y, y_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

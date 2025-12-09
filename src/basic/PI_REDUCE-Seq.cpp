@@ -17,8 +17,8 @@ namespace rajaperf
 namespace basic
 {
 
-
-void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void PI_REDUCE::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -80,7 +80,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -99,7 +99,7 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -137,12 +137,23 @@ void PI_REDUCE::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void PI_REDUCE::setSeqTuningDefinitions(VariantID vid)
+void PI_REDUCE::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&PI_REDUCE::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&PI_REDUCE::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace basic

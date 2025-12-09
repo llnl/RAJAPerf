@@ -21,7 +21,7 @@ namespace basic
 #undef USE_OMP_COLLAPSE
 
 
-void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void NESTED_INIT::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -137,6 +137,8 @@ void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

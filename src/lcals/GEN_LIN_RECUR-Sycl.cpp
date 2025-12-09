@@ -24,6 +24,8 @@ namespace lcals
 template <size_t work_group_size >
 void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -92,7 +94,7 @@ void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace lcals
 } // end namespace rajaperf

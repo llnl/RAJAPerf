@@ -57,6 +57,8 @@ __global__ void poly_mvt_2(Real_ptr A, Real_ptr x2, Real_ptr y2,
 template < size_t block_size >
 void POLYBENCH_MVT::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -160,7 +162,7 @@ void POLYBENCH_MVT::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_MVT, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_MVT, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace polybench
 } // end namespace rajaperf

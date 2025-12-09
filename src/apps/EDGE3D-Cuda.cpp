@@ -50,6 +50,8 @@ __global__ void edge3d(Real_ptr sum,
 template < size_t block_size >
 void EDGE3D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = m_domain->fpz;
   const Index_type iend = m_domain->lpz+1;
@@ -119,7 +121,7 @@ void EDGE3D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(EDGE3D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(EDGE3D, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

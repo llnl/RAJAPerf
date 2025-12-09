@@ -37,6 +37,8 @@ __global__ void hydro_1d(Real_ptr x, Real_ptr y, Real_ptr z,
 template < size_t block_size >
 void HYDRO_1D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -83,7 +85,7 @@ void HYDRO_1D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_1D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_1D, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace lcals
 } // end namespace rajaperf

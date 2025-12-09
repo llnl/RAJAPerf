@@ -15,8 +15,7 @@
 namespace rajaperf {
 namespace lcals {
 
-void PLANCKIAN::runKokkosVariant(VariantID vid,
-                                 size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void PLANCKIAN::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -64,6 +63,8 @@ void PLANCKIAN::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(v, v_view, iend);
   moveDataToHostFromKokkosView(w, w_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PLANCKIAN, Kokkos, Kokkos_Lambda)
 
 } // end namespace lcals
 } // end namespace rajaperf

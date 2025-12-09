@@ -334,56 +334,33 @@ void HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup(VariantID vid)
 
 }
 
-void HALO_EXCHANGE_FUSED::runSeqVariant(VariantID vid, size_t tune_idx)
+
+void HALO_EXCHANGE_FUSED::defineSeqVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_Seq || vid == Lambda_Seq) {
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_Seq || vid == Lambda_Seq) {
 
-      runSeqVariantDirect(vid);
+      addVariantTuning<&HALO_EXCHANGE_FUSED::runSeqVariantDirect>(
+          vid, "direct");
 
     }
 
-    t += 1;
+    if (vid == RAJA_Seq) {
+
+      seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+
+        addVariantTuning<&HALO_EXCHANGE_FUSED::runSeqVariantWorkGroup<
+                             decltype(dispatch_helper)>>(
+            vid, decltype(dispatch_helper)::get_name());
+
+      });
+
+    }
 
   }
 
-  if (vid == RAJA_Seq) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      if (tune_idx == t) {
-
-        runSeqVariantWorkGroup<decltype(dispatch_helper)>(vid);
-
-      }
-
-      t += 1;
-
-    });
-
-  }
-}
-
-void HALO_EXCHANGE_FUSED::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == Lambda_Seq) {
-
-    addVariantTuningName(vid, "direct");
-
-  }
-
-  if (vid == RAJA_Seq) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      addVariantTuningName(vid, decltype(dispatch_helper)::get_name());
-
-    });
-
-  }
 }
 
 } // end namespace comm

@@ -17,8 +17,8 @@ namespace rajaperf
 namespace lcals
 {
 
-
-void FIRST_MIN::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void FIRST_MIN::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -83,7 +83,7 @@ void FIRST_MIN::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -103,7 +103,7 @@ void FIRST_MIN::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
         // Awkward expression for loop counter quiets C++20 compiler warning
@@ -143,12 +143,23 @@ void FIRST_MIN::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void FIRST_MIN::setSeqTuningDefinitions(VariantID vid)
+void FIRST_MIN::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&FIRST_MIN::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&FIRST_MIN::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace lcals

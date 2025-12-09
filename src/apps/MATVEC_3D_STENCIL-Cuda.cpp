@@ -95,6 +95,8 @@ __global__ void matvec_3d(Real_ptr b,
 template < size_t block_size >
 void MATVEC_3D_STENCIL::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = m_domain->n_real_zones;
@@ -198,7 +200,7 @@ void MATVEC_3D_STENCIL::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

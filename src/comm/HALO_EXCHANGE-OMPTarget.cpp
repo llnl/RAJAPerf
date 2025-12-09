@@ -27,7 +27,7 @@ namespace comm
   const size_t threads_per_team = 256;
 
 
-void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -169,6 +169,8 @@ void HALO_EXCHANGE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
      getCout() << "\n HALO_EXCHANGE : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace comm
 } // end namespace rajaperf

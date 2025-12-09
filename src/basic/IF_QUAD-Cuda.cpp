@@ -38,6 +38,8 @@ __global__ void ifquad(Real_ptr x1, Real_ptr x2,
 template < size_t block_size >
 void IF_QUAD::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -103,7 +105,7 @@ void IF_QUAD::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(IF_QUAD, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(IF_QUAD, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

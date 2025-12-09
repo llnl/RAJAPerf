@@ -47,6 +47,8 @@ __global__ void poly_jacobi_1D_2(Real_ptr A, Real_ptr B, Index_type N)
 template < size_t block_size >
 void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -101,7 +103,7 @@ void POLYBENCH_JACOBI_1D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_1D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_1D, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace polybench
 } // end namespace rajaperf

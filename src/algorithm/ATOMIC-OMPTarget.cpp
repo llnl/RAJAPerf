@@ -74,47 +74,19 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
 
 }
 
-void ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  if ( vid == Base_OpenMPTarget || vid == RAJA_OpenMPTarget ) {
+void ATOMIC::defineOpenMPTargetVariantTunings()
+{
+
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
 
     seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
 
       if (run_params.numValidAtomicReplication() == 0u ||
           run_params.validAtomicReplication(replication)) {
 
-        if (tune_idx == t) {
-
-          runOpenMPTargetVariantReplicate<replication>(vid);
-
-        }
-
-        t += 1;
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  ATOMIC : Unknown OMP Target variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void ATOMIC::setOpenMPTargetTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_OpenMPTarget || vid == RAJA_OpenMPTarget ) {
-
-    seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-      if (run_params.numValidAtomicReplication() == 0u ||
-          run_params.validAtomicReplication(replication)) {
-
-        addVariantTuningName(vid, "replicate_"+std::to_string(replication));
+        addVariantTuning<&ATOMIC::runOpenMPTargetVariantReplicate<replication>>(
+            vid, "replicate_"+std::to_string(replication));
 
       }
 

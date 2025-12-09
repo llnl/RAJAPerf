@@ -20,7 +20,7 @@ namespace comm
 {
 
 
-void HALO_EXCHANGE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HALO_EXCHANGE::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -233,6 +233,8 @@ void HALO_EXCHANGE::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace comm
 } // end namespace rajaperf

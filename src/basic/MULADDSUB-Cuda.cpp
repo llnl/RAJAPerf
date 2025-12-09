@@ -38,6 +38,8 @@ __global__ void muladdsub(Real_ptr out1, Real_ptr out2, Real_ptr out3,
 template < size_t block_size >
 void MULADDSUB::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -106,7 +108,7 @@ void MULADDSUB::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MULADDSUB, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MULADDSUB, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

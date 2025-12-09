@@ -18,7 +18,7 @@
 namespace rajaperf {
 namespace apps {
 
-void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
 
   DIFFUSION3DPA_DATA_SETUP;
@@ -317,6 +317,8 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
               << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

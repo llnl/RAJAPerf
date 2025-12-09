@@ -24,6 +24,8 @@ namespace apps {
 
 template < size_t work_group_size >
 void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -434,7 +436,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace apps
 } // end namespace rajaperf

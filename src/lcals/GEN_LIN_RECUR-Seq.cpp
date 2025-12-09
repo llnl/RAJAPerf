@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void GEN_LIN_RECUR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void GEN_LIN_RECUR::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -104,6 +104,8 @@ void GEN_LIN_RECUR::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace lcals
 } // end namespace rajaperf

@@ -18,8 +18,8 @@
 namespace rajaperf {
 namespace apps {
 
-void MASS3DEA::runSeqVariant(VariantID vid,
-                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MASS3DEA::runSeqVariant(VariantID vid)
+{
   const Index_type run_reps = getRunReps();
 
   MASS3DEA_DATA_SETUP;
@@ -158,6 +158,8 @@ void MASS3DEA::runSeqVariant(VariantID vid,
     getCout() << "\n MASS3DEA : Unknown Seq variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MASS3DEA, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

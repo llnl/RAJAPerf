@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -101,6 +101,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

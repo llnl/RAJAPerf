@@ -19,7 +19,7 @@ namespace rajaperf {
 namespace apps {
 
 
-void MASS3DEA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MASS3DEA::runOpenMPVariant(VariantID vid) {
 
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -166,6 +166,8 @@ void MASS3DEA::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MASS3DEA, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf
