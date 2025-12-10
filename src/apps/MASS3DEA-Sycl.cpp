@@ -38,7 +38,6 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     const ::sycl::range<3> gridSize(MEA_Q1D,MEA_Q1D,MEA_Q1D*NE);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -109,7 +108,6 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     constexpr size_t shmem = (MEA_Q1D*MEA_D1D + MEA_Q1D*MEA_Q1D*MEA_Q1D)*sizeof(Real_type);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

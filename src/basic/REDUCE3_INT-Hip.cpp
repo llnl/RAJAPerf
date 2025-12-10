@@ -89,7 +89,6 @@ void REDUCE3_INT::runHipVariantBase(VariantID vid)
         MappingHelper, (reduce3int<block_size>), block_size, shmem);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -147,7 +146,6 @@ void REDUCE3_INT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -192,7 +190,6 @@ void REDUCE3_INT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

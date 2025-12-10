@@ -40,7 +40,6 @@ void MATVEC_3D_STENCIL::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -69,7 +68,6 @@ void MATVEC_3D_STENCIL::runSyclVariantImpl(VariantID vid)
                                              res, RAJA::Unowned);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

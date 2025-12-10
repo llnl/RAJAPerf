@@ -136,7 +136,6 @@ void POLYBENCH_GEMVER::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -173,7 +172,6 @@ void POLYBENCH_GEMVER::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -266,7 +264,6 @@ void POLYBENCH_GEMVER::runHipVariantImpl(VariantID vid)
     using EXEC_POL3 = RAJA::hip_exec<block_size, true /*async*/>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

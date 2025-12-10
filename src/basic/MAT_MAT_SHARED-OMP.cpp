@@ -31,7 +31,6 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid) {
   case Base_OpenMP: {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -85,7 +84,6 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid) {
   case Lambda_OpenMP: {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -177,7 +175,6 @@ void MAT_MAT_SHARED::runOpenMPVariant(VariantID vid) {
     using inner_y = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

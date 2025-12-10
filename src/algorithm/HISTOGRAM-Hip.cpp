@@ -133,7 +133,6 @@ void HISTOGRAM::runHipVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -216,7 +215,6 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
     RAJAPERF_HIP_REDUCER_SETUP(Data_ptr, counts, hcounts, num_bins, global_replication);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -268,7 +266,6 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

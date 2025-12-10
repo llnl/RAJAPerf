@@ -61,7 +61,6 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
     case Base_CUDA : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -107,7 +106,6 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
           RAJA::LoopPolicy<RAJA::cuda_global_size_x_direct<block_size>>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

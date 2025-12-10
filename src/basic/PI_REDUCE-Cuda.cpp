@@ -76,7 +76,6 @@ void PI_REDUCE::runCudaVariantBase(VariantID vid)
         MappingHelper, (pi_reduce<block_size>), block_size, shmem);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -129,7 +128,6 @@ void PI_REDUCE::runCudaVariantRAJA(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -171,7 +169,6 @@ void PI_REDUCE::runCudaVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

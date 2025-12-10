@@ -74,7 +74,6 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantDirect(VariantID vid)
     HALO_PACKING_FUSED_MANUAL_FUSER_SETUP_OMP_TARGET;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -224,7 +223,6 @@ void HALO_PACKING_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
     pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

@@ -35,7 +35,6 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid)
     case Base_OpenMP : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -67,7 +66,6 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid)
                                  };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -101,7 +99,6 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid)
       if constexpr (tune_idx == 0) {
 
         startTimer();
-        // Awkward expression for loop counter quiets C++20 compiler warning
         // Loop counter increment uses macro to quiet C++20 compiler warning
         for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -124,7 +121,6 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid)
       } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        // Awkward expression for loop counter quiets C++20 compiler warning
         // Loop counter increment uses macro to quiet C++20 compiler warning
         for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

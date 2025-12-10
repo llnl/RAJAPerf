@@ -32,7 +32,6 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -53,7 +52,6 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
                                };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -71,7 +69,6 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
 
         RAJA::forall<RAJA::seq_exec>( res,

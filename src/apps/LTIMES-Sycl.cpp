@@ -50,7 +50,6 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
     sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -94,7 +93,6 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
         >;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -132,7 +130,6 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz);
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

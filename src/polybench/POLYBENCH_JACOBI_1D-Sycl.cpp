@@ -36,7 +36,6 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -74,7 +73,6 @@ void POLYBENCH_JACOBI_1D::runSyclVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::sycl_exec<work_group_size, true /*async*/>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

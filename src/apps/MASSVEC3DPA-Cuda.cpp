@@ -269,7 +269,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
     if constexpr (tune_idx == 0) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -286,7 +285,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 1) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -302,7 +300,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 2) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -318,7 +315,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 3) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -353,7 +349,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -515,7 +510,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<MVPA_Q1D>>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -678,7 +672,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_direct>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

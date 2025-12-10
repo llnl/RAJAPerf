@@ -44,7 +44,6 @@ void TRAP_INT::runSyclVariantImpl(VariantID vid)
     allocAndInitSyclDeviceData(sumx, &m_sumx_init, 1, qu);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -81,7 +80,6 @@ void TRAP_INT::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

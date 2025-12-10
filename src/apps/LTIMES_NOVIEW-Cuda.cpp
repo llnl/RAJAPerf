@@ -86,7 +86,6 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -107,7 +106,6 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -153,7 +151,6 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
         >;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -193,7 +190,6 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz);
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

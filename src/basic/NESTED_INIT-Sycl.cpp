@@ -48,7 +48,6 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
     sycl::range<3> wkgroup_dim(k_wg_sz, j_wg_sz, i_wg_sz);
   
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -86,7 +85,6 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 

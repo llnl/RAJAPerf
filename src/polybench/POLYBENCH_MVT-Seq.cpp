@@ -30,7 +30,6 @@ void POLYBENCH_MVT::runSeqVariant(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -78,7 +77,6 @@ void POLYBENCH_MVT::runSeqVariant(VariantID vid)
                                 };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
@@ -141,7 +139,6 @@ void POLYBENCH_MVT::runSeqVariant(VariantID vid)
         >;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
