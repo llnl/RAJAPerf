@@ -7,7 +7,6 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 #include "FEMSWEEP.hpp"
-#include "FEMSWEEP_DATA.hpp"
 
 #include "RAJA/RAJA.hpp"
 
