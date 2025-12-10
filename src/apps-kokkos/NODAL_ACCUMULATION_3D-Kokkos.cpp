@@ -66,7 +66,7 @@ void NODAL_ACCUMULATION_3D::runKokkosVariant(VariantID vid)
     moveDataToHostFromKokkosView(x, x_v, m_nodal_array_length);
 
   } else {
-     getCout() << "\n  NODAL_ACCUMULATION_3D : Unknown Cuda variant id = " << vid << std::endl;
+     getCout() << "\n  NODAL_ACCUMULATION_3D : Unknown Kokkos variant id = " << vid << std::endl;
   }
 }
 
