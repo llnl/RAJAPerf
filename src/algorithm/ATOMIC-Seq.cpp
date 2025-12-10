@@ -32,7 +32,8 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ, i, ATOMIC_VALUE);
@@ -52,7 +53,8 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           atomic_base_lam(i);
@@ -69,7 +71,8 @@ void ATOMIC::runSeqVariantReplicate(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
