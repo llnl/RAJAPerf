@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void INDEXLIST::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -31,7 +31,8 @@ void INDEXLIST::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Index_type count = 0;
 
@@ -55,7 +56,8 @@ void INDEXLIST::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Index_type count = 0;
 
@@ -79,6 +81,8 @@ void INDEXLIST::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST, Seq, Base_Seq, Lambda_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -107,7 +107,8 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       // Run
       CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
@@ -128,7 +129,8 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
   } else if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::exclusive_scan< RAJA::cuda_exec<0, true /*async*/> >(res, RAJA_SCAN_ARGS);
 
@@ -143,6 +145,8 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
 template < size_t block_size, size_t items_per_thread >
 void SCAN::runCudaVariantCustom(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -164,7 +168,8 @@ void SCAN::runCudaVariantCustom(VariantID vid)
     allocData(DataSpace::CudaDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
           block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
@@ -188,20 +193,13 @@ void SCAN::runCudaVariantCustom(VariantID vid)
 }
 
 
-void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
+void SCAN::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
-
-    if (tune_idx == t) {
-
-      runCudaVariantLibrary(vid);
-
-    }
-
-    t += 1;
+    addVariantTuning<&SCAN::runCudaVariantLibrary>(
+        vid, "cub");
 
     if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
 
@@ -214,16 +212,12 @@ void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
 
           if (camp::size<cuda_items_per_thread>::value == 0) {
 
-            if (tune_idx == t) {
-
-              runCudaVariantCustom<decltype(block_size)::value,
+            addVariantTuning<&SCAN::runCudaVariantCustom<
+                                 decltype(block_size)::value,
                                  detail::cuda::grid_scan_default_items_per_thread<
-                                    Real_type, block_size, RAJA_PERFSUITE_TUNING_CUDA_ARCH>::value
-                                 >(vid);
-
-            }
-
-            t += 1;
+                                     Real_type, block_size,
+                                     RAJA_PERFSUITE_TUNING_CUDA_ARCH>::value>>(
+                vid, "block_"+std::to_string(block_size));
 
           }
 
@@ -232,59 +226,11 @@ void SCAN::runCudaVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidItemsPerThread() == 0u ||
                 run_params.validItemsPerThread(block_size)) {
 
-              if (tune_idx == t) {
-
-                runCudaVariantCustom<decltype(block_size)::value, items_per_thread>(vid);
-
-              }
-
-              t += 1;
-
-            }
-
-          });
-
-        }
-
-      });
-
-    }
-
-  } else {
-
-    getCout() << "\n  SCAN : Unknown Cuda variant id = " << vid << std::endl;
-
-  }
-}
-
-void SCAN::setCudaTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
-
-    addVariantTuningName(vid, "cub");
-
-    if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
-
-      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-        if (run_params.numValidGPUBlockSize() == 0u ||
-            run_params.validGPUBlockSize(block_size)) {
-
-          using cuda_items_per_thread = cuda_items_per_thread_type<block_size>;
-
-          if (camp::size<cuda_items_per_thread>::value == 0) {
-
-            addVariantTuningName(vid, "block_"+std::to_string(block_size));
-
-          }
-
-          seq_for(cuda_items_per_thread{}, [&](auto items_per_thread) {
-
-            if (run_params.numValidItemsPerThread() == 0u ||
-                run_params.validItemsPerThread(block_size)) {
-
-              addVariantTuningName(vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
-                                        "block_"+std::to_string(block_size));
+              addVariantTuning<&SCAN::runCudaVariantCustom<
+                                   decltype(block_size)::value,
+                                   items_per_thread>>(
+                  vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
+                       "block_"+std::to_string(block_size));
 
             }
 
@@ -297,6 +243,7 @@ void SCAN::setCudaTuningDefinitions(VariantID vid)
     }
 
   }
+
 }
 
 } // end namespace algorithm

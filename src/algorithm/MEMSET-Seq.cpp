@@ -32,7 +32,8 @@ void MEMSET::runSeqVariantLibrary(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         std::memset(MEMSET_STD_ARGS);
 
@@ -48,7 +49,8 @@ void MEMSET::runSeqVariantLibrary(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         res.memset(MEMSET_STD_ARGS);
 
@@ -80,7 +82,8 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           MEMSET_BODY;
@@ -100,7 +103,8 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
                            };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           memset_lambda(i);
@@ -117,7 +121,8 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
@@ -140,38 +145,24 @@ void MEMSET::runSeqVariantDefault(VariantID vid)
 
 }
 
-void MEMSET::runSeqVariant(VariantID vid, size_t tune_idx)
+
+void MEMSET::defineSeqVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_Seq || vid == RAJA_Seq) {
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_Seq || vid == RAJA_Seq) {
 
-      runSeqVariantLibrary(vid);
+      addVariantTuning<&MEMSET::runSeqVariantLibrary>(
+          vid, "library");
 
     }
 
-    t += 1;
+    addVariantTuning<&MEMSET::runSeqVariantDefault>(
+        vid, "default");
 
   }
 
-  if (tune_idx == t) {
-
-    runSeqVariantDefault(vid);
-
-  }
-
-  t += 1;
-}
-
-void MEMSET::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == RAJA_Seq) {
-    addVariantTuningName(vid, "library");
-  }
-
-  addVariantTuningName(vid, "default");
 }
 
 } // end namespace algorithm

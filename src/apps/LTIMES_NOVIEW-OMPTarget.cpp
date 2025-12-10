@@ -22,7 +22,7 @@ namespace apps
 {
 
 
-void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -31,7 +31,8 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(phidat, elldat, psidat) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
@@ -63,7 +64,8 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -83,13 +85,23 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   }
 }
 
-void LTIMES_NOVIEW::setOpenMPTargetTuningDefinitions(VariantID vid)
+void LTIMES_NOVIEW::defineOpenMPTargetVariantTunings()
 {
 
-  if (vid == RAJA_OpenMPTarget) {
-    addVariantTuningName(vid, "kernel");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
+
+    if (vid == RAJA_OpenMPTarget) {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
+          vid, "kernel");
+
+    } else {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
+          vid, "default");
+
+    }
+
   }
 
 }

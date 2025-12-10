@@ -14,7 +14,7 @@
 namespace rajaperf {
 namespace basic {
 
-void INIT_VIEW1D::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void INIT_VIEW1D::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -29,7 +29,8 @@ void INIT_VIEW1D::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
     Kokkos::fence();
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       Kokkos::parallel_for(
           "INIT_VIEW1D_Kokkos Kokkos_Lambda",
@@ -52,6 +53,8 @@ void INIT_VIEW1D::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 
   moveDataToHostFromKokkosView(a, a_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

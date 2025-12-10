@@ -27,7 +27,7 @@ namespace algorithm
   const size_t threads_per_team = 256;
 
 
-void HISTOGRAM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HISTOGRAM::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -40,7 +40,8 @@ void HISTOGRAM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     HISTOGRAM_SETUP_COUNTS;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       initOpenMPDeviceData(counts, counts_init, num_bins);
 
@@ -64,6 +65,8 @@ void HISTOGRAM::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   HISTOGRAM_DATA_TEARDOWN;
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HISTOGRAM, OpenMPTarget, Base_OpenMPTarget)
 
 } // end namespace algorithm
 } // end namespace rajaperf

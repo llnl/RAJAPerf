@@ -31,7 +31,8 @@ void HALO_PACKING_FUSED::runSeqVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Index_type pack_index = 0;
 
@@ -105,7 +106,8 @@ void HALO_PACKING_FUSED::runSeqVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_LAMBDA_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Index_type pack_index = 0;
 
@@ -231,7 +233,8 @@ void HALO_PACKING_FUSED::runSeqVariantWorkGroup(VariantID vid)
       pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];
@@ -284,56 +287,33 @@ void HALO_PACKING_FUSED::runSeqVariantWorkGroup(VariantID vid)
 
 }
 
-void HALO_PACKING_FUSED::runSeqVariant(VariantID vid, size_t tune_idx)
+
+void HALO_PACKING_FUSED::defineSeqVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_Seq || vid == Lambda_Seq) {
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_Seq || vid == Lambda_Seq) {
 
-      runSeqVariantDirect(vid);
+      addVariantTuning<&HALO_PACKING_FUSED::runSeqVariantDirect>(
+          vid, "direct");
 
     }
 
-    t += 1;
+    if (vid == RAJA_Seq) {
+
+      seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+
+        addVariantTuning<&HALO_PACKING_FUSED::runSeqVariantWorkGroup<
+                             decltype(dispatch_helper)>>(
+            vid, decltype(dispatch_helper)::get_name());
+
+      });
+
+    }
 
   }
 
-  if (vid == RAJA_Seq) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      if (tune_idx == t) {
-
-        runSeqVariantWorkGroup<decltype(dispatch_helper)>(vid);
-
-      }
-
-      t += 1;
-
-    });
-
-  }
-}
-
-void HALO_PACKING_FUSED::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == Lambda_Seq) {
-
-    addVariantTuningName(vid, "direct");
-
-  }
-
-  if (vid == RAJA_Seq) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      addVariantTuningName(vid, decltype(dispatch_helper)::get_name());
-
-    });
-
-  }
 }
 
 } // end namespace comm

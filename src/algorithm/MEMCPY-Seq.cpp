@@ -31,7 +31,8 @@ void MEMCPY::runSeqVariantLibrary(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         std::memcpy(MEMCPY_STD_ARGS);
 
@@ -47,7 +48,8 @@ void MEMCPY::runSeqVariantLibrary(VariantID vid)
       auto res{getHostResource()}; 
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         res.memcpy(MEMCPY_STD_ARGS);
 
@@ -79,7 +81,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           MEMCPY_BODY;
@@ -99,7 +102,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
                            };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           memcpy_lambda(i);
@@ -116,7 +120,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
       auto res{getHostResource()}; 
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
@@ -139,38 +144,19 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
 
 }
 
-void MEMCPY::runSeqVariant(VariantID vid, size_t tune_idx)
+void MEMCPY::defineSeqVariantTunings()
 {
-  size_t t = 0;
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-  if (vid == Base_Seq || vid == RAJA_Seq) {
+    if (vid == Base_Seq || vid == RAJA_Seq) {
 
-    if (tune_idx == t) {
-
-      runSeqVariantLibrary(vid);
+      addVariantTuning<&MEMCPY::runSeqVariantLibrary>(vid, "library");
 
     }
 
-    t += 1;
+    addVariantTuning<&MEMCPY::runSeqVariantDefault>(vid, "default");
 
   }
-
-  if (tune_idx == t) {
-
-    runSeqVariantDefault(vid);
-
-  }
-
-  t += 1;
-}
-
-void MEMCPY::setSeqTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_Seq || vid == RAJA_Seq) {
-    addVariantTuningName(vid, "library");
-  }
-
-  addVariantTuningName(vid, "default");
 }
 
 } // end namespace algorithm

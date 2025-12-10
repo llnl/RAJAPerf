@@ -133,7 +133,8 @@ void HISTOGRAM::runHipVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       // Run
 #if defined(__HIPCC__)
@@ -182,6 +183,8 @@ template < Index_type block_size,
            typename MappingHelper >
 void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -212,7 +215,8 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
     RAJAPERF_HIP_REDUCER_SETUP(Data_ptr, counts, hcounts, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(counts_init, counts, hcounts, num_bins, global_replication);
 
@@ -262,7 +266,8 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       HISTOGRAM_INIT_COUNTS_RAJA(multi_reduce_policy);
 
@@ -284,24 +289,18 @@ void HISTOGRAM::runHipVariantAtomicRuntime(VariantID vid)
 }
 
 
-void HISTOGRAM::runHipVariant(VariantID vid, size_t tune_idx)
+void HISTOGRAM::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_HIP ) {
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_HIP) {
 
-      runHipVariantLibrary(vid);
+      addVariantTuning<&HISTOGRAM::runHipVariantLibrary>(
+          vid, "rocprim");
 
     }
 
-    t += 1;
-
-  }
-
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
-
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
       if (run_params.numValidGPUBlockSize() == 0u ||
@@ -312,17 +311,14 @@ void HISTOGRAM::runHipVariant(VariantID vid, size_t tune_idx)
           if (camp::size<hip_atomic_global_replications_type>::value == 0 &&
               camp::size<hip_atomic_shared_replications_type>::value == 0 ) {
 
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runHipVariantAtomicRuntime<decltype(block_size)::value,
-                                          default_hip_atomic_global_replication,
-                                          default_hip_atomic_shared_replication,
-                                          decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
+            addVariantTuning<&HISTOGRAM::runHipVariantAtomicRuntime<
+                                 decltype(block_size)::value,
+                                 default_hip_atomic_global_replication,
+                                 default_hip_atomic_shared_replication,
+                                 decltype(mapping_helper)>>(
+                vid, "atomic_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
 
           }
 
@@ -333,76 +329,16 @@ void HISTOGRAM::runHipVariant(VariantID vid, size_t tune_idx)
 
               seq_for(hip_atomic_shared_replications_type{}, [&](auto shared_replication) {
 
-                if (tune_idx == t) {
-
-                  setBlockSize(block_size);
-                  runHipVariantAtomicRuntime<decltype(block_size)::value,
-                                             decltype(global_replication)::value,
-                                             decltype(shared_replication)::value,
-                                             decltype(mapping_helper)>(vid);
-
-                }
-
-                t += 1;
-
-              });
-
-            }
-
-          });
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  HISTOGRAM : Unknown Hip variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void HISTOGRAM::setHipTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_HIP ) {
-
-    addVariantTuningName(vid, "rocprim");
-
-  }
-
-  if ( vid == Base_HIP || vid == Lambda_HIP || vid == RAJA_HIP ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
-
-          if (camp::size<hip_atomic_global_replications_type>::value == 0 &&
-              camp::size<hip_atomic_shared_replications_type>::value == 0 ) {
-
-            addVariantTuningName(vid, "atomic_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      std::to_string(block_size));
-
-          }
-
-          seq_for(hip_atomic_global_replications_type{}, [&](auto global_replication) {
-
-            if (run_params.numValidAtomicReplication() == 0u ||
-                run_params.validAtomicReplication(global_replication)) {
-
-              seq_for(hip_atomic_shared_replications_type{}, [&](auto shared_replication) {
-
-                addVariantTuningName(vid, "atomic_"
-                                          "shared("+std::to_string(shared_replication)+")_"+
-                                          "global("+std::to_string(global_replication)+")_"+
-                                          decltype(mapping_helper)::get_name()+"_"+
-                                          std::to_string(block_size));
+                addVariantTuning<&HISTOGRAM::runHipVariantAtomicRuntime<
+                                     decltype(block_size)::value,
+                                     decltype(global_replication)::value,
+                                     decltype(shared_replication)::value,
+                                     decltype(mapping_helper)>>(
+                    vid, "atomic_"
+                         "shared("+std::to_string(shared_replication)+")_"+
+                         "global("+std::to_string(global_replication)+")_"+
+                         decltype(mapping_helper)::get_name()+"_"+
+                         std::to_string(block_size));
 
               });
 

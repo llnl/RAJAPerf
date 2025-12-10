@@ -22,7 +22,7 @@ namespace apps
 {
 
 
-void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -35,7 +35,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           DEL_DOT_VEC_2D_BODY_INDEX;
@@ -57,7 +58,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                                   };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           deldotvec2d_base_lam(ii);
@@ -81,7 +83,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                              };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::forall<RAJA::seq_exec>(res, zones, deldotvec2d_lam);
 
@@ -99,6 +102,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DEL_DOT_VEC_2D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

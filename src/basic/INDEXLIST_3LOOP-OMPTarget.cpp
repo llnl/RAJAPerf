@@ -28,7 +28,7 @@ namespace basic
 #endif
 
 
-void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
  && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
@@ -46,7 +46,8 @@ void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUS
       INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::OmpTarget);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
 
@@ -93,6 +94,13 @@ void INDEXLIST_3LOOP::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUS
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
+ && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, OpenMPTarget, Base_OpenMPTarget)
+#else
+void INDEXLIST_3LOOP::defineOpenMPTargetVariantTunings() {}
+#endif
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -15,8 +15,7 @@
 namespace rajaperf {
 namespace lcals {
 
-void DIFF_PREDICT::runKokkosVariant(VariantID vid,
-                                    size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DIFF_PREDICT::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -41,7 +40,8 @@ void DIFF_PREDICT::runKokkosVariant(VariantID vid,
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       Kokkos::parallel_for(
           "DIFF_PREDICT_Kokkos Kokkos_Lambda",
@@ -84,6 +84,8 @@ void DIFF_PREDICT::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(px, px_flat_view, iend * 14);
   moveDataToHostFromKokkosView(cx, cx_flat_view, iend * 14);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DIFF_PREDICT, Kokkos, Kokkos_Lambda)
 
 } // end namespace lcals
 } // end namespace rajaperf

@@ -18,7 +18,7 @@ namespace algorithm
 {
 
 
-void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void HISTOGRAM::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -33,7 +33,8 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       HISTOGRAM_SETUP_COUNTS;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         HISTOGRAM_INIT_COUNTS;
 
@@ -61,7 +62,8 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         HISTOGRAM_INIT_COUNTS;
 
@@ -84,7 +86,8 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         HISTOGRAM_INIT_COUNTS_RAJA(RAJA::seq_multi_reduce);
 
@@ -112,6 +115,8 @@ void HISTOGRAM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   HISTOGRAM_DATA_TEARDOWN;
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(HISTOGRAM, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace algorithm
 } // end namespace rajaperf

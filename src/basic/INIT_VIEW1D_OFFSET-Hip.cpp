@@ -39,6 +39,8 @@ __global__ void initview1d_offset(Real_ptr a,
 template < size_t block_size >
 void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = getActualProblemSize()+1;
@@ -50,7 +52,8 @@ void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend-ibegin, block_size);
       constexpr size_t shmem = 0;
@@ -67,7 +70,8 @@ void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       auto initview1d_offset_lambda = [=] __device__ (Index_type i) {
         INIT_VIEW1D_OFFSET_BODY;
@@ -90,7 +94,8 @@ void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
     INIT_VIEW1D_OFFSET_VIEW_RAJA;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
@@ -105,7 +110,7 @@ void INIT_VIEW1D_OFFSET::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace basic
 } // end namespace rajaperf

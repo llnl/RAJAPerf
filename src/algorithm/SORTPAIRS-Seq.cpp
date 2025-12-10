@@ -21,7 +21,7 @@ namespace algorithm
 {
 
 
-void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORTPAIRS::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -34,7 +34,8 @@ void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         using pair_type = std::pair<Real_type, Real_type>;
 
@@ -67,7 +68,8 @@ void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::sort_pairs<RAJA::seq_exec>(res, RAJA_SORTPAIRS_ARGS);
 
@@ -85,6 +87,8 @@ void SORTPAIRS::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORTPAIRS, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace algorithm
 } // end namespace rajaperf

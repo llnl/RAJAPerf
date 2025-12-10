@@ -27,7 +27,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PRESSURE::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -38,7 +38,8 @@ void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(compression, bvc) device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
@@ -60,7 +61,8 @@ void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::region<RAJA::seq_region>( [=]() {
 
@@ -83,6 +85,8 @@ void PRESSURE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     getCout() << "\n  PRESSURE : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PRESSURE, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

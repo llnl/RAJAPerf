@@ -81,6 +81,8 @@ __global__ void atomic_replicate_block(Real_ptr atomic,
 template < size_t block_size, size_t replication >
 void ATOMIC::runCudaVariantReplicateGlobal(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -92,7 +94,8 @@ void ATOMIC::runCudaVariantReplicateGlobal(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -109,7 +112,8 @@ void ATOMIC::runCudaVariantReplicateGlobal(VariantID vid)
   } else  if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall<RAJA::cuda_exec<block_size, true /*async*/>>( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
@@ -129,6 +133,8 @@ void ATOMIC::runCudaVariantReplicateGlobal(VariantID vid)
 template < size_t block_size, size_t replication >
 void ATOMIC::runCudaVariantReplicateWarp(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -139,7 +145,8 @@ void ATOMIC::runCudaVariantReplicateWarp(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -163,6 +170,8 @@ void ATOMIC::runCudaVariantReplicateWarp(VariantID vid)
 template < size_t block_size, size_t replication >
 void ATOMIC::runCudaVariantReplicateBlock(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -173,7 +182,8 @@ void ATOMIC::runCudaVariantReplicateBlock(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -194,11 +204,11 @@ void ATOMIC::runCudaVariantReplicateBlock(VariantID vid)
   ATOMIC_DATA_TEARDOWN(replication);
 }
 
-void ATOMIC::runCudaVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
+void ATOMIC::defineCudaVariantTunings()
+{
+
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -210,14 +220,9 @@ void ATOMIC::runCudaVariant(VariantID vid, size_t tune_idx)
           if (run_params.numValidAtomicReplication() == 0u ||
               run_params.validAtomicReplication(replication)) {
 
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantReplicateGlobal<decltype(block_size)::value, replication>(vid);
-
-            }
-
-            t += 1;
+            addVariantTuning<&ATOMIC::runCudaVariantReplicateGlobal<decltype(block_size)::value, replication>>(
+                vid, "replicate_"+std::to_string(replication)+
+                     "_global_"+std::to_string(block_size));
 
           }
 
@@ -230,14 +235,9 @@ void ATOMIC::runCudaVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidAtomicReplication() == 0u ||
                 run_params.validAtomicReplication(replication)) {
 
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runCudaVariantReplicateWarp<decltype(block_size)::value, replication>(vid);
-
-              }
-
-              t += 1;
+              addVariantTuning<&ATOMIC::runCudaVariantReplicateWarp<decltype(block_size)::value, replication>>(
+                  vid, "replicate_"+std::to_string(replication)+
+                       "_warp_"+std::to_string(block_size));
 
             }
 
@@ -248,75 +248,9 @@ void ATOMIC::runCudaVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidAtomicReplication() == 0u ||
                 run_params.validAtomicReplication(replication)) {
 
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runCudaVariantReplicateBlock<decltype(block_size)::value, replication>(vid);
-
-              }
-
-              t += 1;
-
-            }
-
-          });
-
-        }
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  ATOMIC : Unknown Cuda variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void ATOMIC::setCudaTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-          if (run_params.numValidAtomicReplication() == 0u ||
-              run_params.validAtomicReplication(replication)) {
-
-            addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                      "_global_"+std::to_string(block_size));
-
-          }
-
-        });
-
-        if ( vid == Base_CUDA ) {
-
-          seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-            if (run_params.numValidAtomicReplication() == 0u ||
-                run_params.validAtomicReplication(replication)) {
-
-              addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                        "_warp_"+std::to_string(block_size));
-
-            }
-
-          });
-
-          seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-            if (run_params.numValidAtomicReplication() == 0u ||
-                run_params.validAtomicReplication(replication)) {
-
-              addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                        "_block_"+std::to_string(block_size));
+              addVariantTuning<&ATOMIC::runCudaVariantReplicateBlock<decltype(block_size)::value, replication>>(
+                  vid, "replicate_"+std::to_string(replication)+
+                       "_block_"+std::to_string(block_size));
 
             }
 

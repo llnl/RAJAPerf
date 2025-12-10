@@ -10,6 +10,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+
 #include <iostream>
 
 namespace rajaperf
@@ -17,11 +19,9 @@ namespace rajaperf
 namespace apps
 {
 
-
-void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-
   const Index_type run_reps = getRunReps();
 
   LTIMES_NOVIEW_DATA_SETUP;
@@ -31,7 +31,8 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type z = 0; z < num_z; ++z ) {
@@ -58,7 +59,8 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
                               };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type z = 0; z < num_z; ++z ) {
@@ -81,7 +83,7 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         auto ltimesnoview_lam = [=](Index_type d, Index_type z,
                                     Index_type g, Index_type m) {
@@ -102,7 +104,8 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
           >;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
                                                             RAJA::RangeSegment(0, num_z),
@@ -115,7 +118,7 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         using launch_policy = RAJA::LaunchPolicy<RAJA::omp_launch_t>;
 
@@ -128,7 +131,8 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
         using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::launch<launch_policy>( res,
               RAJA::LaunchParams(),
@@ -169,22 +173,34 @@ void LTIMES_NOVIEW::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-#endif
 }
 
-void LTIMES_NOVIEW::setOpenMPTuningDefinitions(VariantID vid)
+
+void LTIMES_NOVIEW::defineOpenMPVariantTunings()
 {
 
-  if (vid == RAJA_OpenMP) {
-    addVariantTuningName(vid, "kernel");
-    addVariantTuningName(vid, "launch");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
+
+    if (vid == RAJA_OpenMP) {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPVariant<0>>(
+          vid, "kernel");
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPVariant<1>>(
+          vid, "launch");
+
+    } else {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPVariant<0>>(
+          vid, "default");
+
+    }
+
   }
 
 }
 
 } // end namespace apps
 } // end namespace rajaperf
+
+#endif

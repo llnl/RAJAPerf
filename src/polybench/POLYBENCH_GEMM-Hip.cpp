@@ -75,6 +75,8 @@ __global__ void poly_gemm_lam(Index_type ni, Index_type nj,
 template < size_t block_size >
 void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -84,7 +86,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       POLY_GEMM_THREADS_PER_BLOCK_HIP;
       POLY_GEMM_NBLOCKS_HIP;
@@ -104,7 +107,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       POLY_GEMM_THREADS_PER_BLOCK_HIP;
       POLY_GEMM_NBLOCKS_HIP;
@@ -150,7 +154,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
       >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
 
@@ -184,7 +189,7 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMM, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMM, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace polybench
 } // end namespace rajaperf

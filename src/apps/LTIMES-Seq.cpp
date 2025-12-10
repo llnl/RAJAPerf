@@ -19,7 +19,8 @@ namespace apps
 
 using namespace ltimes_idx;
 
-void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void LTIMES::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -30,7 +31,8 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (IZ z(0); z < num_z; ++z ) {
           for (IG g(0); g < num_g; ++g ) {
@@ -56,7 +58,8 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
                              };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         for (IZ z(0); z < num_z; ++z ) {
           for (IG g(0); g < num_g; ++g ) {
@@ -78,7 +81,7 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         auto ltimes_lam = [=](ID d, IZ z, IG g, IM m) {
                             LTIMES_BODY;
@@ -98,7 +101,8 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
           >;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
                                                             IZRange(0, *num_z),
@@ -111,7 +115,7 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         using launch_policy = RAJA::LaunchPolicy<RAJA::seq_launch_t>;
 
@@ -124,7 +128,8 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
         using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::launch<launch_policy>( res,
               RAJA::LaunchParams(),
@@ -168,14 +173,26 @@ void LTIMES::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void LTIMES::setSeqTuningDefinitions(VariantID vid)
+void LTIMES::defineSeqVariantTunings()
 {
 
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "kernel");
-    addVariantTuningName(vid, "launch");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&LTIMES::runSeqVariant<0>>(
+          vid, "kernel");
+
+      addVariantTuning<&LTIMES::runSeqVariant<1>>(
+          vid, "launch");
+
+    } else {
+
+      addVariantTuning<&LTIMES::runSeqVariant<0>>(
+          vid, "default");
+
+    }
+
   }
 
 }

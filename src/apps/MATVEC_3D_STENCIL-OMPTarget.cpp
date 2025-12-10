@@ -29,7 +29,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -40,7 +40,8 @@ void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       #pragma omp target is_device_ptr(b, \
                                        dbl, dbc, dbr, dcl, dcc, dcr, dfl, dfc, dfr, \
@@ -67,7 +68,8 @@ void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         zones, [=](Index_type i) {
@@ -81,6 +83,8 @@ void MATVEC_3D_STENCIL::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
     getCout() << "\n  MATVEC_3D_STENCIL : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

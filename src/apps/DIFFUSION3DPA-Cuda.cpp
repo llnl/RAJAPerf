@@ -107,6 +107,8 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
 
 template < size_t block_size >
 void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -118,7 +120,8 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
   case Base_CUDA: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       dim3 nthreads_per_block(DPA_Q1D, DPA_Q1D, DPA_Q1D);
       constexpr size_t shmem = 0;
@@ -153,7 +156,8 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<DPA_Q1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),
@@ -346,7 +350,7 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

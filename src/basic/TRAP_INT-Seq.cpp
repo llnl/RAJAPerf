@@ -19,8 +19,8 @@ namespace rajaperf
 namespace basic
 {
 
-
-void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void TRAP_INT::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -36,7 +36,8 @@ void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Real_type sumx = m_sumx_init;
 
@@ -61,7 +62,8 @@ void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
                               };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         Real_type sumx = m_sumx_init;
 
@@ -81,10 +83,11 @@ void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> sumx(m_sumx_init);
 
@@ -98,10 +101,11 @@ void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Awkward expression for loop counter quiets C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
           Real_type tsumx = m_sumx_init;
 
@@ -135,11 +139,21 @@ void TRAP_INT::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void TRAP_INT::setSeqTuningDefinitions(VariantID vid)
+void TRAP_INT::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&TRAP_INT::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&TRAP_INT::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
 }
 

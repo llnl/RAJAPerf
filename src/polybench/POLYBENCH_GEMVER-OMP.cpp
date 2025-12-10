@@ -20,7 +20,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -33,7 +33,8 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type i = 0; i < n; i++ ) {
@@ -95,7 +96,8 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         #pragma omp parallel for
         for (Index_type i = 0; i < n; i++ ) {
@@ -187,7 +189,8 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
       using EXEC_POL3 = RAJA::seq_exec;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Awkward expression for loop counter quiets C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
         RAJA::kernel_resource<EXEC_POL1>(
           RAJA::make_tuple(RAJA::RangeSegment{0, n},
@@ -240,6 +243,8 @@ void POLYBENCH_GEMVER::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_AR
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMVER, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

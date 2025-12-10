@@ -111,41 +111,68 @@ public:
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
-  void setVariantDefined(VariantID vid);
-  void addVariantTuningName(VariantID vid, std::string name)
-  { variant_tuning_names[vid].emplace_back(std::move(name)); }
-
-  virtual void setSeqTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineSeqVariantTunings() {}
 
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-  virtual void setOpenMPTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineOpenMPVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_CUDA)
-  virtual void setCudaTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineCudaVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_HIP)
-  virtual void setHipTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineHipVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
-  virtual void setOpenMPTargetTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineOpenMPTargetVariantTunings() {}
 #endif
 
 #if defined(RUN_KOKKOS)
-  virtual void setKokkosTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineKokkosVariantTunings() {}
 #endif
+
 #if defined(RAJA_ENABLE_SYCL)
-  virtual void setSyclTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineSyclVariantTunings() {}
 #endif
+
+  template < auto method >
+  void addVariantTuning(VariantID vid, std::string name)
+  {
+    addVariantTuning(vid, std::move(name),
+        &KernelBase::wrapDerivedVariantTuningMethod<
+            class_of_member_function_pointer_t<decltype(method)>, method>);
+  }
+
+  void addVariantTunings()
+  {
+    defineSeqVariantTunings();
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+    defineOpenMPVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_CUDA)
+    defineCudaVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_HIP)
+    defineHipVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_TARGET_OPENMP)
+    defineOpenMPTargetVariantTunings();
+#endif
+
+#if defined(RUN_KOKKOS)
+    defineKokkosVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+    defineSyclVariantTunings();
+#endif
+  }
 
 
   //
@@ -515,51 +542,18 @@ public:
 
   void resetTimer() { timer.reset(); }
 
+  void print(std::ostream& os) const;
+
+  void runKernel(VariantID vid, size_t tune_idx);
+
   //
   // Virtual and pure virtual methods that may/must be implemented
   // by concrete kernel subclass.
   //
 
-  virtual void print(std::ostream& os) const;
-
-  virtual void runKernel(VariantID vid, size_t tune_idx);
-
   virtual void setUp(VariantID vid, size_t tune_idx) = 0;
   virtual void updateChecksum(VariantID vid, size_t tune_idx) = 0;
   virtual void tearDown(VariantID vid, size_t tune_idx) = 0;
-
-  virtual void runSeqVariant(VariantID vid, size_t tune_idx) = 0;
-
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-  virtual void runOpenMPVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_CUDA)
-  virtual void runCudaVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_HIP)
-  virtual void runHipVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-  virtual void runOpenMPTargetVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_SYCL)
-  virtual void runSyclVariant(VariantID vid, size_t /* tune_idx */)
-  {
-     getCout() << "\n KernelBase: Unimplemented Sycl variant id = " << vid << std::endl;
-  }
-#endif
-
-#if defined(RUN_KOKKOS)
-  virtual void runKokkosVariant(VariantID vid, size_t /* tune_idx */)
-  {
-     getCout() << "\n KernelBase: Unimplemented Kokkos variant id = " << vid << std::endl;
-  }
-#endif
-
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   void caliperOn() { doCaliperTiming = true; }
@@ -609,9 +603,25 @@ protected:
 #endif
 
 private:
+  using variant_tuning_method_pointer = void(KernelBase::*)(VariantID);
+
   KernelBase() = delete;
 
   void recordExecTime();
+
+  // This is used to implement tunings by being a wrapper for calling
+  // the given derived class method by casting this to the derived class.
+  // Instantiations of this method are stored in variant_tuning_methods.
+  template < typename Derived, void (Derived::* method)(VariantID) >
+  void wrapDerivedVariantTuningMethod(VariantID vid)
+  {
+    Derived& self = dynamic_cast<Derived&>(*this);
+
+    (self.*method)(vid);
+  }
+
+  void addVariantTuning(VariantID vid, std::string name,
+                        variant_tuning_method_pointer method);
 
   //
   // Static properties of kernel, independent of run
@@ -629,6 +639,7 @@ private:
   Complexity complexity;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
+  std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
   //
   // Properties of kernel dependent on how kernel is run
@@ -674,6 +685,27 @@ private:
   std::vector<RAJA::Timer::ElapsedType> max_time[NumVariants];
   std::vector<RAJA::Timer::ElapsedType> tot_time[NumVariants];
 };
+
+
+// Define the define*VariantTunings function with the given variants for
+// the default tuning.
+//
+// KERNEL is the name of the kernel type (e.g. DAXPY)
+// VariantName is the name of the Variant (e.g. Seq)
+// ... the names of the variants to add variant tunings for (e.g. Base_Seq, Lambda_Seq, RAJA_Seq)
+//
+// Example:
+// RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
+//
+#define RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(KERNEL, VariantName, ...)   \
+  void KERNEL::define##VariantName##VariantTunings()                           \
+  {                                                                            \
+    for (VariantID vid : {__VA_ARGS__}) {                                      \
+      addVariantTuning<&KERNEL::run##VariantName##Variant>(                    \
+          vid, getDefaultTuningName());                                        \
+    }                                                                          \
+  }
+
 
 }  // closing brace for rajaperf namespace
 

@@ -95,6 +95,8 @@ __global__ void halo_packing_fused_unpack(Real_ptr* unpack_buffer_ptrs,
 template < size_t block_size >
 void HALO_PACKING_FUSED::runCudaVariantDirect(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -106,7 +108,8 @@ void HALO_PACKING_FUSED::runCudaVariantDirect(VariantID vid)
     HALO_PACKING_FUSED_MANUAL_FUSER_SETUP_CUDA;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       constexpr size_t shmem = 0;
 
@@ -199,6 +202,8 @@ void HALO_PACKING_FUSED::runCudaVariantDirect(VariantID vid)
 template < size_t block_size, typename dispatch_helper >
 void HALO_PACKING_FUSED::runCudaVariantWorkGroup(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -245,7 +250,8 @@ void HALO_PACKING_FUSED::runCudaVariantWorkGroup(VariantID vid)
     pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Awkward expression for loop counter quiets C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];
@@ -293,92 +299,50 @@ void HALO_PACKING_FUSED::runCudaVariantWorkGroup(VariantID vid)
   }
 }
 
-void HALO_PACKING_FUSED::runCudaVariant(VariantID vid, size_t tune_idx)
+
+void HALO_PACKING_FUSED::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_CUDA) {
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    if (vid == Base_CUDA) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-        if (tune_idx == t) {
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-          runCudaVariantDirect<block_size>(vid);
+          addVariantTuning<&HALO_PACKING_FUSED::runCudaVariantDirect<
+                               block_size>>(
+              vid, "direct_"+std::to_string(block_size));
 
         }
 
-        t += 1;
+      });
 
-      }
+    }
 
-    });
+    if (vid == RAJA_CUDA) {
 
-  }
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-  if (vid == RAJA_CUDA) {
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+          seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+            addVariantTuning<&HALO_PACKING_FUSED::runCudaVariantWorkGroup<
+                                 decltype(block_size){},
+                                 decltype(dispatch_helper)>>(
+                vid, decltype(dispatch_helper)::get_name()+"_"+std::to_string(block_size));
 
-        seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+          });
 
-          if (tune_idx == t) {
+        }
 
-            runCudaVariantWorkGroup<decltype(block_size){},
-                                    decltype(dispatch_helper)>(vid);
+      });
 
-          }
-
-          t += 1;
-
-        });
-
-      }
-
-    });
-
-  }
-
-}
-
-void HALO_PACKING_FUSED::setCudaTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_CUDA) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        addVariantTuningName(vid, "direct_"+std::to_string(block_size));
-
-      }
-
-    });
-
-  }
-
-  if (vid == RAJA_CUDA) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-          addVariantTuningName(vid, decltype(dispatch_helper)::get_name()+"_"+std::to_string(block_size));
-
-        });
-
-      }
-
-    });
+    }
 
   }
 
