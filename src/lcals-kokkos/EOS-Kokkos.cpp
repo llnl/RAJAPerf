@@ -22,10 +22,10 @@ void EOS::runKokkosVariant(VariantID vid) {
   EOS_DATA_SETUP;
 
   // Wrap pointers in Kokkos Views
-  auto x_view = getViewFromPointer(x, iend + 7);
-  auto y_view = getViewFromPointer(y, iend + 7);
-  auto z_view = getViewFromPointer(z, iend + 7);
-  auto u_view = getViewFromPointer(u, iend + 7);
+  auto x_view = getViewFromPointer(x, iend);
+  auto y_view = getViewFromPointer(y, iend);
+  auto z_view = getViewFromPointer(z, iend);
+  auto u_view = getViewFromPointer(u, iend + 6);
 
   switch (vid) {
 
@@ -34,7 +34,7 @@ void EOS::runKokkosVariant(VariantID vid) {
     Kokkos::fence();
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    for (RepIndex_type irep = 0; irep < run_reps; static_cast<void>(((irep = irep + 1), 0))) {
       Kokkos::parallel_for(
           "EOS_Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
@@ -57,10 +57,10 @@ void EOS::runKokkosVariant(VariantID vid) {
   }
   }
 
-  moveDataToHostFromKokkosView(x, x_view, iend + 7);
-  moveDataToHostFromKokkosView(y, y_view, iend + 7);
-  moveDataToHostFromKokkosView(z, z_view, iend + 7);
-  moveDataToHostFromKokkosView(u, u_view, iend + 7);
+  moveDataToHostFromKokkosView(x, x_view, iend);
+  moveDataToHostFromKokkosView(y, y_view, iend);
+  moveDataToHostFromKokkosView(z, z_view, iend);
+  moveDataToHostFromKokkosView(u, u_view, iend + 6);
 }
 
 RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(EOS, Kokkos, Kokkos_Lambda)
