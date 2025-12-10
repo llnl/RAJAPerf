@@ -13,6 +13,8 @@
 
 #include "common/DataUtils.hpp"
 
+#include <fstream>
+#include <string>
 #include <algorithm>
 #include <cmath>
 
@@ -97,6 +99,67 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Sgdat    , m_Sglen     , vid);
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
+
+  // Read mesh connectivity data from file.
+  std::ifstream dataFile("FEMSWEEP_DATA.txt");
+
+  if ( !dataFile.is_open() )
+  {
+    std::cout << "Could not open FEMSWEEP_DATA.txt" << std::endl;
+    return 1;
+  }
+
+  int lcount = 1;
+  std::string line;
+  while ( std::getLine(dataFile, line) )
+  {
+    if ( lcount >= 11 && lcount <= 82 )
+    {
+      g_nhpaa_r[lcount-11] = std::stoi(line);
+    }
+
+    else if ( lcount >= 86 && lcount <= 157 )
+    {
+      g_ohpaa_r[lcount-86] = std::stoi(line);
+    }
+
+    else if ( lcount >= 161 && lcount <= 3256 )
+    {
+      g_phpaa_r[lcount-161] = std::stoi(line);
+    }
+
+    else if ( lcount >= 3261 && lcount <= 246260 )
+    {
+      g_order_r[lcount-3261] = std::stoi(line);
+    }
+
+    else if ( lcount >= 246265 && lcount <= 1704264 )
+    {
+      g_AngleElem2FaceType[lcount-246265] = std::stoi(line);
+    }
+
+    else if ( lcount >= 1704268 && lcount <= 1724517 )
+    {
+      g_elem_to_faces[lcount-1704268] = std::stoi(line);
+    }
+
+    else if ( lcount >= 1724521 && lcount <= 1735320 )
+    {
+      g_F_g2l[lcount-1724521] = std::stoi(line);
+    }
+
+    else if ( lcount >= 1735324 && lcount <= 1773123 )
+    {
+      g_idx1[lcount-1735324] = std::stoi(line);
+    }
+
+    else if ( lcount >= 1773127 && lcount <= 1810926 )
+    {
+      g_idx2[lcount-1773127] = std::stoi(line);
+    }
+
+    lcount++;
+  }
 
   // Some of the constants are properties of the mesh.
   // Will need to derive these when mesh generator is available.

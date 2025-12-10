@@ -352,16 +352,16 @@ private:
   Index_type m_idx2len;
 
   // Mesh data
-  static Index_type g_nhpaa_r[72];
-  static Index_type g_ohpaa_r[72];
-  static Index_type g_phpaa_r[3096];
-  static Index_type g_order_r[243000];
+  Index_type g_nhpaa_r[72];
+  Index_type g_ohpaa_r[72];
+  Index_type g_phpaa_r[3096];
+  Index_type g_order_r[243000];
 
-  static Index_type g_AngleElem2FaceType[1458000];
-  static Index_type g_elem_to_faces[20250]     ;
-  static Index_type g_F_g2l[10800]             ;
-  static Index_type g_idx1[37800]              ;
-  static Index_type g_idx2[37800]              ;
+  Index_type g_AngleElem2FaceType[1458000];
+  Index_type g_elem_to_faces[20250]     ;
+  Index_type g_F_g2l[10800]             ;
+  Index_type g_idx1[37800]              ;
+  Index_type g_idx2[37800]              ;
 };
 
 } // end namespace apps
