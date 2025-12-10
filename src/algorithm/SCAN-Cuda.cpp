@@ -108,7 +108,8 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Run
       CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
@@ -130,7 +131,8 @@ void SCAN::runCudaVariantLibrary(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::exclusive_scan< RAJA::cuda_exec<0, true /*async*/> >(res, RAJA_SCAN_ARGS);
 
@@ -169,7 +171,8 @@ void SCAN::runCudaVariantCustom(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
           block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );

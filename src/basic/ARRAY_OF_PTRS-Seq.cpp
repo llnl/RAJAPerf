@@ -38,7 +38,8 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           ARRAY_OF_PTRS_BODY(x);
@@ -55,7 +56,8 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           array_of_ptrs_lam(i);
@@ -73,7 +75,8 @@ void ARRAY_OF_PTRS::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::simd_exec>( res,
           RAJA::RangeSegment(ibegin, iend), array_of_ptrs_lam);

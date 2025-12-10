@@ -28,7 +28,8 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type by = 0; by < Ny; ++by) {
         for (Index_type bx = 0; bx < Nx; ++bx) {
@@ -78,7 +79,8 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto outer_y = [&](Index_type by) {
         auto outer_x = [&](Index_type bx) {
@@ -170,7 +172,8 @@ void MAT_MAT_SHARED::runSeqVariant(VariantID vid) {
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       //Grid is empty as the host does not need a compute grid to be specified
       RAJA::launch<launch_policy>( res,

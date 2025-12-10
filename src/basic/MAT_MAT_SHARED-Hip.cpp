@@ -74,7 +74,8 @@ void MAT_MAT_SHARED::runHipVariantImpl(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RPlaunchHipKernel( (mat_mat_shared<tile_size>),
                          gridDim, blockDim,
@@ -87,7 +88,8 @@ void MAT_MAT_SHARED::runHipVariantImpl(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto mat_mat_shared_lambda = [=] __device__() {
 
@@ -203,7 +205,8 @@ void MAT_MAT_SHARED::runHipVariantImpl(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(Nx, Ny),

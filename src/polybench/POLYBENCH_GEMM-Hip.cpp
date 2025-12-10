@@ -87,7 +87,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       POLY_GEMM_THREADS_PER_BLOCK_HIP;
       POLY_GEMM_NBLOCKS_HIP;
@@ -108,7 +109,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       POLY_GEMM_THREADS_PER_BLOCK_HIP;
       POLY_GEMM_NBLOCKS_HIP;
@@ -155,7 +157,8 @@ void POLYBENCH_GEMM::runHipVariantImpl(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
 

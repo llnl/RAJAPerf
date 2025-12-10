@@ -142,7 +142,8 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       dim3 nthreads_per_block(CPA_Q1D, CPA_Q1D, CPA_Q1D);
       constexpr size_t shmem = 0;
@@ -178,7 +179,8 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),

@@ -39,7 +39,8 @@ void REDUCE3_INT::runOpenMPTargetVariant(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Int_type vsum = m_vsum_init;
       Int_type vmin = m_vmin_init;
@@ -67,7 +68,8 @@ void REDUCE3_INT::runOpenMPTargetVariant(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Int_type tvsum = m_vsum_init;
       Int_type tvmin = m_vmin_init;

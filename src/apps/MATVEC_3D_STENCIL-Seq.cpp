@@ -34,7 +34,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           MATVEC_3D_STENCIL_BODY_INDEX;
@@ -57,7 +58,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           matvec_3d_lam(ii);
@@ -81,7 +83,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid)
 
       startTimer();
       // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>(res, zones, matvec_3d_lam);
 

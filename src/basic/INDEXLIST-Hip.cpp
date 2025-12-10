@@ -105,7 +105,8 @@ void INDEXLIST::runHipVariantCustom(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
           block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );

@@ -120,7 +120,8 @@ void REDUCE_STRUCT::runCudaVariantBase(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Real_type imem[6] {m_init_sum, m_init_min, m_init_max, m_init_sum, m_init_min, m_init_max};
       RAJAPERF_CUDA_REDUCER_INITIALIZE(imem, mem, hmem, 6, 1);
@@ -181,7 +182,8 @@ void REDUCE_STRUCT::runCudaVariantRAJA(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> xsum(m_init_sum);
       RAJA::ReduceSum<reduction_policy, Real_type> ysum(m_init_sum);
@@ -233,7 +235,8 @@ void REDUCE_STRUCT::runCudaVariantRAJANewReduce(VariantID vid)
 
     startTimer();
     // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Real_type txsum = m_init_sum;
       Real_type tysum = m_init_sum;
