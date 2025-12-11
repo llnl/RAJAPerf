@@ -137,100 +137,21 @@ Index_type KernelBase::getRunReps() const
   return run_reps;
 }
 
-void KernelBase::setVariantDefined(VariantID vid)
+void KernelBase::addVariantTuning(VariantID vid, std::string name,
+                                  variant_tuning_method_pointer method)
 {
   if (!isVariantAvailable(vid)) return;
 
-  switch ( vid ) {
-
-    case Base_Seq :
-    {
-      setSeqTuningDefinitions(vid);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      setSeqTuningDefinitions(vid);
+  variant_tuning_names[vid].emplace_back(std::move(name));
+  variant_tuning_methods[vid].emplace_back(method);
+  checksum[vid].emplace_back(0.0);
+  num_exec[vid].emplace_back(0);
+  min_time[vid].emplace_back(std::numeric_limits<double>::max());
+  max_time[vid].emplace_back(-std::numeric_limits<double>::max());
+  tot_time[vid].emplace_back(0.0);
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  doCaliMetaOnce[vid].emplace_back(true);
 #endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      setOpenMPTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      setOpenMPTargetTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      setCudaTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      setHipTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      setSyclTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-// Required for running Kokkos
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      setKokkosTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-  }
-
-  checksum[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  num_exec[vid].resize(variant_tuning_names[vid].size(), 0);
-  min_time[vid].resize(variant_tuning_names[vid].size(), std::numeric_limits<double>::max());
-  max_time[vid].resize(variant_tuning_names[vid].size(), -std::numeric_limits<double>::max());
-  tot_time[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  #if defined(RAJA_PERFSUITE_USE_CALIPER)
-    doCaliMetaOnce[vid].resize(variant_tuning_names[vid].size(), true);
-  #endif
 }
 
 Size_type KernelBase::getDataAlignment() const
@@ -411,87 +332,8 @@ void KernelBase::runKernel(VariantID vid, size_t tune_idx)
   }
 #endif
 
-  switch ( vid ) {
+  (this->*(variant_tuning_methods[vid].at(tune_idx)))(vid);
 
-    case Base_Seq :
-    {
-      runSeqVariant(vid, tune_idx);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      runSeqVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      runOpenMPVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      runOpenMPTargetVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      runCudaVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      runHipVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      runSyclVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      runKokkosVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-
-  }
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   if (doCaliperTiming) {
     KernelBase::setCaliperMgrStop(vid, getVariantTuningName(vid, tune_idx));

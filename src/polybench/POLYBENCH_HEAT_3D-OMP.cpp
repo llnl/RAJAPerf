@@ -19,7 +19,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -32,7 +32,8 @@ void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for collapse(2)
         for (Index_type i = 1; i < N-1; ++i ) {
@@ -70,7 +71,8 @@ void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for collapse(2)
         for (Index_type i = 1; i < N-1; ++i ) {
@@ -113,7 +115,8 @@ void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
@@ -151,6 +154,8 @@ void POLYBENCH_HEAT_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace polybench
 } // end namespace rajaperf

@@ -20,7 +20,7 @@ namespace apps
 {
 
 
-void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -33,7 +33,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           MATVEC_3D_STENCIL_BODY_INDEX;
@@ -55,7 +56,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           matvec_3d_lam(ii);
@@ -78,7 +80,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>(res, zones, matvec_3d_lam);
 
@@ -96,6 +99,8 @@ void MATVEC_3D_STENCIL::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

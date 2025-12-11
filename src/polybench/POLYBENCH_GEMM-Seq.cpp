@@ -19,7 +19,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_GEMM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_GEMM::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps= getRunReps();
 
@@ -30,7 +30,8 @@ void POLYBENCH_GEMM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < ni; ++i ) {
           for (Index_type j = 0; j < nj; ++j ) {
@@ -65,7 +66,8 @@ void POLYBENCH_GEMM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
                                   };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < ni; ++i ) {
           for (Index_type j = 0; j < nj; ++j ) {
@@ -120,7 +122,8 @@ void POLYBENCH_GEMM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
 
@@ -151,6 +154,8 @@ void POLYBENCH_GEMM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMM, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

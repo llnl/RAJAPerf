@@ -21,7 +21,7 @@ namespace basic
 #undef USE_OMP_COLLAPSE
 
 
-void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void NESTED_INIT::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -38,7 +38,8 @@ void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
 #if defined(USE_OMP_COLLAPSE)
           #pragma omp parallel for collapse(3)
@@ -62,7 +63,8 @@ void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
 #if defined(USE_OMP_COLLAPSE)
           #pragma omp parallel for collapse(3)
@@ -109,7 +111,8 @@ void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, ni),
                                                           RAJA::RangeSegment(0, nj),
@@ -134,6 +137,8 @@ void NESTED_INIT::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

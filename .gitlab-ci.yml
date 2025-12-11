@@ -87,6 +87,7 @@ include:
   # Sets ID tokens for every job using `default:`
   - project: 'lc-templates/id_tokens'
     file: 'id_tokens.yml'
+  ## Note: RAJAPerf uses RSC project in RAJA submodule
   # [Optional] checks preliminary to running the actual CI test
   #- project: 'radiuss/radiuss-shared-ci'
   #  ref: 'v2025.09.1'

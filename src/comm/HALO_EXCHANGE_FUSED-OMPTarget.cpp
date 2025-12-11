@@ -74,7 +74,8 @@ void HALO_EXCHANGE_FUSED::runOpenMPTargetVariantDirect(VariantID vid)
     HALO_EXCHANGE_FUSED_MANUAL_FUSER_SETUP_OMP_TARGET;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -237,7 +238,8 @@ void HALO_EXCHANGE_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
     pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -298,56 +300,33 @@ void HALO_EXCHANGE_FUSED::runOpenMPTargetVariantWorkGroup(VariantID vid)
   }
 }
 
-void HALO_PACKING_FUSED::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
+
+void HALO_EXCHANGE_FUSED::defineOpenMPTargetVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_OpenMPTarget) {
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_OpenMPTarget) {
 
-      runOpenMPTargetVariantDirect(vid);
+      addVariantTuning<&HALO_EXCHANGE_FUSED::runOpenMPTargetVariantDirect>(
+          vid, "direct");
 
     }
 
-    t += 1;
+    if (vid == RAJA_OpenMPTarget) {
+
+      seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+
+        addVariantTuning<&HALO_EXCHANGE_FUSED::runOpenMPTargetVariantWorkGroup<
+                             decltype(dispatch_helper)>>(
+            vid, decltype(dispatch_helper)::get_name());
+
+      });
+
+    }
 
   }
 
-  if (vid == RAJA_OpenMPTarget) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      if (tune_idx == t) {
-
-        runOpenMPTargetVariantWorkGroup<decltype(dispatch_helper)>(vid);
-
-      }
-
-      t += 1;
-
-    });
-
-  }
-}
-
-void HALO_PACKING_FUSED::setOpenMPTargetTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_OpenMPTarget) {
-
-    addVariantTuningName(vid, "direct");
-
-  }
-
-  if (vid == RAJA_OpenMPTarget) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      addVariantTuningName(vid, decltype(dispatch_helper)::get_name());
-
-    });
-
-  }
 }
 
 } // end namespace comm
