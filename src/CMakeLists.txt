@@ -12,6 +12,7 @@ add_subdirectory(common)
 add_subdirectory(basic)
 add_subdirectory(basic-kokkos)
 add_subdirectory(apps)
+add_subdirectory(apps-kokkos)
 add_subdirectory(lcals)
 add_subdirectory(lcals-kokkos)
 add_subdirectory(polybench)
@@ -23,6 +24,7 @@ add_subdirectory(comm)
 set(RAJA_PERFSUITE_LIBS
     common
     apps
+    apps-kokkos
     basic
     basic-kokkos
     lcals
