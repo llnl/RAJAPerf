@@ -33,8 +33,8 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid)
     case Base_OpenMP : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         #pragma omp parallel for
@@ -56,8 +56,8 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid)
           };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         #pragma omp parallel for
@@ -77,8 +77,8 @@ void PI_ATOMIC::runOpenMPVariant(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,

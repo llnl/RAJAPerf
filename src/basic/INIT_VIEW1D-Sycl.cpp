@@ -38,8 +38,8 @@ void INIT_VIEW1D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
@@ -63,8 +63,8 @@ void INIT_VIEW1D::runSyclVariantImpl(VariantID vid)
     INIT_VIEW1D_VIEW_RAJA;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::sycl_exec<work_group_size  /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {

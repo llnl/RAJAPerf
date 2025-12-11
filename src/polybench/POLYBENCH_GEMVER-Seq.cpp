@@ -31,8 +31,8 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < n; i++ ) {
           for (Index_type j = 0; j < n; j++) {
@@ -91,8 +91,8 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid)
                                    };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < n; i++ ) {
           for (Index_type j = 0; j < n; j++) {
@@ -180,8 +180,8 @@ void POLYBENCH_GEMVER::runSeqVariant(VariantID vid)
       using EXEC_POL3 = RAJA::seq_exec;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL1>(
           RAJA::make_tuple(RAJA::RangeSegment{0, n},

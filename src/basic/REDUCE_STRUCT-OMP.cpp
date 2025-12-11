@@ -35,8 +35,8 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid)
     case Base_OpenMP : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -76,8 +76,8 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid)
                                  };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -118,8 +118,8 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid)
       if constexpr (tune_idx == 0) {
 
         startTimer();
-        // Awkward expression for loop counter quiets C++20 compiler warning
-        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
  
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> xsum(m_init_sum);
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> ysum(m_init_sum);
@@ -147,8 +147,8 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid)
       } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        // Awkward expression for loop counter quiets C++20 compiler warning
-        for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           Real_type txsum = m_init_sum;
           Real_type tysum = m_init_sum;

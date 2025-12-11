@@ -102,8 +102,8 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
   case Base_CUDA: {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       dim3 nthreads_per_block(MPA_Q1D, MPA_Q1D, 1);
       constexpr size_t shmem = 0;
@@ -131,8 +131,8 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
     using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<MPA_Q1D>>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

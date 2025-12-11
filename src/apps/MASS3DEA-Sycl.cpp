@@ -38,8 +38,8 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     const ::sycl::range<3> gridSize(MEA_Q1D,MEA_Q1D,MEA_Q1D*NE);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       constexpr size_t shmem = 0;
       qu->submit([&](::sycl::handler& h) {
@@ -108,8 +108,8 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
     constexpr size_t shmem = (MEA_Q1D*MEA_D1D + MEA_Q1D*MEA_Q1D*MEA_Q1D)*sizeof(Real_type);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),

@@ -43,8 +43,8 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(ny, work_group_size);
 
@@ -130,8 +130,8 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
       [=] (Index_type j) {

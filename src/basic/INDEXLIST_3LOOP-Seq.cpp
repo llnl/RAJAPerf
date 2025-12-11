@@ -33,8 +33,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid)
       INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           counts[i] = (INDEXLIST_3LOOP_CONDITIONAL) ? 1 : 0;
@@ -76,8 +76,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid)
                                 };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           indexlist_conditional_lam(i);
@@ -112,8 +112,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid)
       INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),

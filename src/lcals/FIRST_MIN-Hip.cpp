@@ -84,8 +84,8 @@ void FIRST_MIN::runHipVariantBase(VariantID vid)
     RAJAPERF_HIP_REDUCER_SETUP(MyMinLoc*, dminloc, mymin_block, grid_size, 1);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       FIRST_MIN_MINLOC_INIT;
       RAJAPERF_HIP_REDUCER_INITIALIZE_VALUE(mymin, dminloc, mymin_block, grid_size, 1);
@@ -134,8 +134,8 @@ void FIRST_MIN::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::ReduceMinLoc<RAJA::hip_reduce,
                           Real_type, Index_type> minloc(m_xmin_init,
@@ -176,8 +176,8 @@ void FIRST_MIN::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                         m_initloc);

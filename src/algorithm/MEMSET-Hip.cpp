@@ -46,8 +46,8 @@ void MEMSET::runHipVariantLibrary(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
           MEMSET_STD_ARGS, res.get_stream() );
@@ -58,8 +58,8 @@ void MEMSET::runHipVariantLibrary(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       res.memset(MEMSET_STD_ARGS);
 
@@ -90,8 +90,8 @@ void MEMSET::runHipVariantBlock(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -107,8 +107,8 @@ void MEMSET::runHipVariantBlock(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto memset_lambda = [=] __device__ (Index_type i) {
         MEMSET_BODY;
@@ -129,8 +129,8 @@ void MEMSET::runHipVariantBlock(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {

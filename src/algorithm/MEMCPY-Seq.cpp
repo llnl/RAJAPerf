@@ -31,8 +31,8 @@ void MEMCPY::runSeqVariantLibrary(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         std::memcpy(MEMCPY_STD_ARGS);
 
@@ -48,8 +48,8 @@ void MEMCPY::runSeqVariantLibrary(VariantID vid)
       auto res{getHostResource()}; 
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         res.memcpy(MEMCPY_STD_ARGS);
 
@@ -81,8 +81,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           MEMCPY_BODY;
@@ -102,8 +102,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
                            };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           memcpy_lambda(i);
@@ -120,8 +120,8 @@ void MEMCPY::runSeqVariantDefault(VariantID vid)
       auto res{getHostResource()}; 
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),

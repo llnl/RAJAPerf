@@ -35,8 +35,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           DEL_DOT_VEC_2D_BODY_INDEX;
@@ -58,8 +58,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid)
                                   };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           deldotvec2d_base_lam(ii);
@@ -83,8 +83,8 @@ void DEL_DOT_VEC_2D::runSeqVariant(VariantID vid)
                              };
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>(res, zones, deldotvec2d_lam);
 

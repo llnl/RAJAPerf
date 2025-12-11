@@ -47,8 +47,8 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
   if (vid == Base_SYCL) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       qu->submit([&](::sycl::handler& h) {
 
@@ -106,8 +106,8 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
     using threads_y = RAJA::LoopPolicy<RAJA::sycl_local_1_direct>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(Nx, Ny),

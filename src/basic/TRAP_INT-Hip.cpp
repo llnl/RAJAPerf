@@ -82,8 +82,8 @@ void TRAP_INT::runHipVariantBase(VariantID vid)
         MappingHelper, (trapint<block_size>), block_size, shmem);
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_sumx_init, sumx, hsumx, 1, 1);
 
@@ -136,8 +136,8 @@ void TRAP_INT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::ReduceSum<reduction_policy, Real_type> sumx(m_sumx_init);
 
@@ -176,8 +176,8 @@ void TRAP_INT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Real_type tsumx = m_sumx_init;
 

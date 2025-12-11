@@ -136,8 +136,8 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       GEMVER_THREADS_PER_BLOCK_CUDA;
       GEMVER_NBLOCKS_CUDA;
@@ -172,8 +172,8 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       GEMVER_THREADS_PER_BLOCK_CUDA;
       GEMVER_NBLOCKS_CUDA;
@@ -264,8 +264,8 @@ void POLYBENCH_GEMVER::runCudaVariantImpl(VariantID vid)
     using EXEC_POL3 = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL1>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},

@@ -29,8 +29,8 @@ void MASS3DEA::runSeqVariant(VariantID vid)
   case Base_Seq: {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type e = 0; e < NE; ++e) {
 
@@ -84,8 +84,8 @@ void MASS3DEA::runSeqVariant(VariantID vid)
     using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(),

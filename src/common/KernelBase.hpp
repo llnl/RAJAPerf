@@ -69,6 +69,11 @@
 
 #endif
 
+//
+// Macro to increment rep loop counter: quiets C++20 compiler warning
+//
+#define RP_REPCOUNTINC(var)  static_cast<void>( ((var = var + 1), 0) )
+
 namespace rajaperf {
 
 /*!

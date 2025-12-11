@@ -52,8 +52,8 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
     auto result = sycl::malloc_shared< result_type >(1, *qu); 
  
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
@@ -88,8 +88,8 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                          m_initloc);

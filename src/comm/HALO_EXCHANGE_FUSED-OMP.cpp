@@ -36,8 +36,8 @@ void HALO_EXCHANGE_FUSED::runOpenMPVariantDirect(VariantID vid)
       HALO_EXCHANGE_FUSED_MANUAL_FUSER_SETUP;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];
@@ -163,8 +163,8 @@ void HALO_EXCHANGE_FUSED::runOpenMPVariantDirect(VariantID vid)
       HALO_EXCHANGE_FUSED_MANUAL_LAMBDA_FUSER_SETUP;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];
@@ -338,8 +338,8 @@ void HALO_EXCHANGE_FUSED::runOpenMPVariantWorkGroup(VariantID vid)
       pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = unpack_index_list_lengths[l];

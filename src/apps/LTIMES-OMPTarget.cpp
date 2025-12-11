@@ -32,8 +32,8 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid)
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target firstprivate(psi, ell, phi, num_z, num_g, num_m, num_d) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
@@ -68,8 +68,8 @@ void LTIMES::runOpenMPTargetVariant(VariantID vid)
       >;
 
     startTimer();
-    // Awkward expression for loop counter quiets C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL>( RAJA::make_tuple(IDRange(0, *num_d),
                                                         IZRange(0, *num_z),

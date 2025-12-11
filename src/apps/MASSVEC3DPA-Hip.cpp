@@ -268,8 +268,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     if constexpr (tune_idx == 0) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -284,8 +284,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 1) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -299,8 +299,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 2) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -314,8 +314,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     } else if constexpr (tune_idx == 3) {
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         dim3 nthreads_per_block(MVPA_Q1D, MVPA_Q1D, MVPA_Q1D);
         constexpr size_t shmem = 0;
@@ -348,8 +348,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>(
             res,
@@ -509,8 +509,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<MVPA_Q1D>>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>(
             res,
@@ -671,8 +671,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
 
       startTimer();
-      // Awkward expression for loop counter quiets C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; ((irep = irep + 1), 0)) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>(
             res,
