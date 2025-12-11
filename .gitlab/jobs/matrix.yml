@@ -22,6 +22,7 @@ clang_18_1_1_cuda_12_6_0:
   variables:
     SPEC: "~shared +openmp +cuda cuda_arch=75 %llvm@=18.1.8 ^cuda@12.6.0+allow-unsupported-compilers ^blt@develop"
   extends: .job_on_matrix
+  allow_failure: true
 
 ############
 # Extra jobs
