@@ -22,8 +22,7 @@ namespace apps
 {
 
 
-void INTSC_HEXRECT::runSeqVariant(VariantID vid,
-                                  Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
@@ -42,7 +41,8 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           INTSC_HEXRECT_SEQ ( i ) ;
@@ -58,7 +58,8 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin ; i < iend; ++i ) {
           intsc_hexrect_lam( i );
@@ -75,7 +76,8 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexrect_lam);
@@ -94,6 +96,8 @@ void INTSC_HEXRECT::runSeqVariant(VariantID vid,
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXRECT, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

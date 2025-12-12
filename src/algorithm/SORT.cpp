@@ -37,14 +37,7 @@ SORT::SORT(const RunParams& params)
 
   setUsesFeature(Sort);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings( );
 }
 
 SORT::~SORT()

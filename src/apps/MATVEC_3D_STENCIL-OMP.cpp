@@ -20,7 +20,7 @@ namespace apps
 {
 
 
-void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -36,7 +36,8 @@ void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
@@ -58,7 +59,8 @@ void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
           };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
@@ -83,7 +85,8 @@ void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
                                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           zones, matvec_3d_lam);
@@ -104,6 +107,8 @@ void MATVEC_3D_STENCIL::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_A
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

@@ -12,6 +12,7 @@ add_subdirectory(common)
 add_subdirectory(basic)
 add_subdirectory(basic-kokkos)
 add_subdirectory(apps)
+add_subdirectory(apps-kokkos)
 add_subdirectory(lcals)
 add_subdirectory(lcals-kokkos)
 add_subdirectory(polybench)
@@ -23,6 +24,7 @@ add_subdirectory(comm)
 set(RAJA_PERFSUITE_LIBS
     common
     apps
+    apps-kokkos
     basic
     basic-kokkos
     lcals
@@ -44,25 +46,26 @@ blt_add_executable(
   apps/AppsData.cpp
   apps/CONVECTION3DPA.cpp
   apps/CONVECTION3DPA-Seq.cpp
-  apps/CONVECTION3DPA-OMPTarget.cpp
   apps/DEL_DOT_VEC_2D.cpp
   apps/DEL_DOT_VEC_2D-Seq.cpp
   apps/DEL_DOT_VEC_2D-OMPTarget.cpp
   apps/DIFFUSION3DPA.cpp
   apps/DIFFUSION3DPA-Seq.cpp
-  apps/DIFFUSION3DPA-OMPTarget.cpp
+  apps/EDGE3D.cpp
+  apps/EDGE3D-Seq.cpp
+  apps/EDGE3D-OMPTarget.cpp
   apps/ENERGY.cpp
   apps/ENERGY-Seq.cpp
   apps/ENERGY-OMPTarget.cpp
   apps/FEMSWEEP.cpp
   apps/FEMSWEEP-Seq.cpp
-  apps/FEMSWEEP-OMPTarget.cpp
   apps/FIR.cpp
   apps/FIR-Seq.cpp
   apps/FIR-OMPTarget.cpp
-  apps/PRESSURE.cpp
-  apps/PRESSURE-Seq.cpp
-  apps/PRESSURE-OMPTarget.cpp
+  apps/INTSC_HEXHEX.cpp
+  apps/INTSC_HEXHEX-Seq.cpp
+  apps/INTSC_HEXRECT.cpp
+  apps/INTSC_HEXRECT-Seq.cpp
   apps/LTIMES.cpp
   apps/LTIMES-Seq.cpp
   apps/LTIMES-OMPTarget.cpp
@@ -71,16 +74,19 @@ blt_add_executable(
   apps/LTIMES_NOVIEW-OMPTarget.cpp
   apps/MASS3DEA.cpp
   apps/MASS3DEA-Seq.cpp
-  apps/MASS3DEA-OMPTarget.cpp  
   apps/MASS3DPA.cpp
   apps/MASS3DPA-Seq.cpp
-  apps/MASS3DPA-OMPTarget.cpp
+  apps/MASSVEC3DPA.cpp
+  apps/MASSVEC3DPA-Seq.cpp
   apps/MATVEC_3D_STENCIL.cpp
   apps/MATVEC_3D_STENCIL-Seq.cpp
   apps/MATVEC_3D_STENCIL-OMPTarget.cpp
   apps/NODAL_ACCUMULATION_3D.cpp
   apps/NODAL_ACCUMULATION_3D-Seq.cpp
   apps/NODAL_ACCUMULATION_3D-OMPTarget.cpp
+  apps/PRESSURE.cpp
+  apps/PRESSURE-Seq.cpp
+  apps/PRESSURE-OMPTarget.cpp
   apps/VOL3D.cpp
   apps/VOL3D-Seq.cpp
   apps/VOL3D-OMPTarget.cpp
@@ -122,10 +128,12 @@ blt_add_executable(
   basic/INIT_VIEW1D_OFFSET-OMPTarget.cpp
   basic/MAT_MAT_SHARED.cpp
   basic/MAT_MAT_SHARED-Seq.cpp
-  basic/MAT_MAT_SHARED-OMPTarget.cpp
   basic/MULADDSUB.cpp
   basic/MULADDSUB-Seq.cpp
   basic/MULADDSUB-OMPTarget.cpp
+  basic/MULTI_REDUCE.cpp
+  basic/MULTI_REDUCE-Seq.cpp
+  basic/MULTI_REDUCE-OMPTarget.cpp
   basic/NESTED_INIT.cpp
   basic/NESTED_INIT-Seq.cpp
   basic/NESTED_INIT-OMPTarget.cpp
@@ -144,9 +152,6 @@ blt_add_executable(
   basic/TRAP_INT.cpp
   basic/TRAP_INT-Seq.cpp
   basic/TRAP_INT-OMPTarget.cpp
-  basic/MULTI_REDUCE.cpp
-  basic/MULTI_REDUCE-Seq.cpp
-  basic/MULTI_REDUCE-OMPTarget.cpp
   lcals/DIFF_PREDICT.cpp
   lcals/DIFF_PREDICT-Seq.cpp
   lcals/DIFF_PREDICT-OMPTarget.cpp

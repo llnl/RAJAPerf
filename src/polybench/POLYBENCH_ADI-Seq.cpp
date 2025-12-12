@@ -18,7 +18,7 @@ namespace rajaperf
 namespace polybench
 {
 
-void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_ADI::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -29,7 +29,8 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 1; i < n-1; ++i) {
           POLYBENCH_ADI_BODY2;
@@ -88,7 +89,8 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 1; i < n-1; ++i) {
           poly_adi_base_lam2(i);
@@ -164,7 +166,8 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
@@ -206,6 +209,8 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_ADI, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

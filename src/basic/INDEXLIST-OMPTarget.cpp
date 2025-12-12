@@ -28,7 +28,7 @@ namespace basic
 #endif
 
 
-void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST::runOpenMPTargetVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
  && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
@@ -44,7 +44,8 @@ void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     case Base_OpenMPTarget : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Index_type count = 0;
         #pragma omp target is_device_ptr(x, list) device( did )
@@ -79,6 +80,13 @@ void INDEXLIST::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP) \
+ && _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST, OpenMPTarget, Base_OpenMPTarget)
+#else
+void INDEXLIST::defineOpenMPTargetVariantTunings() {}
+#endif
 
 } // end namespace basic
 } // end namespace rajaperf
