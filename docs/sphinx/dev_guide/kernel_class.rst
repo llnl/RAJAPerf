@@ -74,7 +74,7 @@ The key parts of a kernel class header file are:
   * **Reference implementation**, which is a comment section that shows a
     C-style implementation of the kernel. This is basically what the
     ``Base_Seq`` variant of the kernel looks like. All kernel variants 
-    should produce the same results of the reference version.
+    should produce results close to the reference version.
 
   * **Uniquely-named include guard** that guards the contents of 
     the header file. All such guards have the form 

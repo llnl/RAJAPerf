@@ -17,8 +17,8 @@ processes as RAJA, which are documented in the
 `RAJA Developer Guide <https://raja.readthedocs.io/en/develop/sphinx/dev_guide/index.html>`_ 
 
 This guide describes development items that are specific to the RAJA Performance
-Suite refers to sections in the RAJA Developer Guide on common things to avoid
-redundancy.
+Suite and refers to sections in the RAJA Developer Guide on common things to
+avoid redundancy and simplify documentation maintenance.
 
 .. toctree::
    :maxdepth: 1

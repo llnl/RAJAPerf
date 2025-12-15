@@ -119,8 +119,8 @@ variant.
 
 The ``Executor`` class in the ``common`` directory creates kernel objects,
 one for each kernel that will be run based on command-line input options. To
-ensure a new kernel object will be created properly, make sure a call to its
-class constructor in the switch case section for its ``KernelID`` in the
+ensure a new kernel object will be created properly, make sure to add a call
+to its class constructor in the switch case section for its ``KernelID`` in the
 ``getKernelObject()`` method in the ``RAJAPerfSuite.cpp`` file. For example::
 
   KernelBase* getKernelObject(KernelID kid,
