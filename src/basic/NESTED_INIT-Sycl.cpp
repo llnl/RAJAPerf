@@ -31,6 +31,8 @@ namespace basic
 template <size_t work_group_size >
 void NESTED_INIT::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -46,7 +48,8 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
     sycl::range<3> wkgroup_dim(k_wg_sz, j_wg_sz, i_wg_sz);
   
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       qu->submit([&] (::sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
@@ -82,7 +85,8 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, ni),
@@ -101,7 +105,7 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace basic
 } // end namespace rajaperf

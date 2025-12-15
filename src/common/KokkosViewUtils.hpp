@@ -49,7 +49,11 @@ auto getViewFromPointer(PointedAt *kokkos_ptr, Boundaries... boundaries) ->
       typename PointerOfNdimensions<PointedAt, sizeof...(Boundaries)>::type,
       typename Kokkos::DefaultExecutionSpace::memory_space>;
 
+#if KOKKOS_VERSION >= 50000
+  using mirror_view_type = typename device_view_type::host_mirror_type;
+#else
   using mirror_view_type = typename device_view_type::HostMirror;
+#endif
 
   host_view_type pointer_holder(kokkos_ptr, boundaries...);
 
@@ -83,7 +87,11 @@ void moveDataToHostFromKokkosView(PointedAt *kokkos_ptr, ExistingView my_view,
       typename PointerOfNdimensions<PointedAt, sizeof...(Boundaries)>::type,
       typename Kokkos::DefaultExecutionSpace::memory_space>;
 
+#if KOKKOS_VERSION >= 50000
+  using mirror_view_type = typename device_view_type::host_mirror_type;
+#else
   using mirror_view_type = typename device_view_type::HostMirror;
+#endif
 
   host_view_type pointer_holder(kokkos_ptr, boundaries...);
 

@@ -349,35 +349,34 @@ using reducer_helpers = camp::list<
   RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(hip, HIP, device_ptr_name, host_ptr_name, length, replication)
 
 
+
+// Define the define*VariantTunings function with the given variants for
+// gpu block size tunings.
 //
-#define RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(kernel, variant)     \
-  void kernel::run##variant##Variant(VariantID vid, size_t tune_idx)           \
+// KERNEL is the name of the kernel type (e.g. DAXPY)
+// VariantName is the name of the Variant (e.g. Cuda)
+// ... the names of the variants to add variant tunings for (e.g. Base_Cuda, Lambda_Cuda, RAJA_Cuda)
+//
+// Example:
+// RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DAXPY, Cuda, Base_Cuda, Lambda_Cuda, RAJA_Cuda)
+//
+#define RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(KERNEL, Variant, ...) \
+  void KERNEL::define##Variant##VariantTunings()                               \
   {                                                                            \
-    size_t t = 0;                                                              \
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                     \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        if (tune_idx == t) {                                                   \
-          setBlockSize(block_size);                                            \
-          run##variant##VariantImpl<block_size>(vid);                          \
+    for (VariantID vid : {__VA_ARGS__}) { \
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                   \
+        if (run_params.numValidGPUBlockSize() == 0u ||                         \
+            run_params.validGPUBlockSize(block_size)) {                        \
+          if (block_size == 0u) {                                              \
+            addVariantTuning<&KERNEL::run##Variant##VariantImpl<block_size>>(  \
+                vid, "block_auto");                                            \
+          } else {                                                             \
+            addVariantTuning<&KERNEL::run##Variant##VariantImpl<block_size>>(  \
+                vid, "block_"+std::to_string(block_size));                     \
+          }                                                                    \
         }                                                                      \
-        t += 1;                                                                \
-      }                                                                        \
-    });                                                                        \
-  }                                                                            \
-                                                                               \
-  void kernel::set##variant##TuningDefinitions(VariantID vid)                  \
-  {                                                                            \
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                     \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        if (block_size == 0u) {                                                 \
-          addVariantTuningName(vid, "block_auto");                             \
-        } else {                                                               \
-          addVariantTuningName(vid, "block_"+std::to_string(block_size));      \
-        }                                                                      \
-      }                                                                        \
-    });                                                                        \
+      });                                                                      \
+    }                                                                          \
   }
 
 #endif  // closing endif for header file include guard

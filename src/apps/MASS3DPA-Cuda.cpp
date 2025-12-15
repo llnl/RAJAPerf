@@ -89,6 +89,8 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
 
 template < size_t block_size >
 void MASS3DPA::runCudaVariantImpl(VariantID vid) {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -100,7 +102,8 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
   case Base_CUDA: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       dim3 nthreads_per_block(MPA_Q1D, MPA_Q1D, 1);
       constexpr size_t shmem = 0;
@@ -128,7 +131,8 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
     using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<MPA_Q1D>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),
@@ -260,7 +264,7 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASS3DPA, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASS3DPA, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

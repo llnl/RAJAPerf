@@ -107,24 +107,22 @@ public:
 
   ~INTSC_HEXRECT();
 
-  void setUp(VariantID vid, Size_type tune_idx);
-  void updateChecksum(VariantID vid, Size_type tune_idx);
-  void tearDown(VariantID vid, Size_type tune_idx);
+  void setUp(VariantID vid, size_t tune_idx);
+  void updateChecksum(VariantID vid, size_t tune_idx);
+  void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, Size_type tune_idx);
-  void runOpenMPVariant(VariantID vid, Size_type tune_idx);
-  void runCudaVariant(VariantID vid, Size_type tune_idx);
-  void runHipVariant(VariantID vid, Size_type tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
 
   template < Size_type block_size >
   void runCudaVariantImpl(VariantID vid);
   template < Size_type block_size >
   void runHipVariantImpl(VariantID vid);
-  template < Size_type work_group_size >
-  void runSyclVariantImpl(VariantID vid);
 
 private:
   void setupTargetPlanes

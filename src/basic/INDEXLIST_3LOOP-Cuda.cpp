@@ -54,6 +54,8 @@ __global__ void indexlist_make_list(Int_ptr list,
 template < size_t block_size >
 void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -90,7 +92,8 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -133,7 +136,8 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     allocData(DataSpace::CudaPinned, len, 1);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend),
@@ -172,7 +176,7 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

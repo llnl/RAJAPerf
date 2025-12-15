@@ -76,21 +76,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings();
 }
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
@@ -257,7 +243,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid,
-                                  Size_type tune_idx)
+                                  size_t tune_idx)
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;

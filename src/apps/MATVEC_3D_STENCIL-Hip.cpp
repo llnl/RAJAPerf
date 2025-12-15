@@ -95,6 +95,8 @@ __global__ void matvec_3d(Real_ptr b,
 template < size_t block_size >
 void MATVEC_3D_STENCIL::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = m_domain->n_real_zones;
@@ -106,7 +108,8 @@ void MATVEC_3D_STENCIL::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -181,7 +184,8 @@ void MATVEC_3D_STENCIL::runHipVariantImpl(VariantID vid)
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         zones, [=] __device__ (Index_type i) {
@@ -196,7 +200,7 @@ void MATVEC_3D_STENCIL::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MATVEC_3D_STENCIL, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

@@ -15,7 +15,7 @@
 namespace rajaperf {
 namespace basic {
 
-void NESTED_INIT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void NESTED_INIT::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
 
   NESTED_INIT_DATA_SETUP;
@@ -40,7 +40,8 @@ void NESTED_INIT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
     Kokkos::fence();
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // MDRange can be optimized
       Kokkos::parallel_for(
@@ -72,6 +73,8 @@ void NESTED_INIT::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   }
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NESTED_INIT, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf
