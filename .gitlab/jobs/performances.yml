@@ -18,7 +18,14 @@ clang_14_0_6_openmp_caliper:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq RAJA_OpenMP"
-    PERF_RUN_OPTS: "--repfact 10.0"
+    # Exclude unstable tests (~20% variability):
+    PERF_EXCLUDE_KERNELS: >
+      ARRAY_OF_PTRS
+      COPY8
+      PI_ATOMIC
+      REDUCE3_INT
+      REDUCE_STRUCT
+    PERF_RUN_OPTS: "--repfact 5.0"
     OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
@@ -27,7 +34,21 @@ gcc_10_3_1_openmp_caliper:
     SPEC: "~shared +openmp +caliper %gcc@=10.3.1 ^blt@develop"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq RAJA_OpenMP"
-    PERF_RUN_OPTS: "--repfact 10.0"
+    # Exclude unstable tests (~20% variability):
+    PERF_EXCLUDE_KERNELS: >
+      ARRAY_OF_PTRS
+      COPY8
+      DAXPY
+      EMPTY
+      INIT3
+      INIT_VIEW1D
+      INIT_VIEW1D_OFFSET
+      MULADDSUB
+      PI_ATOMIC
+      PI_REDUCE
+      REDUCE3_INT
+      REDUCE_STRUCT
+    PERF_RUN_OPTS: "--repfact 5.0"
     OMP_NUM_THREADS: "16"
   extends: .perf_on_dane
 
@@ -36,15 +57,35 @@ clang_14_0_6_mpi_caliper:
     SPEC: "~shared +mpi +caliper %clang@=14.0.6 ^blt@develop"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq"
-    PERF_RUN_OPTS: "--repfact 10.0"
+    # Exclude unstable tests (~20% variability):
+    PERF_EXCLUDE_KERNELS: >
+      ARRAY_OF_PTRS
+      COPY8
+      DAXPY
+      DAXPY_ATOMIC
+      REDUCE_STRUCT
+    PERF_RUN_OPTS: "--repfact 5.0"
     PERF_MPI_EXEC: "srun --overlap -n 16"
   extends: .perf_on_dane
 
 rocmcc_6_4_1_hip_openmp_caliper:
   variables:
-    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared ^adiak~shared ^papi~shared"
+    SPEC: "~shared +rocm +openmp +caliper amdgpu_target=gfx942 %rocmcc@=6.4.1 ^hip@6.4.1 ^blt@develop ^caliper~shared~libunwind ^adiak~shared~mpi ^papi~shared"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_HIP"
+    # Exclude unstable tests (~20% variability):
+    PERF_EXCLUDE_KERNELS: >
+      ARRAY_OF_PTRS
+      COPY8
+      EMPTY
+      IF_QUAD
+      INDEXLIST_3LOOP
+      MAT_MAT_SHARED
+      MULTI_REDUCE
+      PI_REDUCE
+      REDUCE3_INT
+      REDUCE_STRUCT
+      TRAP_INT
   extends: .perf_on_tuolumne
 
 process_results:

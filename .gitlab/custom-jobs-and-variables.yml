@@ -81,7 +81,7 @@ variables:
 
 .custom_perf:
   variables:
-    CALI_CONFIG: "event-trace,runtime-report,print.metadata"
+    CALI_CONFIG: "print.metadata"
 
 .reproducer_vars:
   script:
