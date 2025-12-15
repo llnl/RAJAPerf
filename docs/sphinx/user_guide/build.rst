@@ -23,8 +23,8 @@ Requirements
 
 The primary requirement for building the RAJA Performance Suite are:
 
-- C++ compiler with C++14 support
-- `CMake <https://cmake.org/>`_ version 3.23 or greater when building the HIP back-end, and version 3.20 or greater otherwise.
+- C++ compiler with C++17 support
+- `CMake <https://cmake.org/>`_ version 3.23 or greater.
 
 For the most part, available configuration options and how to enable or 
 disable them are similar to `RAJA build options <https://raja.readthedocs.io/en/develop/sphinx/user_guide/config_options.html#configopt-label>`_. 
@@ -46,7 +46,8 @@ command::
    $ git clone --recursive https://github.com/LLNL/RAJAPerf.git
 
 The ``--recursive`` option is required to pull all RAJA Performance Suite 
-Git *submodules* into your local copy of the repository.
+Git *submodules* into your local copy of the repository. These include RAJA and
+the BLT CMake-based configuration project, which is also used by RAJA.
 
 After running the ``git clone`` command, a copy of the RAJA Performance Suite
 repository will reside in the ``RAJAPerf`` subdirectory where you ran the 
@@ -69,14 +70,13 @@ code and build it.
 .. note:: * If you are in your local copy of the RAJA Performance Suite repo
             and you switch to a different branch (e.g., you run the 
             command ``git checkout <different branch name>``), you may need to 
-            run the command ``git submodule update`` to set the Git *submodule
-            versions* to what is used by the new branch. To see if this is 
-            required, the ``git status`` command will indicate whether the
-            submodules are at the proper versions. 
+            run the command ``git submodule update --init --recursive``to set
+            the Git *submodule versions* to those used by the new branch.
+            To see if this is required, the ``git status`` command will
+            indicate whether the submodules are at the proper versions. 
           * If the *set of submodules* in a new branch is different than the
-            previous branch you were on, you may need to run the command
-            ``git submodule update --init --recursive`` (described above) to 
-            pull in the correct set of submodule and versions.
+            previous branch you were on, you will need to run the command
+            command above to update the submodules.
 
 .. _build_depend-label:
 
@@ -129,7 +129,7 @@ script creates a descriptively-named build space directory and runs CMake with
 a configuration appropriate for the platform and specified compiler(s). To 
 compile the code after CMake completes, enter the build directory and type 
 ``make`` (or ``make -j <N>`` or ``make -j`` for a parallel build using N 
-processor cores, or all available processor cores on a node, respectively). 
+processor cores, or all available processor cores on a node, respectively. 
 For example::
 
   $ ./scripts/lc-builds/toss4_amdclang.sh 6.4.1 gfx942
@@ -169,8 +169,8 @@ type ``make test`` to run the tests you have built and see the results.
 Building with MPI
 -----------------
 
-Earlier, we mentioned that the Suite can be built with MPI enabled and
-described why this is useful. Some configuration scripts we provide will 
+In :ref:`run_mpi-label`, we not that the Suite can be built with MPI enabled
+and described why this is useful. Some configuration scripts we provide will 
 configure a build with MPI support enabled. For example::
 
   $ ./scripts/lc-builds/toss4_cray-mpich_amdclang.sh 9.0.1 6.4.2 gfx942
@@ -181,7 +181,7 @@ This will configure a build to use the 6.4.2 version of the AMD clang compiler
 targeting GPU compute architecture gfx942 and using Cray MPICH MPI version
 9.0.1.
 
-In general, MPI support can be enabled by passing the `-DENABLE_MPI=On` option
+In general, MPI support can be enabled by passing the ``-DENABLE_MPI=On`` option
 to CMake and providing a MPI compiler wrapper via the
 ``-DMPI_CXX_COMPILER=/path/to/mpic++`` option to CMake, in addition to other 
 necessary CMake options. For example::
@@ -196,7 +196,7 @@ necessary CMake options. For example::
 Building with specific GPU thread-block size tunings
 -----------------------------------------------------
 
-If desired, you can build a version of the RAJA Performance Suite code with 
+If desired, you can build a RAJA Performance Suite executable that will contain
 multiple versions of GPU kernels that will run with different GPU thread-block 
 sizes. The CMake option for this is 
 ``-DRAJA_PERFSUITE_GPU_BLOCKSIZES=<list,of,block,sizes>``. For example::
@@ -209,15 +209,23 @@ sizes. The CMake option for this is
   $ make -j
 
 will build versions of GPU kernels that use 64, 128, 256, 512, and 1024 threads
-per GPU thread-block.
+per GPU thread-block. When this is done, the executable is enabled to perform
+a sweep over the specified thread-block sizes to compare performance of each
+kernel using the set of block sizes.
 
 Building with specific GPU atomic replication tunings
 -----------------------------------------------------
 
 If desired, you can build a version of the RAJA Performance Suite code with
 multiple versions of GPU kernels that will run with different GPU atomic
-replication amounts. The CMake option for this is
-``-DRAJA_PERFSUITE_ATOMIC_REPLICATIONS=<list,of,atomic,replication,amounts>``. For example::
+replication levels. We refer to the atomic replication level as the number of
+memory locations atomic operations will be spread over to compare execution
+performance of kernels containing atomics with respect to atomic contention.
+For example, a replication of 1 means that each atomic operation in a kernel
+will use a single memory location. A replication of 2 means that each atomic
+operation in a kernel will use two memory locations, cutting the atomic
+contention in half, potentially improving performance. The CMake option for
+this is ``-DRAJA_PERFSUITE_ATOMIC_REPLICATIONS=<list,of,atomic,replication,amounts>``. For example::
 
   $ mkdir my-gpu-build
   $ cd my-gpu-build
@@ -233,9 +241,10 @@ Building with specific GPU items per thread tunings
 -----------------------------------------------------
 
 If desired, you can build a version of the RAJA Performance Suite code with
-multiple versions of GPU kernels that will run with different GPU items per
-thread amounts. The CMake option for this is
-``-DRAJA_PERFSUITE_GPU_ITEMS_PER_THREAD=<list,of,items,per,thread,amounts>``. For example::
+multiple versions of GPU kernels that will run with different numbers of 
+items (i.e., kernel iterates) per GPU thread. The CMake option for this is
+``-DRAJA_PERFSUITE_GPU_ITEMS_PER_THREAD=<list,of,items,per,thread,amounts>``.
+For example::
 
   $ mkdir my-gpu-build
   $ cd my-gpu-build
@@ -249,17 +258,20 @@ will build versions of GPU kernels that use 1, 2, 4, and 8 items per thread.
 Building with Caliper
 ---------------------
 
-RAJAPerf Suite may also use Caliper instrumentation, with per variant & tuning output into .cali files. While Caliper is low-overhead
-it is not zero, so it will add a small amount of timing skew in its data as 
-compared to the original. Caliper output enables usage of performance analysis tools like Hatchet and Thicket.
-For much more on Caliper, Hatchet and Thicket, read their documentation here:
+RAJAPerf Suite may also be configured with Caliper instrumentation, which will
+generate per variant and tuning output in .cali files. While Caliper is designed
+to have low overhead, it is not zero, so it will add a small amount of timing
+skew in its data as compared to the basic RAJA Performance Suite timers.
+Caliper output enables usage of performance analysis tools like Hatchet and
+Thicket. For more information on Caliper, Hatchet, and Thicket, please read
+their documentation accessible at these links: 
 
 | - `Caliper Documentation <http://software.llnl.gov/Caliper/>`_ 
 | - `Hatchet User Guide <https://llnl-hatchet.readthedocs.io/en/latest/user_guide.html>`_ 
 | - `Thicket User Guide <https://thicket.readthedocs.io/en/latest/>`_ 
 
 
-Caliper *annotation* is in the following tree structure::
+Caliper *annotation* uses the following tree structure::
 
   RAJAPerf
     Group
@@ -283,12 +295,13 @@ Caliper *annotation* is in the following tree structure::
   or use
     -Dcaliper_DIR -Dadiak_DIR package prefixes
 
-For Spack : raja_perf +caliper ^caliper@2.9.0
+For a Spack-generated build configuration add ``+caliper ^caliper@2.9.0`` to
+the Spack spec.
 
-For Uberenv: python3 scripts/uberenv/uberenv.py --spec +caliper ^caliper@2.9.0
+If using Uberenv, running the command ``python3 scripts/uberenv/uberenv.py --spec +caliper ^caliper@2.9.0`` will generate a similar configuration.
 
 If you intend on passing nvtx or roctx annotation to Nvidia or AMD profiling tools, 
-build Caliper with +cuda cuda_arch=XX or +rocm respectively. Then you can specify
+build Caliper with +cuda cuda_arch=XX, or +rocm respectively. Then you can specify
 an additional Caliper service for nvtx or roctx like so: roctx example:
 
 CALI_SERVICES_ENABLE=roctx rocprof --roctx-trace --hip-trace raja-perf.exe 
