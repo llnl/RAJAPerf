@@ -16,10 +16,9 @@ The RAJA Performance Suite project follows nearly identical development
 processes as RAJA, which are documented in the 
 `RAJA Developer Guide <https://raja.readthedocs.io/en/develop/sphinx/dev_guide/index.html>`_ 
 
-This guide is structured similarly to the RAJA Developer Guide and refers to 
-sections in that on various development topics to avoid redundancy. In
-addition, it contains information about development and maintenance 
-practices that are specific to the RAJA Performance Suite.
+This guide describes development items that are specific to the RAJA Performance
+Suite refers to sections in the RAJA Developer Guide on common things to avoid
+redundancy.
 
 .. toctree::
    :maxdepth: 1
