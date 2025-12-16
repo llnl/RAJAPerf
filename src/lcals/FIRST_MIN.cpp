@@ -33,11 +33,9 @@ FIRST_MIN::FIRST_MIN(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) +
-                      1*sizeof(Real_type ) +
-                      1*sizeof(Real_type ) * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Index_type) +
-                         1*sizeof(Real_type ) );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 

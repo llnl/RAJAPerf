@@ -28,8 +28,9 @@ TRIAD::TRIAD(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // b, c
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * getActualProblemSize());
 

@@ -30,10 +30,12 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * m_N +
-                      3*sizeof(Real_type ) * m_N );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * m_N +
-                         2*sizeof(Real_type ) * m_N );
+  setBytesReadPerRep( 2*sizeof(Real_type ) * m_N + // sa, sb
+                      2*sizeof(Real_type ) * m_N ); // sa, sb
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N + // b5
+                         1*sizeof(Real_type ) * m_N ); // b5
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type ) * m_N + // stb5
+                               1*sizeof(Real_type ) * m_N ); // stb5
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((3 +
                   3 ) * m_N);

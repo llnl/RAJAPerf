@@ -30,9 +30,10 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() +
-                      1*sizeof(Real_type ) * (getActualProblemSize()+1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() + // y
+                      1*sizeof(Real_type ) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // x
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(5 * getActualProblemSize());
 

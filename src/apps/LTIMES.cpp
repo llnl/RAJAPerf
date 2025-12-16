@@ -42,10 +42,10 @@ LTIMES::LTIMES(const RunParams& params)
   setItsPerRep( m_philen );
   setKernelsPerRep(1);
   // using total data size instead of writes and reads
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_philen +
-                      1*sizeof(Real_type) * m_elllen +
-                      1*sizeof(Real_type) * m_psilen );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_philen );
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                      1*sizeof(Real_type) * m_psilen ); // psi
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_philen ); // phi
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
 

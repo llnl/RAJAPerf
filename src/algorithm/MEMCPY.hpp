@@ -10,7 +10,7 @@
 /// MEMCPY kernel reference implementation:
 ///
 /// for (Index_type i = ibegin; i < iend; ++i ) {
-///   x[i] = val ;
+///   y[i] = x[i] ;
 /// }
 ///
 

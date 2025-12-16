@@ -28,9 +28,10 @@ DAXPY_ATOMIC::DAXPY_ATOMIC(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
   setFLOPsPerRep(2 * getActualProblemSize());
 
   setComplexity(Complexity::N);

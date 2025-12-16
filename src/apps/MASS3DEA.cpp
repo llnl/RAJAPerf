@@ -40,6 +40,7 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setBytesReadPerRep( 1*sizeof(Real_type) * MEA_Q1D*MEA_D1D + // B
                       1*sizeof(Real_type) * MEA_Q1D*MEA_Q1D*MEA_Q1D*m_NE ); // D
   setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(m_NE * 7 * ea_mat_entries);

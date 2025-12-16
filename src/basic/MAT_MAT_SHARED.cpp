@@ -32,8 +32,9 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setItsPerRep( num_tiles*num_tiles * TL_SZ*TL_SZ );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  );
+  setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N ); // A, B
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  ); // C
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);

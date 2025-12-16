@@ -30,7 +30,8 @@ ATOMIC::ATOMIC(const RunParams& params)
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // atomic (assumes replication == problem size)
   setFLOPsPerRep(getActualProblemSize());
 
   setComplexity(Complexity::N);

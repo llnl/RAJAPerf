@@ -33,9 +33,9 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Int_type) +
-                      1*sizeof(Int_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 3*sizeof(Int_type) );
+  setBytesReadPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
