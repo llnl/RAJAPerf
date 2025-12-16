@@ -28,6 +28,6 @@ RAJA Performance Suite. Please see `Contributing to RAJA <https://raja.readthedo
 
 The most important things to know about making a contribution to the 
 RAJA Performance Suite involve the organization of the source code and
-how it works, especially when adding a new Kernel or Variant. These items
+how it works, especially when adding a new kernel or variant. These items
 are described in detail in :ref:`structure-label`.
 

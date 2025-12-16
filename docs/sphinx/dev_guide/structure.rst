@@ -12,7 +12,7 @@
 RAJA Performance Suite Structure: Adding Kernels, Variants, and Tunings 
 ************************************************************************
 
-This section describes how to add Kernels, Variants, Groups, and Tunings to the
+This section describes how to add kernels, variants, groups, and tunings to the
 Suite. The discussion aims to make clear the organization of the code and 
 how it works, which is useful to understand when making a contribution.
 
@@ -32,7 +32,7 @@ directory, you will see the following::
   RAJAPerfSuiteDriver.cpp
   CMakeLists.txt
 
-Each directory contains files for kernels in the Group associated with the 
+Each directory contains files for kernels in the group associated with the 
 directory name. For example, the ``lcals`` directory contains kernels from
 the LCALS benchmark suite (a precursor to RAJA Performance Suite), the
 ``stream`` directory contains kernels from a stream benchmark suite, and so on.
@@ -70,7 +70,7 @@ Adding a kernel ID and name
 ----------------------------
 
 Two key pieces of information are used to identify each kernel in the Suite: 
-the group in which it resides and the name of the kernel. Kernel IDs and
+the group in which it resides and the name of the kernel. kernel IDs and
 names are maintained in the files ``RAJAPerfSuite.hpp`` and 
 ``RAJAPerfSuite.cpp``, respectively, which reside in the ``src/common`` 
 directory.
@@ -123,10 +123,10 @@ Suite machinery.
           * The values in the ``KernelID`` enum must match the strings in the
             ``KernelNames`` array one-to-one and in the same order.
 
-Typically, adding a new Group or Feature is not needed when adding a Kernel.
-One or both of these needs to be added only if the Kernel is not part of an
-existing Group of kernels, or exercises a RAJA Feature that is not used in an
-existing Kernel. For completeness, we describe the addition of a new group and
+Typically, adding a new group or Feature is not needed when adding a kernel.
+One or both of these needs to be added only if the kernel is not part of an
+existing group of kernels, or exercises a RAJA Feature that is not used in an
+existing kernel. For completeness, we describe the addition of a new group and
 feature in case either is needed.
 
 .. _structure_addkernel_group-label:
@@ -134,13 +134,13 @@ feature in case either is needed.
 Adding a group 
 ----------------------------
 
-If a kernel is added as part of a new Group of kernels in the Suite, a new 
+If a kernel is added as part of a new group of kernels in the Suite, a new 
 value must be added to the ``GroupID`` enum in the ``RAJAPerfSuite.hpp`` 
 header file and an associated group string name must be added to the 
 ``GroupNames`` string array in the ``RAJAPerfSuite.cpp`` source file. The
 process is similar to adding a new kernel ID and name described above.
 
-.. note:: Enumeration values and string array entries for Groups must be kept 
+.. note:: Enumeration values and string array entries for groups must be kept 
           consistent, in the same order and matching one-to-one.
 
 .. _structure_addkernel_feature-label:
@@ -164,7 +164,7 @@ described above.
 Adding a Variant
 ================
 
-Similar to a Kernel, each Variant in the Suite is is identified by an 
+Similar to a kernel, each variant in the Suite is is identified by an 
 enumeration value and a string name. Adding a new variant requires adding 
 these two items in a similar fashion to adding a kernel name and ID as 
 described above.

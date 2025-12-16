@@ -47,9 +47,9 @@ The methods in the source file are:
       * The number of *loop iterations* that are executed and the number of 
         loop kernels that run each time the kernel is executed. Note that the 
         **ADD** kernel contains a single for-loop so the number of iterations 
-        is the problem size and number of kernels run is one. Other kernels in
+        is the problem size and number of loop kernels is one. Other kernels in
         the Suite execute multiple loop kernels with different sizes,
-        potentially, and so these methods call are used to describe this.
+        potentially, and so these methods are used to describe this.
       * The number of bytes read and written and the number of floating point
         operations (FLOPS) performed for each kernel execution.
       * The operational complexity of the kernel.
@@ -87,7 +87,7 @@ The methods in the source file are:
     was run.
 
     .. note:: Kernel checksum values are used to determine whether kernels 
-              variants are producing the same results. This, the checksum
+              variants are producing the same results. Thus, the checksum
               **must** be computed in the same way for each
               variant of a kernel so that checksums for different
               variants can be compared to help identify differences, and
@@ -200,10 +200,10 @@ A few details are worth noting:
     tunings for the ``ADD`` kernel for the ``Seq`` back-end. The macro defines
     the ``defineSeqVariantTunings`` method for this kernel and assumes the
     existence of ``runSeqVariant``. Note that it adds a "default" tuning for
-    each of the variants listed in final arguments to the macro.
+    each of the variants listed in the final arguments to the macro.
   * Each kernel variant execution contains a call to ``startTimer()`` and
     ``endTimer()`` methods which are used to gather execution timing
-    information. Between these methods calls is a loop over
+    information. Between these method calls is a loop over
     *kernel repetitions*. Each kernel defines a default number of run
     repetitions to record a sufficient amount of execution time to reduce
     execution timing noise. The number of repetitions can be controlled via
