@@ -70,7 +70,7 @@ Adding a kernel ID and name
 ----------------------------
 
 Two key pieces of information are used to identify each kernel in the Suite: 
-the group in which it resides and the name of the kernel. kernel IDs and
+the group in which it resides and the name of the kernel. Kernel IDs and
 names are maintained in the files ``RAJAPerfSuite.hpp`` and 
 ``RAJAPerfSuite.cpp``, respectively, which reside in the ``src/common`` 
 directory.

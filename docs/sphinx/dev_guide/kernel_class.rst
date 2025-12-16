@@ -84,7 +84,7 @@ The key parts of a kernel class header file are:
     multiple places in the kernel class implementation, such as setting 
     data pointers and operations in the kernel body. While macros obfuscate
     the code somewhat, we use them to reduce the amount of code we maintain 
-    and ensure implementations are consist across variants.
+    and ensure implementations are consistent across variants.
 
   * **Class definition** derived from the ``KernelBase`` class. We describe
     this in more detail below.
