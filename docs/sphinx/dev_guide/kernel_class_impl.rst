@@ -47,9 +47,9 @@ The methods in the source file are:
       * The number of *loop iterations* that are executed and the number of 
         loop kernels that run each time the kernel is executed. Note that the 
         **ADD** kernel contains a single for-loop so the number of iterations 
-        is the problem size and number of loop kernels is one. Other kernels in
-        the Suite execute multiple loop kernels with different sizes,
-        potentially, and so these methods are used to describe this.
+        is the problem size and the number of loop kernels is one. Other kernels
+        in the Suite may execute multiple loop kernels with different sizes,
+        so these methods are used to describe this.
       * The number of bytes read and written and the number of floating point
         operations (FLOPS) performed for each kernel execution.
       * The operational complexity of the kernel.
