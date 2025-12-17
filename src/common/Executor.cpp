@@ -835,6 +835,7 @@ void Executor::runWarmupKernels()
   //
   // Run warmup kernels
   //
+  bool prev_state = KernelBase::setWarmupRun(true);
   for ( auto kid = kernel_ids.begin(); kid != kernel_ids.end(); ++ kid ) {
     KernelBase* kernel = getKernelObject(*kid, run_params);
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
@@ -846,6 +847,7 @@ void Executor::runWarmupKernels()
 #endif
     delete kernel;
   }
+  KernelBase::setWarmupRun(prev_state);
 
 }
 
@@ -933,10 +935,12 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Set basic table formatting parameters.
     //
-    const string kernel_col_name("Kernel  ");
+    const string kernel_name_col_header_variant("Variant  ");
+    const string kernel_name_col_header_tuning("Tuning  ");
     const string sepchr(" , ");
 
-    size_t kercol_width = kernel_col_name.size();
+    size_t kercol_width = max(kernel_name_col_header_variant.size(),
+                              kernel_name_col_header_tuning.size());
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       kercol_width = max(kercol_width, kernels[ik]->getName().size());
     }
@@ -969,7 +973,7 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column variant name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
+    file <<left<< setw(kercol_width) << kernel_name_col_header_variant;
     for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
       for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
@@ -981,7 +985,7 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column tuning name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
+    file <<left<< setw(kercol_width) << kernel_name_col_header_tuning;
     for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
       for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
