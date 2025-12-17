@@ -15,8 +15,8 @@ Kernel Class Implementation
 Each kernel in the Suite follows a similar source file organization and 
 implementation pattern for consistency and ease of analysis and understanding.
 Here, we describe important conventions that apply in each kernel class
-implementation that must be followed to ensure that all kernels integrate into
-the RAJA Performance Suite in the same way.
+implementation that **must be followed** to ensure that all kernels look the
+same and integrate into the RAJA Performance Suite in the same way.
 
 .. _kernel_class_impl_gen-label:
 
@@ -25,9 +25,9 @@ General class methods
 ----------------------
 
 Class methods that do not execute kernel variants and which are not specific to
-any kernel variant implementation are defined in one implementation file. For
-the **ADD** kernel that we are describing, this is the source file ``ADD.cpp``,
-which in its entirety is:
+any kernel variant implementation are defined in one implementation file, for
+example the source file ``ADD.cpp`` for the **ADD** kernel that we are
+describing. The file contents in their entirety are:
 
 .. literalinclude:: ../../../src/stream/ADD.cpp
    :language: C++
@@ -43,19 +43,26 @@ The methods in the source file are:
       * Default problem size and number of kernel repetitions to generate 
         execution run time.
       * The actual problem size that will be run, which is a function of
-        the default size and command-line input.
-      * The number of *loop iterations* that are performed and the number of 
+        the default size and command-line input for target problem size.
+      * The number of *loop iterations* that are executed and the number of 
         loop kernels that run each time the kernel is executed. Note that the 
-        **ADD** kernel is based on a simple, single for-loop. However, other 
-        kernels in the Suite execute multiple loop kernels.
-      * The number of bytes read and written and the number of FLOPS performed 
-        for each kernel execution.
+        **ADD** kernel contains a single for-loop so the number of iterations 
+        is the problem size and the number of loop kernels is one. Other kernels
+        in the Suite may execute multiple loop kernels with different sizes,
+        so these methods are used to describe this.
+      * The number of bytes read and written and the number of floating point
+        operations (FLOPS) performed for each kernel execution.
+      * The operational complexity of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
         the various ``define*VariantTunings`` methods that are defined in the
-        file where the variants and tunings are implemented. Note that not
-        every kernel implements every variant, so ``KernelBase`` provides a
+        source file where the variants and tunings are implemented. Note that
+        not every kernel implements every variant, so ``KernelBase`` provides a
         "default" implementation that defines no variants or tunings.
+
+    ..note:: Available variant tunings for each kernel are specified using a
+             ``...BOILERPLATE...`` macro invocation in each kernel variant
+             source file. This is discussed in :ref:`kernel_class_impl_exec-label`.
 
   * **Class destructor**, which must be provided to deallocate kernel state 
     that is allocated in the constructor and which persists throughout the
@@ -64,7 +71,8 @@ The methods in the source file are:
     constructor.
 
   * ``setUp`` method, which allocates and initializes data required for the
-    kernel to execute and produce results.
+    kernel to execute and produce results. This method is called before
+    each kernel variant is run.
 
   * ``tearDown`` method, which deallocates and resets any data that will be
     re-allocated and/or initialized in subsequent kernel executions.
@@ -78,8 +86,10 @@ The methods in the source file are:
     member of the ``KernelBase`` class, for the variant and tuning index that
     was run.
 
-    .. note:: The checksum must be computed in the same way for each
-              variant of a  kernel so that checksums for different
+    .. note:: Kernel checksum values are used to determine whether kernels 
+              variants are producing the same results. Thus, the checksum
+              **must** be computed in the same way for each
+              variant of a kernel so that checksums for different
               variants can be compared to help identify differences, and
               potential errors in implementations, compiler optimizations,
               programming model execution, etc.
@@ -109,9 +119,9 @@ variant.
 
 The ``Executor`` class in the ``common`` directory creates kernel objects,
 one for each kernel that will be run based on command-line input options. To
-ensure a new kernel object will be created properly, add a call to its class 
-constructor based on its ``KernelID`` in the ``getKernelObject()`` method in 
-the ``RAJAPerfSuite.cpp`` file. For example::
+ensure a new kernel object will be created properly, make sure to add a call
+to its class constructor in the switch case section for its ``KernelID`` in the
+``getKernelObject()`` method in the ``RAJAPerfSuite.cpp`` file. For example::
 
   KernelBase* getKernelObject(KernelID kid,
                               const RunParams& run_params)
@@ -185,12 +195,26 @@ A few details are worth noting:
   * Macros defined in the ``ADD.hpp`` header file are used to reduce the amount
     of redundant code, such as for data initialization (``ADD_DATA_SETUP``) 
     and the kernel body (``ADD_BODY``).
-  * The ``RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE`` macro is used outside
-    the method implementation, to define the "default" tunings for the ``ADD``
-    kernel for the ``Seq`` backend. The macro defines the
-    ``defineSeqVariantTunings`` method for this kernel and assumes the
+  * The ``RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE`` macro appears in the file
+    outside of the class implementation to define the variants and "default"
+    tunings for the ``ADD`` kernel for the ``Seq`` back-end. The macro defines
+    the ``defineSeqVariantTunings`` method for this kernel and assumes the
     existence of ``runSeqVariant``. Note that it adds a "default" tuning for
-    each of the variants listed as the final arguments to the macro.
+    each of the variants listed in the final arguments to the macro.
+  * Each kernel variant execution contains a call to ``startTimer()`` and
+    ``endTimer()`` methods which are used to gather execution timing
+    information. Between these method calls is a loop over
+    *kernel repetitions*. Each kernel defines a default number of run
+    repetitions to record a sufficient amount of execution time to reduce
+    execution timing noise. The number of repetitions can be controlled via
+    command-line arguments.
+
+    .. note:: The kernel repetition loop counter increment is done using the
+    macro ``RP_REPCOUNTINC`` for consistency and to reduce code verbosity.
+    The loop counter variable ``irep`` is declared ``volatile`` to prevent
+    compilers from optimizing certain loop execution operations. The syntax
+    inside the macro definition quiets compiler warnings when the code is 
+    compiled using the C++20 standard.
 
 All kernel source files follow a similar organization and implementation 
 pattern for each set of back-end execution variants. However, there are some
@@ -210,7 +234,7 @@ Notable differences with the sequential variant file are:
   * Most of the file is guarded using the ``RAJA_ENABLE_CUDA`` macro.
 
     .. note:: The contents of all non-sequential variant implementation files
-              are guarded using the ``RAJA_ENABLE_<backend>`` macros.
+              are guarded using the ``RAJA_ENABLE_<back-end>`` macros.
 
   * A CUDA GPU kernel ``add`` is implemented for the ``Base_CUDA`` variant.
   * The method to execute the CUDA kernel variants ``ADD::runCudaVariantImpl``
@@ -219,36 +243,33 @@ Notable differences with the sequential variant file are:
     ``setBlockSize`` function is called to provide this block_size to caliper.
   * The ``RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE`` macro is
     used outside the method implementation, to define "block_size" tunings for
-    the ``ADD`` kernel for the ``Cuda`` backend. The macro defines the
+    the ``ADD`` kernel for the ``Cuda`` back-end. The macro defines the
     ``defineCudaVariantTunings`` method for this kernel and assumes the
     existence of ``runCudaVariantImpl<block_size>`` and ``gpu_block_sizes_type``.
     Note that this sets the kernel up to run with the GPU ``block_size``
-    versions specified via command-line input mentioned in :ref:`build_build-label`.
+    information specified via command-line input mentioned in :ref:`build_build-label`.
+  * Finally, the method ``RPLaunchCudaKernel`` method is used to launch the
+    non-RAJA variants so that they use the same launch mechanics for GPU
+    kernels used inside RAJA for a fair timing comparison. A similar method
+    ``RPLaunchHipKernel`` is used for HIP back-end kernel variants. 
 
 .. important:: Following the established implementation patterns for kernels
-               in the Suite help to ensure that the code is consistent, 
-               understandable, easily maintained, and needs minimal 
-               documentation.
+               in the Suite help to ensure that the code is consistent,
+               understandable, easily maintained, and needs minimal specific
+               documentation for any individual kernel or variant.
 
 --------------------------------
 Kernel tuning definition methods
 --------------------------------
 
-Following on from the previous section the **ADD** :ref:`kernel_class-label`
+Following on from the previous section, the **ADD** :ref:`kernel_class-label`
 back-end files also contain *define* methods which add tuning definitions
 for the variants of the kernel in the same back-end file.
 
 By convention each of the *define* methods takes no arguments. Each kernel must
-provide a *define* method for each of the back-ends that it implements. This
-method defines the variants and tunings for that backend. Each method is
-responsible for defining the variants and tunings for that back-end which
-involves calling the ``addVariantTuning`` kernel base class method for each
-variant and tuning:
-
-  * The template parameter is a pointer to the member function that implements
-    the tuning
-  * The first argument is the variant id
-  * The second argument is the name of the tuning
+provide such a *define* method for each of the back-ends that it implements.
+This method defines the tunings for the variants of the back-end by calling
+the ``addVariantTuning`` kernel base class method for each variant and tuning.
 
 For example, here is the method to define CUDA GPU variants of the **MEMSET**
 kernel in the ``MEMSET-Cuda.cpp`` file:
@@ -257,6 +278,11 @@ kernel in the ``MEMSET-Cuda.cpp`` file:
    :start-after: _memset_define_cuda_start
    :end-before: _memset_define_cuda_end
    :language: C++
+
+  * The template parameter is a pointer to the member function that implements
+    the tuning; e.g., ``&MEMSET::runCudaVariantLibrary``
+  * The first argument is the variant id
+  * The second argument is the name of the tuning given as a string
 
 A few details are worth noting:
 

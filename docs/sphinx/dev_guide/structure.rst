@@ -12,7 +12,7 @@
 RAJA Performance Suite Structure: Adding Kernels, Variants, and Tunings 
 ************************************************************************
 
-This section describes how to add Kernels, Variants, Groups, and Tunings to the
+This section describes how to add kernels, variants, groups, and tunings to the
 Suite. The discussion aims to make clear the organization of the code and 
 how it works, which is useful to understand when making a contribution.
 
@@ -32,12 +32,13 @@ directory, you will see the following::
   RAJAPerfSuiteDriver.cpp
   CMakeLists.txt
 
-Each directory contains files for kernels in the Group associated with the 
+Each directory contains files for kernels in the group associated with the 
 directory name. For example, the ``lcals`` directory contains kernels from
-the LCALS benchmark suite, the ``stream`` directory contains kernels from a
-stream benchmark suite, and so on. The one exception is the ``common`` 
-directory, which contains files that implement the Suite infrastructure and 
-utilities, such as data management routines, used throughout the Suite.
+the LCALS benchmark suite (a precursor to RAJA Performance Suite), the
+``stream`` directory contains kernels from a stream benchmark suite, and so on.
+The one exception is the ``common`` directory, which contains files that
+implement the Suite infrastructure and utilities, such as data management
+routines, used throughout the Suite.
 
 The following discussion describes how to modify and add files with new 
 content to the Suite, such as new kernels, variants, etc.
@@ -51,8 +52,8 @@ Adding a Kernel
 Adding a kernel to the Suite involves five main steps:
 
 #. Add a unique kernel ID and a unique kernel name to the Suite.
-#. If the kernel is part of a new kernel group or exercises a new RAJA feature,
-   add a unique group ID and group name. 
+#. If the kernel is part of a new kernel group, add a unique group ID and
+   group name. 
 #. If the kernel exercises a RAJA feature that is not currently used in the 
    Suite, add a unique feature ID and feature name.
 #. Implement a kernel class that defines all operations needed to integrate
@@ -61,7 +62,7 @@ Adding a kernel to the Suite involves five main steps:
 #. Add appropriate targets to ``CMakeLists.txt`` files, where needed, so
    that the new kernel code will be compiled when the Suite is built.
 
-We describe the steps in the following sections.
+We describe these steps in the following sections.
 
 .. _structure_addkernel_name-label:
 
@@ -122,10 +123,10 @@ Suite machinery.
           * The values in the ``KernelID`` enum must match the strings in the
             ``KernelNames`` array one-to-one and in the same order.
 
-Typically, adding a new Group or Feature is not needed when adding a Kernel.
-One or both of these needs to be added only if the Kernel is not part of an
-existing Group of kernels, or exercises a RAJA Feature that is not used in an
-existing Kernel. For completeness, we describe the addition of a new group and
+Typically, adding a new group or Feature is not needed when adding a kernel.
+One or both of these needs to be added only if the kernel is not part of an
+existing group of kernels, or exercises a RAJA Feature that is not used in an
+existing kernel. For completeness, we describe the addition of a new group and
 feature in case either is needed.
 
 .. _structure_addkernel_group-label:
@@ -139,7 +140,7 @@ header file and an associated group string name must be added to the
 ``GroupNames`` string array in the ``RAJAPerfSuite.cpp`` source file. The
 process is similar to adding a new kernel ID and name described above.
 
-.. note:: Enumeration values and string array entries for Groups must be kept 
+.. note:: Enumeration values and string array entries for groups must be kept 
           consistent, in the same order and matching one-to-one.
 
 .. _structure_addkernel_feature-label:
@@ -163,7 +164,7 @@ described above.
 Adding a Variant
 ================
 
-Similar to a Kernel, each Variant in the Suite is is identified by an 
+Similar to a kernel, each variant in the Suite is is identified by an 
 enumeration value and a string name. Adding a new variant requires adding 
 these two items in a similar fashion to adding a kernel name and ID as 
 described above.
@@ -194,7 +195,8 @@ directory. Adding a new variant ID and name is essentially the same as
 adding a kernel ID and name, which is described in 
 :ref:`structure_addkernel_name-label`.
 
-.. note:: A variant string name is just a string version of the variant ID.               enum value label. This convention must be followed so that each
+.. note:: A variant string name is just a string version of the variant ID
+          enum value label. This convention must be followed so that each
           variant works properly within the RAJA Performance Suite 
           machinery. Also, the values in the VariantID enum and the 
           strings in the VariantNames array must be kept consistent 
@@ -224,6 +226,6 @@ When adding a new tuning to a kernel follow these steps.
 #. Define the new tuning in the ``define<variant-name>VariantTunings`` method
    for the appropriate variant(s) as needed.
 
-.. note:: If a tuning is added to a kernel backend currently using one of the
-          tuning definition boilerplates then you will have to add a custom
-          ``define<variant-name>VariantTunings`` method.
+.. note:: If a tuning is added to a kernel back-end currently using one of the
+          tuning definition boilerplate macros, then you will have to add a
+          custom ``define<variant-name>VariantTunings`` method.
