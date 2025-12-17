@@ -202,7 +202,8 @@ starting weights (sum to 1.0) which include:
 
 .. note:: Caveats: 
 
-          #. When collecting PAPI data in this way you'll be limited to running              only one kernel variant, since Caliper maintains only one PAPI
+          #. When collecting PAPI data in this way, you'll be limited to running
+             only one kernel variant, since Caliper maintains only one PAPI
              context.
           #. Small kernels should be run at large problem sizes to minimize 
              anomalous readings.

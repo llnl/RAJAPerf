@@ -169,7 +169,7 @@ type ``make test`` to run the tests you have built and see the results.
 Building with MPI
 -----------------
 
-In :ref:`run_mpi-label`, we not that the Suite can be built with MPI enabled
+In :ref:`run_mpi-label`, we note that the Suite can be built with MPI enabled
 and described why this is useful. Some configuration scripts we provide will 
 configure a build with MPI support enabled. For example::
 
