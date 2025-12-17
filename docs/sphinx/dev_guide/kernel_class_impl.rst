@@ -50,8 +50,13 @@ The methods in the source file are:
         is the problem size and the number of loop kernels is one. Other kernels
         in the Suite may execute multiple loop kernels with different sizes,
         so these methods are used to describe this.
-      * The number of bytes read and written and the number of floating point
-        operations (FLOPS) performed for each kernel execution.
+      * The number of bytes read for each kernel execution.
+      * The number of bytes written for each kernel execution.
+      * The number of bytes read, modified, and written for each kernel execution.
+      * The number of bytes atomically read, modified, and written for each
+        kernel execution.
+      * The number of floating point operations (FLOPS) performed for each
+        kernel execution.
       * The operational complexity of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
@@ -59,6 +64,17 @@ The methods in the source file are:
         source file where the variants and tunings are implemented. Note that
         not every kernel implements every variant, so ``KernelBase`` provides a
         "default" implementation that defines no variants or tunings.
+
+    ..note:: When counting the number of bytes accessed each byte accessed is
+             counted in exactly one of the byte counters. For example a byte
+             that read and written is counted in the bytes read, modified, and
+             written counter and not in the read or written counters. Each byte
+             accessed is counted once for each loop/kernel launch it is accessed
+             in even if it is accessed multiple times within a loop/kernel
+             launch. For example if a byte is written five times in the first
+             loop/kernel launch and read two times in the second loop/kernel
+             launch of a kernel, then it is counted once in the bytes read
+             counter and once in the bytes written counter.
 
     ..note:: Available variant tunings for each kernel are specified using a
              ``...BOILERPLATE...`` macro invocation in each kernel variant
