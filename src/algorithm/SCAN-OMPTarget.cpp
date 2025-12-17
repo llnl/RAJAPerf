@@ -30,7 +30,7 @@ namespace algorithm
 #endif
 
 
-void SCAN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SCAN::runOpenMPTargetVariant(VariantID vid)
 {
 #if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
 
@@ -45,7 +45,8 @@ void SCAN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_OpenMPTarget : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         SCAN_PROLOGUE;
 
@@ -70,6 +71,12 @@ void SCAN::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+#if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SCAN, OpenMPTarget, Base_OpenMPTarget)
+#else
+void SCAN::defineOpenMPTargetVariantTunings() {}
+#endif
 
 } // end namespace algorithm
 } // end namespace rajaperf

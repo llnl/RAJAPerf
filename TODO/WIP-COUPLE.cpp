@@ -46,11 +46,7 @@ COUPLE::COUPLE(const RunParams& params)
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
+  addVariantTunings();
 }
 
 COUPLE::~COUPLE()
@@ -80,9 +76,8 @@ void COUPLE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_ireal = Complex_type(0.0, 1.0);
 }
 
-void COUPLE::runKernel(VariantID vid, size_t tune_idx)
+void COUPLE::runSeqVariant(VariantID vid)
 {
-  RAJA_UNUSED_VAR(tune_idx);
   const Index_type run_reps = getRunReps();
 
   COUPLE_DATA_SETUP;
@@ -122,6 +117,23 @@ void COUPLE::runKernel(VariantID vid, size_t tune_idx)
     }
 #endif
 
+    default : {
+      getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
+    }
+
+  }
+}
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(COUPLE, Seq, Base_Seq, RAJA_Seq)
+
+void COUPLE::runOpenMPVariant(VariantID vid)
+{
+  const Index_type run_reps = getRunReps();
+
+  COUPLE_DATA_SETUP;
+
+  switch ( vid ) {
+
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
     case Base_OpenMP : {
 
@@ -155,30 +167,15 @@ void COUPLE::runKernel(VariantID vid, size_t tune_idx)
     }
 #endif
 
-#if defined(RAJA_ENABLE_TARGET_OPENMP) && 0
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-      runOpenMPTargetVariant(vid, tune_idx);
-      break;
-    }
-#endif
-
-#if defined(RAJA_ENABLE_CUDA) && 0
-    case Base_CUDA :
-    case RAJA_CUDA :
-    {
-      runCudaVariant(vid, tune_idx);
-      break;
-    }
-#endif
-
     default : {
       getCout() << "\n  COUPLE : Unknown variant id = " << vid << std::endl;
     }
 
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(COUPLE, OpenMP, Base_OpenMP, RAJA_OpenMP)
+
 
 void COUPLE::updateChecksum(VariantID vid, size_t tune_idx)
 {

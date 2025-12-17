@@ -57,6 +57,8 @@ __global__ void dot(Real_ptr a, Real_ptr b,
 template < size_t block_size, typename MappingHelper >
 void DOT::runHipVariantBase(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -73,7 +75,8 @@ void DOT::runHipVariantBase(VariantID vid)
         MappingHelper, (dot<block_size>), block_size, shmem);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJAPERF_HIP_REDUCER_INITIALIZE(&m_dot_init, dprod, hdprod, 1, 1);
 
@@ -101,6 +104,8 @@ void DOT::runHipVariantBase(VariantID vid)
 template < size_t block_size, typename AlgorithmHelper, typename MappingHelper >
 void DOT::runHipVariantRAJA(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using reduction_policy = std::conditional_t<AlgorithmHelper::atomic,
       RAJA::hip_reduce_atomic,
       RAJA::hip_reduce>;
@@ -120,7 +125,8 @@ void DOT::runHipVariantRAJA(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::ReduceSum<reduction_policy, Real_type> dot(m_dot_init);
 
@@ -142,6 +148,8 @@ void DOT::runHipVariantRAJA(VariantID vid)
 template < size_t block_size, typename MappingHelper >
 void DOT::runHipVariantRAJANewReduce(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using exec_policy = std::conditional_t<MappingHelper::direct,
       RAJA::hip_exec<block_size, true /*async*/>,
       RAJA::hip_exec_occ_calc<block_size, true /*async*/>>;
@@ -157,7 +165,8 @@ void DOT::runHipVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        Real_type tdot = m_dot_init;
 
@@ -180,77 +189,11 @@ void DOT::runHipVariantRAJANewReduce(VariantID vid)
   }
 }
 
-void DOT::runHipVariant(VariantID vid, size_t tune_idx)
+
+void DOT::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
-
-          if ( vid == Base_HIP ) {
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runHipVariantBase<decltype(block_size){},
-                                decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          } else if ( vid == RAJA_HIP ) {
-
-            seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
-
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runHipVariantRAJA<decltype(block_size){},
-                                  decltype(algorithm_helper),
-                                  decltype(mapping_helper)>(vid);
-
-              }
-
-              t += 1;
-
-            });
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runHipVariantRAJANewReduce<decltype(block_size){},
-                                         decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          }
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  DOT : Unknown Hip variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void DOT::setHipTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -263,25 +206,35 @@ void DOT::setHipTuningDefinitions(VariantID vid)
 
             auto algorithm_helper = gpu_algorithm::block_atomic_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      std::to_string(block_size));
+            addVariantTuning<&DOT::runHipVariantBase<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
 
           } else if ( vid == RAJA_HIP ) {
 
             seq_for(gpu_algorithm::reducer_helpers{}, [&](auto algorithm_helper) {
 
-              addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                        decltype(mapping_helper)::get_name()+"_"+
-                                        std::to_string(block_size));
+              addVariantTuning<&DOT::runHipVariantRAJA<
+                                   decltype(block_size){},
+                                   decltype(algorithm_helper),
+                                   decltype(mapping_helper)>>(
+                  vid, decltype(algorithm_helper)::get_name()+"_"+
+                       decltype(mapping_helper)::get_name()+"_"+
+                       std::to_string(block_size));
 
             });
      
             auto algorithm_helper = gpu_algorithm::block_device_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      "new_"+std::to_string(block_size));
+            addVariantTuning<&DOT::runHipVariantRAJANewReduce<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     "new_"+std::to_string(block_size));
 
           }
 

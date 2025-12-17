@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST_3LOOP::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -33,7 +33,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           counts[i] = (INDEXLIST_3LOOP_CONDITIONAL) ? 1 : 0;
@@ -75,7 +76,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           indexlist_conditional_lam(i);
@@ -110,7 +112,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::Host);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend),
@@ -147,6 +150,8 @@ void INDEXLIST_3LOOP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

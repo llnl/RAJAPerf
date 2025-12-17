@@ -19,8 +19,7 @@ namespace rajaperf
 namespace apps
 {
 
-void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
-                                     Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXRECT::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -52,7 +51,8 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
@@ -68,7 +68,8 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
@@ -86,7 +87,8 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexrect_lam);
@@ -107,6 +109,8 @@ void INTSC_HEXRECT::runOpenMPVariant(VariantID vid,
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXRECT, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

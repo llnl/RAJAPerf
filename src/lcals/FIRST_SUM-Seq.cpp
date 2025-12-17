@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void FIRST_SUM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FIRST_SUM::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
@@ -37,7 +37,8 @@ void FIRST_SUM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           FIRST_SUM_BODY;
@@ -53,7 +54,8 @@ void FIRST_SUM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           firstsum_lam(i);
@@ -70,7 +72,8 @@ void FIRST_SUM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), firstsum_lam);
@@ -89,6 +92,8 @@ void FIRST_SUM::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FIRST_SUM, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace lcals
 } // end namespace rajaperf

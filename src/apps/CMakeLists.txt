@@ -14,7 +14,6 @@ blt_add_library(
           CONVECTION3DPA-Hip.cpp
           CONVECTION3DPA-Seq.cpp
           CONVECTION3DPA-OMP.cpp
-          CONVECTION3DPA-OMPTarget.cpp
           CONVECTION3DPA-Sycl.cpp
           DEL_DOT_VEC_2D.cpp
           DEL_DOT_VEC_2D-Seq.cpp
@@ -22,13 +21,12 @@ blt_add_library(
           DEL_DOT_VEC_2D-Cuda.cpp
           DEL_DOT_VEC_2D-OMP.cpp
           DEL_DOT_VEC_2D-OMPTarget.cpp
-	  DEL_DOT_VEC_2D-Sycl.cpp
+          DEL_DOT_VEC_2D-Sycl.cpp
           DIFFUSION3DPA.cpp
           DIFFUSION3DPA-Cuda.cpp
           DIFFUSION3DPA-Hip.cpp
           DIFFUSION3DPA-Seq.cpp
           DIFFUSION3DPA-OMP.cpp
-          DIFFUSION3DPA-OMPTarget.cpp
           DIFFUSION3DPA-Sycl.cpp
           EDGE3D.cpp
           EDGE3D-Cuda.cpp
@@ -49,8 +47,6 @@ blt_add_library(
           FEMSWEEP-Hip.cpp
           FEMSWEEP-Seq.cpp
           FEMSWEEP-OMP.cpp
-          FEMSWEEP-OMPTarget.cpp
-          FEMSWEEP-Sycl.cpp
           FIR.cpp
           FIR-Seq.cpp
           FIR-Hip.cpp
@@ -87,21 +83,18 @@ blt_add_library(
           MASS3DEA-Hip.cpp
           MASS3DEA-Seq.cpp
           MASS3DEA-OMP.cpp
-          MASS3DEA-OMPTarget.cpp
           MASS3DEA-Sycl.cpp
           MASS3DPA.cpp
           MASS3DPA-Cuda.cpp
           MASS3DPA-Hip.cpp
           MASS3DPA-Seq.cpp
           MASS3DPA-OMP.cpp
-          MASS3DPA-OMPTarget.cpp
           MASS3DPA-Sycl.cpp
           MASSVEC3DPA.cpp
           MASSVEC3DPA-Cuda.cpp
           MASSVEC3DPA-Hip.cpp
           MASSVEC3DPA-Seq.cpp
           MASSVEC3DPA-OMP.cpp
-          MASSVEC3DPA-OMPTarget.cpp
           MASSVEC3DPA-Sycl.cpp
           MATVEC_3D_STENCIL.cpp
           MATVEC_3D_STENCIL-Seq.cpp
