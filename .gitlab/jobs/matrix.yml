@@ -19,7 +19,7 @@
 # the comparison with the original job is easier.
 
 # Shared job uses %clang-18-gcc-13, replaced with %clang-18 below
-clang_18_1_1_gcc_13_cuda_12_6_0:
+clang_18_1_8_gcc_13_cuda_12_6_0:
   extends: .job_on_matrix
   variables:
     ON_MATRIX: "OFF"
