@@ -53,6 +53,8 @@ ENERGY::ENERGY(const RunParams& params)
                   9    // 1 sqrt
                   ) * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

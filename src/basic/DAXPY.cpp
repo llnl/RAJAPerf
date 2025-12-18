@@ -33,6 +33,8 @@ DAXPY::DAXPY(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

@@ -55,6 +55,8 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                   2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D +
                   2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);

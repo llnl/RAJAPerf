@@ -33,6 +33,8 @@ ADD::ADD(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

@@ -112,6 +112,7 @@ public:
   void setBytesAtomicModifyWrittenPerRep(Index_type bytes) { bytes_atomic_modify_written_per_rep = bytes;}
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
+  void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -196,6 +197,7 @@ public:
   Index_type getBytesAtomicModifyWrittenPerRep() const { return bytes_atomic_modify_written_per_rep; }
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
+  ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
@@ -641,6 +643,8 @@ private:
 
   bool uses_feature[NumFeatures];
 
+  ChecksumConsistency checksum_consistency;
+
   Complexity complexity;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
@@ -678,6 +682,7 @@ private:
   cali_id_t Flops_Rep_attr;
   cali_id_t BlockSize_attr;
   std::map<std::string, cali_id_t> Feature_attrs;
+  cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
 
 

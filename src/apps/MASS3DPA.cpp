@@ -48,6 +48,8 @@ MASS3DPA::MASS3DPA(const RunParams& params)
                          2 * MPA_Q1D * MPA_Q1D * MPA_D1D * MPA_D1D +
                          2 * MPA_Q1D * MPA_D1D * MPA_D1D * MPA_D1D + MPA_D1D * MPA_D1D * MPA_D1D));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);

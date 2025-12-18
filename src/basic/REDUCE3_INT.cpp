@@ -39,6 +39,8 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
