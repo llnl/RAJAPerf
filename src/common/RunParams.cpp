@@ -58,6 +58,7 @@ RunParams::RunParams(int argc, char** argv)
    checkrun_reps(1),
    reference_variant(),
    reference_vid(NumVariants),
+   warmup_mode(WarmupMode::Default),
    warmup_kernel_input(),
    invalid_warmup_kernel_input(),
    kernel_input(),
@@ -83,7 +84,6 @@ RunParams::RunParams(int argc, char** argv)
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
-   disable_warmup(false),
    run_kernels(),
    run_variants()
 {
@@ -176,8 +176,6 @@ void RunParams::print(std::ostream& str) const
   }
 #endif
 
-  str << "\n disable_warmup = " << disable_warmup;
-
   str << "\n seq data space = " << getDataSpaceName(seqDataSpace);
   str << "\n omp data space = " << getDataSpaceName(ompDataSpace);
   str << "\n omp target data space = " << getDataSpaceName(ompTargetDataSpace);
@@ -199,6 +197,8 @@ void RunParams::print(std::ostream& str) const
   str << "\n cuda MPI data space = " << getDataSpaceName(cudaMPIDataSpace);
   str << "\n hip MPI data space = " << getDataSpaceName(hipMPIDataSpace);
   str << "\n kokkos MPI data space = " << getDataSpaceName(kokkosMPIDataSpace);
+
+  str << "\n warmup_mode = " << WarmupModeToStr(warmup_mode);
 
   str << "\n warmup_kernel_input = ";
   for (size_t j = 0; j < warmup_kernel_input.size(); ++j) {
@@ -845,6 +845,8 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         }
       }
 
+      warmup_mode = WarmupMode::Specified;
+
     } else if ( opt == std::string("--kernels") ||
                 opt == std::string("-k") ) {
 
@@ -1140,9 +1142,13 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = DryRun;
       }
 
-    } else if ( std::string(argv[i]) == std::string("--disable-warmup") ) {
+    } else if ( std::string(argv[i]) == std::string("--warmup-disable") ) {
 
-      disable_warmup = true;
+      warmup_mode = WarmupMode::Disable;
+
+    } else if ( std::string(argv[i]) == std::string("--warmup-to-run") ) {
+
+      warmup_mode = WarmupMode::KernelsRun;
 
     } else if ( std::string(argv[i]) == std::string("--checkrun") ) {
 
@@ -1348,11 +1354,16 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -of dat (output data will be in files 'dat*')\n\n";
 
   str << "\t Options for selecting kernels to run....\n"
-      << "\t ========================================\n\n";;
+      << "\t ========================================\n\n";
 
-  str << "\t --disable-warmup (disable warmup kernels) [Default is run warmup kernels that are relevant to kernels selected to run]\n\n";
+  str << "\t For warmup kernels, the default (no option specified) is to run a minimal set of warmup kernels based on\n"
+      << "\t RAJA features exercised in kernels selected to run. Other options are:\n\n";
 
-  str << "\t --warmup-kernels, -wk <space-separated strings> [Default is run warmup kernels that are relevant to kernels selected to run]\n"
+  str << "\t --warmup-disable (do not run any warmup kernels)\n\n";
+
+  str << "\t --warmup-to-run (run each kernel specified to run once in warmup pass)\n\n";
+
+  str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, default minimal set will be run]]\n"
       << "\t      (names of individual kernels and/or groups of kernels to warmup)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
@@ -2065,7 +2076,7 @@ void RunParams::processKernelInput()
   //
   // ================================================================
 
-  run_warmup_kernels.clear();
+  specified_warmup_kernel_ids.clear();
 
   if ( !warmup_kernel_input.empty() ) {
 
@@ -2103,7 +2114,7 @@ void RunParams::processKernelInput()
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
-          run_warmup_kernels.insert(tkid);
+          specified_warmup_kernel_ids.insert(tkid);
         }
       }
 
@@ -2121,7 +2132,7 @@ void RunParams::processKernelInput()
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
-            run_warmup_kernels.insert(tkid);
+            specified_warmup_kernel_ids.insert(tkid);
           }
           found_it = true;
         }

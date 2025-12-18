@@ -133,6 +133,35 @@ public:
   }
 
   /*!
+   * \brief Enumeration indicating how to run warmup kernels
+   */
+  enum WarmupMode {
+    Disable,    /*!< no warmup kernels will be run */
+    Default,    /*!< run minimal set of warmup kernels based kernels to run */
+    KernelsRun, /*!< run warmup pass of each kernel to run */
+    Specified,   /*!< run warmup pass of each kernel specified in warmup input */
+  };
+
+  /*!
+   * \brief Translate SizeMeaning enum value to string
+   */
+  static std::string WarmupModeToStr(WarmupMode wm)
+  {
+    switch (wm) {
+      case WarmupMode::Disable:
+        return "Disable";
+      case WarmupMode::Default:
+        return "Default";
+      case WarmupMode::KernelsRun:
+        return "KernelsRun";
+      case WarmupMode::Specified:
+        return "Specified";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
    * \brief Return state of input parsed to this point.
    */
   InputOpt getInputState() const { return input_state; }
@@ -252,9 +281,10 @@ public:
   const std::string& getAddToCaliperConfig() const { return add_to_cali_config; }
 #endif
 
-  bool getDisableWarmup() const { return disable_warmup; }
+  WarmupMode getWarmupMode() const { return warmup_mode; }
 
-  const std::set<KernelID>& getWarmupKernelIDsToRun() const { return run_warmup_kernels; }
+  const std::set<KernelID>& getSpecifiedWarmupKernelIDs() const
+    { return specified_warmup_kernel_ids; }
   const std::set<KernelID>& getKernelIDsToRun() const { return run_kernels; }
   const std::set<VariantID>& getVariantIDsToRun() const { return run_variants; }
   VariantID getReferenceVariantID() const { return reference_vid; }
@@ -364,6 +394,8 @@ private:
   DataSpace syclMPIDataSpace = DataSpace::SyclPinned;
   DataSpace kokkosMPIDataSpace = DataSpace::Copy;
 
+  WarmupMode warmup_mode;
+
   //
   // Arrays to hold input strings for valid/invalid input. Helpful for
   // debugging command line args.
@@ -398,9 +430,7 @@ private:
   std::string add_to_cali_config;
 #endif
 
-  bool disable_warmup;
-
-  std::set<KernelID>  run_warmup_kernels;
+  std::set<KernelID>  specified_warmup_kernel_ids;
   std::set<KernelID>  run_kernels;
   std::set<VariantID> run_variants;
 

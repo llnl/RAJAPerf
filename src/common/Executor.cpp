@@ -754,7 +754,9 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
 
 void Executor::runWarmupKernels()
 {
-  if ( run_params.getDisableWarmup() ) {
+  RunParams::WarmupMode warmup_mode = run_params.getWarmupMode();
+
+  if ( warmup_mode == RunParams::WarmupMode::Disable ) {
     return;
   } 
 
@@ -763,16 +765,28 @@ void Executor::runWarmupKernels()
   //
   // Get warmup kernels to run from input
   //
-  std::set<KernelID> kernel_ids = run_params.getWarmupKernelIDsToRun();
+  std::set<KernelID> warmup_kernel_ids;
 
-  if ( kernel_ids.empty() ) {
+  if ( warmup_mode == RunParams::WarmupMode::Specified ) {
+
+    warmup_kernel_ids = run_params.getSpecifiedWarmupKernelIDs();
+
+  } else if ( warmup_mode == RunParams::WarmupMode::KernelsRun ) {
 
     //
-    // If no warmup kernels were given, choose a warmup kernel for each feature
+    // Warmup kernels will be same as kernels specified to run in the suite
     //
+    for (size_t ik = 0; ik < kernels.size(); ++ik) {
+      KernelBase* kernel = kernels[ik];
+      warmup_kernel_ids.insert( kernel->getKernelID() );
+    } // iterate over kernels to run
+
+  } else if ( warmup_mode == RunParams::WarmupMode::Default ) {
 
     //
-    // For kernels to be run, assemble a set of feature IDs
+    // No warmup kernel input given, choose a warmup kernel for each feature
+    //
+    // First, assemble a set of feature IDs
     //
     std::set<FeatureID> feature_ids;
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
@@ -788,7 +802,7 @@ void Executor::runWarmupKernels()
     } // iterate over kernels
 
     //
-    // Map feature IDs to set of warmup kernel IDs
+    // Map feature IDs to rudimentary set of warmup kernel IDs
     //
     for ( auto fid = feature_ids.begin(); fid != feature_ids.end(); ++ fid ) {
 
@@ -797,29 +811,29 @@ void Executor::runWarmupKernels()
         case Forall:
         case Kernel:
         case Launch:
-          kernel_ids.insert(Basic_DAXPY); break;
+          warmup_kernel_ids.insert(Basic_DAXPY); break;
 
         case Sort:
-          kernel_ids.insert(Algorithm_SORT); break;
+          warmup_kernel_ids.insert(Algorithm_SORT); break;
 
         case Scan:
-          kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
+          warmup_kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
 
         case Workgroup:
-          kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
 
         case Reduction:
-          kernel_ids.insert(Basic_REDUCE3_INT); break;
+          warmup_kernel_ids.insert(Basic_REDUCE3_INT); break;
 
         case Atomic:
-          kernel_ids.insert(Basic_PI_ATOMIC); break;
+          warmup_kernel_ids.insert(Basic_PI_ATOMIC); break;
 
         case View:
           break;
 
   #ifdef RAJA_PERFSUITE_ENABLE_MPI
         case MPI:
-          kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
   #endif
 
         default:
@@ -836,7 +850,14 @@ void Executor::runWarmupKernels()
   // Run warmup kernels
   //
   bool prev_state = KernelBase::setWarmupRun(true);
-  for ( auto kid = kernel_ids.begin(); kid != kernel_ids.end(); ++ kid ) {
+
+  for ( auto kid = warmup_kernel_ids.begin();
+             kid != warmup_kernel_ids.end(); ++ kid ) {
+    //  
+    // Note that we create a new kernel object for each kernel to run
+    // in warmup so we don't pollute timing data, checksum data, etc.
+    // for kernels that will run for real later...
+    //
     KernelBase* kernel = getKernelObject(*kid, run_params);
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
     kernel->caliperOff();
@@ -847,6 +868,7 @@ void Executor::runWarmupKernels()
 #endif
     delete kernel;
   }
+
   KernelBase::setWarmupRun(prev_state);
 
 }
