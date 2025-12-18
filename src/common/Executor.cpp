@@ -19,7 +19,7 @@
 #include "CudaDataUtils.hpp"
 #include "HipDataUtils.hpp"
 
-// Warmup kernels to run first to help reduce startup overheads in timings
+// Warmup kernels for default warmup mode
 #include "basic/DAXPY.hpp"
 #include "basic/REDUCE3_INT.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -767,11 +767,11 @@ void Executor::runWarmupKernels()
   //
   std::set<KernelID> warmup_kernel_ids;
 
-  if ( warmup_mode == RunParams::WarmupMode::Specified ) {
+  if ( warmup_mode == RunParams::WarmupMode::Explicit ) {
 
     warmup_kernel_ids = run_params.getSpecifiedWarmupKernelIDs();
 
-  } else if ( warmup_mode == RunParams::WarmupMode::KernelsRun ) {
+  } else if ( warmup_mode == RunParams::WarmupMode::PerfRunSame ) {
 
     //
     // Warmup kernels will be same as kernels specified to run in the suite

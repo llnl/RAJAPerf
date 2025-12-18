@@ -845,7 +845,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         }
       }
 
-      warmup_mode = WarmupMode::Specified;
+      warmup_mode = WarmupMode::Explicit;
 
     } else if ( opt == std::string("--kernels") ||
                 opt == std::string("-k") ) {
@@ -1146,9 +1146,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       warmup_mode = WarmupMode::Disable;
 
-    } else if ( std::string(argv[i]) == std::string("--warmup-to-run") ) {
+    } else if ( std::string(argv[i]) == std::string("--warmup-perfrun-same") ) {
 
-      warmup_mode = WarmupMode::KernelsRun;
+      warmup_mode = WarmupMode::PerfRunSame;
 
     } else if ( std::string(argv[i]) == std::string("--checkrun") ) {
 
@@ -1356,14 +1356,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t Options for selecting kernels to run....\n"
       << "\t ========================================\n\n";
 
-  str << "\t For warmup kernels, the default (no option specified) is to run a minimal set of warmup kernels based on\n"
-      << "\t RAJA features exercised in kernels selected to run. Other options are:\n\n";
+  str << "\t For warmup kernels, the default (no option specified) will run a minimal set of warmup kernels based on\n"
+      << "\t RAJA features exercised in kernels specified for perf run. Other options are:\n\n";
 
   str << "\t --warmup-disable (do not run any warmup kernels)\n\n";
 
-  str << "\t --warmup-to-run (run each kernel specified to run once in warmup pass)\n\n";
+  str << "\t --warmup-perfrun-same (run same set of kernels for warmup as specified for perf run)\n\n";
 
-  str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, default minimal set will be run]]\n"
+  str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, none will be run for warmup]\n"
       << "\t      (names of individual kernels and/or groups of kernels to warmup)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";

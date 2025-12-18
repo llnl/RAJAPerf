@@ -136,10 +136,10 @@ public:
    * \brief Enumeration indicating how to run warmup kernels
    */
   enum WarmupMode {
-    Disable,    /*!< no warmup kernels will be run */
-    Default,    /*!< run minimal set of warmup kernels based kernels to run */
-    KernelsRun, /*!< run warmup pass of each kernel to run */
-    Specified,   /*!< run warmup pass of each kernel specified in warmup input */
+    Disable,       /*!< no warmup kernels will be run */
+    Default,       /*!< run minimal set of warmup kernels based kernels to run */
+    PerfRunSame,   /*!< run warmup pass of each kernel to run */
+    Explicit,      /*!< run warmup pass of each kernel explicitly named for warmup in input */
   };
 
   /*!
@@ -152,10 +152,10 @@ public:
         return "Disable";
       case WarmupMode::Default:
         return "Default";
-      case WarmupMode::KernelsRun:
-        return "KernelsRun";
-      case WarmupMode::Specified:
-        return "Specified";
+      case WarmupMode::PerfRunSame:
+        return "PerfRunSame";
+      case WarmupMode::Explicit:
+        return "Explicit";
       default:
         return "Unknown";
     }
