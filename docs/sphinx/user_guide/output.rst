@@ -97,16 +97,12 @@ Information reported in the file for each kernel is:
     each repetition of kernel.
   * **BytesWritten/rep** -- Total number of bytes written to memory for 
     each repetition of kernel.
-  * **BytesModifyWritten/rep** -- Total number of bytes modified (read and
-    written) for each repetition of kernel.
+  * **BytesModifyWritten/rep** -- Total number of bytes modified for each
+    repetition of kernel. The intersection of bytes in both ``BytesRead/rep``
+    and ``BytesWritten/rep``.
   * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified by 
     atomic operations in a kernel. If a kernel contains no atomic operations, 
     the value of zero is reported.
-
-  ..note:: The BytesRead/rep, BytesWritten/rep, BytesModifyWritten/rep, and
-           BytesAtomicModifyWritten/rep counts are mutually exclusive, so
-           access(es) to a memory location in a loop is only counted in one of
-           these counts.
 
   ..note:: The Bytes*/rep and FLOPs/rep counts are estimates for kernels
            involving randomness or difficult to count algorithms.
