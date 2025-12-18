@@ -221,11 +221,22 @@ performance-measurements:
   stage: performance-measurements
   trigger:
     include:
-      - local: '.gitlab/custom-jobs-and-variables.yml'
-      - project: 'radiuss/radiuss-shared-ci'
-        ref: 'woptim/workflow-token'
-        file: 'pipelines/performances.yml'
+      - local: '.gitlab/custom-variables.yml'
+      - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/performance-pipeline@v2025.12.0
+        inputs:
+          job_cmd: $JOB_CMD
+          dane_perf_alloc: $DANE_PERF_ALLOC
+          tuolumne_perf_alloc: $TUOLUMNE_PERF_ALLOC
+          perf_processing_cmd: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
+          perf_artifact_dir: "performance-results"
+          perf_results_file: "*_*-*.cali"
+          perf_processed_file: "processed_results.json"
+          github_token: $GITHUB_TOKEN
+          github_project_name: $GITHUB_PROJECT_NAME
+          github_project_org: $GITHUB_PROJECT_ORG
       - local: '.gitlab/jobs/performances.yml'
     strategy: depend
     forward:
       pipeline_variables: true
+  variables:
+    PERF_TESTS: "true"

@@ -6,13 +6,6 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 ##############################################################################
 
-variables:
-  PERF_ARTIFACT_DIR: "performance-results"
-  PERF_RESULTS_FILE: "*_*-*.cali"
-  PERF_PROCESSED_FILE: "processed_results.json"
-  PERF_PROCESSING_CMD: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
-  PERF_TESTS: "true"
-
 clang_14_0_6_openmp_caliper:
   variables:
     SPEC: "~shared +openmp +caliper %clang@=14.0.6 ^blt@develop"
