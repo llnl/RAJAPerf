@@ -65,16 +65,21 @@ The methods in the source file are:
         not every kernel implements every variant, so ``KernelBase`` provides a
         "default" implementation that defines no variants or tunings.
 
-    ..note:: When counting the number of bytes accessed each byte accessed is
-             counted in exactly one of the byte counters. For example a byte
-             that read and written is counted in the bytes read, modified, and
-             written counter and not in the read or written counters. Each byte
-             accessed is counted once for each loop/kernel launch it is accessed
-             in even if it is accessed multiple times within a loop/kernel
-             launch. For example if a byte is written five times in the first
-             loop/kernel launch and read two times in the second loop/kernel
-             launch of a kernel, then it is counted once in the bytes read
-             counter and once in the bytes written counter.
+    ..note:: The byte counters are intended to count traffic to and from main
+             memory like DRAM or HBM under idealized conditions with perfect
+             caching. They are not intended to count the total number of bytes
+             requested by load and store instructions. So, even if a memory
+             address is read in multiple different iterations of a loop with a
+             stencil access pattern it is only counted once in bytes read.
+             However caching is not assumed between loops/kernel launches so an
+             address is counted once for each separate loop or kernel launch.
+
+    ..note:: To simplify counting each address accessed should only be counted
+             in one of the byte counter attributes. For example an address
+             that is read and written is counted in the "read, modified, and
+             written" counter, but not in the "read" or "written" counters. The
+             final output however does add the "read" and "read, modified, and
+             written" counters when showing the bytes read.
 
     ..note:: Available variant tunings for each kernel are specified using a
              ``...BOILERPLATE...`` macro invocation in each kernel variant
