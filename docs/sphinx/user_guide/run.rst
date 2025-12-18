@@ -51,29 +51,12 @@ kernel.
 Running the Suite
 ==================
 
-After compilation, the main executable will reside in the ``bin`` subdirectory 
-of the build space. The executable will be able to run all kernels and 
-variants that have been built depending on which CMake options were specified
-to configure the build.
+After compilation, the RAJA Performance Suite executable will reside in the
+``bin`` subdirectory of the build space. The executable will be able to run
+all kernels and variants that have been built depending on which CMake options
+were specified to configure the build.
 
-To run the Suite in its default mode, type the executable name with no 
-command-line arguments::
-
-  $ ./bin/raja-perf.exe
-
-This will run all kernels and variants that have been built in their default
-configurations. Information describing how the Suite will run along with
-some information about each kernel will appear on the screen. More information
-about kernel and execution details will also appear in a run report files 
-generated in the run directory after Suite execution completes. 
-
-.. note:: You can pass the ``--dryrun`` command-line option to the executable
-          to see a summary of how the Suite will execute, by showing default
-          run parameters, without actually running it. You can also pass 
-          other command-line options when doing a "dry run" and you will see
-          that the given options are represented in the screen output.
-
-The Suite can be run in a variety of ways determined by the command-line 
+The Suite can be run in many different ways chosen by the command-line 
 options passed to the executable. For example, you can run or exclude subsets 
 of kernels, variants, or groups. You can also pass options to set problem 
 sizes, number of times each kernel is run (sampled), and many other run 
@@ -94,6 +77,27 @@ or::
 
 .. note:: To see all available Suite execution options, pass the `--help` or 
           `-h` option to the executable.
+
+.. important:: We do not describe most of the Suite execution options in this
+               guide since the runtime help output is the main reference for
+               available options, defaults, and arguments they accept.
+
+To run the Suite in its default mode, type the executable name with no 
+command-line arguments::
+
+  $ ./bin/raja-perf.exe
+
+This will run all kernels and variants that have been built in their default
+configurations. Information describing how the Suite will run along with
+some information about each kernel will appear on the screen. More information
+about kernel and execution details will also appear in a run report files 
+generated in the run directory after Suite execution completes. 
+
+.. note:: You can pass the ``--dryrun`` command-line option to the executable
+          to see a summary of how the Suite will execute by showing run
+          parameters without actually running it. You can pass any other
+          command-line options when doing a "dry run" and you will see
+          that the given options are represented in the screen output.
 
 Lastly, the program will report specific errors if given incorrect input, such
 as an option that requires a value and no value is provided. It will also emit 
@@ -116,7 +120,8 @@ will report the following in the screen output::
     See run parameters or option messages above.
 
 The output indicates that the kernel input is invalid because the string Foo
-is not the name of a kernel in the Suite, while DAXPY is the name of a kernel. 
+is not the name of a kernel in the Suite, while DAXPY is the name of a kernel
+in the Suite.
 
 .. note:: The Suite executable will attempt to provide helpful information
           if it is given incorrect input, such as command-line arguments that 
@@ -130,8 +135,19 @@ is not the name of a kernel in the Suite, while DAXPY is the name of a kernel.
 Running with MPI
 ==================
 
-Running the Suite with MPI is just like running any other MPI application.
-For example, issuing the following command on a machine with slurm scheduling::
+The Suite can be configured and compiled to run in a distributed memory
+parallel mode using MPI. Running the Suite on multiple MPI ranks will execute
+the same code for each kernel on each rank with minimal synchronization points
+to gather execution timing data from all ranks. This capability is provided so
+that individual kernel performance more closely aligns with how such kernels 
+would perform in a real application. For example, compute node memory bandwidth
+impact on performance may be different when running on many core system using
+OpenMP multithreading to exercise all cores than when each core is mapped to
+an MPI rank.
+
+Running the Suite on multiple MPI ranks is just like running any other MPI
+application. For example, issuing the following command on a machine with
+slurm scheduling::
 
   $ srun -n 2 ./bin/raja-perf.exe
 
