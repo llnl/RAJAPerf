@@ -36,10 +36,15 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
 
+  m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
+                          m_nx * (m_ny - 1) * m_nz +
+                          m_nx * m_ny * (m_nz - 1);
+  m_boundaryfaces = 2 * m_nx * m_ny + 2 * m_ny * m_nz + 2 * m_nx * m_nz;
+  m_hplanes = m_nx + m_ny + m_nz - 2;
+
   m_Blen = ND * m_ne * m_na;
   m_Alen = ND * ND * m_ne * m_na;
-  // 9450 is a property of the mesh. Will need to derive this when mesh generator is available.
-  m_Flen = FDS * FDS * 2 * 9450 * m_na;
+  m_Flen = FDS * FDS * 2 * m_sharedinteriorfaces * m_na;
   m_Sglen = m_ne * m_ng;
   m_M0len = ND * ND * m_ne;
   m_Xlen = ND * m_ne * m_ng * m_na;
@@ -164,14 +169,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   // Will need to derive these when mesh generator is available.
   allocAndCopyHostData(m_nhpaa_r, g_nhpaa_r, m_na       , vid);
   allocAndCopyHostData(m_ohpaa_r, g_ohpaa_r, m_na       , vid);
-  allocAndCopyHostData(m_phpaa_r, g_phpaa_r, m_na * 43  , vid);
+  allocAndCopyHostData(m_phpaa_r, g_phpaa_r, m_na * m_hplanes  , vid);
   allocAndCopyHostData(m_order_r, g_order_r, m_na * m_ne, vid);
 
   allocAndCopyHostData(m_AngleElem2FaceType, g_AngleElem2FaceType, NLF * m_ne * m_na , vid);
   allocAndCopyHostData(m_elem_to_faces     , g_elem_to_faces     , NLF * m_ne        , vid);
-  allocAndCopyHostData(m_F_g2l             , g_F_g2l             , 10800             , vid);
-  allocAndCopyHostData(m_idx1              , g_idx1              , 37800             , vid);
-  allocAndCopyHostData(m_idx2              , g_idx2              , 37800             , vid);
+  allocAndCopyHostData(m_F_g2l             , g_F_g2l             , m_sharedinteriorfaces + m_boundaryfaces             , vid);
+  allocAndCopyHostData(m_idx1              , g_idx1              , m_sharedinteriorfaces * 4             , vid);
+  allocAndCopyHostData(m_idx2              , g_idx2              , m_sharedinteriorfaces * 4             , vid);
 }
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)

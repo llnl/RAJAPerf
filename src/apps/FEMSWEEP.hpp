@@ -315,6 +315,10 @@ private:
   Index_type m_na;
   Index_type m_ng;
 
+  Index_type m_sharedinteriorfaces;
+  Index_type m_boundaryfaces;
+  Index_type m_hplanes;
+
   Real_ptr m_Bdat;
   Real_ptr m_Adat;
   Real_ptr m_Fdat;
