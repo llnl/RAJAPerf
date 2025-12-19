@@ -50,9 +50,6 @@ int main( int argc, char** argv )
 TEST(ShortSuiteTest, Basic)
 {
 
-  // default checksum tolerance for test pass/fail
-  rajaperf::Checksum_type chksum_tol = 1e-7;
-
 // Assemble command line args for basic test
 
   std::vector< std::string > sargv{};
@@ -76,10 +73,6 @@ TEST(ShortSuiteTest, Basic)
 #if !defined(_WIN32)
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
-  // checksum tolerance reduced b/c bas omp target variant of JACOBI_1D
-  // kernel result is off
-  chksum_tol = 5e-6;
-
   sargv.emplace_back(std::string("--exclude-kernels"));
   sargv.emplace_back(std::string("Comm"));
   sargv.emplace_back(std::string("EDGE3D"));
@@ -134,27 +127,8 @@ TEST(ShortSuiteTest, Basic)
 
     rajaperf::KernelBase* kernel = kernels[ik];
 
-    // 
-    // Get reference checksum (first kernel variant run)
-    //
-    rajaperf::Checksum_type cksum_ref = 0.0;
-    size_t ivck = 0;
-    bool found_ref = false;
-    while ( ivck < variant_ids.size() && !found_ref ) {
-
-      rajaperf::VariantID vid = variant_ids[ivck];
-      size_t num_tunings = kernel->getNumVariantTunings(vid);
-      for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-        if ( kernel->wasVariantTuningRun(vid, tune_idx) ) {
-          cksum_ref = kernel->getChecksum(vid, tune_idx);
-          found_ref = true;
-          break;
-        }
-      }
-      ++ivck;
-
-    } // while loop over variants until reference checksum found
-
+    rajaperf::Checksum_type cksum_tol = kernel->getChecksumTolerance();
+    rajaperf::Checksum_type cksum_ref = kernel->getReferenceChecksum();
 
     //
     // Check execution time is greater than zero and checksum diff is 
@@ -180,7 +154,7 @@ TEST(ShortSuiteTest, Basic)
                     << kernel->getVariantTuningName(vid, tune_idx) 
                     << std::endl;
           EXPECT_GT(rtime, 0.0);
-          EXPECT_LT(cksum_diff, chksum_tol);
+          EXPECT_LE(cksum_diff, cksum_tol);
           
         }
       } 
