@@ -33,7 +33,9 @@ SORT::SORT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
-  setChecksumConsistency(ChecksumConsistency::Consistent); //  // sort is not stable but values are equal if equivalent
+  checksum_tolerance = zero_checksum_tolerance;
+
+  setChecksumConsistency(ChecksumConsistency::Consistent); // sort is not stable but values are equal if equivalent
 
   setComplexity(Complexity::N_logN);
 

@@ -33,6 +33,8 @@ COPY8::COPY8(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  checksum_tolerance = zero_checksum_tolerance;
+
   setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N);

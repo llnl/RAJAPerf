@@ -35,7 +35,9 @@ FIRST_SUM::FIRST_SUM(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * (m_N-1));
 
-  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
+  checksum_tolerance = very_tight_checksum_tolerance;
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 

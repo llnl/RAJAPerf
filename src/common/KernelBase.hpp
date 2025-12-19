@@ -267,8 +267,18 @@ public:
   double getTotTime(VariantID vid, size_t tune_idx) const
   { return tot_time[vid].at(tune_idx); }
 
+  // Get reference checksum (first variant tuning run)
+  Checksum_type getReferenceChecksum() const
+  {
+    if (checksum_reference_variant == NumVariants) {
+      throw std::runtime_error("Can't get reference checksum if kernel was not run");
+    }
+    return checksum[checksum_reference_variant].at(checksum_reference_tuning);
+  }
   Checksum_type getChecksum(VariantID vid, size_t tune_idx) const
   { return checksum[vid].at(tune_idx); }
+  Checksum_type getChecksumTolerance() const
+  { return checksum_tolerance; }
 
   void execute(VariantID vid, size_t tune_idx);
 
@@ -601,8 +611,15 @@ public:
 protected:
   const RunParams& run_params;
 
+  static constexpr inline Checksum_type zero_checksum_tolerance = 0.0;
+  static constexpr inline Checksum_type very_tight_checksum_tolerance = 1e-12;
+  static constexpr inline Checksum_type tight_checksum_tolerance = 1e-10;
+  static constexpr inline Checksum_type normal_checksum_tolerance = 1e-7;
+  static constexpr inline Checksum_type loose_checksum_tolerance = 5e-6;
+
   std::vector<Checksum_type> checksum[NumVariants];
   Checksum_type checksum_scale_factor;
+  Checksum_type checksum_tolerance;
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
@@ -663,6 +680,9 @@ private:
 
   VariantID running_variant;
   size_t running_tuning;
+
+  VariantID checksum_reference_variant;
+  size_t checksum_reference_tuning;
 
   std::vector<int> num_exec[NumVariants];
 

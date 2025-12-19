@@ -33,7 +33,9 @@ MUL::MUL(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
+  checksum_tolerance = very_tight_checksum_tolerance;
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 

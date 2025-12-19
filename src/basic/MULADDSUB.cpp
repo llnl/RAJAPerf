@@ -33,7 +33,9 @@ MULADDSUB::MULADDSUB(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * getActualProblemSize());
 
-  setChecksumConsistency(ChecksumConsistency::Consistent);
+  checksum_tolerance = tight_checksum_tolerance;
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 

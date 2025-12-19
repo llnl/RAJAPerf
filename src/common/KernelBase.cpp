@@ -52,7 +52,12 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   running_variant = NumVariants;
   running_tuning = getUnknownTuningIdx();
 
+  checksum_reference_variant = NumVariants;
+  checksum_reference_tuning = getUnknownTuningIdx();
+
   checksum_scale_factor = 1.0;
+
+  checksum_tolerance = normal_checksum_tolerance;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   // Init Caliper column metadata attributes
@@ -305,6 +310,12 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
   this->runKernel(vid, tune_idx);
 
   this->updateChecksum(vid, tune_idx);
+
+  if (checksum_reference_variant == NumVariants) {
+    // use first run variant tuning as checksum reference
+    checksum_reference_variant = vid;
+    checksum_reference_tuning = tune_idx;
+  }
 
   this->tearDown(vid, tune_idx);
 

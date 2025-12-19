@@ -43,6 +43,8 @@ INDEXLIST_3LOOP::INDEXLIST_3LOOP(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  checksum_tolerance = zero_checksum_tolerance;
+
   setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N);
