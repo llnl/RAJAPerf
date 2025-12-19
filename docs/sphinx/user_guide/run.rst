@@ -141,9 +141,8 @@ the same code for each kernel on each rank with minimal synchronization points
 to gather execution timing data from all ranks. This capability is provided so
 that individual kernel performance more closely aligns with how such kernels 
 would perform in a real application. For example, compute node memory bandwidth
-impact on performance may be different when running on many core system using
-OpenMP multithreading to exercise all cores than when each core is mapped to
-an MPI rank.
+may be different when running on a many core system using OpenMP multithreading
+to exercise all cores than when each core is mapped to an MPI rank.
 
 Running the Suite on multiple MPI ranks is just like running any other MPI
 application. For example, issuing the following command on a machine with
