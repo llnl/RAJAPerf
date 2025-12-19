@@ -52,6 +52,12 @@ The methods in the source file are:
         so these methods are used to describe this.
       * The number of bytes read and written and the number of floating point
         operations (FLOPS) performed for each kernel execution.
+      * The consistency of the checksums of the kernel. The possible values are
+        ``Consistent`` where all the variant tunings always get the same checksum,
+        ``ConsistentPerVariantTuning`` where an individual variant tuning always
+        gets the same checksum but different variant tunings may differ
+        slightly, and ``Inconsistent`` where the checksum of a variant tuning
+        may vary slightly run to run.
       * The operational complexity of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls

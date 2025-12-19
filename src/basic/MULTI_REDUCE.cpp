@@ -41,6 +41,8 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

@@ -356,6 +356,24 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       printKernelFeatures(getCout());
       input_state = InfoRequest;
 
+    } else if ( opt == std::string("--print-checksum-consistencies") ||
+                opt == std::string("-pcc") ) {
+
+      printChecksumConsistencyNames(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-checksum-consistency-kernels") ||
+                opt == std::string("-pcck") ) {
+
+      printChecksumConsistencyKernels(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-kernel-checksum-consistencies") ||
+                opt == std::string("-pkcc") ) {
+
+      printKernelChecksumConsistencies(getCout());
+      input_state = InfoRequest;
+
     } else if ( opt == std::string("--print-complexities") ||
                 opt == std::string("-pc") ) {
 
@@ -1302,6 +1320,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --print-kernel-features, -pkf \n"
       << "\t      (print names of features used by each kernel)\n\n";
 
+  str << "\t --print-consistencies, -pcc (print names of checksum consistencies exercised in Suite)\n\n";
+
+  str << "\t --print-consistency-kernels, -pcck \n"
+      << "\t      (print names of kernels that have each consistency)\n\n";
+
+  str << "\t --print-kernel-consistencies, -pkcc \n"
+      << "\t      (print the name of the consistency of each kernel)\n\n";
+
   str << "\t --print-complexities, -pc (print names of algorithmic complexities exercised in Suite)\n\n";
 
   str << "\t --print-complexity-kernels, -pck \n"
@@ -1811,6 +1837,51 @@ void RunParams::printKernelFeatures(std::ostream& str) const
          str << "\t" << getFeatureName(tfid) << std::endl;
       }
     }  // loop over features
+    delete kern;
+  }  // loop over kernels
+  str.flush();
+}
+
+void RunParams::printChecksumConsistencyNames(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies:";
+  str << "\n-------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    str << getChecksumConsistencyName(static_cast<ChecksumConsistency>(cc)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printChecksumConsistencyKernels(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies and kernels that use each:";
+  str << "\n---------------------------------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    ChecksumConsistency tcc = static_cast<ChecksumConsistency>(cc);
+    str << getChecksumConsistencyName(tcc) << std::endl;
+    for (int kid = 0; kid < NumKernels; ++kid) {
+      KernelID tkid = static_cast<KernelID>(kid);
+      KernelBase* kern = getKernelObject(tkid, *this);
+      if ( kern->getChecksumConsistency() == tcc ) {
+        str << "\t" << getFullKernelName(tkid) << std::endl;
+      }
+      delete kern;
+    }  // loop over kernels
+    str << std::endl;
+  }  // loop over consistencies
+  str.flush();
+}
+
+void RunParams::printKernelChecksumConsistencies(std::ostream& str) const
+{
+  str << "\nAvailable kernels and checksum consistencies each uses:";
+  str << "\n-----------------------------------------\n";
+  for (int kid = 0; kid < NumKernels; ++kid) {
+    KernelID tkid = static_cast<KernelID>(kid);
+    str << getFullKernelName(tkid) << std::endl;
+    KernelBase* kern = getKernelObject(tkid, *this);
+    ChecksumConsistency tcc = kern->getChecksumConsistency();
+    str << "\t" << getChecksumConsistencyName(tcc) << std::endl;
     delete kern;
   }  // loop over kernels
   str.flush();

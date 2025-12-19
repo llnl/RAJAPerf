@@ -33,6 +33,8 @@ ATOMIC::ATOMIC(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
   setFLOPsPerRep(getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // atomics
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
