@@ -52,6 +52,8 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+
   setComplexity(Complexity::N_to_the_three_halves);
 
   setUsesFeature(Kernel);

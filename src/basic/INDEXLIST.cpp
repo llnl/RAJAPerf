@@ -35,6 +35,8 @@ INDEXLIST::INDEXLIST(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

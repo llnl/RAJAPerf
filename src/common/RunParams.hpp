@@ -312,6 +312,9 @@ private:
   void printFeatureNames(std::ostream& str) const;
   void printFeatureKernels(std::ostream& str) const;
   void printKernelFeatures(std::ostream& str) const;
+  void printChecksumConsistencyNames(std::ostream& str) const;
+  void printChecksumConsistencyKernels(std::ostream& str) const;
+  void printKernelChecksumConsistencies(std::ostream& str) const;
   void printComplexityNames(std::ostream& str) const;
   void printComplexityKernels(std::ostream& str) const;
   void printKernelComplexities(std::ostream& str) const;

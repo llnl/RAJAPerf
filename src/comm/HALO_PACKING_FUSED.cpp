@@ -37,6 +37,8 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+
   setComplexity(Complexity::N_to_the_two_thirds);
 
   setUsesFeature(Workgroup);

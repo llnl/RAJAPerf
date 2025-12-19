@@ -80,6 +80,8 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
