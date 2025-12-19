@@ -19,6 +19,16 @@
 
 namespace rajaperf {
 
+//
+// Static method to set whether kernels are used for warmup purposes or not
+//
+bool KernelBase::setWarmupRun(bool warmup_run)
+{
+  bool previous_state = s_warmup_run;
+  s_warmup_run = warmup_run;
+  return previous_state;
+}
+
 KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
@@ -133,7 +143,9 @@ Index_type KernelBase::getTargetProblemSize() const
 Index_type KernelBase::getRunReps() const
 {
   Index_type run_reps = static_cast<Index_type>(0);
-  if (run_params.getInputState() == RunParams::CheckRun) {
+  if (s_warmup_run) {
+    run_reps = static_cast<Index_type>(1);
+  } else if (run_params.getInputState() == RunParams::CheckRun) {
     run_reps = static_cast<Index_type>(run_params.getCheckRunReps());
   } else {
     run_reps = static_cast<Index_type>(default_reps*run_params.getRepFactor());
