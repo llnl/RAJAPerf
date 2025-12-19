@@ -34,6 +34,8 @@ INIT_VIEW1D::INIT_VIEW1D(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

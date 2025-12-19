@@ -34,6 +34,8 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

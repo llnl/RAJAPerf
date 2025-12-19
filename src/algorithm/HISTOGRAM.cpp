@@ -40,6 +40,8 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // counts
   setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

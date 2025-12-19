@@ -38,6 +38,8 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
     uses_feature[fid] = false;
   }
 
+  checksum_consistency = ChecksumConsistency::NumChecksumConsistencies;
+
   complexity = Complexity::NumComplexities;
 
   its_per_rep = -1;
@@ -112,6 +114,8 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                               CALI_ATTR_AGGREGATABLE |
                                               CALI_ATTR_SKIP_EVENTS);
   }
+  ChecksumConsistency_attr = cali_create_attribute("ChecksumConsistency", CALI_TYPE_STRING,
+                                                   CALI_ATTR_SKIP_EVENTS);
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
                                            CALI_ATTR_SKIP_EVENTS);
 #endif
@@ -362,6 +366,7 @@ void KernelBase::print(std::ostream& os) const
     os << "\t\t\t\t" << getFeatureName(static_cast<FeatureID>(j))
                      << " : " << uses_feature[j] << std::endl;
   }
+  os << "\t\t\t checksum_consistency = " << getChecksumConsistencyName(checksum_consistency) << std::endl;
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
@@ -451,6 +456,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
 
+    cali_set_string(ChecksumConsistency_attr, getChecksumConsistencyName(getChecksumConsistency()).c_str());
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }

@@ -39,6 +39,8 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * getActualProblemSize() + 2);
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

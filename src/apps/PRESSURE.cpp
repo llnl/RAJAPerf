@@ -38,6 +38,8 @@ PRESSURE::PRESSURE(const RunParams& params)
                   1
                   ) * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

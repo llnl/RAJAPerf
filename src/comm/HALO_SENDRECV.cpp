@@ -38,6 +38,8 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+
   setComplexity(Complexity::N_to_the_two_thirds);
 
   setUsesFeature(Forall);

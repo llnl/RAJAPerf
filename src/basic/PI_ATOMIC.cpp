@@ -34,6 +34,8 @@ PI_ATOMIC::PI_ATOMIC(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) ); // pi
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);

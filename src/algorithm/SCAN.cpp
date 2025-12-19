@@ -39,6 +39,8 @@ SCAN::SCAN(const RunParams& params)
                                               getActualProblemSize() ) /
                  getActualProblemSize();
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Scan);

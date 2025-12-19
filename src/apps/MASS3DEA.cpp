@@ -45,6 +45,8 @@ MASS3DEA::MASS3DEA(const RunParams& params)
 
   setFLOPsPerRep(m_NE * 7 * ea_mat_entries);
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);

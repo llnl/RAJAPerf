@@ -67,6 +67,8 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
   checksum_scale_factor = 0.0000000001;
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);

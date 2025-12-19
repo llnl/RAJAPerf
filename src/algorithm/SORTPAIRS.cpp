@@ -35,6 +35,8 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // sort is not stable and could depend on scheduling
+
   setComplexity(Complexity::N_logN);
 
   setUsesFeature(Sort);
