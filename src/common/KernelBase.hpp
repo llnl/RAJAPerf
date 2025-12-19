@@ -90,6 +90,15 @@ public:
     { return std::numeric_limits<size_t>::max(); }
   static std::string getDefaultTuningName() { return "default"; }
 
+  //
+  // Method to set state of all Kernel objects to indicate kernel runs 
+  // are for warmup purposes if true is passed, else false.
+  //
+  // The warmup state before the method call is returned to facilitate 
+  // reset mechanics. 
+  //
+  static bool setWarmupRun(bool warmup_run);
+
   KernelBase(KernelID kid, const RunParams& params);
 
   virtual ~KernelBase();
@@ -648,7 +657,13 @@ private:
                         variant_tuning_method_pointer method);
 
   //
-  // Static properties of kernel, independent of run
+  // Boolean member shared by all kernel objects indicating whether they
+  // will be run for warmup purposes (true) or not (false).
+  //
+  static inline bool s_warmup_run = false;
+
+  //
+  // Persistent properties of kernel, independent of run
   //
   KernelID    kernel_id;
   std::string name;
