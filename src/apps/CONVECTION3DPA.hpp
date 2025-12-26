@@ -10,8 +10,8 @@
 /// Action of 3D diffusion matrix via partial assembly
 ///
 /// Based on MFEM's/CEED algorithms.
-/// Reference implementation
-/// https://github.com/mfem/mfem/blob/master/fem/bilininteg_convection_pa.cpp
+/// Reference implementation - MFEM-v4.9
+/// https://github.com/mfem/mfem/blob/v4.9/fem/integ/bilininteg_convection_kernels.hpp
 ///
 ///
 /// for(int e = 0; e < NE; ++e) {
