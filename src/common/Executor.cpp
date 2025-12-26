@@ -1399,6 +1399,7 @@ void Executor::writeChecksumReport(ostream& file)
 
     file <<left<< setw(namecol_width) << "Variants  "
          <<left<< setw(resultcol_width) << "Result  "
+         <<left<< setw(checksum_width) << "Tolerance  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << "Average Checksum  "
          <<left<< setw(checksum_width) << "Max Checksum Diff  "
@@ -1411,6 +1412,7 @@ void Executor::writeChecksumReport(ostream& file)
 
     file <<left<< setw(namecol_width) << "  "
          <<left<< setw(resultcol_width) << "  "
+         <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "(vs. first variant listed)  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -1541,6 +1543,7 @@ void Executor::writeChecksumReport(ostream& file)
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
                  <<left<< setw(resultcol_width) << result
                  << showpoint << setprecision(prec)
+                 <<left<< setw(checksum_width) << cksum_tol
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << checksums_avg[iv][tune_idx]
                  <<left<< setw(checksum_width) << checksums_abs_diff_max[iv][tune_idx]
@@ -1552,6 +1555,7 @@ void Executor::writeChecksumReport(ostream& file)
           } else {
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
                  <<left<< setw(resultcol_width) << "Not Run"
+                 <<left<< setw(checksum_width) << "Not Run"
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << "Not Run"
                  <<left<< setw(checksum_width) << "Not Run"
