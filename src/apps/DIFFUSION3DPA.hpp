@@ -41,31 +41,31 @@
 ///   double (*QDD1)[MD1][MD1] = (double (*)[MD1][MD1]) (sm0+1);
 ///   double (*QDD2)[MD1][MD1] = (double (*)[MD1][MD1]) (sm0+2);
 ///
-///   CPU_FOREACH(dz,z,DPA_D1D)
+///   for(int dz=0; dz<DPA_D1D; ++dz)
 ///   {
-///    CPU_FOREACH(dy,y,DPA_D1D)
+///    for(int dy=0; dy<DPA_D1D; ++dy)
 ///    {
-///      CPU_FOREACH(dx,x,DPA_D1D)
+///      for(int dx=0; dx<DPA_D1D; ++dx)
 ///      {
 ///        s_X[dz][dy][dx] = DPA_X(dx,dy,dz,e);
 ///      }
 ///    }
 ///  }
 ///
-///  CPU_FOREACH(dy,y,DPA_D1D)
+///  for(int dy=0; dy<DPA_D1D; ++dy)
 ///  {
-///    CPU_FOREACH(qx,x,DPA_Q1D)
+///    for(int qx=0; qx<DPA_Q1D; ++qx)
 ///    {
 ///      B[qx][dy] = DPA_b(qx,dy);
 ///      G[qx][dy] = DPA_g(qx,dy);
 ///    }
 ///  }
 ///
-///  CPU_FOREACH(dz,z,DPA_D1D)
+///  for(int dz=0; dz<DPA_D1D; ++dz)
 ///  {
-///    CPU_FOREACH(dy,y,DPA_D1D)
+///    for(int dy=0; dy<DPA_D1D; ++dy)
 ///    {
-///      CPU_FOREACH(qx,x,DPA_Q1D)
+///      for(int qx=0; qx<DPA_Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
@@ -80,12 +80,12 @@
 ///      }
 ///    }
 ///  }
-///  //MFEM_SYNC_THREAD;
-///  CPU_FOREACH(dz,z,DPA_D1D)
+///
+///  for(int dz=0; dz<DPA_D1D; ++dz)
 ///  {
-///    CPU_FOREACH(qy,y,DPA_Q1D)
+///    for(int qy=0; qy<DPA_Q1D; ++qy)
 ///    {
-///      CPU_FOREACH(qx,x,DPA_Q1D)
+///      for(int qx=0; qx<DPA_Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
@@ -102,12 +102,11 @@
 ///    }
 ///  }
 ///
-///  //MFEM_SYNC_THREAD;
-///  CPU_FOREACH(qz,z,DPA_Q1D)
+///  for(int qz=0; qz<DPA_Q1D; ++qz)
 ///  {
-///    CPU_FOREACH(qy,y,DPA_Q1D)
+///    for(int qy=0; qy<DPA_Q1D; ++qy)
 ///    {
-///      CPU_FOREACH(qx,x,DPA_Q1D)
+///      for(int qx=0; qx<DPA_Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
@@ -136,21 +135,20 @@
 ///    }
 ///  }
 ///
-///
-///  CPU_FOREACH(dy,y,DPA_D1D)
+///  for(int dy=0; dy<DPA_D1D; ++dy)
 ///  {
-///    CPU_FOREACH(qx,x,DPA_Q1D)
+///    for(int qx=0; qx<DPA_Q1D; ++qx)
 ///    {
 ///      Bt[dy][qx] = DPA_b(qx,dy);
 ///      Gt[dy][qx] = DPA_g(qx,dy);
 ///    }
 ///  }
 ///
-///  CPU_FOREACH(qz,z,DPA_Q1D)
+///  for(int qz=0; qz<DPA_Q1D; ++qz)
 ///  {
-///    CPU_FOREACH(qy,y,DPA_Q1D)
+///    for(int qy=0; qy<DPA_Q1D; ++qy)
 ///    {
-///      CPU_FOREACH(dx,x,DPA_D1D)
+///      for(int dx=0; dx<DPA_D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MQ1)
@@ -167,11 +165,11 @@
 ///    }
 ///  }
 ///
-///  CPU_FOREACH(qz,z,DPA_Q1D)
+///  for(int qz=0; qz<DPA_Q1D; ++qz)
 ///  {
-///    CPU_FOREACH(dy,y,DPA_D1D)
+///    for(int dy=0; dy<DPA_D1D; ++dy)
 ///    {
-///      CPU_FOREACH(dx,x,DPA_D1D)
+///      for(int dx=0; dx<DPA_D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(DPA_Q1D)
@@ -188,11 +186,11 @@
 ///    }
 ///  }
 ///
-///  CPU_FOREACH(dz,z,DPA_D1D)
+///  for(int dz=0; dz<DPA_D1D; ++dz)
 ///  {
-///    CPU_FOREACH(dy,y,DPA_D1D)
+///    for(int dy=0; dy<DPA_D1D; ++dy)
 ///    {
-///      CPU_FOREACH(dx,x,DPA_D1D)
+///      for(int dx=0; dx<DPA_D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MQ1)
