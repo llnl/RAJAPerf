@@ -69,7 +69,7 @@ void FIRST_MIN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void FIRST_MIN::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += static_cast<long double>(m_minloc);
+  checksum[vid][tune_idx] += static_cast<Checksum_type>(m_minloc);
 }
 
 void FIRST_MIN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

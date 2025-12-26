@@ -67,7 +67,7 @@ void GEN_LIN_RECUR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_b5, getActualProblemSize(), checksum_scale_factor , vid);
+  checksum[vid][tune_idx] += calcChecksum(m_b5, getActualProblemSize(), vid);
 }
 
 void GEN_LIN_RECUR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

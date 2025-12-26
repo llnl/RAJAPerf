@@ -138,7 +138,7 @@ void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
 void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_b, m_zonal_array_length, checksum_scale_factor , vid);
+  checksum[vid].at(tune_idx) += calcChecksum(m_b, m_zonal_array_length, vid);
 }
 
 void MATVEC_3D_STENCIL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -529,23 +529,16 @@ public:
   }
 
   template <typename T>
-  long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len,
-                           Real_type scale_factor = 1.0)
+  Checksum_type calcChecksum(DataSpace dataSpace, T* ptr, Size_type len)
   {
     return rajaperf::calcChecksum(dataSpace,
-      ptr, len, getDataAlignment(), scale_factor);
+      ptr, len, getDataAlignment());
   }
 
   template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, VariantID vid)
+  Checksum_type calcChecksum(T* ptr, Size_type len, VariantID vid)
   {
     return calcChecksum(getDataSpace(vid), ptr, len);
-  }
-
-  template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, Real_type scale_factor, VariantID vid)
-  {
-    return calcChecksum(getDataSpace(vid), ptr, len, scale_factor);
   }
 
   void startTimer()
@@ -630,7 +623,6 @@ protected:
   };
 
   std::vector<Checksum_type> checksum[NumVariants];
-  Checksum_type checksum_scale_factor;
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
@@ -679,6 +671,7 @@ private:
 
   ChecksumConsistency checksum_consistency;
   Checksum_type checksum_tolerance;
+  Checksum_type checksum_scale_factor;
 
   Complexity complexity;
 

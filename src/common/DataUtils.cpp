@@ -575,16 +575,15 @@ void initData(Real_type& d)
  * Calculate and return checksum for data arrays.
  */
 template < typename Data_getter >
-long double calcChecksumImpl(Data_getter data, Size_type len,
-                             Real_type scale_factor)
+Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 {
-  long double tchk = 0.0;
-  long double ckahan = 0.0;
+  Checksum_type tchk = 0.0;
+  Checksum_type ckahan = 0.0;
   for (Size_type j = 0; j < len; ++j) {
-    long double x = (std::abs(std::sin(j+1.0))+0.5) * data(j);
-    long double y = x - ckahan;
-    volatile long double t = tchk + y;
-    volatile long double z = t - tchk;
+    Checksum_type x = (std::abs(std::sin(j+1.0))+0.5) * data(j);
+    Checksum_type y = x - ckahan;
+    volatile Checksum_type t = tchk + y;
+    volatile Checksum_type z = t - tchk;
     ckahan = z - y;
     tchk = t;
 #if 0 // RDH DEBUG
@@ -593,40 +592,35 @@ long double calcChecksumImpl(Data_getter data, Size_type len,
     }
 #endif
   }
-  tchk *= scale_factor;
   return tchk;
 }
 
-long double calcChecksum(Int_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(unsigned long long* ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(unsigned long long* ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Real_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Real_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Complex_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Complex_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(real(ptr[j])+imag(ptr[j]));
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(real(ptr[j])+imag(ptr[j]));
+  }, len);
 }
 
 }  // closing brace for detail namespace

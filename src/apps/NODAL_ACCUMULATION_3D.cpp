@@ -77,7 +77,7 @@ void NODAL_ACCUMULATION_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
 
 void NODAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_x, m_nodal_array_length, checksum_scale_factor , vid);
+  checksum[vid].at(tune_idx) += calcChecksum(m_x, m_nodal_array_length, vid);
 }
 
 void NODAL_ACCUMULATION_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
