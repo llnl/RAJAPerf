@@ -10,8 +10,9 @@
 /// Assembly of 3D mass matrix
 ///
 /// Based on MFEM's/CEED algorithms.
-/// Reference implementation
-/// https://github.com/mfem/mfem/blob/master/fem/integ/bilininteg_mass_ea.cpp#L142
+/// Reference implementation - MFEM-v4.9
+/// https://github.com/mfem/mfem/blob/v4.9/fem/integ/bilininteg_mass_kernels.hpp#L1268
+/// Kernel uses shared memory which is optimal for orders higher than 2
 ///
 /// for (int e = 0; e < NE; ++e)
 ///   {
