@@ -122,6 +122,7 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
+  void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -207,6 +208,7 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
+  Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
@@ -286,8 +288,6 @@ public:
   }
   Checksum_type getChecksum(VariantID vid, size_t tune_idx) const
   { return checksum[vid].at(tune_idx); }
-  Checksum_type getChecksumTolerance() const
-  { return checksum_tolerance; }
 
   void execute(VariantID vid, size_t tune_idx);
 
@@ -620,15 +620,16 @@ public:
 protected:
   const RunParams& run_params;
 
-  static constexpr inline Checksum_type zero_checksum_tolerance = 0.0;
-  static constexpr inline Checksum_type very_tight_checksum_tolerance = 1e-12;
-  static constexpr inline Checksum_type tight_checksum_tolerance = 1e-10;
-  static constexpr inline Checksum_type normal_checksum_tolerance = 1e-7;
-  static constexpr inline Checksum_type loose_checksum_tolerance = 5e-6;
+  struct ChecksumTolerance
+  {
+    static constexpr inline Checksum_type zero = 0.0;
+    static constexpr inline Checksum_type tight = 1e-12;
+    static constexpr inline Checksum_type normal = 1e-7;
+    static constexpr inline Checksum_type loose = 5e-6;
+  };
 
   std::vector<Checksum_type> checksum[NumVariants];
   Checksum_type checksum_scale_factor;
-  Checksum_type checksum_tolerance;
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
@@ -676,6 +677,7 @@ private:
   bool uses_feature[NumFeatures];
 
   ChecksumConsistency checksum_consistency;
+  Checksum_type checksum_tolerance;
 
   Complexity complexity;
 

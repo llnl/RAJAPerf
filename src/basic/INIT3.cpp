@@ -34,6 +34,7 @@ INIT3::INIT3(const RunParams& params)
   setFLOPsPerRep(1 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

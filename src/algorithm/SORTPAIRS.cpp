@@ -34,6 +34,7 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // sort is not stable and could depend on scheduling
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N_logN);
 

@@ -34,6 +34,7 @@ DAXPY::DAXPY(const RunParams& params)
   setFLOPsPerRep(2 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

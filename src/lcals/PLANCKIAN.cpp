@@ -34,6 +34,7 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

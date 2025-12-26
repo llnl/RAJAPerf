@@ -34,6 +34,7 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
   setFLOPsPerRep(getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // Reduction may use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

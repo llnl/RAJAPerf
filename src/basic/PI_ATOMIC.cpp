@@ -34,6 +34,7 @@ PI_ATOMIC::PI_ATOMIC(const RunParams& params)
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

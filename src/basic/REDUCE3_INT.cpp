@@ -40,6 +40,7 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

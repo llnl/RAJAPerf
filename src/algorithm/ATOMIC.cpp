@@ -34,6 +34,7 @@ ATOMIC::ATOMIC(const RunParams& params)
   setFLOPsPerRep(getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

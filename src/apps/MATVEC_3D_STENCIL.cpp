@@ -84,6 +84,7 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
                                            getActualProblemSize() );
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

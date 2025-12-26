@@ -36,6 +36,7 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setFLOPsPerRep(2 * (m_N-1));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

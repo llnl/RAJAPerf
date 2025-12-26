@@ -54,6 +54,7 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
                                            getActualProblemSize() );
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

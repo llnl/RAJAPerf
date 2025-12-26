@@ -68,6 +68,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   checksum_scale_factor = 0.0000000001;
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

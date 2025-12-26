@@ -43,6 +43,7 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
                                            getActualProblemSize() );
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

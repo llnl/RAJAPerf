@@ -44,9 +44,8 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * getActualProblemSize());
 
-  checksum_tolerance = very_tight_checksum_tolerance;
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 

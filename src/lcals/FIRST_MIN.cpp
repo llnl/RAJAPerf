@@ -41,9 +41,8 @@ FIRST_MIN::FIRST_MIN(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
-  checksum_tolerance = zero_checksum_tolerance;
-
   setChecksumConsistency(ChecksumConsistency::Consistent); // The loc returned is always the first of equivalent mins
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 

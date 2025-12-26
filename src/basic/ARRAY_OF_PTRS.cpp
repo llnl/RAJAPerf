@@ -36,6 +36,7 @@ ARRAY_OF_PTRS::ARRAY_OF_PTRS(const RunParams& params)
   setFLOPsPerRep(m_array_size * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

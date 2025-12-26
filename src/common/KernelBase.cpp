@@ -67,7 +67,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
 
   checksum_scale_factor = 1.0;
 
-  checksum_tolerance = normal_checksum_tolerance;
+  checksum_tolerance = ChecksumTolerance::normal;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   // Init Caliper column metadata attributes

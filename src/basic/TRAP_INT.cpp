@@ -34,6 +34,7 @@ TRAP_INT::TRAP_INT(const RunParams& params)
   setFLOPsPerRep(10 * getActualProblemSize()); // 1 sqrt
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

@@ -33,9 +33,8 @@ INIT_VIEW1D::INIT_VIEW1D(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  checksum_tolerance = very_tight_checksum_tolerance;
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 

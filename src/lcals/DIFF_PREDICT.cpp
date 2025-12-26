@@ -34,6 +34,7 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setFLOPsPerRep(9 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

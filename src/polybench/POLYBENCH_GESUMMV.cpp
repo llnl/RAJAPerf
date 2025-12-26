@@ -44,6 +44,7 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
                   3 ) * m_N  );
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

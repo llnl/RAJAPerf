@@ -34,6 +34,7 @@ PI_REDUCE::PI_REDUCE(const RunParams& params)
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

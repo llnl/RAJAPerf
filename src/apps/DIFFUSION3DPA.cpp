@@ -53,6 +53,7 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
                          3 * DPA_D1D * DPA_D1D * DPA_D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

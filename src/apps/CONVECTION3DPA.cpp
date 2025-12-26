@@ -52,6 +52,7 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
                          ));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

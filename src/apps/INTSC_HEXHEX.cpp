@@ -73,6 +73,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

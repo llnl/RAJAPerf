@@ -35,6 +35,7 @@ DOT::DOT(const RunParams& params)
   setFLOPsPerRep(2 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

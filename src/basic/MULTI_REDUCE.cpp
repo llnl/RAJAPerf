@@ -42,6 +42,7 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
   setFLOPsPerRep(1 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 

@@ -40,6 +40,7 @@ TRIAD::TRIAD(const RunParams& params)
   checksum_tolerance = very_tight_checksum_tolerance;
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 

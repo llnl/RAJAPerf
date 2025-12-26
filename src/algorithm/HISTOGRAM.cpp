@@ -40,9 +40,8 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
-  checksum_tolerance = zero_checksum_tolerance;
-
   setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 

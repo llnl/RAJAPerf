@@ -40,6 +40,7 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
   setFLOPsPerRep(2 * getActualProblemSize() + 2);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
