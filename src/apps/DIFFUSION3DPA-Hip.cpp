@@ -32,77 +32,6 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
 
   DIFFUSION3DPA_0_GPU;
 
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
-        DIFFUSION3DPA_1;
-      }
-    }
-  }
-
-  if (threadIdx.z == 0) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
-        DIFFUSION3DPA_2;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
-        DIFFUSION3DPA_3;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
-        DIFFUSION3DPA_4;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(qx, x, DPA_Q1D) {
-        DIFFUSION3DPA_5;
-      }
-    }
-  }
-  __syncthreads();
-  if (threadIdx.z == 0) {
-    GPU_FOREACH_THREAD(d, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(q, x, DPA_Q1D) {
-        DIFFUSION3DPA_6;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(qy, y, DPA_Q1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
-        DIFFUSION3DPA_7;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(qz, z, DPA_Q1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
-        DIFFUSION3DPA_8;
-      }
-    }
-  }
-  __syncthreads();
-  GPU_FOREACH_THREAD(dz, z, DPA_D1D) {
-    GPU_FOREACH_THREAD(dy, y, DPA_D1D) {
-      GPU_FOREACH_THREAD(dx, x, DPA_D1D) {
-        DIFFUSION3DPA_9;
-      }
-    }
-  }
 }
 
 template < size_t block_size >
@@ -248,7 +177,7 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
                        [&](Index_type qx) {
 
-                         DIFFUSION3DPA_5;
+                          DIFFUSION3DPA_5;
 
                        } // lambda (qx)
                      ); // RAJA::loop<inner_x>
@@ -262,9 +191,9 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                [&](Index_type RAJA_UNUSED_ARG(dz)) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](Index_type d) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](Index_type q) {
+                       [&](Index_type qx) {
 
                          DIFFUSION3DPA_6;
 
@@ -320,7 +249,7 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
                        [&](Index_type dx) {
 
-                         DIFFUSION3DPA_9;
+                         DIFFUSION3DPA_9;                       
 
                        } // lambda (dx)
                      ); // RAJA::loop<inner_x>

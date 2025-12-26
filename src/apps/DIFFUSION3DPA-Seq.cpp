@@ -49,7 +49,6 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(dz,z,DPA_D1D) {
           CPU_FOREACH(dy,y,DPA_D1D) {
             CPU_FOREACH(qx,x,DPA_Q1D) {
@@ -59,7 +58,6 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(dz,z,DPA_D1D) {
           CPU_FOREACH(qy,y,DPA_Q1D) {
             CPU_FOREACH(qx,x,DPA_Q1D) {
@@ -68,7 +66,6 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(qz,z,DPA_Q1D) {
           CPU_FOREACH(qy,y,DPA_Q1D) {
             CPU_FOREACH(qx,x,DPA_Q1D) {
@@ -77,14 +74,12 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(dy,y,DPA_D1D) {
           CPU_FOREACH(qx,x,DPA_Q1D) {
             DIFFUSION3DPA_6
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(qz,z,DPA_Q1D) {
           CPU_FOREACH(qy,y,DPA_Q1D) {
             CPU_FOREACH(dx,x,DPA_D1D) {
@@ -93,7 +88,6 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(qz,z,DPA_Q1D) {
           CPU_FOREACH(dy,y,DPA_D1D) {
             CPU_FOREACH(dx,x,DPA_D1D) {
@@ -102,7 +96,6 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
           }
         }
 
-        //MFEM_SYNC_THREAD;
         CPU_FOREACH(dz,z,DPA_D1D) {
           CPU_FOREACH(dy,y,DPA_D1D) {
             CPU_FOREACH(dx,x,DPA_D1D) {
