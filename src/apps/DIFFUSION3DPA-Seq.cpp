@@ -35,70 +35,155 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
 
         DIFFUSION3DPA_0_CPU;
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_1;
+        CPU_FOREACH(dz,z,DPA_D1D) {
+          CPU_FOREACH(dy,y,DPA_D1D) {
+            CPU_FOREACH(dx,x,DPA_D1D) {
+             s_X[dz][dy][dx] = DPA_X(dx,dy,dz,e);
             }
           }
         }
 
-        CPU_FOREACH(dy, y, DPA_D1D) {
-          CPU_FOREACH(qx, x, DPA_Q1D) {
-            DIFFUSION3DPA_2;
+        CPU_FOREACH(dy,y,DPA_D1D) {
+          CPU_FOREACH(qx,x,DPA_Q1D) {
+            B[qx][dy] = DPA_b(qx,dy);
+            G[qx][dy] = DPA_g(qx,dy);
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_3;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(dz,z,DPA_D1D) {
+          CPU_FOREACH(dy,y,DPA_D1D) {
+            CPU_FOREACH(qx,x,DPA_Q1D) {
+
+              double u = 0.0, v = 0.0;
+              RAJAPERF_UNROLL(MD1)
+              for (int dx = 0; dx < DPA_D1D; ++dx)
+              {
+                const double coords = s_X[dz][dy][dx];
+                u += coords * B[qx][dx];
+                v += coords * G[qx][dx];
+              }
+              DDQ0[dz][dy][qx] = u;
+              DDQ1[dz][dy][qx] = v;
             }
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_4;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(dz,z,DPA_D1D) {
+          CPU_FOREACH(qy,y,DPA_Q1D) {
+            CPU_FOREACH(qx,x,DPA_Q1D) {
+
+              double u = 0.0, v = 0.0, w = 0.0;
+              RAJAPERF_UNROLL(MD1)
+              for (int dy = 0; dy < DPA_D1D; ++dy)
+              {
+                u += DDQ1[dz][dy][qx] * B[qy][dy];
+                v += DDQ0[dz][dy][qx] * G[qy][dy];
+                w += DDQ0[dz][dy][qx] * B[qy][dy];
+              }
+              DQQ0[dz][qy][qx] = u;
+              DQQ1[dz][qy][qx] = v;
+              DQQ2[dz][qy][qx] = w;
             }
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_5;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(qz,z,DPA_Q1D) {
+          CPU_FOREACH(qy,y,DPA_Q1D) {
+            CPU_FOREACH(qx,x,DPA_Q1D) {
+
+              double u = 0.0, v = 0.0, w = 0.0;
+              RAJAPERF_UNROLL(MD1)
+              for (int dz = 0; dz < DPA_D1D; ++dz)
+              {
+                u += DQQ0[dz][qy][qx] * B[qz][dz];
+                v += DQQ1[dz][qy][qx] * B[qz][dz];
+                w += DQQ2[dz][qy][qx] * G[qz][dz];
+              }
+              const double O11 = DPA_d(qx,qy,qz,0,e);
+              const double O12 = DPA_d(qx,qy,qz,1,e);
+              const double O13 = DPA_d(qx,qy,qz,2,e);
+              const double O21 = symmetric ? O12 : DPA_d(qx,qy,qz,3,e);
+              const double O22 = symmetric ? DPA_d(qx,qy,qz,3,e) : DPA_d(qx,qy,qz,4,e);
+              const double O23 = symmetric ? DPA_d(qx,qy,qz,4,e) : DPA_d(qx,qy,qz,5,e);
+              const double O31 = symmetric ? O13 : DPA_d(qx,qy,qz,6,e);
+              const double O32 = symmetric ? O23 : DPA_d(qx,qy,qz,7,e);
+              const double O33 = symmetric ? DPA_d(qx,qy,qz,5,e) : DPA_d(qx,qy,qz,8,e);
+              const double gX = u;
+              const double gY = v;
+              const double gZ = w;
+              QQQ0[qz][qy][qx] = (O11*gX) + (O12*gY) + (O13*gZ);
+              QQQ1[qz][qy][qx] = (O21*gX) + (O22*gY) + (O23*gZ);
+              QQQ2[qz][qy][qx] = (O31*gX) + (O32*gY) + (O33*gZ);
+
             }
           }
         }
 
-        CPU_FOREACH(d, y, DPA_D1D) {
-          CPU_FOREACH(q, x, DPA_Q1D) {
-            DIFFUSION3DPA_6;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(dy,y,DPA_D1D) {
+          CPU_FOREACH(qx,x,DPA_Q1D) {
+            Bt[dy][qx] = DPA_b(qx,dy);
+            Gt[dy][qx] = DPA_g(qx,dy);
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_7;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(qz,z,DPA_Q1D) {
+          CPU_FOREACH(qy,y,DPA_Q1D) {
+            CPU_FOREACH(dx,x,DPA_D1D) {
+
+              double u = 0.0, v = 0.0, w = 0.0;
+              RAJAPERF_UNROLL(MQ1)
+              for (int qx = 0; qx < DPA_Q1D; ++qx)
+              {
+               u += QQQ0[qz][qy][qx] * Gt[dx][qx];
+               v += QQQ1[qz][qy][qx] * Bt[dx][qx];
+               w += QQQ2[qz][qy][qx] * Bt[dx][qx];
+              }
+              QQD0[qz][qy][dx] = u;
+              QQD1[qz][qy][dx] = v;
+              QQD2[qz][qy][dx] = w;
             }
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_8;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(qz,z,DPA_Q1D) {
+          CPU_FOREACH(dy,y,DPA_D1D) {
+            CPU_FOREACH(dx,x,DPA_D1D) {
+
+              double u = 0.0, v = 0.0, w = 0.0;
+              RAJAPERF_UNROLL(DPA_Q1D)
+              for (int qy = 0; qy < DPA_Q1D; ++qy)
+              {
+                u += QQD0[qz][qy][dx] * Bt[dy][qy];
+                v += QQD1[qz][qy][dx] * Gt[dy][qy];
+                w += QQD2[qz][qy][dx] * Bt[dy][qy];
+              }
+              QDD0[qz][dy][dx] = u;
+              QDD1[qz][dy][dx] = v;
+              QDD2[qz][dy][dx] = w;
             }
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_9;
+        //MFEM_SYNC_THREAD;
+        CPU_FOREACH(dz,z,DPA_D1D) {
+          CPU_FOREACH(dy,y,DPA_D1D) {
+            CPU_FOREACH(dx,x,DPA_D1D) {
+
+              double u = 0.0, v = 0.0, w = 0.0;
+              RAJAPERF_UNROLL(MQ1)
+              for (int qz = 0; qz < DPA_Q1D; ++qz)
+              {
+                 u += QDD0[qz][dy][dx] * Bt[dz][qz];
+                 v += QDD1[qz][dy][dx] * Bt[dz][qz];
+                 w += QDD2[qz][dy][dx] * Gt[dz][qz];
+              }
+              DPA_Y(dx,dy,dz,e) += (u + v + w);
             }
           }
         }
