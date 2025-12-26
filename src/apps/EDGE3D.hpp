@@ -441,8 +441,6 @@ private:
 
   ADomain* m_domain;
   Index_type m_array_length;
-
-  Real_type m_checksum_scale_factor;
 };
 
 } // end namespace apps
