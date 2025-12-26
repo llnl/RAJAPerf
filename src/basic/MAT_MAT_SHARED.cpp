@@ -38,12 +38,11 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
 
   setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);
 
-  checksum_scale_factor = 1e-6 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(1e-6 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 

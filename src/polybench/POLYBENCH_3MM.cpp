@@ -65,12 +65,11 @@ POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
                  2 * m_nj*m_nl*m_nm +
                  2 * m_ni*m_nj*m_nl );
 
-  checksum_scale_factor = 0.000000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.000000001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 

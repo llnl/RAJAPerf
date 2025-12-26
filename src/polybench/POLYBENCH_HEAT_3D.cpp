@@ -42,12 +42,11 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   setFLOPsPerRep( 15 * (m_N-2) * (m_N-2) * (m_N-2) +
                   15 * (m_N-2) * (m_N-2) * (m_N-2) );
 
-  checksum_scale_factor = 0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.0001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

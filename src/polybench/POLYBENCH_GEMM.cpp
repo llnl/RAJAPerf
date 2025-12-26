@@ -48,12 +48,11 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   setFLOPsPerRep((1 +
                   3 * m_nk) * m_ni*m_nj);
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 

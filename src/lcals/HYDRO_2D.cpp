@@ -57,12 +57,11 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
                   26 +
                   4  ) * (m_jn-2)*(m_kn-2));
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

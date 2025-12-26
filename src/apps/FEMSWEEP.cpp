@@ -65,10 +65,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
 
   // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
-  checksum_scale_factor = 0.0000000001;
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.0000000001);
 
   setComplexity(Complexity::N);
 

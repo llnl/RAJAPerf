@@ -123,6 +123,7 @@ public:
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
+  void setChecksumScaleFactor(Checksum_type csf) { checksum_scale_factor = csf; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }

@@ -38,12 +38,11 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
   setFLOPsPerRep((3 +
                   3 ) * m_N);
 
-  checksum_scale_factor = 0.01 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.01 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

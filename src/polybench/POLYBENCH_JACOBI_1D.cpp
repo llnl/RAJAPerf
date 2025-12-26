@@ -41,10 +41,6 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
   setFLOPsPerRep( 3 * (m_N-2) +
                   3 * (m_N-2) );
 
-  checksum_scale_factor = 0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   // TODO: base omp target variant result is off
@@ -52,6 +48,9 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
 #else
   setChecksumTolerance(ChecksumTolerance::normal);
 #endif
+  setChecksumScaleFactor(0.0001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

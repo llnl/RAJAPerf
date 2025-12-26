@@ -48,12 +48,11 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   setFLOPsPerRep( (13 + 2) * (m_n-2)*(m_n-2) +
                   (13 + 2) * (m_n-2)*(m_n-2) );
 
-  checksum_scale_factor = 0.0000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.0000001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

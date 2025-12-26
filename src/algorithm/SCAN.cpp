@@ -33,13 +33,12 @@ SCAN::SCAN(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  checksum_scale_factor = 1e-2 *
-                 ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                              getActualProblemSize() ) /
-                 getActualProblemSize();
-
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(1e-2 *
+                 ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                              getActualProblemSize() ) /
+                 getActualProblemSize());
 
   setComplexity(Complexity::N);
 

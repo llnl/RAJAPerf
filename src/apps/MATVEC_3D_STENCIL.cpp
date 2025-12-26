@@ -79,12 +79,11 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   const size_t adds = 26;
   setFLOPsPerRep((multiplies + adds) * getItsPerRep());
 
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(1.0 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
