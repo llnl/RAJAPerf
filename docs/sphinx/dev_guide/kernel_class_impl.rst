@@ -52,12 +52,24 @@ The methods in the source file are:
         so these methods are used to describe this.
       * The number of bytes read and written and the number of floating point
         operations (FLOPS) performed for each kernel execution.
-      * The consistency of the checksums of the kernel. The possible values are
-        ``Consistent`` where all the variant tunings always get the same checksum,
-        ``ConsistentPerVariantTuning`` where an individual variant tuning always
-        gets the same checksum but different variant tunings may differ
-        slightly, and ``Inconsistent`` where the checksum of a variant tuning
-        may vary slightly run to run.
+      * The consistency of the checksums of the kernel. If the kernel
+        always produces the same checksum value for all variant tunings then the
+        checksums are ``Consistent``. Most kernels get a different but consistent
+        checksum for each variant tuning so the checksums are
+        ``ConsistentPerVariantTuning``. On the other hand, some kernels have
+        variant tunings that get different checksums on each run of that variant
+        tuning, for example due to the ordering of floating-point atomic add
+        operations, so the checksums are ``Inconsistent``.
+      * The tolerance of the checksums of the kernel. A number of predefined
+        values are available in the ``KernelBase\:\:ChecksumTolerance`` class. If
+        the kernel consistently produces the same checksums then ``zero`` tolerance
+        is used. Most kernels use the ``normal`` tolerance. Some kernels are very
+        simple, for example they have a single floating-point operation per
+        iteration, so they use the ``tight`` tolerance.
+      * The scale factor to use with the checksums of the kernel. This is an
+        arbitrary multiplier on the checksum values used to scale the checksums
+        to a desired range. Mostly used for kernels with floating-point
+        operation complexity that does not scale linearly with problem size.
       * The operational complexity of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
