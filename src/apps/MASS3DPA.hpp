@@ -10,8 +10,8 @@
 /// Action of 3D mass matrix via partial assembly
 ///
 /// Based on MFEM's/CEED algorithms.
-/// Reference implementation
-/// https://github.com/mfem/mfem/blob/master/fem/bilininteg_mass_pa.cpp#L925
+/// Reference implementation - MFEM-v4.9
+/// https://github.com/mfem/mfem/blob/v4.9/fem/integ/bilininteg_mass_kernels.hpp#L809
 ///
 /// for (int e = 0; e < NE; ++e) {
 ///
