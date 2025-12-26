@@ -723,36 +723,27 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
         kernel->execute(vid, tune_idx); // Execute kernel
 
         if ( run_params.showProgress() ) {
-          getCout() << " -- " << kernel->getLastTime() / kernel->getRunReps() << " sec. x " << kernel->getRunReps() << " rep.";
-
-          size_t prec = 20;
-          const auto default_precision = getCout().precision();
-
           Checksum_type cksum_tol = kernel->getChecksumTolerance();
           Checksum_type cksum_ref = kernel->getReferenceChecksum();
           Checksum_type cksum = kernel->getChecksum(vid, tune_idx);
           Checksum_type cksum_diff = std::abs(cksum_ref - cksum);
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
           {
-            Checksum_type cksum_sum = 0;
-            Allreduce(&cksum, &cksum_sum, 1, MPI_SUM, MPI_COMM_WORLD);
-            cksum = cksum_sum / num_ranks;
-
             Checksum_type cksum_diff_max = 1e80;
             Allreduce(&cksum_diff, &cksum_diff_max, 1, MPI_MAX, MPI_COMM_WORLD);
             cksum_diff = cksum_diff_max;
           }
-          const char* cksum_name = "cksum_avg";
-#else
-          const char* cksum_name = "checksum";
 #endif
           const char* cksum_result = "FAILED";
           if (cksum_diff <= cksum_tol) {
             cksum_result = "PASSED";
           }
-          getCout() << " " << cksum_result << " " << cksum_name << " ";
-          getCout() << setprecision(prec) << cksum
-                    << setprecision(default_precision) << endl;
+
+          getCout() << " -- "
+                    << kernel->getLastTime() / kernel->getRunReps() << " sec."
+                    << " x " << kernel->getRunReps() << " rep."
+                    << " " << cksum_result << " checksum"
+                    << endl;
         }
 
       } else {
