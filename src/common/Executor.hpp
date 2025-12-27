@@ -75,9 +75,9 @@ private:
 
   std::unique_ptr<std::ostream> openOutputFile(const std::string& filename) const;
 
-  void writeKernelInfoSummary(std::ostream& str, bool to_file) const;
+  void writeKernelInfoSummary(std::ostream& str, std::vector<KernelBase*> const& kernels, bool to_file) const;
 
-  void writeCSVReport(std::ostream& file, CSVRepMode mode,
+  void writeCSVReport(std::ostream& file, std::vector<KernelBase*> const& kernels, CSVRepMode mode,
                       RunParams::CombinerOpt combiner, size_t prec);
   std::string getReportTitle(CSVRepMode mode, RunParams::CombinerOpt combiner);
   long double getReportDataEntry(CSVRepMode mode, 
@@ -85,10 +85,12 @@ private:
                                  KernelBase* kern, VariantID vid, 
                                  size_t tune_idx);
 
-  void writeChecksumReport(std::ostream& file);
+  void writeChecksumReport(std::ostream& file, std::vector<KernelBase*> const& kernels);
 
-  void writeFOMReport(std::ostream& file, std::vector<FOMGroup>& fom_groups);
+  void writeFOMReport(std::ostream& file, std::vector<KernelBase*> const& kernels, std::vector<FOMGroup>& fom_groups);
   void getFOMGroups(std::vector<FOMGroup>& fom_groups);
+
+  void writeSeparator(std::ostream& file);
 
   RunParams run_params;
   std::vector<KernelBase*> kernels;

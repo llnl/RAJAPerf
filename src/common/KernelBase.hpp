@@ -227,21 +227,19 @@ public:
   bool hasVariantTuningDefined(VariantID vid,
                                std::string const& tuning_name) const
   {
-    if (hasVariantDefined(vid)) {
-      for (std::string const& a_tuning_name : getVariantTuningNames(vid)) {
-        if (tuning_name == a_tuning_name) { return true; }
-      }
-    }
-    return false;
+    return getVariantTuningIndex(vid, tuning_name) != getUnknownTuningIdx();
   }
 
   size_t getVariantTuningIndex(VariantID vid,
                                std::string const& tuning_name) const
   {
-    std::vector<std::string> const& tuning_names = getVariantTuningNames(vid);
-    for (size_t t = 0; t < tuning_names.size(); ++t) {
-      std::string const& a_tuning_name = tuning_names[t];
-      if (tuning_name == a_tuning_name) { return t; }
+    if (hasVariantDefined(vid)) {
+      std::vector<std::string> const& tuning_names = getVariantTuningNames(vid);
+      for (size_t t = 0; t < tuning_names.size(); ++t) {
+        if (tuning_name == tuning_names[t]) {
+          return t;
+        }
+      }
     }
     return getUnknownTuningIdx();
   }
@@ -263,6 +261,12 @@ public:
       return num_exec[vid].at(tune_idx) > 0;
     }
     return false;
+  }
+  ///
+  bool wasVariantTuningRun(VariantID vid, std::string const& tuning_name) const
+  {
+    size_t tune_idx = getVariantTuningIndex(vid, tuning_name);
+    return wasVariantTuningRun(vid, tune_idx) ;
   }
 
   // get runtime of executed variant/tuning

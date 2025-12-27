@@ -119,6 +119,35 @@ void Allreduce(const Checksum_type* send, Checksum_type* recv, int count,
 
 #endif
 
+using active_variant_tunings_type = vector<pair<VariantID, vector<string>>>;
+
+active_variant_tunings_type getActiveVariantTunings(
+    vector<KernelBase*> const& kernels,
+    vector<VariantID> const& variant_ids,
+    const vector<string> (&tuning_names)[NumVariants])
+{
+  active_variant_tunings_type active_vartuns;
+  for (VariantID vid : variant_ids) {
+    pair<VariantID, vector<string>>* active_var = nullptr;
+    for (string const& tuning_name : tuning_names[vid]) {
+      for (KernelBase* kern : kernels) {
+        if ( kern->wasVariantTuningRun(vid, tuning_name) ) {
+          if (!active_var) {
+            active_var = &active_vartuns.emplace_back(vid, 0);
+          }
+          auto& active_tuning_names = active_var->second;
+          if (find(active_tuning_names.begin(), active_tuning_names.end(), tuning_name)
+              == active_tuning_names.end()) {
+            active_tuning_names.emplace_back(tuning_name);
+          }
+          break;
+        }
+      }
+    }
+  }
+  return active_vartuns;
+}
+
 }
 
 Executor::Executor(int argc, char** argv)
@@ -497,8 +526,8 @@ void Executor::reportRunSummary(ostream& str) const
 
     str << endl;
 
-    bool to_file = false;
-    writeKernelInfoSummary(str, to_file);
+    constexpr bool to_file = false;
+    writeKernelInfoSummary(str, kernels, to_file);
 
   }
 
@@ -506,7 +535,9 @@ void Executor::reportRunSummary(ostream& str) const
 }
 
 
-void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
+void Executor::writeKernelInfoSummary(ostream& str,
+                                      vector<KernelBase*> const& kernels,
+                                      bool to_file) const
 {
   if ( to_file ) {
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -897,35 +928,65 @@ void Executor::outputRunData()
   }
   out_fprefix = "./" + run_params.getOutputFilePrefix();
 
-  unique_ptr<ostream> file;
 
+  vector<FOMGroup> fom_groups;
+  getFOMGroups(fom_groups);
 
-  for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
-    file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-    writeCSVReport(*file, CSVRepMode::Timing, combiner, 6 /* prec */);
+  for (size_t i = 0; i <= kernels.size(); ++i) {
 
-    if ( haveReferenceVariant() ) {
-      file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-      writeCSVReport(*file, CSVRepMode::Speedup, combiner, 3 /* prec */);
+    const bool separate_files = i == kernels.size();
+
+    vector<KernelBase*> const& mykernels = separate_files
+                                         ? kernels
+                                         : vector<KernelBase*>{kernels[i]};
+
+    unique_ptr<ostream> file;
+    if (separate_files) {
+      file = openOutputFile(out_fprefix + "-kernels.csv");
+    } else {
+      file = openOutputFile(out_fprefix + "-" + mykernels[0]->getName() + ".out");
     }
-  }
+    if ( *file ) {
+      constexpr bool to_file = true;
+      writeKernelInfoSummary(*file, mykernels, to_file);
+    }
 
-  file = openOutputFile(out_fprefix + "-checksum.txt");
-  writeChecksumReport(*file);
+    if (separate_files) {
+      file = openOutputFile(out_fprefix + "-checksum.txt");
+    } else {
+      writeSeparator(*file);
+    }
+    writeChecksumReport(*file, mykernels);
 
-  {
-    vector<FOMGroup> fom_groups;
-    getFOMGroups(fom_groups);
+    for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
+
+      if (separate_files) {
+        file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+      } else {
+        writeSeparator(*file);
+      }
+      writeCSVReport(*file, mykernels, CSVRepMode::Timing, combiner, 6 /* prec */);
+
+      if ( haveReferenceVariant() ) {
+
+        if (separate_files) {
+          file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+        } else {
+          writeSeparator(*file);
+        }
+        writeCSVReport(*file, mykernels, CSVRepMode::Speedup, combiner, 3 /* prec */);
+      }
+    }
+
     if (!fom_groups.empty() ) {
-      file = openOutputFile(out_fprefix + "-fom.csv");
-      writeFOMReport(*file, fom_groups);
+      if (separate_files) {
+        file = openOutputFile(out_fprefix + "-fom.csv");
+      } else {
+        writeSeparator(*file);
+      }
+      writeFOMReport(*file, mykernels, fom_groups);
     }
-  }
 
-  file = openOutputFile(out_fprefix + "-kernels.csv");
-  if ( *file ) {
-    bool to_file = true;
-    writeKernelInfoSummary(*file, to_file);
   }
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
@@ -949,8 +1010,11 @@ unique_ptr<ostream> Executor::openOutputFile(const string& filename) const
   return unique_ptr<ostream>(makeNullStream());
 }
 
-void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
-                              RunParams::CombinerOpt combiner, size_t prec)
+void Executor::writeCSVReport(ostream& file,
+                              vector<KernelBase*> const& kernels,
+                              CSVRepMode mode,
+                              RunParams::CombinerOpt combiner,
+                              size_t prec)
 {
   if ( file ) {
 
@@ -968,11 +1032,15 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     }
     kercol_width++;
 
-    vector<std::vector<size_t>> vartuncol_width(variant_ids.size());
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      size_t var_width = max(prec+2, getVariantName(variant_ids[iv]).size());
-      for (std::string const& tuning_name : tuning_names[variant_ids[iv]]) {
-        vartuncol_width[iv].emplace_back(max(var_width, tuning_name.size()));
+    active_variant_tunings_type active_vartuns =
+        getActiveVariantTunings(kernels, variant_ids, tuning_names);
+
+    vector<vector<size_t>> vartuncol_width(active_vartuns.size());
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      size_t var_width = max(prec+2, getVariantName(vid).size());
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
+        vartuncol_width[iv].emplace_back(max(var_width, active_tuning_names[it].size()));
       }
     }
 
@@ -985,8 +1053,8 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     // Wrtie CSV file contents for report.
     //
 
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      for (size_t it = 0; it < active_vartuns[iv].second.size(); ++it) {
         file << sepchr;
       }
     }
@@ -996,10 +1064,11 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     // Print column variant name line.
     //
     file <<left<< setw(kercol_width) << kernel_name_col_header_variant;
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
-             << getVariantName(variant_ids[iv]);
+             << getVariantName(vid);
       }
     }
     file << endl;
@@ -1008,10 +1077,11 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     // Print column tuning name line.
     //
     file <<left<< setw(kercol_width) << kernel_name_col_header_tuning;
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
-             << tuning_names[variant_ids[iv]][it];
+             << active_tuning_names[it];
       }
     }
     file << endl;
@@ -1022,22 +1092,23 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       KernelBase* kern = kernels[ik];
       file <<left<< setw(kercol_width) << kern->getName();
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        VariantID vid = variant_ids[iv];
-        for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
-          std::string const& tuning_name = tuning_names[variant_ids[iv]][it];
+
+      for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+        auto const& [vid, active_tuning_names] = active_vartuns[iv];
+        for (size_t it = 0; it < active_tuning_names.size(); ++it) {
+
           file << sepchr <<right<< setw(vartuncol_width[iv][it]);
           if ( (mode == CSVRepMode::Speedup) &&
-               (!kern->hasVariantTuningDefined(reference_vid, reference_tune_idx) ||
-                !kern->hasVariantTuningDefined(vid, tuning_name)) ) {
+               (!kern->wasVariantTuningRun(reference_vid, reference_tune_idx) ||
+                !kern->wasVariantTuningRun(vid, active_tuning_names[it])) ) {
             file << "Not run";
           } else if ( (mode == CSVRepMode::Timing) &&
-                      !kern->hasVariantTuningDefined(vid, tuning_name) ) {
+                      !kern->wasVariantTuningRun(vid, active_tuning_names[it]) ) {
             file << "Not run";
           } else {
             file << setprecision(prec) << std::fixed
                  << getReportDataEntry(mode, combiner, kern, vid,
-                        kern->getVariantTuningIndex(vid, tuning_name));
+                        kern->getVariantTuningIndex(vid, active_tuning_names[it]));
           }
         }
       }
@@ -1050,7 +1121,9 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
 }
 
 
-void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
+void Executor::writeFOMReport(ostream& file,
+                              vector<KernelBase*> const& kernels,
+                              vector<FOMGroup>& fom_groups)
 {
   if ( file ) {
 
@@ -1069,28 +1142,35 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
     size_t fom_col_width = prec+14;
 
+    std::vector<active_variant_tunings_type> fom_group_vartuns(fom_groups.size());
     std::vector<size_t> fom_group_ncols(fom_groups.size(), 0);
     for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-      const FOMGroup& group = fom_groups[ifg];
+      const FOMGroup& fom_group = fom_groups[ifg];
 
-      for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-        VariantID vid = group.variants[gv];
+      fom_group_vartuns[ifg] =
+          getActiveVariantTunings(kernels, fom_group.variants, tuning_names);
+      const active_variant_tunings_type& group = fom_group_vartuns[ifg];
+
+      for (size_t gv = 0; gv < fom_group_vartuns[ifg].size(); ++gv) {
+        auto const& [vid, fom_group_tuning_names] = group[gv];
+
         const string& variant_name = getVariantName(vid);
         // num variants and tuning
         // Includes the PM baseline and the variants and tunings to compared to it
-        fom_group_ncols[ifg] += tuning_names[vid].size();
-        for (const string& tuning_name : tuning_names[vid]) {
+
+        fom_group_ncols[ifg] += fom_group_tuning_names.size();
+        for (const string& tuning_name : fom_group_tuning_names) {
           fom_col_width = max(fom_col_width, variant_name.size()+1+tuning_name.size());
         }
       }
     }
 
-    vector< vector<int> > col_exec_count(fom_groups.size());
-    vector< vector<double> > col_min(fom_groups.size());
-    vector< vector<double> > col_max(fom_groups.size());
-    vector< vector<double> > col_avg(fom_groups.size());
-    vector< vector<double> > col_stddev(fom_groups.size());
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    vector< vector<int> > col_exec_count(fom_group_vartuns.size());
+    vector< vector<double> > col_min(fom_group_vartuns.size());
+    vector< vector<double> > col_max(fom_group_vartuns.size());
+    vector< vector<double> > col_avg(fom_group_vartuns.size());
+    vector< vector<double> > col_stddev(fom_group_vartuns.size());
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       col_exec_count[ifg].resize(fom_group_ncols[ifg], 0);
       col_min[ifg].resize(fom_group_ncols[ifg], numeric_limits<double>::max());
       col_max[ifg].resize(fom_group_ncols[ifg], -numeric_limits<double>::max());
@@ -1099,8 +1179,8 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     }
     vector< vector< vector<double> > > pct_diff(kernels.size());
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
-      pct_diff[ik].resize(fom_groups.size());
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+      pct_diff[ik].resize(fom_group_vartuns.size());
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
         pct_diff[ik][ifg].resize(fom_group_ncols[ifg], 0.0);
       }
     }
@@ -1109,7 +1189,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print title line.
     //
     file << "FOM Report : signed speedup(-)/slowdown(+) for each PM (base vs. RAJA) -> (T_RAJA - T_base) / T_base )";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t iv = 0; iv < fom_group_ncols[ifg]*2; ++iv) {
         file << sepchr;
       }
@@ -1117,12 +1197,14 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     file << endl;
 
     file << "'OVER_TOL' in column to right if RAJA speedup is over tolerance";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t iv = 0; iv < fom_group_ncols[ifg]*2; ++iv) {
         file << sepchr;
       }
     }
     file << endl;
+
+    string not_run("Not run");
 
     string pass(",        ");
     string fail(",OVER_TOL");
@@ -1132,12 +1214,12 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print column title line.
     //
     file <<left<< setw(kercol_width) << kernel_col_name;
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-      const FOMGroup& group = fom_groups[ifg];
-      for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-        VariantID vid = group.variants[gv];
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+      const active_variant_tunings_type& group = fom_group_vartuns[ifg];
+      for (size_t gv = 0; gv < group.size(); ++gv) {
+        auto const& [vid, fom_group_tuning_names] = group[gv];
         string variant_name = getVariantName(vid);
-        for (const string& tuning_name : tuning_names[vid]) {
+        for (const string& tuning_name : fom_group_tuning_names) {
           file << sepchr <<left<< setw(fom_col_width)
                << (variant_name+"-"+tuning_name) << pass;
         }
@@ -1158,17 +1240,17 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
       file <<left<< setw(kercol_width) << kern->getName();
 
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-        const FOMGroup& group = fom_groups[ifg];
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+        const active_variant_tunings_type& group = fom_group_vartuns[ifg];
 
         constexpr double unknown_totTime = -1.0;
         double base_totTime = unknown_totTime;
 
         size_t col = 0;
-        for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-          VariantID vid = group.variants[gv];
+        for (size_t gv = 0; gv < group.size(); ++gv) {
+          auto const& [vid, fom_group_tuning_names] = group[gv];
 
-          for (const string& tuning_name : tuning_names[vid]) {
+          for (const string& tuning_name : fom_group_tuning_names) {
 
             size_t tune_idx = kern->getVariantTuningIndex(vid, tuning_name);
 
@@ -1207,8 +1289,8 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
             } else {  // variant was not run, print a big fat goose egg...
 
-              file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-                   << 0.0 << pass;
+              file << sepchr <<left<< setw(fom_col_width)
+                   << not_run << pass;
 
             }
 
@@ -1217,7 +1299,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
         }  // iterate over group variants
 
-      }  // iterate over fom_groups (i.e., columns)
+      }  // iterate over fom_group_vartuns (i.e., columns)
 
       file << endl;
 
@@ -1229,12 +1311,10 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     //
 
     // Column average...
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         if ( col_exec_count[ifg][col] > 0 ) {
           col_avg[ifg][col] /= col_exec_count[ifg][col];
-        } else {
-          col_avg[ifg][col] = 0.0;
         }
       }
     }
@@ -1243,14 +1323,14 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       KernelBase* kern = kernels[ik];
 
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-        const FOMGroup& group = fom_groups[ifg];
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+        const active_variant_tunings_type& group = fom_group_vartuns[ifg];
 
         int col = 0;
-        for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-          VariantID vid = group.variants[gv];
+        for (size_t gv = 0; gv < group.size(); ++gv) {
+          auto const& [vid, fom_group_tuning_names] = group[gv];
 
-          for (const string& tuning_name : tuning_names[vid]) {
+          for (const string& tuning_name : fom_group_tuning_names) {
 
             size_t tune_idx = kern->getVariantTuningIndex(vid, tuning_name);
 
@@ -1268,12 +1348,10 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
     }  // iterate over kernels
 
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         if ( col_exec_count[ifg][col] > 0 ) {
           col_stddev[ifg][col] /= col_exec_count[ifg][col];
-        } else {
-          col_stddev[ifg][col] = 0.0;
         }
       }
     }
@@ -1282,7 +1360,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print column summaries.
     //
     file <<left<< setw(kercol_width) << " ";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         file << sepchr << setw(fom_col_width) <<left<< "  " <<right<< pass;
       }
@@ -1290,37 +1368,57 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Min";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_min[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_min[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Max";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_max[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_max[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Avg";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_avg[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_avg[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Std Dev";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_stddev[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_stddev[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
@@ -1331,7 +1429,15 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 }
 
 
-void Executor::writeChecksumReport(ostream& file)
+void Executor::writeSeparator(std::ostream& file)
+{
+  if ( file ) {
+    file << endl << endl;
+  }
+}
+
+void Executor::writeChecksumReport(ostream& file,
+                                   std::vector<KernelBase*> const& kernels)
 {
   if ( file ) {
 
@@ -1346,7 +1452,7 @@ void Executor::writeChecksumReport(ostream& file)
     const string equal_line("===================================================================================================");
     const string dash_line("----------------------------------------------------------------------------------------");
     const string dash_line_short("-------------------------------------------------------");
-    string dot_line("........................................................");
+    const string dot_line("........................................................");
 
     size_t prec = 20;
     size_t checksum_width = prec + 8;
