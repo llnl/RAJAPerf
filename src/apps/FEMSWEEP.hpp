@@ -326,17 +326,6 @@ private:
   Real_ptr m_M0dat;
   Real_ptr m_Xdat;
 
-  Index_ptr m_nhpaa_r;
-  Index_ptr m_ohpaa_r;
-  Index_ptr m_phpaa_r;
-  Index_ptr m_order_r;
-
-  Index_ptr m_AngleElem2FaceType;
-  Index_ptr m_elem_to_faces     ;
-  Index_ptr m_F_g2l             ;
-  Index_ptr m_idx1              ;
-  Index_ptr m_idx2              ;
-
   Index_type m_Blen;
   Index_type m_Alen;
   Index_type m_Flen;
@@ -356,16 +345,16 @@ private:
   Index_type m_idx2len;
 
   // Mesh data
-  Index_type g_nhpaa_r[72];
-  Index_type g_ohpaa_r[72];
-  Index_type g_phpaa_r[3096];
-  Index_type g_order_r[243000];
+  Index_ptr m_nhpaa_r;
+  Index_ptr m_ohpaa_r;
+  Index_ptr m_phpaa_r;
+  Index_ptr m_order_r;
 
-  Index_type g_AngleElem2FaceType[1458000];
-  Index_type g_elem_to_faces[20250]     ;
-  Index_type g_F_g2l[10800]             ;
-  Index_type g_idx1[37800]              ;
-  Index_type g_idx2[37800]              ;
+  Index_ptr m_AngleElem2FaceType;
+  Index_ptr m_elem_to_faces     ;
+  Index_ptr m_F_g2l             ;
+  Index_ptr m_idx1              ;
+  Index_ptr m_idx2              ;
 };
 
 } // end namespace apps
