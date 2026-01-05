@@ -26,14 +26,15 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
 
   setItsPerRep( 2 * m_num_vars * halo_size );
   setKernelsPerRep( 2 );
-  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack
-                      1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // vars
 
-                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack
-                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
+                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack_buffers
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack_buffers
 
-                         1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
+                         1*sizeof(Real_type) * m_num_vars * halo_size ); // vars
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 

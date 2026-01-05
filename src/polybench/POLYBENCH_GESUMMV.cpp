@@ -36,9 +36,10 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
 
   setItsPerRep( m_N );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +
-                      2*sizeof(Real_type ) * m_N * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // x
+                      2*sizeof(Real_type ) * m_N * m_N ); // A, B
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N ); // y
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((4 * m_N +
                   3 ) * m_N  );

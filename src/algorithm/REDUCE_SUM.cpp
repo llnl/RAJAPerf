@@ -28,8 +28,9 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) );
+  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(getActualProblemSize());
 

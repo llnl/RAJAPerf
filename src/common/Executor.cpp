@@ -560,8 +560,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type itsrep_width = 0;
   Index_type bytesrep_width = 0;
   Index_type flopsrep_width = 0;
+  Index_type bytesTouchedrep_width = 0;
   Index_type bytesReadrep_width = 0;
   Index_type bytesWrittenrep_width = 0;
+  Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
   Index_type dash_width = 0;
 
@@ -572,8 +574,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
     bytesrep_width = max(bytesrep_width, kernels[ik]->getBytesPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
+    bytesTouchedrep_width = max(bytesrep_width, kernels[ik]->getBytesTouchedPerRep());
     bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
+    bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
   }
 
@@ -618,6 +622,12 @@ void Executor::writeKernelInfoSummary(ostream& str,
                          static_cast<Index_type>(frsize) ) + 3;
   dash_width += flopsrep_width + static_cast<Index_type>(sepchr.size());
 
+  double btrsize = log10( static_cast<double>(bytesTouchedrep_width) );
+  string bytesTouchedrep_head("BytesTouched/rep");
+  bytesTouchedrep_width = max( static_cast<Index_type>(bytesTouchedrep_head.size()),
+                        static_cast<Index_type>(btrsize) ) + 3;
+  dash_width += bytesTouchedrep_width + static_cast<Index_type>(sepchr.size());
+
   double brrsize = log10( static_cast<double>(bytesReadrep_width) );
   string bytesReadrep_head("BytesRead/rep");
   bytesReadrep_width = max( static_cast<Index_type>(bytesReadrep_head.size()),
@@ -629,6 +639,12 @@ void Executor::writeKernelInfoSummary(ostream& str,
   bytesWrittenrep_width = max( static_cast<Index_type>(bytesWrittenrep_head.size()),
                         static_cast<Index_type>(bwrsize) ) + 3;
   dash_width += bytesWrittenrep_width + static_cast<Index_type>(sepchr.size());
+
+  double bmwrsize = log10( static_cast<double>(bytesModifyWrittenrep_width) );
+  string bytesModifyWrittenrep_head("BytesModifyWritten/rep");
+  bytesModifyWrittenrep_width = max( static_cast<Index_type>(bytesModifyWrittenrep_head.size()),
+                        static_cast<Index_type>(bmwrsize) ) + 3;
+  dash_width += bytesModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
   double bamrrsize = log10( static_cast<double>(bytesAtomicModifyWrittenrep_width) );
   string bytesAtomicModifyWrittenrep_head("BytesAtomicModifyWritten/rep");
@@ -643,8 +659,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
       << sepchr <<right<< setw(bytesrep_width) << bytesrep_head
       << sepchr <<right<< setw(flopsrep_width) << flopsrep_head
+      << sepchr <<right<< setw(bytesTouchedrep_width) << bytesTouchedrep_head
       << sepchr <<right<< setw(bytesReadrep_width) << bytesReadrep_head
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
+      << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
       << endl;
 
@@ -664,8 +682,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
         << sepchr <<right<< setw(bytesrep_width) << kern->getBytesPerRep()
         << sepchr <<right<< setw(flopsrep_width) << kern->getFLOPsPerRep()
+        << sepchr <<right<< setw(bytesTouchedrep_width) << kern->getBytesTouchedPerRep()
         << sepchr <<right<< setw(bytesReadrep_width) << kern->getBytesReadPerRep()
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
+        << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
         << endl;
   }
