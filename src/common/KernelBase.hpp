@@ -288,10 +288,15 @@ public:
     if (checksum_reference_variant == NumVariants) {
       throw std::runtime_error("Can't get reference checksum if kernel was not run");
     }
-    return checksum[checksum_reference_variant].at(checksum_reference_tuning);
+    return getChecksum(checksum_reference_variant, checksum_reference_tuning);
   }
   Checksum_type getChecksum(VariantID vid, size_t tune_idx) const
-  { return checksum[vid].at(tune_idx); }
+  {
+    if (num_exec[vid].at(tune_idx) <= 0) {
+      throw std::runtime_error("Can't get checksum if variant tuning was not run");
+    }
+    return checksum[vid].at(tune_idx) / num_exec[vid].at(tune_idx);
+  }
 
   void execute(VariantID vid, size_t tune_idx);
 

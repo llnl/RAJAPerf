@@ -331,7 +331,7 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
   this->runKernel(vid, tune_idx);
 
   Checksum_type old_checksum = checksum[vid][tune_idx];
-  checksum[vid][tune_idx] = 0;
+  checksum[vid][tune_idx] = 0.0;
   this->updateChecksum(vid, tune_idx);
   checksum[vid][tune_idx] *= checksum_scale_factor;
   checksum[vid][tune_idx] += old_checksum;
