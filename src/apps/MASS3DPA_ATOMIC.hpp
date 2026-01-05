@@ -161,6 +161,92 @@ constexpr int Q1D = 4;
   D[qx + mpa3d_at::Q1D * qy + mpa3d_at::Q1D * mpa3d_at::Q1D * qz +             \
     mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D * e]
 
+#define MASS3DPA_ATOMIC_0_CPU                                                  \
+  constexpr int MQ1 = mpa3d_at::Q1D;                                           \
+  constexpr int MD1 = mpa3d_at::D1D;                                           \
+  constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
+  double sm_B[MQ1][MD1];                                                       \
+  double sm_Bt[MD1][MQ1];                                                      \
+  double sm0[MDQ * MDQ * MDQ];                                                 \
+  double sm1[MDQ * MDQ * MDQ];                                                 \
+  double (*sm_X)[MD1][MD1] = (double (*)[MD1][MD1])sm0;                        \
+  double (*DDQ)[MD1][MQ1] = (double (*)[MD1][MQ1])sm1;                         \
+  double (*DQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm0;                         \
+  double (*QQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm1;                         \
+  double (*QQD)[MQ1][MD1] = (double (*)[MQ1][MD1])sm0;                         \
+  double (*QDD)[MD1][MD1] = (double (*)[MD1][MD1])sm1;                         \
+  int thread_dofs[MD1 * MD1 * MD1];
+
+#define MASS3DPA_ATOMIC_0_GPU                                                  \
+  constexpr int MQ1 = mpa3d_at::Q1D;                                           \
+  constexpr int MD1 = mpa3d_at::D1D;                                           \
+  constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
+  RAJA_TEAM_SHARED double sm_B[MQ1][MD1];                                      \
+  RAJA_TEAM_SHARED double sm_Bt[MD1][MQ1];                                     \
+  RAJA_TEAM_SHARED double sm0[MDQ * MDQ * MDQ];                                \
+  RAJA_TEAM_SHARED double sm1[MDQ * MDQ * MDQ];                                \
+  double (*sm_X)[MD1][MD1] = (double (*)[MD1][MD1])sm0;                        \
+  double (*DDQ)[MD1][MQ1] = (double (*)[MD1][MQ1])sm1;                         \
+  double (*DQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm0;                         \
+  double (*QQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm1;                         \
+  double (*QQD)[MQ1][MD1] = (double (*)[MQ1][MD1])sm0;                         \
+  double (*QDD)[MD1][MD1] = (double (*)[MD1][MD1])sm1;                         \
+  RAJA_TEAM_SHARED int thread_dofs[MD1 * MD1 * MD1];
+
+#define MASS3DPA_ATOMIC_1                                                      \
+  int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                      \
+  thread_dofs[j] =                                                             \
+      m_elemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * e];      \
+  sm_X[dz][dy][dx] =                                                           \
+      X[thread_dofs[j]]; // missing dof_map for lexicographical ordering
+
+#define MASS3DPA_ATOMIC_2                                                      \
+  sm_B[q][d] = MPAT_B(q, d);                                                   \
+  sm_Bt[d][q] = sm_B[q][d];
+
+#define MASS3DPA_ATOMIC_3                                                      \
+  double u = 0.0;                                                              \
+  for (int dx = 0; dx < mpa3d_at::D1D; ++dx) {                                 \
+    u += sm_X[dz][dy][dx] * sm_B[qx][dx];                                      \
+  }                                                                            \
+  DDQ[dz][dy][qx] = u;
+
+#define MASS3DPA_ATOMIC_4                                                      \
+  double u = 0.0;                                                              \
+  for (int dy = 0; dy < mpa3d_at::D1D; ++dy) {                                 \
+    u += DDQ[dz][dy][qx] * sm_B[qy][dy];                                       \
+  }                                                                            \
+  DQQ[dz][qy][qx] = u;
+
+#define MASS3DPA_ATOMIC_5                                                      \
+  double u = 0.0;                                                              \
+  for (int dz = 0; dz < mpa3d_at::D1D; ++dz) {                                 \
+    u += DQQ[dz][qy][qx] * sm_B[qz][dz];                                       \
+  }                                                                            \
+  QQQ[qz][qy][qx] = u * MPAT_D(qx, qy, qz, e);
+
+#define MASS3DPA_ATOMIC_6                                                      \
+  double u = 0.0;                                                              \
+  for (int qx = 0; qx < mpa3d_at::Q1D; ++qx) {                                 \
+    u += QQQ[qz][qy][qx] * sm_Bt[dx][qx];                                      \
+  }                                                                            \
+  QQD[qz][qy][dx] = u;
+
+#define MASS3DPA_ATOMIC_7                                                      \
+  double u = 0.0;                                                              \
+  for (int qy = 0; qy < mpa3d_at::Q1D; ++qy) {                                 \
+    u += QQD[qz][qy][dx] * sm_Bt[dy][qy];                                      \
+  }                                                                            \
+  QDD[qz][dy][dx] = u;
+
+#define MASS3DPA_ATOMIC_8                                                      \
+  double u = 0.0;                                                              \
+  for (int qz = 0; qz < mpa3d_at::Q1D; ++qz) {                                 \
+    u += QDD[qz][dy][dx] * sm_Bt[dz][qz];                                      \
+  }                                                                            \
+  const int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                \
+  Y[thread_dofs[j]] += u; // atomic add
+
 namespace rajaperf {
 class RunParams;
 
