@@ -28,12 +28,6 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
 
   m_NE = m_Nx * m_Ny * m_Nz;
 
-  const int ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);
-  const int total_size = ndof_per_elem * ndof_per_elem;
-  std::cout << "elem to dof table size " << total_size << std::endl;
-  m_elemToDoF = new Index_type[total_size];
-
-  buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_elemToDoF);
 
   m_Tot_Dofs = (m_Nx * m_P + 1) * (m_Ny * m_P + 1) * (m_Nz * m_P + 1);
 
@@ -79,7 +73,7 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   addVariantTunings();
 }
 
-MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() { delete m_elemToDoF; }
+MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() { }
 
 void MASS3DPA_ATOMIC::setUp(VariantID vid,
                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
@@ -93,6 +87,14 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
       Real_type(1.0), vid);
   allocAndInitDataConst(m_X, Index_type(m_Tot_Dofs), Real_type(1.0), vid);
   allocAndInitDataConst(m_Y, Index_type(m_Tot_Dofs), Real_type(0.0), vid);
+
+  // Compute table elem to dof table size
+  const int ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);
+  const int total_size = ndof_per_elem * ndof_per_elem;
+
+  auto a_elemToDoF = allocDataForInit(m_ElemToDoF, total_size, vid);
+  buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_ElemToDoF);  
+  
 }
 
 void MASS3DPA_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx) {
@@ -108,6 +110,7 @@ void MASS3DPA_ATOMIC::tearDown(VariantID vid,
   deallocData(m_D, vid);
   deallocData(m_X, vid);
   deallocData(m_Y, vid);
+  deallocData(m_ElemToDoF, vid);
 }
 
 } // end namespace apps

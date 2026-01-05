@@ -142,6 +142,7 @@
   Real_ptr D = m_D;                                                            \
   Real_ptr X = m_X;                                                            \
   Real_ptr Y = m_Y;                                                            \
+  Index_ptr ElemToDoF = m_ElemToDoF;                                           \
   Index_type NE = m_NE;
 
 #include "FEM_MACROS.hpp"
@@ -196,7 +197,7 @@ constexpr int Q1D = 4;
 #define MASS3DPA_ATOMIC_1                                                      \
   int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                      \
   thread_dofs[j] =                                                             \
-      m_elemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * e];      \
+      ElemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * e];        \
   sm_X[dz][dy][dx] =                                                           \
       X[thread_dofs[j]]; // missing dof_map for lexicographical ordering
 
@@ -245,7 +246,7 @@ constexpr int Q1D = 4;
     u += QDD[qz][dy][dx] * sm_Bt[dz][qz];                                      \
   }                                                                            \
   const int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                \
-  Y[thread_dofs[j]] += u; // atomic add
+  RAJA::atomicAdd<RAJA::auto_atomic>(&Y[thread_dofs[j]], u); // atomic add
 
 namespace rajaperf {
 class RunParams;
@@ -342,7 +343,7 @@ public:
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = mpa3d_at::Q1D * mpa3d_at::Q1D;
+  static const size_t default_gpu_block_size = mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
@@ -357,9 +358,7 @@ private:
   Index_type m_P;        // polynomial order
   Index_type m_Tot_Dofs; // total number of dofs
 
-  //
-  std::vector<std::vector<int>> elem_to_dofs;
-  Index_ptr m_elemToDoF;
+  Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
   Index_type m_NE_default;
