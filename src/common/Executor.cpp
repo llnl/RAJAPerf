@@ -932,59 +932,67 @@ void Executor::outputRunData()
   vector<FOMGroup> fom_groups;
   getFOMGroups(fom_groups);
 
-  for (size_t i = 0; i <= kernels.size(); ++i) {
-
-    const bool separate_files = i == kernels.size();
-
-    vector<KernelBase*> const& mykernels = separate_files
-                                         ? kernels
-                                         : vector<KernelBase*>{kernels[i]};
-
-    unique_ptr<ostream> file;
-    if (separate_files) {
-      file = openOutputFile(out_fprefix + "-kernels.csv");
-    } else {
-      file = openOutputFile(out_fprefix + "-" + mykernels[0]->getName() + ".out");
-    }
+  {
+    unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernels.csv");
     if ( *file ) {
       constexpr bool to_file = true;
-      writeKernelInfoSummary(*file, mykernels, to_file);
+      writeKernelInfoSummary(*file, kernels, to_file);
     }
 
-    if (separate_files) {
-      file = openOutputFile(out_fprefix + "-checksum.txt");
-    } else {
-      writeSeparator(*file);
-    }
-    writeChecksumReport(*file, mykernels);
+    file = openOutputFile(out_fprefix + "-checksum.txt");
+    writeChecksumReport(*file, kernels);
 
     for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
 
-      if (separate_files) {
-        file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-      } else {
-        writeSeparator(*file);
-      }
-      writeCSVReport(*file, mykernels, CSVRepMode::Timing, combiner, 6 /* prec */);
+      file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+      writeCSVReport(*file, kernels, CSVRepMode::Timing, combiner, 6 /* prec */);
 
       if ( haveReferenceVariant() ) {
 
-        if (separate_files) {
-          file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-        } else {
-          writeSeparator(*file);
-        }
-        writeCSVReport(*file, mykernels, CSVRepMode::Speedup, combiner, 3 /* prec */);
+        file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+        writeCSVReport(*file, kernels, CSVRepMode::Speedup, combiner, 3 /* prec */);
       }
     }
 
     if (!fom_groups.empty() ) {
-      if (separate_files) {
-        file = openOutputFile(out_fprefix + "-fom.csv");
-      } else {
+      file = openOutputFile(out_fprefix + "-fom.csv");
+      writeFOMReport(*file, kernels, fom_groups);
+    }
+  }
+
+
+  for (size_t i = 0; i < kernels.size(); ++i) {
+
+    const bool separate_files = false;
+
+    string kernel_out_fprefix = out_fprefix + "-" + kernels[i]->getName();
+    vector<KernelBase*> mykernel({kernels[i]});
+
+    unique_ptr<ostream> file = openOutputFile(kernel_out_fprefix + ".out");
+
+    if ( *file ) {
+      constexpr bool to_file = true;
+      writeKernelInfoSummary(*file, mykernel, to_file);
+    }
+
+    writeSeparator(*file);
+    writeChecksumReport(*file, mykernel);
+
+    for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
+
+      writeSeparator(*file);
+      writeCSVReport(*file, mykernel, CSVRepMode::Timing, combiner, 6 /* prec */);
+
+      if ( haveReferenceVariant() ) {
+
         writeSeparator(*file);
+        writeCSVReport(*file, mykernel, CSVRepMode::Speedup, combiner, 3 /* prec */);
       }
-      writeFOMReport(*file, mykernels, fom_groups);
+    }
+
+    if (!fom_groups.empty() ) {
+      writeSeparator(*file);
+      writeFOMReport(*file, mykernel, fom_groups);
     }
 
   }
