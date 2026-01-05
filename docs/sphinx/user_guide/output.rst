@@ -103,6 +103,13 @@ Information reported in the file for each kernel is:
   * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified in memory
     by atomic operations in a kernel. If a kernel contains no atomic operations,
     the value of zero is reported.
+  * **ChecksumConsistency** -- The consistency of the checksums of the kernel.
+    Kernels that always get the same checksum are ``Consistent``, kernels that
+    can get different checksums for each variant tuning are
+    ``ConsistentPerVariantTuning``, and kernels with checksums that can vary from
+    run to run are ``Inconsistent``.
+  * **OperationalComplexity** -- The operational complexity of the kernel, where
+    N is the *problem size* of the kernel.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
            like DRAM or HBM under idealized conditions. They assume caching is

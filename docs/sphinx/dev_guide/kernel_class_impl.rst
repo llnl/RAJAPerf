@@ -75,7 +75,8 @@ The methods in the source file are:
         arbitrary multiplier on the checksum values used to scale the checksums
         to a desired range. Mostly used for kernels with floating-point
         operation complexity that does not scale linearly with problem size.
-      * The operational complexity of the kernel.
+      * The operational complexity of the kernel, where N is the *problem size*
+        of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
         the various ``define*VariantTunings`` methods that are defined in the
