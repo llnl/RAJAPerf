@@ -521,9 +521,7 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
 //
 // Set up column headers and column widths for kernel summary output.
 //
-  string kern_head("Kernels");
-  size_t kercol_width = kern_head.size();
-
+  size_t     kercol_width = 0;
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
@@ -534,7 +532,8 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
   Index_type bytesWrittenrep_width = 0;
   Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
-  Index_type dash_width = 0;
+
+  size_t     dash_width = 0;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     kercol_width = max(kercol_width, kernels[ik]->getName().size());
@@ -552,7 +551,9 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
 
   const string sepchr(" , ");
 
-  kercol_width += 2;
+  string kern_head("Kernels");
+  kercol_width = max( kern_head.size(),
+                      kercol_width ) + 2;
   dash_width += kercol_width;
 
   double psize = log10( static_cast<double>(psize_width) );
@@ -621,7 +622,7 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
                         static_cast<Index_type>(bamrrsize) ) + 3;
   dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
-  str <<left<< setw(kercol_width) << kern_head
+  str           <<left << setw(kercol_width) << kern_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
@@ -636,7 +637,7 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
       << endl;
 
   if ( !to_file ) {
-    for (Index_type i = 0; i < dash_width; ++i) {
+    for (size_t i = 0; i < dash_width; ++i) {
       str << "-";
     }
     str << endl;
@@ -644,7 +645,7 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     KernelBase* kern = kernels[ik];
-    str <<left<< setw(kercol_width) <<  kern->getName()
+    str           <<left << setw(kercol_width) << kern->getName()
         << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
@@ -873,7 +874,7 @@ void Executor::runWarmupKernels()
 
   for ( auto kid = warmup_kernel_ids.begin();
              kid != warmup_kernel_ids.end(); ++ kid ) {
-    //  
+    //
     // Note that we create a new kernel object for each kernel to run
     // in warmup so we don't pollute timing data, checksum data, etc.
     // for kernels that will run for real later...
