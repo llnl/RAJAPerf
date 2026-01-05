@@ -30,7 +30,8 @@ PI_ATOMIC::PI_ATOMIC(const RunParams& params)
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0  );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) ); // pi
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);

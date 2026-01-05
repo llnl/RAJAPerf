@@ -28,8 +28,9 @@ TRAP_INT::TRAP_INT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) );
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(10 * getActualProblemSize()); // 1 sqrt
 

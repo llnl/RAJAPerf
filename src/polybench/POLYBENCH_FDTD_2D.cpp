@@ -43,24 +43,28 @@ POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
                 m_nx*(m_ny-1) +
                 (m_nx-1)*(m_ny-1) );
   setKernelsPerRep(4);
-  setBytesReadPerRep( 1*sizeof(Real_type ) +
+  setBytesReadPerRep( 1*sizeof(Real_type ) + // fict
 
-                      1*sizeof(Real_type ) * (m_nx-1) * m_ny +
-                      1*sizeof(Real_type ) * m_nx * m_ny +
+                      1*sizeof(Real_type ) * m_nx * m_ny + // hz
 
-                      1*sizeof(Real_type ) * m_nx * (m_ny-1) +
-                      1*sizeof(Real_type ) * m_nx * m_ny +
+                      1*sizeof(Real_type ) * m_nx * m_ny + // hz
 
-                      1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) +
-                      1*sizeof(Real_type ) * (m_nx-1) * m_ny +
-                      1*sizeof(Real_type ) * m_nx * (m_ny-1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ny +
+                      1*sizeof(Real_type ) * (m_nx-1) * m_ny + // ex
+                      1*sizeof(Real_type ) * m_nx * (m_ny-1) ); // ey
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ny + // ey
 
-                         1*sizeof(Real_type ) * (m_nx-1) * m_ny +
+                         0 +
 
-                         1*sizeof(Real_type ) * m_nx * (m_ny-1) +
+                         0 +
 
-                         1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) );
+                         0 ); // hz
+  setBytesModifyWrittenPerRep( 0 +
+
+                               1*sizeof(Real_type ) * (m_nx-1) * m_ny + // ey
+
+                               1*sizeof(Real_type ) * m_nx * (m_ny-1) + // ex
+
+                               1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) ); // hz
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 0 * m_ny +
                   3 * (m_nx-1)*m_ny +
