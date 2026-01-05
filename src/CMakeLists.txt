@@ -76,6 +76,8 @@ blt_add_executable(
   apps/MASS3DEA-Seq.cpp
   apps/MASS3DPA.cpp
   apps/MASS3DPA-Seq.cpp
+  apps/MASS3DPA_ATOMIC.cpp
+  apps/MASS3DPA_ATOMIC-Seq.cpp  
   apps/MASSVEC3DPA.cpp
   apps/MASSVEC3DPA-Seq.cpp
   apps/MATVEC_3D_STENCIL.cpp

@@ -95,6 +95,7 @@
 #include "apps/LTIMES_NOVIEW.hpp"
 #include "apps/MASS3DEA.hpp"
 #include "apps/MASS3DPA.hpp"
+#include "apps/MASS3DPA_ATOMIC.hpp"
 #include "apps/MASSVEC3DPA.hpp"
 #include "apps/MATVEC_3D_STENCIL.hpp"
 #include "apps/NODAL_ACCUMULATION_3D.hpp"
@@ -254,6 +255,7 @@ static const std::string KernelNames [] =
   std::string("Apps_LTIMES_NOVIEW"),
   std::string("Apps_MASS3DEA"),
   std::string("Apps_MASS3DPA"),
+  std::string("Apps_MASS3DPA_ATOMIC"),
   std::string("Apps_MASSVEC3DPA"),
   std::string("Apps_MATVEC_3D_STENCIL"),
   std::string("Apps_NODAL_ACCUMULATION_3D"),
@@ -1108,6 +1110,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new apps::MASS3DPA(run_params);
        break;
     }
+    case Apps_MASS3DPA_ATOMIC : {
+       kernel = new apps::MASS3DPA_ATOMIC(run_params);
+       break;
+    }    
     case Apps_MASSVEC3DPA : {
        kernel = new apps::MASSVEC3DPA(run_params);
        break;
