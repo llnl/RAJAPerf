@@ -28,8 +28,9 @@ IF_QUAD::IF_QUAD(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // b, a, c
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x2, x1
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   // estimate conditional true half of the time, 1 sqrt
   setFLOPsPerRep(4 * getActualProblemSize() +
@@ -39,33 +40,13 @@ IF_QUAD::IF_QUAD(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 IF_QUAD::~IF_QUAD()

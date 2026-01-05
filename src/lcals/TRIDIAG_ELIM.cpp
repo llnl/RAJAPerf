@@ -30,36 +30,19 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
 
   setItsPerRep( m_N-1 );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) );
+  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) ); // z, y, xin
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // xout
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * (m_N-1));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 TRIDIAG_ELIM::~TRIDIAG_ELIM()

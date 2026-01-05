@@ -40,37 +40,18 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize()  );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // array
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 NESTED_INIT::~NESTED_INIT()

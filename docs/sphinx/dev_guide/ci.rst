@@ -13,11 +13,11 @@ RAJA Performance Suite Continuous Integration (CI) Testing
 ************************************************************
 
 The RAJA Performance Suite project uses the same continuous integration tools 
-as the RAJA project, namely Azure Pipelines and GitLab CI in the Livermore
+as the RAJA project, namely GitHub Actions and GitLab CI in the Livermore
 Computing Collaboration Zone (LC CZ). Please see `RAJA Continuous Integration Testing <https://raja.readthedocs.io/en/develop/sphinx/dev_guide/ci.html>`_ for more information.
 
 The RAJA Performance Suite project includes files that support GitLab and
-Azure Pipelines CI testing that are specific to the project. These file are
+GitHub Actions CI testing that are specific to the project. These file are
 similar to those in the RAJA project and play the same roles and follow the
 same structure as in the RAJA project. Such files are described in `RAJA Continuous Integration Testing <https://raja.readthedocs.io/en/develop/sphinx/dev_guide/ci.html>`_.
 
@@ -36,7 +36,7 @@ content in the RAJA submodule:
    :language: json
 
 Like RAJA, the RAJA Performance Suite Spack package is maintained in the 
-RADIUSS Spack Configs project.
+`Spack Packages project on GitHub <https://github.com/spack/spack-packages>`_.
 
 .. _ci_tasks-label:
 

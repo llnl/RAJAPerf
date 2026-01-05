@@ -28,36 +28,20 @@ DAXPY_ATOMIC::DAXPY_ATOMIC(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
   setFLOPsPerRep(2 * getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Atomic);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 DAXPY_ATOMIC::~DAXPY_ATOMIC()

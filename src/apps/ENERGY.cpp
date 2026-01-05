@@ -29,21 +29,28 @@ ENERGY::ENERGY(const RunParams& params)
   setItsPerRep( 6 * getActualProblemSize() );
   setKernelsPerRep(6);
   // some branches are never taken due to the nature of the initialization of delvc
-  // the additional reads that would be done if those branches were taken are noted in the comments
-  setBytesReadPerRep((5*sizeof(Real_type) +
-                      1*sizeof(Real_type) + // 8
-                      6*sizeof(Real_type) +
-                      2*sizeof(Real_type) +
-                      7*sizeof(Real_type) + // 12
-                      1*sizeof(Real_type)   // 8
+  // the additional ops that would be done if those branches were taken are noted in the comments
+  setBytesReadPerRep((5*sizeof(Real_type) + // e_old, delvc, p_old, q_old, work
+                      1*sizeof(Real_type) + // delvc (+7 : compHalfStep, pbvc, e_new, bvc, pHalfStep, ql_old, qq_old)
+                      5*sizeof(Real_type) + // delvc, p_old, q_old, pHalfStep, q_new
+                      1*sizeof(Real_type) + // work
+                      6*sizeof(Real_type) + // delvc p_old, q_old, pHalfStep, q_new, p_new (+5 : pbvc, vnewc, bvc, ql_old, qq_old )
+                      1*sizeof(Real_type)   // delvc (+7 : pbvc, e_new, vnewc, bvc, p_new, ql_old, qq_old )
                       ) * getActualProblemSize() );
-  setBytesWrittenPerRep((1*sizeof(Real_type) +
-                         1*sizeof(Real_type) +
-                         1*sizeof(Real_type) +
-                         1*sizeof(Real_type) +
-                         1*sizeof(Real_type) +
-                         0*sizeof(Real_type)
+  setBytesWrittenPerRep((1*sizeof(Real_type) + // e_new
+                         1*sizeof(Real_type) + // q_new
+                         0*sizeof(Real_type) +
+                         0*sizeof(Real_type) +
+                         0*sizeof(Real_type) +
+                         0*sizeof(Real_type)   // (+1 : q_new )
                          ) * getActualProblemSize() );
+  setBytesModifyWrittenPerRep( (0*sizeof(Real_type) +
+                                0*sizeof(Real_type) +
+                                1*sizeof(Real_type) + // e_new
+                                1*sizeof(Real_type) + // e_new
+                                1*sizeof(Real_type) + // e_new
+                                0*sizeof(Real_type)
+                                ) * getActualProblemSize() );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((6  +
                   11 + // 1 sqrt
@@ -53,29 +60,13 @@ ENERGY::ENERGY(const RunParams& params)
                   9    // 1 sqrt
                   ) * getActualProblemSize());
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 ENERGY::~ENERGY()

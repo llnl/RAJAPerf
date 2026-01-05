@@ -40,29 +40,18 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setBytesReadPerRep( 1*sizeof(Real_type) * MEA_Q1D*MEA_D1D + // B
                       1*sizeof(Real_type) * MEA_Q1D*MEA_Q1D*MEA_Q1D*m_NE ); // D
   setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(m_NE * 7 * ea_mat_entries);
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
+  addVariantTunings();
 }
 
 MASS3DEA::~MASS3DEA()

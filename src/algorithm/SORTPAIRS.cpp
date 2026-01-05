@@ -28,23 +28,20 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // not useful in this case due to O(n*log(n)) algorithm
-  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // not useful in this case due to O(n*log(n)) algorithm
+  // not useful in this case due to O(n*log(n)) algorithm
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, i
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // sort is not stable and could depend on scheduling
 
   setComplexity(Complexity::N_logN);
 
   setUsesFeature(Sort);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings( );
 }
 
 SORTPAIRS::~SORTPAIRS()

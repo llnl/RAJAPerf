@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MULTI_REDUCE::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -35,7 +35,8 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       MULTI_REDUCE_SETUP_VALUES;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES;
 
@@ -63,7 +64,8 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
           };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES;
 
@@ -87,7 +89,8 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES_RAJA(RAJA::omp_multi_reduce);
 
@@ -116,6 +119,8 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MULTI_REDUCE, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

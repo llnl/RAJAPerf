@@ -36,9 +36,10 @@ MASS3DPA::MASS3DPA(const RunParams& params)
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * MPA_Q1D*MPA_D1D + // B, Bt
-                      2*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE + // X, Y
+                      1*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE + // X
                       1*sizeof(Real_type) * MPA_Q1D*MPA_Q1D*MPA_Q1D*m_NE ); // D
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE ); // Y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE ); // Y
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(m_NE * (2 * MPA_D1D * MPA_D1D * MPA_D1D * MPA_Q1D +
@@ -48,25 +49,13 @@ MASS3DPA::MASS3DPA(const RunParams& params)
                          2 * MPA_Q1D * MPA_Q1D * MPA_D1D * MPA_D1D +
                          2 * MPA_Q1D * MPA_D1D * MPA_D1D * MPA_D1D + MPA_D1D * MPA_D1D * MPA_D1D));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
+  addVariantTunings();
 }
 
 MASS3DPA::~MASS3DPA()

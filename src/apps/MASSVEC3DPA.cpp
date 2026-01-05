@@ -43,6 +43,7 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                          m_NE); // D
   setBytesWrittenPerRep(3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
                         MVPA_DIM * m_NE); // Y (3 components)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(0);
 
   //3 for the dimension loop
@@ -55,24 +56,13 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                   2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D +
                   2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 
-  setVariantDefined(Base_Seq);
-  setVariantDefined(RAJA_Seq);
-
-  setVariantDefined(Base_OpenMP);
-  setVariantDefined(RAJA_OpenMP);
-
-  setVariantDefined(Base_CUDA);
-  setVariantDefined(RAJA_CUDA);
-
-  setVariantDefined(Base_HIP);
-  setVariantDefined(RAJA_HIP);
-
-  setVariantDefined(Base_SYCL);
-  setVariantDefined(RAJA_SYCL);
+  addVariantTunings();
 }
 
 MASSVEC3DPA::~MASSVEC3DPA() {}

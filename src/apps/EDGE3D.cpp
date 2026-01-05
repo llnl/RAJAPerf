@@ -40,8 +40,9 @@ EDGE3D::EDGE3D(const RunParams& params)
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
-  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // sum
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr size_t flops_k_loop = 15
@@ -62,31 +63,13 @@ EDGE3D::EDGE3D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 EDGE3D::~EDGE3D()

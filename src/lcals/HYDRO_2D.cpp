@@ -40,18 +40,23 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
 
   setItsPerRep( 3 * (m_kn-2) * (m_jn-2) );
   setKernelsPerRep(3);
-  setBytesReadPerRep( 4*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) +
+  setBytesReadPerRep( 2*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) + // zp, zq (4 point stencil)
+                      2*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) + // zr, zm (3 point stencil)
 
-                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
-                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-1) +
-                      2*sizeof(Real_type ) * ((m_kn) * (m_jn) - 4) +
+                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-1) + // za, zb (2 point stencil)
+                      2*sizeof(Real_type ) * ((m_kn) * (m_jn) - 4) + // zz, zr (5 point stencil)
 
-                      4*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
+                      4*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) ); // zr, zu, zz, zv
+  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) + // za, zb
 
-                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
+                         0 +
 
-                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
+                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) ); // zrout, zzout
+  setBytesModifyWrittenPerRep( 0 +
+
+                               2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) + // zu, zv
+
+                               0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((14 +
                   26 +
@@ -61,31 +66,13 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 HYDRO_2D::~HYDRO_2D()

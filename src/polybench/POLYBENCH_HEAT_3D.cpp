@@ -34,10 +34,13 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep( 2 );
-  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8) +
-                      1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8));
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) +
-                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8) + // A (7 point stencil)
+
+                      1*sizeof(Real_type ) * (m_N * m_N * m_N - 12*(m_N-2) - 8)); // B (7 point stencil)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) + // B
+
+                         1*sizeof(Real_type ) * (m_N-2) * (m_N-2) * (m_N-2) ); // A
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 15 * (m_N-2) * (m_N-2) * (m_N-2) +
                   15 * (m_N-2) * (m_N-2) * (m_N-2) );
@@ -46,31 +49,13 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_HEAT_3D::~POLYBENCH_HEAT_3D()

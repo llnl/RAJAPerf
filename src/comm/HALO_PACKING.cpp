@@ -26,37 +26,25 @@ HALO_PACKING::HALO_PACKING(const RunParams& params)
 
   setItsPerRep( 2 * m_num_vars * halo_size );
   setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
-  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack
-                      1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * halo_size +  // vars
 
-                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack
-                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack
+                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack_buffers
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack_buffers
 
-                         1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack
+                         1*sizeof(Real_type) * m_num_vars * halo_size ); // vars
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings();
 }
 
 HALO_PACKING::~HALO_PACKING()

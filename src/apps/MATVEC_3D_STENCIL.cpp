@@ -69,10 +69,11 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
                             get_size_matrix(1, 1, 1) +
                             get_size_matrix(0, 1, 1) +
                             get_size_matrix(1, 1, 1) ;
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() +
-                      1*sizeof(Real_type) * x_accessed +
-                      1*sizeof(Real_type) * m_accessed );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      1*sizeof(Real_type) * x_accessed + // x
+                      1*sizeof(Real_type) * m_accessed ); // m
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed ); // b
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   const size_t multiplies = 27;
@@ -83,29 +84,13 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 MATVEC_3D_STENCIL::~MATVEC_3D_STENCIL()

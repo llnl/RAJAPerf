@@ -28,35 +28,20 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) );
+  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // Reduction may use atomics
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings( );
 }
 
 REDUCE_SUM::~REDUCE_SUM()

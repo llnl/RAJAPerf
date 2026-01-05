@@ -29,38 +29,19 @@ INIT_VIEW1D_OFFSET::INIT_VIEW1D_OFFSET(const RunParams& params)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize()  );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(View);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 INIT_VIEW1D_OFFSET::~INIT_VIEW1D_OFFSET()

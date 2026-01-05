@@ -33,10 +33,13 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +
-                      1*sizeof(Real_type ) * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) +
-                         1*sizeof(Real_type ) * (m_N-2) );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // A (3 point stencil)
+
+                      1*sizeof(Real_type ) * m_N ); // B (3 point stencil)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) + // B
+
+                         1*sizeof(Real_type ) * (m_N-2) ); // A
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 3 * (m_N-2) +
                   3 * (m_N-2) );
@@ -45,29 +48,13 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_JACOBI_1D::~POLYBENCH_JACOBI_1D()

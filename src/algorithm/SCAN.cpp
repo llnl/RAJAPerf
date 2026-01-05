@@ -28,8 +28,9 @@ SCAN::SCAN(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
@@ -38,27 +39,13 @@ SCAN::SCAN(const RunParams& params)
                                               getActualProblemSize() ) /
                  getActualProblemSize();
 
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Scan);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-#if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
-  setVariantDefined( Base_OpenMPTarget );
-#endif
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings( );
 }
 
 SCAN::~SCAN()

@@ -73,6 +73,7 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   // Bytes written : nvals_hexrect (=4) doubles for each intersection.
   setBytesWrittenPerRep( nvals_hexrect*sizeof(Real_type) * getItsPerRep() );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 150 ;
@@ -80,25 +81,13 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings();
 }
 
 INTSC_HEXRECT::~INTSC_HEXRECT()
@@ -628,7 +617,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 
 
-void INTSC_HEXRECT::updateChecksum(VariantID vid, Size_type tune_idx)
+void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
 {
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;

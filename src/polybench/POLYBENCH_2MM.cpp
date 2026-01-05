@@ -44,14 +44,15 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
 
   setItsPerRep( m_ni*m_nj + m_ni*m_nl );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk +
-                      1*sizeof(Real_type ) * m_nj * m_nk +
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk + // A
+                      1*sizeof(Real_type ) * m_nj * m_nk + // B
 
-                      1*sizeof(Real_type ) * m_ni * m_nj +
-                      1*sizeof(Real_type ) * m_nj * m_nl );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj +
+                      1*sizeof(Real_type ) * m_ni * m_nj + // tmp
+                      1*sizeof(Real_type ) * m_nj * m_nl ); // C
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj + // tmp
 
-                         1*sizeof(Real_type ) * m_ni * m_nl );
+                         1*sizeof(Real_type ) * m_ni * m_nl ); // D
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * m_ni*m_nj*m_nk +
                  2 * m_ni*m_nj*m_nl );
@@ -60,31 +61,13 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+
   setComplexity(Complexity::N_to_the_three_halves);
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_2MM::~POLYBENCH_2MM()

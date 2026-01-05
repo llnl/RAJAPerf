@@ -30,32 +30,18 @@ ATOMIC::ATOMIC(const RunParams& params)
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // atomic (assumes replication == problem size)
   setFLOPsPerRep(getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // atomics
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Atomic);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings();
 }
 
 ATOMIC::~ATOMIC()

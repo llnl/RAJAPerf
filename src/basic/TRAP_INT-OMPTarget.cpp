@@ -29,7 +29,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void TRAP_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRAP_INT::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -42,7 +42,8 @@ void TRAP_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     #pragma omp target enter data map(to:x0,xp,y,yp,h)
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Real_type sumx = m_sumx_init;
 
@@ -66,7 +67,8 @@ void TRAP_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Real_type tsumx = m_sumx_init;
 
@@ -88,6 +90,8 @@ void TRAP_INT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
      getCout() << "\n  TRAP_INT : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRAP_INT, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

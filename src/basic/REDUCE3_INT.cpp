@@ -33,38 +33,20 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Int_type) +
-                      1*sizeof(Int_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 3*sizeof(Int_type) );
+  setBytesReadPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 REDUCE3_INT::~REDUCE3_INT()

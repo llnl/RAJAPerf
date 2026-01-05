@@ -28,36 +28,19 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() );
+  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // px(0)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(17 * getActualProblemSize());
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 INT_PREDICT::~INT_PREDICT()

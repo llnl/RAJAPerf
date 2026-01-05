@@ -36,9 +36,10 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 2*sizeof(Real_type) * DPA_Q1D*DPA_D1D + // b, g
-                      2*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE + // x, y
+                      1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE + // x
                 DPA_SYM*sizeof(Real_type) * DPA_Q1D*DPA_Q1D*DPA_Q1D*m_NE ); // d
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE ); // y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE ); // y
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(m_NE * (DPA_Q1D * DPA_D1D +
@@ -52,25 +53,13 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
                          7 * DPA_D1D * DPA_Q1D * DPA_D1D * DPA_D1D +
                          3 * DPA_D1D * DPA_D1D * DPA_D1D));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Launch);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
+  addVariantTunings();
 }
 
 DIFFUSION3DPA::~DIFFUSION3DPA()

@@ -58,6 +58,7 @@ RunParams::RunParams(int argc, char** argv)
    checkrun_reps(1),
    reference_variant(),
    reference_vid(NumVariants),
+   warmup_mode(WarmupMode::Default),
    warmup_kernel_input(),
    invalid_warmup_kernel_input(),
    kernel_input(),
@@ -83,7 +84,6 @@ RunParams::RunParams(int argc, char** argv)
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
-   disable_warmup(false),
    run_kernels(),
    run_variants()
 {
@@ -176,8 +176,6 @@ void RunParams::print(std::ostream& str) const
   }
 #endif
 
-  str << "\n disable_warmup = " << disable_warmup;
-
   str << "\n seq data space = " << getDataSpaceName(seqDataSpace);
   str << "\n omp data space = " << getDataSpaceName(ompDataSpace);
   str << "\n omp target data space = " << getDataSpaceName(ompTargetDataSpace);
@@ -199,6 +197,8 @@ void RunParams::print(std::ostream& str) const
   str << "\n cuda MPI data space = " << getDataSpaceName(cudaMPIDataSpace);
   str << "\n hip MPI data space = " << getDataSpaceName(hipMPIDataSpace);
   str << "\n kokkos MPI data space = " << getDataSpaceName(kokkosMPIDataSpace);
+
+  str << "\n warmup_mode = " << WarmupModeToStr(warmup_mode);
 
   str << "\n warmup_kernel_input = ";
   for (size_t j = 0; j < warmup_kernel_input.size(); ++j) {
@@ -354,6 +354,24 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 opt == std::string("-pkf") ) {
 
       printKernelFeatures(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-checksum-consistencies") ||
+                opt == std::string("-pcc") ) {
+
+      printChecksumConsistencyNames(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-checksum-consistency-kernels") ||
+                opt == std::string("-pcck") ) {
+
+      printChecksumConsistencyKernels(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-kernel-checksum-consistencies") ||
+                opt == std::string("-pkcc") ) {
+
+      printKernelChecksumConsistencies(getCout());
       input_state = InfoRequest;
 
     } else if ( opt == std::string("--print-complexities") ||
@@ -845,6 +863,8 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         }
       }
 
+      warmup_mode = WarmupMode::Explicit;
+
     } else if ( opt == std::string("--kernels") ||
                 opt == std::string("-k") ) {
 
@@ -1140,9 +1160,13 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = DryRun;
       }
 
-    } else if ( std::string(argv[i]) == std::string("--disable-warmup") ) {
+    } else if ( std::string(argv[i]) == std::string("--warmup-disable") ) {
 
-      disable_warmup = true;
+      warmup_mode = WarmupMode::Disable;
+
+    } else if ( std::string(argv[i]) == std::string("--warmup-perfrun-same") ) {
+
+      warmup_mode = WarmupMode::PerfRunSame;
 
     } else if ( std::string(argv[i]) == std::string("--checkrun") ) {
 
@@ -1302,6 +1326,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --print-kernel-features, -pkf \n"
       << "\t      (print names of features used by each kernel)\n\n";
 
+  str << "\t --print-consistencies, -pcc (print names of checksum consistencies exercised in Suite)\n\n";
+
+  str << "\t --print-consistency-kernels, -pcck \n"
+      << "\t      (print names of kernels that have each consistency)\n\n";
+
+  str << "\t --print-kernel-consistencies, -pkcc \n"
+      << "\t      (print the name of the consistency of each kernel)\n\n";
+
   str << "\t --print-complexities, -pc (print names of algorithmic complexities exercised in Suite)\n\n";
 
   str << "\t --print-complexity-kernels, -pck \n"
@@ -1348,11 +1380,16 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -of dat (output data will be in files 'dat*')\n\n";
 
   str << "\t Options for selecting kernels to run....\n"
-      << "\t ========================================\n\n";;
+      << "\t ========================================\n\n";
 
-  str << "\t --disable-warmup (disable warmup kernels) [Default is run warmup kernels that are relevant to kernels selected to run]\n\n";
+  str << "\t For warmup kernels, the default (no option specified) will run a minimal set of warmup kernels based on\n"
+      << "\t RAJA features exercised in kernels specified for perf run. Other options are:\n\n";
 
-  str << "\t --warmup-kernels, -wk <space-separated strings> [Default is run warmup kernels that are relevant to kernels selected to run]\n"
+  str << "\t --warmup-disable (do not run any warmup kernels)\n\n";
+
+  str << "\t --warmup-perfrun-same (run same set of kernels for warmup as specified for perf run)\n\n";
+
+  str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, none will be run for warmup]\n"
       << "\t      (names of individual kernels and/or groups of kernels to warmup)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
@@ -1816,6 +1853,51 @@ void RunParams::printKernelFeatures(std::ostream& str) const
   str.flush();
 }
 
+void RunParams::printChecksumConsistencyNames(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies:";
+  str << "\n-------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    str << getChecksumConsistencyName(static_cast<ChecksumConsistency>(cc)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printChecksumConsistencyKernels(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies and kernels that use each:";
+  str << "\n---------------------------------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    ChecksumConsistency tcc = static_cast<ChecksumConsistency>(cc);
+    str << getChecksumConsistencyName(tcc) << std::endl;
+    for (int kid = 0; kid < NumKernels; ++kid) {
+      KernelID tkid = static_cast<KernelID>(kid);
+      KernelBase* kern = getKernelObject(tkid, *this);
+      if ( kern->getChecksumConsistency() == tcc ) {
+        str << "\t" << getFullKernelName(tkid) << std::endl;
+      }
+      delete kern;
+    }  // loop over kernels
+    str << std::endl;
+  }  // loop over consistencies
+  str.flush();
+}
+
+void RunParams::printKernelChecksumConsistencies(std::ostream& str) const
+{
+  str << "\nAvailable kernels and checksum consistencies each uses:";
+  str << "\n-----------------------------------------\n";
+  for (int kid = 0; kid < NumKernels; ++kid) {
+    KernelID tkid = static_cast<KernelID>(kid);
+    str << getFullKernelName(tkid) << std::endl;
+    KernelBase* kern = getKernelObject(tkid, *this);
+    ChecksumConsistency tcc = kern->getChecksumConsistency();
+    str << "\t" << getChecksumConsistencyName(tcc) << std::endl;
+    delete kern;
+  }  // loop over kernels
+  str.flush();
+}
+
 void RunParams::printComplexityNames(std::ostream& str) const
 {
   str << "\nAvailable complexities:";
@@ -2065,7 +2147,7 @@ void RunParams::processKernelInput()
   //
   // ================================================================
 
-  run_warmup_kernels.clear();
+  specified_warmup_kernel_ids.clear();
 
   if ( !warmup_kernel_input.empty() ) {
 
@@ -2103,7 +2185,7 @@ void RunParams::processKernelInput()
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
-          run_warmup_kernels.insert(tkid);
+          specified_warmup_kernel_ids.insert(tkid);
         }
       }
 
@@ -2121,7 +2203,7 @@ void RunParams::processKernelInput()
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
-            run_warmup_kernels.insert(tkid);
+            specified_warmup_kernel_ids.insert(tkid);
           }
           found_it = true;
         }

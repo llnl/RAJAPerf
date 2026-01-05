@@ -38,8 +38,9 @@ VOL3D::VOL3D(const RunParams& params)
   setItsPerRep( m_domain->lpz+1 - m_domain->fpz );
   setKernelsPerRep(1);
   // touched data size, not actual number of stores and loads
-  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // vol
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(72 * (m_domain->lpz+1 - m_domain->fpz));
 
@@ -47,29 +48,13 @@ VOL3D::VOL3D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 VOL3D::~VOL3D()

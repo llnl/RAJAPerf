@@ -69,6 +69,11 @@
 
 #endif
 
+//
+// Macro to increment rep loop counter: quiets C++20 compiler warning
+//
+#define RP_REPCOUNTINC(var)  static_cast<void>( ((var = var + 1), 0) )
+
 namespace rajaperf {
 
 /*!
@@ -84,6 +89,15 @@ public:
   static constexpr size_t getUnknownTuningIdx()
     { return std::numeric_limits<size_t>::max(); }
   static std::string getDefaultTuningName() { return "default"; }
+
+  //
+  // Method to set state of all Kernel objects to indicate kernel runs 
+  // are for warmup purposes if true is passed, else false.
+  //
+  // The warmup state before the method call is returned to facilitate 
+  // reset mechanics. 
+  //
+  static bool setWarmupRun(bool warmup_run);
 
   KernelBase(KernelID kid, const RunParams& params);
 
@@ -104,48 +118,77 @@ public:
   void setKernelsPerRep(Index_type nkerns) { kernels_per_rep = nkerns; };
   void setBytesReadPerRep(Index_type bytes) { bytes_read_per_rep = bytes;}
   void setBytesWrittenPerRep(Index_type bytes) { bytes_written_per_rep = bytes;}
+  void setBytesModifyWrittenPerRep(Index_type bytes) { bytes_modify_written_per_rep = bytes;}
   void setBytesAtomicModifyWrittenPerRep(Index_type bytes) { bytes_atomic_modify_written_per_rep = bytes;}
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
+  void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
-  void setVariantDefined(VariantID vid);
-  void addVariantTuningName(VariantID vid, std::string name)
-  { variant_tuning_names[vid].emplace_back(std::move(name)); }
-
-  virtual void setSeqTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineSeqVariantTunings() {}
 
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-  virtual void setOpenMPTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineOpenMPVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_CUDA)
-  virtual void setCudaTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineCudaVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_HIP)
-  virtual void setHipTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineHipVariantTunings() {}
 #endif
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
-  virtual void setOpenMPTargetTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineOpenMPTargetVariantTunings() {}
 #endif
 
 #if defined(RUN_KOKKOS)
-  virtual void setKokkosTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineKokkosVariantTunings() {}
 #endif
+
 #if defined(RAJA_ENABLE_SYCL)
-  virtual void setSyclTuningDefinitions(VariantID vid)
-  { addVariantTuningName(vid, getDefaultTuningName()); }
+  virtual void defineSyclVariantTunings() {}
 #endif
+
+  template < auto method >
+  void addVariantTuning(VariantID vid, std::string name)
+  {
+    addVariantTuning(vid, std::move(name),
+        &KernelBase::wrapDerivedVariantTuningMethod<
+            class_of_member_function_pointer_t<decltype(method)>, method>);
+  }
+
+  void addVariantTunings()
+  {
+    defineSeqVariantTunings();
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+    defineOpenMPVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_CUDA)
+    defineCudaVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_HIP)
+    defineHipVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_TARGET_OPENMP)
+    defineOpenMPTargetVariantTunings();
+#endif
+
+#if defined(RUN_KOKKOS)
+    defineKokkosVariantTunings();
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+    defineSyclVariantTunings();
+#endif
+  }
 
 
   //
@@ -158,12 +201,15 @@ public:
   Index_type getDefaultReps() const { return default_reps; }
   Index_type getItsPerRep() const { return its_per_rep; };
   Index_type getKernelsPerRep() const { return kernels_per_rep; };
-  Index_type getBytesPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count atomic_modify_write operations as a read and a write to match previous counting
-  Index_type getBytesReadPerRep() const { return bytes_read_per_rep; }
-  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep; }
+  Index_type getBytesPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count modify_write operations twice to get the memory traffic
+  Index_type getBytesTouchedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + bytes_modify_written_per_rep + bytes_atomic_modify_written_per_rep; } // count modify_write operations once to get the data size only
+  Index_type getBytesReadPerRep() const { return bytes_read_per_rep + bytes_modify_written_per_rep; }
+  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep + bytes_modify_written_per_rep; }
+  Index_type getBytesModifyWrittenPerRep() const { return bytes_modify_written_per_rep; }
   Index_type getBytesAtomicModifyWrittenPerRep() const { return bytes_atomic_modify_written_per_rep; }
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
+  ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
@@ -515,51 +561,18 @@ public:
 
   void resetTimer() { timer.reset(); }
 
+  void print(std::ostream& os) const;
+
+  void runKernel(VariantID vid, size_t tune_idx);
+
   //
   // Virtual and pure virtual methods that may/must be implemented
   // by concrete kernel subclass.
   //
 
-  virtual void print(std::ostream& os) const;
-
-  virtual void runKernel(VariantID vid, size_t tune_idx);
-
   virtual void setUp(VariantID vid, size_t tune_idx) = 0;
   virtual void updateChecksum(VariantID vid, size_t tune_idx) = 0;
   virtual void tearDown(VariantID vid, size_t tune_idx) = 0;
-
-  virtual void runSeqVariant(VariantID vid, size_t tune_idx) = 0;
-
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-  virtual void runOpenMPVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_CUDA)
-  virtual void runCudaVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_HIP)
-  virtual void runHipVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-  virtual void runOpenMPTargetVariant(VariantID vid, size_t tune_idx) = 0;
-#endif
-
-#if defined(RAJA_ENABLE_SYCL)
-  virtual void runSyclVariant(VariantID vid, size_t tune_idx)
-  {
-     getCout() << "\n KernelBase: Unimplemented Sycl variant id = " << vid << std::endl;
-  }
-#endif
-
-#if defined(RUN_KOKKOS)
-  virtual void runKokkosVariant(VariantID vid, size_t tune_idx)
-  {
-     getCout() << "\n KernelBase: Unimplemented Kokkos variant id = " << vid << std::endl;
-  }
-#endif
-
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   void caliperOn() { doCaliperTiming = true; }
@@ -609,12 +622,34 @@ protected:
 #endif
 
 private:
+  using variant_tuning_method_pointer = void(KernelBase::*)(VariantID);
+
   KernelBase() = delete;
 
   void recordExecTime();
 
+  // This is used to implement tunings by being a wrapper for calling
+  // the given derived class method by casting this to the derived class.
+  // Instantiations of this method are stored in variant_tuning_methods.
+  template < typename Derived, void (Derived::* method)(VariantID) >
+  void wrapDerivedVariantTuningMethod(VariantID vid)
+  {
+    Derived& self = dynamic_cast<Derived&>(*this);
+
+    (self.*method)(vid);
+  }
+
+  void addVariantTuning(VariantID vid, std::string name,
+                        variant_tuning_method_pointer method);
+
   //
-  // Static properties of kernel, independent of run
+  // Boolean member shared by all kernel objects indicating whether they
+  // will be run for warmup purposes (true) or not (false).
+  //
+  static inline bool s_warmup_run = false;
+
+  //
+  // Persistent properties of kernel, independent of run
   //
   KernelID    kernel_id;
   std::string name;
@@ -626,9 +661,12 @@ private:
 
   bool uses_feature[NumFeatures];
 
+  ChecksumConsistency checksum_consistency;
+
   Complexity complexity;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
+  std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
   //
   // Properties of kernel dependent on how kernel is run
@@ -637,6 +675,7 @@ private:
   Index_type kernels_per_rep;
   Index_type bytes_read_per_rep;
   Index_type bytes_written_per_rep;
+  Index_type bytes_modify_written_per_rep;
   Index_type bytes_atomic_modify_written_per_rep;
   Index_type FLOPs_per_rep;
   double kernel_block_size = nan(""); // Set default value for non GPU kernels
@@ -656,12 +695,15 @@ private:
   cali_id_t Iters_Rep_attr;
   cali_id_t Kernels_Rep_attr;
   cali_id_t Bytes_Rep_attr;
+  cali_id_t Bytes_Touched_Rep_attr;
   cali_id_t Bytes_Read_Rep_attr;
   cali_id_t Bytes_Written_Rep_attr;
+  cali_id_t Bytes_ModifyWritten_Rep_attr;
   cali_id_t Bytes_AtomicModifyWritten_Rep_attr;
   cali_id_t Flops_Rep_attr;
   cali_id_t BlockSize_attr;
   std::map<std::string, cali_id_t> Feature_attrs;
+  cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
 
 
@@ -674,6 +716,27 @@ private:
   std::vector<RAJA::Timer::ElapsedType> max_time[NumVariants];
   std::vector<RAJA::Timer::ElapsedType> tot_time[NumVariants];
 };
+
+
+// Define the define*VariantTunings function with the given variants for
+// the default tuning.
+//
+// KERNEL is the name of the kernel type (e.g. DAXPY)
+// VariantName is the name of the Variant (e.g. Seq)
+// ... the names of the variants to add variant tunings for (e.g. Base_Seq, Lambda_Seq, RAJA_Seq)
+//
+// Example:
+// RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
+//
+#define RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(KERNEL, VariantName, ...)   \
+  void KERNEL::define##VariantName##VariantTunings()                           \
+  {                                                                            \
+    for (VariantID vid : {__VA_ARGS__}) {                                      \
+      addVariantTuning<&KERNEL::run##VariantName##Variant>(                    \
+          vid, getDefaultTuningName());                                        \
+    }                                                                          \
+  }
+
 
 }  // closing brace for rajaperf namespace
 

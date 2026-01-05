@@ -110,6 +110,8 @@ __global__ void poly_2mm_2_lam(Index_type ni,  Index_type nl,
 template < size_t block_size >
 void POLYBENCH_2MM::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -119,7 +121,8 @@ void POLYBENCH_2MM::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       POLY_2MM_THREADS_PER_BLOCK_CUDA;
       constexpr size_t shmem = 0;
@@ -150,7 +153,8 @@ void POLYBENCH_2MM::runCudaVariantImpl(VariantID vid)
   } else if (vid == Lambda_CUDA) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       POLY_2MM_THREADS_PER_BLOCK_CUDA;
       constexpr size_t shmem = 0;
@@ -212,7 +216,8 @@ void POLYBENCH_2MM::runCudaVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_param_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{0, ni},
@@ -262,7 +267,7 @@ void POLYBENCH_2MM::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_2MM, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_2MM, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace polybench
 } // end namespace rajaperf

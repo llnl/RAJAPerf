@@ -32,8 +32,9 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setItsPerRep( num_tiles*num_tiles * TL_SZ*TL_SZ );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  );
+  setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N ); // A, B
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  ); // C
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);
@@ -42,28 +43,13 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+
   setComplexity(Complexity::N_to_the_three_halves);
 
   setUsesFeature(Launch);
 
-  setVariantDefined(Base_Seq);
-  setVariantDefined(Lambda_Seq);
-  setVariantDefined(RAJA_Seq);
-
-  setVariantDefined(Base_OpenMP);
-  setVariantDefined(Lambda_OpenMP);
-  setVariantDefined(RAJA_OpenMP);
-
-  setVariantDefined(Base_CUDA);
-  setVariantDefined(Lambda_CUDA);
-  setVariantDefined(RAJA_CUDA);
-
-  setVariantDefined(Base_HIP);
-  setVariantDefined(Lambda_HIP);
-  setVariantDefined(RAJA_HIP);
-
-  setVariantDefined(Base_SYCL);
-  setVariantDefined(RAJA_SYCL);  
+  addVariantTunings();
 }
 
 MAT_MAT_SHARED::~MAT_MAT_SHARED() {}

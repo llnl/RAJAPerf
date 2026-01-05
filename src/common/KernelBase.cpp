@@ -19,6 +19,16 @@
 
 namespace rajaperf {
 
+//
+// Static method to set whether kernels are used for warmup purposes or not
+//
+bool KernelBase::setWarmupRun(bool warmup_run)
+{
+  bool previous_state = s_warmup_run;
+  s_warmup_run = warmup_run;
+  return previous_state;
+}
+
 KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
@@ -38,12 +48,15 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
     uses_feature[fid] = false;
   }
 
+  checksum_consistency = ChecksumConsistency::NumChecksumConsistencies;
+
   complexity = Complexity::NumComplexities;
 
   its_per_rep = -1;
   kernels_per_rep = -1;
   bytes_read_per_rep = -1;
   bytes_written_per_rep = -1;
+  bytes_modify_written_per_rep = -1;
   bytes_atomic_modify_written_per_rep = -1;
   FLOPs_per_rep = -1;
 
@@ -75,6 +88,10 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
+  Bytes_Touched_Rep_attr = cali_create_attribute("BytesTouched/Rep", CALI_TYPE_INT,
+                                                 CALI_ATTR_ASVALUE |
+                                                 CALI_ATTR_AGGREGATABLE |
+                                                 CALI_ATTR_SKIP_EVENTS);
   Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_INT,
                                               CALI_ATTR_ASVALUE |
                                               CALI_ATTR_AGGREGATABLE |
@@ -83,6 +100,10 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                                  CALI_ATTR_ASVALUE |
                                                  CALI_ATTR_AGGREGATABLE |
                                                  CALI_ATTR_SKIP_EVENTS);
+  Bytes_ModifyWritten_Rep_attr = cali_create_attribute("BytesModifyWritten/Rep", CALI_TYPE_INT,
+                                                       CALI_ATTR_ASVALUE |
+                                                       CALI_ATTR_AGGREGATABLE |
+                                                       CALI_ATTR_SKIP_EVENTS);
   Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_INT,
                                                              CALI_ATTR_ASVALUE |
                                                              CALI_ATTR_AGGREGATABLE |
@@ -103,6 +124,8 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                               CALI_ATTR_AGGREGATABLE |
                                               CALI_ATTR_SKIP_EVENTS);
   }
+  ChecksumConsistency_attr = cali_create_attribute("ChecksumConsistency", CALI_TYPE_STRING,
+                                                   CALI_ATTR_SKIP_EVENTS);
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
                                            CALI_ATTR_SKIP_EVENTS);
 #endif
@@ -129,7 +152,9 @@ Index_type KernelBase::getTargetProblemSize() const
 Index_type KernelBase::getRunReps() const
 {
   Index_type run_reps = static_cast<Index_type>(0);
-  if (run_params.getInputState() == RunParams::CheckRun) {
+  if (s_warmup_run) {
+    run_reps = static_cast<Index_type>(1);
+  } else if (run_params.getInputState() == RunParams::CheckRun) {
     run_reps = static_cast<Index_type>(run_params.getCheckRunReps());
   } else {
     run_reps = static_cast<Index_type>(default_reps*run_params.getRepFactor());
@@ -137,100 +162,21 @@ Index_type KernelBase::getRunReps() const
   return run_reps;
 }
 
-void KernelBase::setVariantDefined(VariantID vid)
+void KernelBase::addVariantTuning(VariantID vid, std::string name,
+                                  variant_tuning_method_pointer method)
 {
   if (!isVariantAvailable(vid)) return;
 
-  switch ( vid ) {
-
-    case Base_Seq :
-    {
-      setSeqTuningDefinitions(vid);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      setSeqTuningDefinitions(vid);
+  variant_tuning_names[vid].emplace_back(std::move(name));
+  variant_tuning_methods[vid].emplace_back(method);
+  checksum[vid].emplace_back(0.0);
+  num_exec[vid].emplace_back(0);
+  min_time[vid].emplace_back(std::numeric_limits<double>::max());
+  max_time[vid].emplace_back(-std::numeric_limits<double>::max());
+  tot_time[vid].emplace_back(0.0);
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  doCaliMetaOnce[vid].emplace_back(true);
 #endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      setOpenMPTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      setOpenMPTargetTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      setCudaTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      setHipTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      setSyclTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-// Required for running Kokkos
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      setKokkosTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-  }
-
-  checksum[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  num_exec[vid].resize(variant_tuning_names[vid].size(), 0);
-  min_time[vid].resize(variant_tuning_names[vid].size(), std::numeric_limits<double>::max());
-  max_time[vid].resize(variant_tuning_names[vid].size(), -std::numeric_limits<double>::max());
-  tot_time[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  #if defined(RAJA_PERFSUITE_USE_CALIPER)
-    doCaliMetaOnce[vid].resize(variant_tuning_names[vid].size(), true);
-  #endif
 }
 
 Size_type KernelBase::getDataAlignment() const
@@ -411,87 +357,8 @@ void KernelBase::runKernel(VariantID vid, size_t tune_idx)
   }
 #endif
 
-  switch ( vid ) {
+  (this->*(variant_tuning_methods[vid].at(tune_idx)))(vid);
 
-    case Base_Seq :
-    {
-      runSeqVariant(vid, tune_idx);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      runSeqVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      runOpenMPVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      runOpenMPTargetVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      runCudaVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      runHipVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      runSyclVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      runKokkosVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-
-  }
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   if (doCaliperTiming) {
     KernelBase::setCaliperMgrStop(vid, getVariantTuningName(vid, tune_idx));
@@ -511,6 +378,7 @@ void KernelBase::print(std::ostream& os) const
     os << "\t\t\t\t" << getFeatureName(static_cast<FeatureID>(j))
                      << " : " << uses_feature[j] << std::endl;
   }
+  os << "\t\t\t checksum_consistency = " << getChecksumConsistencyName(checksum_consistency) << std::endl;
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
@@ -525,6 +393,7 @@ void KernelBase::print(std::ostream& os) const
   os << "\t\t\t kernels_per_rep = " << kernels_per_rep << std::endl;
   os << "\t\t\t bytes_read_per_rep = " << bytes_read_per_rep << std::endl;
   os << "\t\t\t bytes_written_per_rep = " << bytes_written_per_rep << std::endl;
+  os << "\t\t\t bytes_modify_written_per_rep = " << bytes_modify_written_per_rep << std::endl;
   os << "\t\t\t bytes_atomic_modify_written_per_rep = " << bytes_atomic_modify_written_per_rep << std::endl;
   os << "\t\t\t FLOPs_per_rep = " << FLOPs_per_rep << std::endl;
   os << "\t\t\t num_exec: " << std::endl;
@@ -584,8 +453,10 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Iters_Rep_attr, getItsPerRep());
     cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
     cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
     cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
     cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_ModifyWritten_Rep_attr, getBytesModifyWrittenPerRep());
     cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
@@ -597,6 +468,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
 
+    cali_set_string(ChecksumConsistency_attr, getChecksumConsistencyName(getChecksumConsistency()).c_str());
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }
@@ -635,8 +507,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(max#Kernels/Rep)", "as": "Kernels/Rep" },
           { "expr": "any(max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(max#BlockSize)", "as": "BlockSize" },
@@ -662,8 +536,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(any#max#Kernels/Rep)", "as": "Kernels/Rep" },
           { "expr": "any(any#max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(any#max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(any#max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(any#max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(any#max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(any#max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(any#max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(any#max#BlockSize)", "as": "BlockSize" },

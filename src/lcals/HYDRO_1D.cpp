@@ -30,9 +30,10 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() +
-                      1*sizeof(Real_type ) * (getActualProblemSize()+1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() + // y
+                      1*sizeof(Real_type ) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // x
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(5 * getActualProblemSize());
 
@@ -40,31 +41,13 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 HYDRO_1D::~HYDRO_1D()

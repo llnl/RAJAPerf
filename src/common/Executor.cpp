@@ -19,7 +19,7 @@
 #include "CudaDataUtils.hpp"
 #include "HipDataUtils.hpp"
 
-// Warmup kernels to run first to help reduce startup overheads in timings
+// Warmup kernels for default warmup mode
 #include "basic/DAXPY.hpp"
 #include "basic/REDUCE3_INT.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -529,8 +529,10 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
   Index_type itsrep_width = 0;
   Index_type bytesrep_width = 0;
   Index_type flopsrep_width = 0;
+  Index_type bytesTouchedrep_width = 0;
   Index_type bytesReadrep_width = 0;
   Index_type bytesWrittenrep_width = 0;
+  Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
   Index_type dash_width = 0;
 
@@ -541,8 +543,10 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
     bytesrep_width = max(bytesrep_width, kernels[ik]->getBytesPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
+    bytesTouchedrep_width = max(bytesrep_width, kernels[ik]->getBytesTouchedPerRep());
     bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
+    bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
   }
 
@@ -587,6 +591,12 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
                          static_cast<Index_type>(frsize) ) + 3;
   dash_width += flopsrep_width + static_cast<Index_type>(sepchr.size());
 
+  double btrsize = log10( static_cast<double>(bytesTouchedrep_width) );
+  string bytesTouchedrep_head("BytesTouched/rep");
+  bytesTouchedrep_width = max( static_cast<Index_type>(bytesTouchedrep_head.size()),
+                        static_cast<Index_type>(btrsize) ) + 3;
+  dash_width += bytesTouchedrep_width + static_cast<Index_type>(sepchr.size());
+
   double brrsize = log10( static_cast<double>(bytesReadrep_width) );
   string bytesReadrep_head("BytesRead/rep");
   bytesReadrep_width = max( static_cast<Index_type>(bytesReadrep_head.size()),
@@ -598,6 +608,12 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
   bytesWrittenrep_width = max( static_cast<Index_type>(bytesWrittenrep_head.size()),
                         static_cast<Index_type>(bwrsize) ) + 3;
   dash_width += bytesWrittenrep_width + static_cast<Index_type>(sepchr.size());
+
+  double bmwrsize = log10( static_cast<double>(bytesModifyWrittenrep_width) );
+  string bytesModifyWrittenrep_head("BytesModifyWritten/rep");
+  bytesModifyWrittenrep_width = max( static_cast<Index_type>(bytesModifyWrittenrep_head.size()),
+                        static_cast<Index_type>(bmwrsize) ) + 3;
+  dash_width += bytesModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
   double bamrrsize = log10( static_cast<double>(bytesAtomicModifyWrittenrep_width) );
   string bytesAtomicModifyWrittenrep_head("BytesAtomicModifyWritten/rep");
@@ -612,8 +628,10 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
       << sepchr <<right<< setw(bytesrep_width) << bytesrep_head
       << sepchr <<right<< setw(flopsrep_width) << flopsrep_head
+      << sepchr <<right<< setw(bytesTouchedrep_width) << bytesTouchedrep_head
       << sepchr <<right<< setw(bytesReadrep_width) << bytesReadrep_head
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
+      << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
       << endl;
 
@@ -633,8 +651,10 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
         << sepchr <<right<< setw(bytesrep_width) << kern->getBytesPerRep()
         << sepchr <<right<< setw(flopsrep_width) << kern->getFLOPsPerRep()
+        << sepchr <<right<< setw(bytesTouchedrep_width) << kern->getBytesTouchedPerRep()
         << sepchr <<right<< setw(bytesReadrep_width) << kern->getBytesReadPerRep()
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
+        << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
         << endl;
   }
@@ -754,7 +774,9 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
 
 void Executor::runWarmupKernels()
 {
-  if ( run_params.getDisableWarmup() ) {
+  RunParams::WarmupMode warmup_mode = run_params.getWarmupMode();
+
+  if ( warmup_mode == RunParams::WarmupMode::Disable ) {
     return;
   } 
 
@@ -763,16 +785,28 @@ void Executor::runWarmupKernels()
   //
   // Get warmup kernels to run from input
   //
-  std::set<KernelID> kernel_ids = run_params.getWarmupKernelIDsToRun();
+  std::set<KernelID> warmup_kernel_ids;
 
-  if ( kernel_ids.empty() ) {
+  if ( warmup_mode == RunParams::WarmupMode::Explicit ) {
+
+    warmup_kernel_ids = run_params.getSpecifiedWarmupKernelIDs();
+
+  } else if ( warmup_mode == RunParams::WarmupMode::PerfRunSame ) {
 
     //
-    // If no warmup kernels were given, choose a warmup kernel for each feature
+    // Warmup kernels will be same as kernels specified to run in the suite
     //
+    for (size_t ik = 0; ik < kernels.size(); ++ik) {
+      KernelBase* kernel = kernels[ik];
+      warmup_kernel_ids.insert( kernel->getKernelID() );
+    } // iterate over kernels to run
+
+  } else if ( warmup_mode == RunParams::WarmupMode::Default ) {
 
     //
-    // For kernels to be run, assemble a set of feature IDs
+    // No warmup kernel input given, choose a warmup kernel for each feature
+    //
+    // First, assemble a set of feature IDs
     //
     std::set<FeatureID> feature_ids;
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
@@ -788,7 +822,7 @@ void Executor::runWarmupKernels()
     } // iterate over kernels
 
     //
-    // Map feature IDs to set of warmup kernel IDs
+    // Map feature IDs to rudimentary set of warmup kernel IDs
     //
     for ( auto fid = feature_ids.begin(); fid != feature_ids.end(); ++ fid ) {
 
@@ -797,29 +831,29 @@ void Executor::runWarmupKernels()
         case Forall:
         case Kernel:
         case Launch:
-          kernel_ids.insert(Basic_DAXPY); break;
+          warmup_kernel_ids.insert(Basic_DAXPY); break;
 
         case Sort:
-          kernel_ids.insert(Algorithm_SORT); break;
+          warmup_kernel_ids.insert(Algorithm_SORT); break;
 
         case Scan:
-          kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
+          warmup_kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
 
         case Workgroup:
-          kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
 
         case Reduction:
-          kernel_ids.insert(Basic_REDUCE3_INT); break;
+          warmup_kernel_ids.insert(Basic_REDUCE3_INT); break;
 
         case Atomic:
-          kernel_ids.insert(Basic_PI_ATOMIC); break;
+          warmup_kernel_ids.insert(Basic_PI_ATOMIC); break;
 
         case View:
           break;
 
   #ifdef RAJA_PERFSUITE_ENABLE_MPI
         case MPI:
-          kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
   #endif
 
         default:
@@ -835,7 +869,15 @@ void Executor::runWarmupKernels()
   //
   // Run warmup kernels
   //
-  for ( auto kid = kernel_ids.begin(); kid != kernel_ids.end(); ++ kid ) {
+  bool prev_state = KernelBase::setWarmupRun(true);
+
+  for ( auto kid = warmup_kernel_ids.begin();
+             kid != warmup_kernel_ids.end(); ++ kid ) {
+    //  
+    // Note that we create a new kernel object for each kernel to run
+    // in warmup so we don't pollute timing data, checksum data, etc.
+    // for kernels that will run for real later...
+    //
     KernelBase* kernel = getKernelObject(*kid, run_params);
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
     kernel->caliperOff();
@@ -846,6 +888,8 @@ void Executor::runWarmupKernels()
 #endif
     delete kernel;
   }
+
+  KernelBase::setWarmupRun(prev_state);
 
 }
 
@@ -933,10 +977,12 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Set basic table formatting parameters.
     //
-    const string kernel_col_name("Kernel  ");
+    const string kernel_name_col_header_variant("Variant  ");
+    const string kernel_name_col_header_tuning("Tuning  ");
     const string sepchr(" , ");
 
-    size_t kercol_width = kernel_col_name.size();
+    size_t kercol_width = max(kernel_name_col_header_variant.size(),
+                              kernel_name_col_header_tuning.size());
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       kercol_width = max(kercol_width, kernels[ik]->getName().size());
     }
@@ -969,7 +1015,7 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column variant name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
+    file <<left<< setw(kercol_width) << kernel_name_col_header_variant;
     for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
       for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
@@ -981,7 +1027,7 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column tuning name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
+    file <<left<< setw(kercol_width) << kernel_name_col_header_tuning;
     for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
       for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])

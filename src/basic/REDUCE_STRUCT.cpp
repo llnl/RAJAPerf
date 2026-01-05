@@ -33,33 +33,20 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 6*sizeof(Real_type) +
-                      2*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 6*sizeof(Real_type) );
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * getActualProblemSize() + 2);
+
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  addVariantTunings();
 }
 
 REDUCE_STRUCT::~REDUCE_STRUCT()

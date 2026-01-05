@@ -33,14 +33,15 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +
-                      1*sizeof(Real_type ) * m_N * m_N +
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // y1
+                      1*sizeof(Real_type ) * m_N * m_N + // A
 
-                      1*sizeof(Real_type ) * m_N +
-                      1*sizeof(Real_type ) * m_N * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N +
+                      1*sizeof(Real_type ) * m_N + // y2
+                      1*sizeof(Real_type ) * m_N * m_N ); // A
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N + // x1
 
-                         1*sizeof(Real_type ) * m_N );
+                         1*sizeof(Real_type ) * m_N ); // x2
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_N*m_N +
                  2 * m_N*m_N );
@@ -49,29 +50,13 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_MVT::~POLYBENCH_MVT()

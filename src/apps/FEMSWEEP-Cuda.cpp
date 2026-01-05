@@ -48,6 +48,8 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
 template < size_t block_size >
 void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -59,7 +61,8 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
     case Base_CUDA : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
          const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
          constexpr size_t shmem = 0;
@@ -103,7 +106,8 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
           RAJA::LoopPolicy<RAJA::cuda_global_size_x_direct<block_size>>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
          RAJA::launch<launch_policy>( res,
              RAJA::LaunchParams(RAJA::Teams(grid_size),
@@ -129,7 +133,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf

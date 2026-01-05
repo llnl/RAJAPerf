@@ -18,7 +18,7 @@ namespace lcals
 {
 
 
-void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -38,7 +38,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type k = 0; k < N; ++k ) {
@@ -59,7 +60,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type k = 0; k < N; ++k ) {
@@ -82,7 +84,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(0, N), genlinrecur_lam1);
@@ -106,6 +109,8 @@ void GEN_LIN_RECUR::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace lcals
 } // end namespace rajaperf

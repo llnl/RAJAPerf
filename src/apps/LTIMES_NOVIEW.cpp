@@ -42,10 +42,10 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
   setItsPerRep( m_philen );
   setKernelsPerRep(1);
   // using total data size instead of writes and reads
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_philen +
-                      1*sizeof(Real_type) * m_elllen +
-                      1*sizeof(Real_type) * m_psilen );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_philen );
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                      1*sizeof(Real_type) * m_psilen ); // psi
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_philen ); // phi
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
 
@@ -53,32 +53,14 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+
   setComplexity(Complexity::N);
 
   setUsesFeature(Kernel);
   setUsesFeature(Launch);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 LTIMES_NOVIEW::~LTIMES_NOVIEW()

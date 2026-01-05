@@ -37,37 +37,20 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() +
-                      4*sizeof(Real_type) * m_domain->n_real_nodes ); // 4 variables with 2d nodal stencil pattern: 4 touches per iterate
-  setBytesWrittenPerRep( 1*sizeof(Index_type) * getItsPerRep() );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      4*sizeof(Real_type) * m_domain->n_real_nodes ); // x, y, fx, fy (2d nodal stencil pattern: 4 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // div
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(54 * m_domain->n_real_zones);
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 DEL_DOT_VEC_2D::~DEL_DOT_VEC_2D()

@@ -373,6 +373,31 @@ static const std::string FeatureNames [] =
 /*!
  *******************************************************************************
  *
+ * \brief Array of names for each CHECKSUMCONSISTENCY class used in suite.
+ *
+ * IMPORTANT: This is only modified when a new checksum consistency class is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ChecksumConsistency enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string ChecksumConsistencyNames [] =
+{
+  std::string("Consistent"),
+
+  std::string("ConsistentPerVariantTuning"),
+
+  std::string("Inconsistent"),
+
+  std::string("Unknown ChecksumConsistency")  // Keep this at the end and DO NOT remove....
+
+}; // END ChecksumConsistencyNames
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Array of names for each COMPLEXITY used in suite.
  *
  * IMPORTANT: This is only modified when a new complexity is used in suite.
@@ -649,6 +674,19 @@ bool isVariantGPU(VariantID vid)
 const std::string& getFeatureName(FeatureID fid)
 {
   return FeatureNames[fid];
+}
+
+
+/*
+ *******************************************************************************
+ *
+ * Return checksum consistency name associated with ChecksumConsistency enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getChecksumConsistencyName(ChecksumConsistency cc)
+{
+  return ChecksumConsistencyNames[static_cast<int>(cc)];
 }
 
 

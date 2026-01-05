@@ -91,6 +91,8 @@ __global__ void hydro_2d3(Real_ptr zroutdat, Real_ptr zzoutdat,
 template < size_t block_size >
 void HYDRO_2D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type kbeg = 1;
   const Index_type kend = m_kn - 1;
@@ -104,7 +106,8 @@ void HYDRO_2D::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       constexpr size_t shmem = 0;
 
@@ -156,7 +159,8 @@ void HYDRO_2D::runCudaVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXECPOL>(
         RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
@@ -190,7 +194,7 @@ void HYDRO_2D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HYDRO_2D, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace lcals
 } // end namespace rajaperf

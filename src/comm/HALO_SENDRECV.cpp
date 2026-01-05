@@ -32,10 +32,13 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   setItsPerRep( 0 );
   setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send_buffers (MPI)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv_buffers (MPI)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
@@ -43,16 +46,8 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   setUsesFeature(MPI);
 
   if (params.validMPI3DDivision()) {
-    setVariantDefined( Base_Seq );
-
-    setVariantDefined( Base_OpenMP );
-
-    setVariantDefined( Base_OpenMPTarget );
-
-    setVariantDefined( Base_CUDA );
-
-    setVariantDefined( Base_HIP );
-  }
+    addVariantTunings();
+}
 }
 
 HALO_SENDRECV::~HALO_SENDRECV()

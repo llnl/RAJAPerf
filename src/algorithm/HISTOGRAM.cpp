@@ -34,34 +34,20 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Data_type) * m_num_bins +
-                      1*sizeof(Index_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Data_type) * m_num_bins );
-  setBytesAtomicModifyWrittenPerRep( 0 );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getActualProblemSize() ); // bins
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // counts
   setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
+
+  setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Atomic);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Kokkos_Lambda );
+  addVariantTunings();
 }
 
 HISTOGRAM::~HISTOGRAM()

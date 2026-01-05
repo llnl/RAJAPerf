@@ -28,33 +28,22 @@ INDEXLIST::INDEXLIST(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) +
-                      1*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Index_type) +
-                         1*sizeof(Int_type) * getActualProblemSize() / 2 ); // about 50% output
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Int_type) * getActualProblemSize() / 2 ); // list (about 50% output)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
 
   setComplexity(Complexity::N);
 
   setUsesFeature(Forall);
   setUsesFeature(Scan);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-
-#if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
-  setVariantDefined( Base_OpenMPTarget );
-#endif
-
   if (run_params.getEnableCustomScan()) {
 
-    setVariantDefined( Base_CUDA );
-
-    setVariantDefined( Base_HIP );
+    addVariantTunings();
 
   }
 }
