@@ -532,6 +532,8 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
   Index_type bytesWrittenrep_width = 0;
   Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
+  size_t     checksumConsistency_width = 0;
+  size_t     operationalComplexity_width = 0;
 
   size_t     dash_width = 0;
 
@@ -547,6 +549,8 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
     bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
+    checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
+    operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
   }
 
   const string sepchr(" , ");
@@ -622,6 +626,16 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
                         static_cast<Index_type>(bamrrsize) ) + 3;
   dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
+  string checksumConsistency_head("ChecksumConsistency");
+  checksumConsistency_width = max( checksumConsistency_head.size(),
+                                     checksumConsistency_width ) + 2;
+  dash_width += checksumConsistency_width + static_cast<Index_type>(sepchr.size());
+
+  string operationalComplexity_head("OperationalComplexity");
+  operationalComplexity_width = max( operationalComplexity_head.size(),
+                                     operationalComplexity_width ) + 2;
+  dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
+
   str           <<left << setw(kercol_width) << kern_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
@@ -634,6 +648,8 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
       << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
+      << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
+      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
       << endl;
 
   if ( !to_file ) {
@@ -657,6 +673,8 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
         << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
+        << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
+        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
         << endl;
   }
 
