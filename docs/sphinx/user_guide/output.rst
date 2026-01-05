@@ -89,23 +89,33 @@ Information reported in the file for each kernel is:
     currently count operations like abs and comparisons (<, >, etc.) in the 
     FLOP count. So these numbers are rough estimates. For actual FLOP counts, 
     a performance analysis tool should be used.
-  * **BytesTouched/rep** -- Total number of bytes accessed for each repetition
-    of kernel. This is a best case scenario for the amount of cache needed to
-    fit all of the data used by the kernel ignoring partial usage of some cache
-    lines.
+  * **BytesTouched/rep** -- Total number of bytes accessed in memory for each
+    repetition of kernel. This is a best case scenario for the amount of cache
+    needed to fit all of the data used by the kernel ignoring partial usage of
+    some cache lines.
   * **BytesRead/rep** -- Total number of bytes read from memory for 
     each repetition of kernel.
   * **BytesWritten/rep** -- Total number of bytes written to memory for 
     each repetition of kernel.
-  * **BytesModifyWritten/rep** -- Total number of bytes modified for each
-    repetition of kernel. The intersection of bytes in both ``BytesRead/rep``
+  * **BytesModifyWritten/rep** -- Total number of bytes modified in memory for
+    each repetition of kernel. The intersection of bytes in both ``BytesRead/rep``
     and ``BytesWritten/rep``.
-  * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified by 
-    atomic operations in a kernel. If a kernel contains no atomic operations, 
+  * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified in memory
+    by atomic operations in a kernel. If a kernel contains no atomic operations,
     the value of zero is reported.
+
+  ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
+           like DRAM or HBM under idealized conditions. They assume caching is
+           perfect so even if the same byte is read multiple times then it
+           assumes that the byte is only read from memory once.
 
   ..note:: The Bytes*/rep and FLOPs/rep counts are estimates for kernels
            involving randomness or difficult to count algorithms.
+
+  ..note:: The Bytes*/rep and FLOPs/rep counts are intended to help give a
+           reasonable approximation of the achieved bandwidth and flop rate.
+           The kernels that perform significantly outside of expectations are
+           good candidates for more detailed performance studies.
 
 .. _output_probsize-label:
 
