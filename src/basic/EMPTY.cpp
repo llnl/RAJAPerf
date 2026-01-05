@@ -30,6 +30,7 @@ EMPTY::EMPTY(const RunParams& params)
   setKernelsPerRep( 1 );
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 0 );
 

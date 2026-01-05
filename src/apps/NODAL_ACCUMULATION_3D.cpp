@@ -39,10 +39,11 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   // touched data size, not actual number of stores and loads
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() +
-                      1*sizeof(Real_type) * getItsPerRep() );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      1*sizeof(Real_type) * getItsPerRep() ); // vol
   setBytesWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * m_domain->n_real_nodes );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * m_domain->n_real_nodes ); // x (3d nodal stencil pattern: 8 touches per iterate)
   setFLOPsPerRep(9 * getItsPerRep());
 
   checksum_scale_factor = 0.001 *

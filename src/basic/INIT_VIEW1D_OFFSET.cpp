@@ -29,7 +29,8 @@ INIT_VIEW1D_OFFSET::INIT_VIEW1D_OFFSET(const RunParams& params)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize()  );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 

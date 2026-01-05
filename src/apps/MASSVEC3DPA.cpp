@@ -43,6 +43,7 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                          m_NE); // D
   setBytesWrittenPerRep(3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
                         MVPA_DIM * m_NE); // Y (3 components)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(0);
 
   //3 for the dimension loop
