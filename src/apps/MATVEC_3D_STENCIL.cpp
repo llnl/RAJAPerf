@@ -69,10 +69,11 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
                             get_size_matrix(1, 1, 1) +
                             get_size_matrix(0, 1, 1) +
                             get_size_matrix(1, 1, 1) ;
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() +
-                      1*sizeof(Real_type) * x_accessed +
-                      1*sizeof(Real_type) * m_accessed );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      1*sizeof(Real_type) * x_accessed + // x
+                      1*sizeof(Real_type) * m_accessed ); // m
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed ); // b
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   const size_t multiplies = 27;

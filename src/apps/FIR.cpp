@@ -30,9 +30,10 @@ FIR::FIR(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( m_coefflen*sizeof(Real_type) +
-                      1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( m_coefflen*sizeof(Real_type) + // coeff
+                      1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) ); // in
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // out
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((2 * m_coefflen) * getActualProblemSize());
 

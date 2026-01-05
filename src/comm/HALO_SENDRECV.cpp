@@ -32,8 +32,9 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   setItsPerRep( 0 );
   setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send_buffers (MPI)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv_buffers (MPI)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 

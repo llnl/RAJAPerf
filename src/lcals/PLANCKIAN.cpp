@@ -28,8 +28,9 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * getActualProblemSize() );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * getActualProblemSize() );
+  setBytesReadPerRep( 3*sizeof(Real_type ) * getActualProblemSize() ); // u, v, x
+  setBytesWrittenPerRep( 2*sizeof(Real_type ) * getActualProblemSize() ); // y, w
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
 

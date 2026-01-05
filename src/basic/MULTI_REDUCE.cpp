@@ -34,11 +34,11 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Data_type) * m_num_bins +
-                      1*sizeof(Data_type) * getActualProblemSize() +
-                      1*sizeof(Index_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Data_type) * m_num_bins );
-  setBytesAtomicModifyWrittenPerRep( 0 );
+  setBytesReadPerRep( 1*sizeof(Data_type) * getActualProblemSize() + // bins
+                      1*sizeof(Index_type) * getActualProblemSize() ); // data
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // values
   setFLOPsPerRep(1 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);

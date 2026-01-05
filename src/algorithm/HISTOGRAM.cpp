@@ -34,10 +34,10 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Data_type) * m_num_bins +
-                      1*sizeof(Index_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Data_type) * m_num_bins );
-  setBytesAtomicModifyWrittenPerRep( 0 );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getActualProblemSize() ); // bins
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // counts
   setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
   setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic

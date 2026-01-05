@@ -50,8 +50,13 @@ The methods in the source file are:
         is the problem size and the number of loop kernels is one. Other kernels
         in the Suite may execute multiple loop kernels with different sizes,
         so these methods are used to describe this.
-      * The number of bytes read and written and the number of floating point
-        operations (FLOPS) performed for each kernel execution.
+      * The number of bytes read for each kernel execution.
+      * The number of bytes written for each kernel execution.
+      * The number of bytes read, modified, and written for each kernel execution.
+      * The number of bytes atomically read, modified, and written for each
+        kernel execution.
+      * The number of floating point operations (FLOPS) performed for each
+        kernel execution.
       * The consistency of the checksums of the kernel. If the kernel
         always produces the same checksum value for all variant tunings then the
         checksums are ``Consistent``. Most kernels get a different but consistent
@@ -77,6 +82,22 @@ The methods in the source file are:
         source file where the variants and tunings are implemented. Note that
         not every kernel implements every variant, so ``KernelBase`` provides a
         "default" implementation that defines no variants or tunings.
+
+    ..note:: The byte counters are intended to count traffic to and from main
+             memory like DRAM or HBM under idealized conditions with perfect
+             caching. They are not intended to count the total number of bytes
+             requested by load and store instructions. So, even if a memory
+             address is read in multiple different iterations of a loop with a
+             stencil access pattern it is only counted once in bytes read.
+             However caching is not assumed between loops/kernel launches so an
+             address is counted once for each separate loop or kernel launch.
+
+    ..note:: To simplify counting each address accessed should only be counted
+             in one of the byte counter attributes. For example an address
+             that is read and written is counted in the "read, modified, and
+             written" counter, but not in the "read" or "written" counters. The
+             final output however does add the "read" and "read, modified, and
+             written" counters when showing the bytes read.
 
     ..note:: Available variant tunings for each kernel are specified using a
              ``...BOILERPLATE...`` macro invocation in each kernel variant

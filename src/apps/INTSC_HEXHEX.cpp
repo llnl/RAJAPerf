@@ -65,6 +65,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   //   A standard intersection is 8 subzone intersections.
   //
   setBytesWrittenPerRep( 13*8*sizeof(Real_type) * getItsPerRep() );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 336 ;

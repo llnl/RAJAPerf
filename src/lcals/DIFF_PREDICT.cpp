@@ -28,8 +28,9 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setItsPerRep( getActualProblemSize() );
 
   setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 10*sizeof(Real_type) * getActualProblemSize() );
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
+  setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(9 * getActualProblemSize());
 

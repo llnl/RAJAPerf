@@ -40,8 +40,9 @@ EDGE3D::EDGE3D(const RunParams& params)
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
-  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // sum
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr size_t flops_k_loop = 15

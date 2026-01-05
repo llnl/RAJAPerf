@@ -33,8 +33,9 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setItsPerRep( m_N * m_N*m_N );
   setKernelsPerRep(m_N);
-  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
-  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
+  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pin
+  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pout
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
 

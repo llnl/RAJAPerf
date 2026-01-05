@@ -73,6 +73,7 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   // Bytes written : nvals_hexrect (=4) doubles for each intersection.
   setBytesWrittenPerRep( nvals_hexrect*sizeof(Real_type) * getItsPerRep() );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 150 ;
