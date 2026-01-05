@@ -27,91 +27,91 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
   // Read problem size from file.
-  std::ifstream dataFile("FEMSWEEP_DATA.txt");
+  std::ifstream dataFile("../src/apps/FEMSWEEP_DATA.txt");
 
   if ( !dataFile.is_open() )
   {
     std::cout << "Could not open FEMSWEEP_DATA.txt in constructor." << std::endl;
-    return 1;
   }
 
   std::string line;
-  while ( std::getLine(dataFile, line) )
+  while ( std::getline(dataFile, line) )
   {
 
     if ( line == std::string("m_nx") )
     {
       // Read next line for value.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         m_nx = std::stoi(line);
+        //std::cout << "RCC CHECK m_nx " << m_nx << std::endl;
       }
       else
       {
         std::cout << "Unable to initialize m_nx properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_ny") )
     {
       // Read next line for value.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         m_ny = std::stoi(line);
+        //std::cout << "RCC CHECK m_ny " << m_ny << std::endl;
       }
       else
       {
         std::cout << "Unable to initialize m_ny properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_nz") )
     {
       // Read next line for value.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         m_nz = std::stoi(line);
+        //std::cout << "RCC CHECK m_nz " << m_nz << std::endl;
       }
       else
       {
         std::cout << "Unable to initialize m_nz properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_na") )
     {
       // Read next line for value.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         m_na = std::stoi(line);
+        //std::cout << "RCC CHECK m_na " << m_na << std::endl;
       }
       else
       {
         std::cout << "Unable to initialize m_na properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_ng") )
     {
       // Read next line for value.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         m_ng = std::stoi(line);
+        //std::cout << "RCC CHECK m_ng " << m_ng << std::endl;
       }
       else
       {
         std::cout << "Unable to initialize m_ng properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
-        return 1;
       }
     }
 
   }
 
   m_ne = m_nx * m_ny * m_nz;
+  //std::cout << "RCC CHECK m_ne " << m_ne << std::endl;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
@@ -119,8 +119,11 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
                           m_nx * m_ny * (m_nz - 1);
+  //std::cout << "RCC CHECK m_sharedinteriorfaces " << m_sharedinteriorfaces << std::endl;
   m_boundaryfaces = 2 * m_nx * m_ny + 2 * m_ny * m_nz + 2 * m_nx * m_nz;
+  //std::cout << "RCC CHECK m_boundaryfaces " << m_boundaryfaces << std::endl;
   m_hplanes = m_nx + m_ny + m_nz - 2;
+  //std::cout << "RCC CHECK m_hplanes " << m_hplanes << std::endl;
 
   m_Blen = ND * m_ne * m_na;
   m_Alen = ND * ND * m_ne * m_na;
@@ -185,45 +188,42 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
   // Read mesh connectivity data from file.
-  std::ifstream dataFile("FEMSWEEP_DATA.txt");
+  std::ifstream dataFile("../src/apps/FEMSWEEP_DATA.txt");
 
   if ( !dataFile.is_open() )
   {
     std::cout << "Could not open FEMSWEEP_DATA.txt in setUp." << std::endl;
-    return 1;
   }
 
   int lcount = 0;
   int sizetemp = 0;
   std::string line;
-  while ( std::getLine(dataFile, line) )
+  while ( std::getline(dataFile, line) )
   {
 
     if ( line == std::string("m_nhpaa_r") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
           std::cout << "Size of m_nhpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_nhpaa_r = allocDataForInit(m_nhpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_nhpaa_r[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_nhpaa_r." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -231,35 +231,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_nhpaa_r." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_ohpaa_r") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
           std::cout << "Size of m_ohpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_ohpaa_r = allocDataForInit(m_ohpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_ohpaa_r[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_ohpaa_r." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -267,35 +264,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_ohpaa_r." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_phpaa_r") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na * m_hplanes )
         {
           std::cout << "Size of m_phpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_phpaa_r = allocDataForInit(m_phpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_phpaa_r[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_phpaa_r." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -303,35 +297,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_phpaa_r." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_order_r") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na * m_ne )
         {
           std::cout << "Size of m_order_r in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_order_r, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_order_r[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_order_r." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -339,35 +330,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_order_r." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_AngleElem2FaceType") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne * m_na )
         {
           std::cout << "Size of m_AngleElem2FaceType in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_AngleElem2FaceType[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_AngleElem2FaceType." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -375,35 +363,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_AngleElem2FaceType." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_elem_to_faces") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne )
         {
           std::cout << "Size of m_elem_to_faces in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_elem_to_faces, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_elem_to_faces[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_elem_to_faces." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -411,35 +396,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_elem_to_faces." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_F_g2l") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != (m_sharedinteriorfaces + m_boundaryfaces) )
         {
           std::cout << "Size of m_F_g2l in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_F_g2l, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_F_g2l[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_F_g2l." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -447,35 +429,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_F_g2l." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_idx1") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
           std::cout << "Size of m_idx1 in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_idx1, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_idx1[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_idx1." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -483,35 +462,32 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_idx1." << std::endl;
-        return 1;
       }
     }
 
     else if ( line == std::string("m_idx2") )
     {
       // Read next line for array size.
-      if ( std::getLine(dataFile, line) )
+      if ( std::getline(dataFile, line) )
       {
         sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
           std::cout << "Size of m_idx2 in FEMSWEEP_DATA.txt does not match." << std::endl;
-          return 1;
         }
         auto temp_order_r = allocDataForInit(m_idx2, sizetemp, vid); 
         // Read rest of entries for array.
         lcount = 0;
         while ( lcount < sizetemp )
         {
-          if ( std::getLine(dataFile, line) )
+          if ( std::getline(dataFile, line) )
           {
             m_idx2[lcount] = std::stoi(line);
           }
           else
           {
             std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_idx2." << std::endl;
-            return 1;
           }
           lcount++;
         }
@@ -519,7 +495,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       else
       {
         std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_idx2." << std::endl;
-        return 1;
       }
     }
 
