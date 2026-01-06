@@ -14,44 +14,44 @@
 /// https://github.com/mfem/mfem/blob/v4.9/fem/integ/bilininteg_mass_kernels.hpp#L1268
 /// Kernel uses shared memory which is optimal for orders higher than 2
 ///
-/// for (int e = 0; e < NE; ++e)
+/// for (Index_type e = 0; e < NE; ++e)
 ///   {
 ///
-///     double s_B[MQ1s][MD1s];
-///     double r_B[MQ1r][MD1r];
+///     Real_type s_B[MQ1s][MD1s];
+///     Real_type r_B[MQ1r][MD1r];
 ///
-///     double (*l_B)[MD1] = nullptr;
+///     Real_type (*l_B)[MD1] = nullptr;
 ///
-///     for(int d=0; d<D1D; ++d) {
-///       for(int q=0; q<Q1D; ++q) {
+///     for(Index_type d=0; d<D1D; ++d) {
+///       for(Index_type q=0; q<Q1D; ++q) {
 ///         s_B[q][d] = B(q,d);
 ///       }
 ///     }
 ///
-///     l_B = (double (*)[MD1])s_B;
+///     l_B = (Real_type (*)[MD1])s_B;
 ///
-///     double s_D[MQ1][MQ1][MQ1];
+///     Real_type s_D[MQ1][MQ1][MQ1];
 ///
-///     for(int k1=0; k1<Q1D; ++k1) {
-///       for(int k2=0; k2<Q1D; ++k2) {
-///         for(int k3=0; k3<Q1D; ++k3) {
+///     for(Index_type k1=0; k1<Q1D; ++k1) {
+///       for(Index_type k2=0; k2<Q1D; ++k2) {
+///         for(Index_type k3=0; k3<Q1D; ++k3) {
 ///           s_D[k1][k2][k3] = D(k1,k2,k3,e);
 ///         }
 ///       }
 ///     }
 ///
-///     for(int i1=0; i1<D1D; ++i1) {
-///       for(int i2=0; i2<D1D; ++i2) {
-///         for(int i3=0; i3<D1D; ++i3) {
+///     for(Index_type i1=0; i1<D1D; ++i1) {
+///       for(Index_type i2=0; i2<D1D; ++i2) {
+///         for(Index_type i3=0; i3<D1D; ++i3) {
 ///
-///           for (int j1 = 0; j1 < D1D; ++j1) {
-///             for (int j2 = 0; j2 < D1D; ++j2) {
-///               for (int j3 = 0; j3 < D1D; ++j3) {
+///           for (Index_type j1 = 0; j1 < D1D; ++j1) {
+///             for (Index_type j2 = 0; j2 < D1D; ++j2) {
+///               for (Index_type j3 = 0; j3 < D1D; ++j3) {
 ///
-///                 double val = 0.0;
-///                 for (int k1 = 0; k1 < Q1D; ++k1) {
-///                   for (int k2 = 0; k2 < Q1D; ++k2) {
-///                     for (int k3 = 0; k3 < Q1D; ++k3) {
+///                 Real_type val = 0.0;
+///                 for (Index_type k1 = 0; k1 < Q1D; ++k1) {
+///                   for (Index_type k2 = 0; k2 < Q1D; ++k2) {
+///                     for (Index_type k3 = 0; k3 < Q1D; ++k3) {
 ///
 ///                       val += l_B[k1][i1] * l_B[k1][j1]
 ///                         * l_B[k2][i2] * l_B[k2][j2]
@@ -88,39 +88,41 @@
 #include "RAJA/RAJA.hpp"
 
 // Number of Dofs/Qpts in 1D
-#define MEA_D1D 4
-#define MEA_Q1D 5
-#define MEA_B(x, y) B[x + MEA_Q1D * y]
+namespace mea{
+constexpr RAJA::Index_type MEA_D1D = 4;
+constexpr RAJA::Index_type MEA_Q1D = 5;
+}
+#define MEA_B(x, y) B[x + mea::MEA_Q1D * y]
 #define MEA_M(i1, i2, i3, j1, j2, j3, e)                                   \
-  M[i1 + MEA_D1D * (i2 + MEA_D1D * (i3 + MEA_D1D * (j1 + MEA_D1D * (j2 + MEA_D1D * (j3 + MEA_D1D * e)))))]
+  M[i1 + mea::MEA_D1D * (i2 + mea::MEA_D1D * (i3 + mea::MEA_D1D * (j1 + mea::MEA_D1D * (j2 + mea::MEA_D1D * (j3 + mea::MEA_D1D * e)))))]
 
 #define MEA_D(qx, qy, qz, e)                                           \
-  D[qx + MEA_Q1D * qy + MEA_Q1D * MEA_Q1D * qz +                        \
-    MEA_Q1D * MEA_Q1D * MEA_Q1D * e]
+  D[qx + mea::MEA_Q1D * qy + mea::MEA_Q1D * mea::MEA_Q1D * qz +                        \
+    mea::MEA_Q1D * mea::MEA_Q1D * mea::MEA_Q1D * e]
 
-#define MASS3DEA_0 RAJA_TEAM_SHARED double s_B[MEA_Q1D][MEA_D1D];
+#define MASS3DEA_0 RAJA_TEAM_SHARED Real_type s_B[mea::MEA_Q1D][mea::MEA_D1D];
 
-#define MASS3DEA_0_CPU double s_B[MEA_Q1D][MEA_D1D];
+#define MASS3DEA_0_CPU Real_type s_B[mea::MEA_Q1D][mea::MEA_D1D];
 
 #define MASS3DEA_1 s_B[q][d] = MEA_B(q, d);
 
 #define MASS3DEA_2                                                      \
-  RAJA_TEAM_SHARED double s_D[MEA_Q1D][MEA_Q1D][MEA_Q1D];
+  RAJA_TEAM_SHARED Real_type s_D[mea::MEA_Q1D][mea::MEA_Q1D][mea::MEA_Q1D];
 
 #define MASS3DEA_2_CPU                                                  \
-  double s_D[MEA_Q1D][MEA_Q1D][MEA_Q1D];
+  Real_type s_D[mea::MEA_Q1D][mea::MEA_Q1D][mea::MEA_Q1D];
 
 #define MASS3DEA_3 s_D[k1][k2][k3] = MEA_D(k1, k2, k3, e);
 
 #define MASS3DEA_4                                                      \
-  for (Index_type j1 = 0; j1 < MEA_D1D; ++j1) {                                \
-    for (Index_type j2 = 0; j2 < MEA_D1D; ++j2) {                              \
-      for (Index_type j3 = 0; j3 < MEA_D1D; ++j3) {                            \
+  for (Index_type j1 = 0; j1 < mea::MEA_D1D; ++j1) {                                \
+    for (Index_type j2 = 0; j2 < mea::MEA_D1D; ++j2) {                              \
+      for (Index_type j3 = 0; j3 < mea::MEA_D1D; ++j3) {                            \
                                                                         \
         Real_type val = 0.0;                                               \
-        for (Index_type k1 = 0; k1 < MEA_Q1D; ++k1) {                          \
-          for (Index_type k2 = 0; k2 < MEA_Q1D; ++k2) {                        \
-            for (Index_type k3 = 0; k3 < MEA_Q1D; ++k3) {                      \
+        for (Index_type k1 = 0; k1 < mea::MEA_Q1D; ++k1) {                          \
+          for (Index_type k2 = 0; k2 < mea::MEA_Q1D; ++k2) {                        \
+            for (Index_type k3 = 0; k3 < mea::MEA_Q1D; ++k3) {                      \
                                                                         \
               val += s_B[k1][i1] * s_B[k1][j1] * s_B[k2][i2]            \
                 * s_B[k2][j2] *                                         \
@@ -165,7 +167,7 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = MEA_D1D * MEA_D1D * MEA_D1D;
+  static const size_t default_gpu_block_size = mea::MEA_D1D * mea::MEA_D1D * mea::MEA_D1D;
   using gpu_block_sizes_type =
       integer::list_type<default_gpu_block_size>;
 
