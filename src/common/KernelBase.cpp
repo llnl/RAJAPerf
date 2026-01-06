@@ -560,7 +560,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#View)", "as": "FeatureView" },
           { "expr": "any(max#MPI)", "as": "FeatureMPI" },
         ],
-        "group by": ["Complexity"],
+        "group by": ["Complexity", "ChecksumConsistency"],
       },
       {
         "level"  : "cross",
@@ -589,7 +589,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#View)", "as": "FeatureView" },
           { "expr": "any(any#max#MPI)", "as": "FeatureMPI" },
         ],
-        "group by": ["Complexity"],
+        "group by": ["Complexity", "ChecksumConsistency"],
       }
     ]
   }
