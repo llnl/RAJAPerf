@@ -49,9 +49,6 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(2);
-  setMaxArrayDimensions(2);
-  setNumArrays(4);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);

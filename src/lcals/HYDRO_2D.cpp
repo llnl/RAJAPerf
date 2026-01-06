@@ -71,9 +71,6 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(2);
-  setMaxLoopDimensions(2);
-  setMaxArrayDimensions(2);
-  setNumArrays(11);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);

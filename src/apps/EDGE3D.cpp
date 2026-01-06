@@ -68,9 +68,6 @@ EDGE3D::EDGE3D(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(2);
-  setMaxLoopDimensions(3);
-  setMaxArrayDimensions(2); // edge_matrix
-  setNumArrays(28); // x0-7, y0-7, z0-7, x, y, z, sum
   setProblemDimensionality(3);
 
   setUsesFeature(Forall);

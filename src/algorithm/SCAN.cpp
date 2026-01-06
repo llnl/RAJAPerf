@@ -44,9 +44,6 @@ SCAN::SCAN(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(2);
   setProblemDimensionality(1);
 
   setUsesFeature(Scan);

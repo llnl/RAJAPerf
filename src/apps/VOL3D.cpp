@@ -53,9 +53,6 @@ VOL3D::VOL3D(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(4); // m_x, m_y, m_z, and m_vol
   setProblemDimensionality(3);
 
   setUsesFeature(Forall);

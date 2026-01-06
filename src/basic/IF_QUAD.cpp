@@ -45,9 +45,6 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(5);
   setProblemDimensionality(1);
 
   setUsesFeature(Forall);

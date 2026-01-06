@@ -55,9 +55,6 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(2);
-  setMaxLoopDimensions(2);
-  setMaxArrayDimensions(2);
-  setNumArrays(5);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);

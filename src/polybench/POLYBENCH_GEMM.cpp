@@ -57,9 +57,6 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   setComplexity(Complexity::N_to_the_three_halves);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(3);
-  setMaxArrayDimensions(2);
-  setNumArrays(3);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);

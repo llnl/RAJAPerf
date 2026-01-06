@@ -43,9 +43,6 @@ PRESSURE::PRESSURE(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(5); // m_compression, m_bvc, m_p_new, m_e_old, m_vnewc
   setProblemDimensionality(1);
 
   setUsesFeature(Forall);

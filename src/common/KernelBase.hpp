@@ -125,10 +125,6 @@ public:
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setComplexity(Complexity ac) { complexity = ac; }
   void setMaxPerfectLoopDimensions(Index_type nploops) { num_nested_perfect_loops = nploops; }
-  void setMaxLoopDimensions(Index_type nloops) { num_nested_loops = nloops; }
-  void setMaxArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
-  void setNumArrays(Index_type narr) { num_arrays = narr; }
-  void setBatchSize(Index_type bsize) { batch_size = bsize; }
   void setProblemDimensionality(Index_type pdim) { problem_dimensionality = pdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -218,10 +214,6 @@ public:
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Complexity getComplexity() const { return complexity; };
   Index_type getMaxPerfectLoopDimensions() const { return num_nested_perfect_loops; };
-  Index_type getMaxLoopDimensions() const { return num_nested_loops; };
-  Index_type getMaxArrayDimensions() const { return array_dimension; };
-  Index_type getNumArrays() const { return num_arrays; };
-  Index_type getBatchSize() const { return batch_size; };
   Index_type getProblemDimensionality() const { return problem_dimensionality; };
 
   Index_type getTargetProblemSize() const;
@@ -678,10 +670,6 @@ private:
   Complexity complexity;
 
   Index_type num_nested_perfect_loops;
-  Index_type num_nested_loops;
-  Index_type array_dimension;
-  Index_type num_arrays;
-  Index_type batch_size;
   Index_type problem_dimensionality;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
@@ -725,10 +713,6 @@ private:
   cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
   cali_id_t MaxPerfectLoopDimensions_attr;
-  cali_id_t MaxLoopDimensions_attr;
-  cali_id_t MaxArrayDimensions_attr;
-  cali_id_t NumArrays_attr;
-  cali_id_t BatchSize_attr;
   cali_id_t ProblemDimensionality_attr;
 
 

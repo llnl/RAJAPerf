@@ -132,22 +132,6 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  MaxLoopDimensions_attr = cali_create_attribute("MaxLoopDimensions", CALI_TYPE_INT,
-                                           CALI_ATTR_ASVALUE |
-                                           CALI_ATTR_AGGREGATABLE |
-                                           CALI_ATTR_SKIP_EVENTS);
-  MaxArrayDimensions_attr = cali_create_attribute("MaxArrayDimensions", CALI_TYPE_INT,
-                                           CALI_ATTR_ASVALUE |
-                                           CALI_ATTR_AGGREGATABLE |
-                                           CALI_ATTR_SKIP_EVENTS);
-  NumArrays_attr = cali_create_attribute("NumArrays", CALI_TYPE_INT,
-                                           CALI_ATTR_ASVALUE |
-                                           CALI_ATTR_AGGREGATABLE |
-                                           CALI_ATTR_SKIP_EVENTS);
-  BatchSize_attr = cali_create_attribute("BatchSize", CALI_TYPE_INT,
-                                           CALI_ATTR_ASVALUE |
-                                           CALI_ATTR_AGGREGATABLE |
-                                           CALI_ATTR_SKIP_EVENTS);
   ProblemDimensionality_attr = cali_create_attribute("ProblemDimensionality", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
@@ -405,10 +389,6 @@ void KernelBase::print(std::ostream& os) const
   os << "\t\t\t checksum_consistency = " << getChecksumConsistencyName(checksum_consistency) << std::endl;
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
   os << "\t\t\t number_max_nested_perfect_loop_levels = " << num_nested_perfect_loops << std::endl;
-  os << "\t\t\t number_max_nested_loop_levels = " << num_nested_loops << std::endl;
-  os << "\t\t\t max_array_dimensions = " << array_dimension << std::endl;
-  os << "\t\t\t num_arrays = " << num_arrays << std::endl;
-  os << "\t\t\t batch_size = " << batch_size << std::endl;
   os << "\t\t\t problem_dimensionality = " << problem_dimensionality << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
@@ -491,10 +471,6 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
     cali_set_helper(MaxPerfectLoopDimensions_attr, getMaxPerfectLoopDimensions());
-    cali_set_helper(MaxLoopDimensions_attr, getMaxLoopDimensions());
-    cali_set_helper(MaxArrayDimensions_attr, getMaxArrayDimensions());
-    cali_set_helper(NumArrays_attr, getNumArrays());
-    cali_set_helper(BatchSize_attr, getBatchSize());
     cali_set_helper(ProblemDimensionality_attr, getProblemDimensionality());
 
     // Feature values will be either (0, 1)
@@ -561,10 +537,6 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#View)", "as": "FeatureView" },
           { "expr": "any(max#MPI)", "as": "FeatureMPI" },
           { "expr": "any(max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
-          { "expr": "any(max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
-          { "expr": "any(max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
-          { "expr": "any(max#NumArrays)", "as": "NumArrays" },
-          { "expr": "any(max#BatchSize)", "as": "BatchSize" },
           { "expr": "any(max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
         "group by": ["Complexity", "ChecksumConsistency"],
@@ -596,10 +568,6 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#View)", "as": "FeatureView" },
           { "expr": "any(any#max#MPI)", "as": "FeatureMPI" },
           { "expr": "any(any#max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
-          { "expr": "any(any#max#MaxLoopDimensions)", "as": "MaxLoopDimensions" },
-          { "expr": "any(any#max#MaxArrayDimensions)", "as": "MaxArrayDimensions" },
-          { "expr": "any(any#max#NumArrays)", "as": "NumArrays" },
-          { "expr": "any(any#max#BatchSize)", "as": "BatchSize" },
           { "expr": "any(any#max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
         "group by": ["Complexity", "ChecksumConsistency"],

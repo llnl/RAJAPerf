@@ -40,9 +40,6 @@ SORT::SORT(const RunParams& params)
   setComplexity(Complexity::N_logN);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(1);
   setProblemDimensionality(1);
 
   setUsesFeature(Sort);

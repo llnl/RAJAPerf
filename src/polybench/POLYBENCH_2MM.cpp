@@ -66,9 +66,6 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   setComplexity(Complexity::N_to_the_three_halves);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(3);
-  setMaxArrayDimensions(2);
-  setNumArrays(5);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);

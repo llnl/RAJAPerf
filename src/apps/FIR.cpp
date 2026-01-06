@@ -46,9 +46,6 @@ FIR::FIR(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(2);
-  setMaxArrayDimensions(1);
-  setNumArrays(3);
   setProblemDimensionality(1);
 
   setUsesFeature(Forall);

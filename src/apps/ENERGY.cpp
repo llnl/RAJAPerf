@@ -65,9 +65,6 @@ ENERGY::ENERGY(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(1);
-  setMaxLoopDimensions(1);
-  setMaxArrayDimensions(1);
-  setNumArrays(15);
   setProblemDimensionality(1);
 
   setUsesFeature(Forall);

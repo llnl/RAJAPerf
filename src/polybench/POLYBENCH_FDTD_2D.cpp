@@ -80,9 +80,6 @@ POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
   setComplexity(Complexity::N);
 
   setMaxPerfectLoopDimensions(2);
-  setMaxLoopDimensions(2);
-  setMaxArrayDimensions(2);
-  setNumArrays(4);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
