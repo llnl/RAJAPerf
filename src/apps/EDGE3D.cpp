@@ -67,7 +67,7 @@ EDGE3D::EDGE3D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
-  setMaxPerfectLoopDimensions(2);
+  setMaxPerfectLoopDimensions(1);
   setProblemDimensionality(3);
 
   setUsesFeature(Forall);
