@@ -552,9 +552,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
 //
 // Set up column headers and column widths for kernel summary output.
 //
-  string kern_head("Kernels");
-  size_t kercol_width = kern_head.size();
-
+  size_t     kercol_width = 0;
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
@@ -565,7 +563,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type bytesWrittenrep_width = 0;
   Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
-  Index_type dash_width = 0;
+  size_t     checksumConsistency_width = 0;
+  size_t     operationalComplexity_width = 0;
+
+  size_t     dash_width = 0;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     kercol_width = max(kercol_width, kernels[ik]->getName().size());
@@ -579,11 +580,15 @@ void Executor::writeKernelInfoSummary(ostream& str,
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
     bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
+    checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
+    operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
   }
 
   const string sepchr(" , ");
 
-  kercol_width += 2;
+  string kern_head("Kernels");
+  kercol_width = max( kern_head.size(),
+                      kercol_width ) + 2;
   dash_width += kercol_width;
 
   double psize = log10( static_cast<double>(psize_width) );
@@ -652,7 +657,17 @@ void Executor::writeKernelInfoSummary(ostream& str,
                         static_cast<Index_type>(bamrrsize) ) + 3;
   dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
-  str <<left<< setw(kercol_width) << kern_head
+  string checksumConsistency_head("ChecksumConsistency");
+  checksumConsistency_width = max( checksumConsistency_head.size(),
+                                     checksumConsistency_width ) + 2;
+  dash_width += checksumConsistency_width + static_cast<Index_type>(sepchr.size());
+
+  string operationalComplexity_head("OperationalComplexity");
+  operationalComplexity_width = max( operationalComplexity_head.size(),
+                                     operationalComplexity_width ) + 2;
+  dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
+
+  str           <<left << setw(kercol_width) << kern_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
@@ -664,10 +679,12 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
       << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
+      << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
+      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
       << endl;
 
   if ( !to_file ) {
-    for (Index_type i = 0; i < dash_width; ++i) {
+    for (size_t i = 0; i < dash_width; ++i) {
       str << "-";
     }
     str << endl;
@@ -675,7 +692,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     KernelBase* kern = kernels[ik];
-    str <<left<< setw(kercol_width) <<  kern->getName()
+    str           <<left << setw(kercol_width) << kern->getName()
         << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
@@ -687,6 +704,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
         << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
+        << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
+        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
         << endl;
   }
 
@@ -904,7 +923,7 @@ void Executor::runWarmupKernels()
 
   for ( auto kid = warmup_kernel_ids.begin();
              kid != warmup_kernel_ids.end(); ++ kid ) {
-    //  
+    //
     // Note that we create a new kernel object for each kernel to run
     // in warmup so we don't pollute timing data, checksum data, etc.
     // for kernels that will run for real later...

@@ -63,7 +63,8 @@ The methods in the source file are:
         gets the same checksum but different variant tunings may differ
         slightly, and ``Inconsistent`` where the checksum of a variant tuning
         may vary slightly run to run.
-      * The operational complexity of the kernel.
+      * The operational complexity of the kernel, where N is the *problem size*
+        of the kernel.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
         the various ``define*VariantTunings`` methods that are defined in the
