@@ -209,65 +209,68 @@ Index_type NE = m_NE;
 #include "RAJA/RAJA.hpp"
 
 //Number of Dofs/Qpts in 1D
-#define CPA_D1D 3
-#define CPA_Q1D 4
-#define CPA_VDIM 3
-#define CPA_B(x, y) Basis[x + CPA_Q1D * y]
-#define CPA_Bt(x, y) tBasis[x + CPA_D1D * y]
-#define CPA_G(x, y) dBasis[x + CPA_Q1D * y]
+namespace conv{
+constexpr int D1D = 3;
+constexpr int Q1D = 4;
+constexpr int VDIM = 3;
+}
+
+#define CPA_B(x, y) Basis[x + conv::Q1D * y]
+#define CPA_Bt(x, y) tBasis[x + conv::D1D * y]
+#define CPA_G(x, y) dBasis[x + conv::Q1D * y]
 #define CPA_X(dx, dy, dz, e)                                                     \
-  X[dx + CPA_D1D * dy + CPA_D1D * CPA_D1D * dz + CPA_D1D * CPA_D1D * CPA_D1D * e]
+  X[dx + conv::D1D * dy + conv::D1D * conv::D1D * dz + conv::D1D * conv::D1D * conv::D1D * e]
 #define CPA_Y(dx, dy, dz, e)                                                      \
-  Y[dx + CPA_D1D * dy + CPA_D1D * CPA_D1D * dz + CPA_D1D * CPA_D1D * CPA_D1D * e]
+  Y[dx + conv::D1D * dy + conv::D1D * conv::D1D * dz + conv::D1D * conv::D1D * conv::D1D * e]
 #define CPA_op(qx, qy, qz, d, e)                                       \
-  D[qx + CPA_Q1D * qy + CPA_Q1D * CPA_Q1D * qz + CPA_Q1D * CPA_Q1D * CPA_Q1D * d  +  CPA_VDIM * CPA_Q1D * CPA_Q1D * CPA_Q1D * e]
+  D[qx + conv::Q1D * qy + conv::Q1D * conv::Q1D * qz + conv::Q1D * conv::Q1D * conv::Q1D * d  +  conv::VDIM * conv::Q1D * conv::Q1D * conv::Q1D * e]
 
 #define CONVECTION3DPA_0_GPU \
-  constexpr int max_D1D = CPA_D1D; \
-  constexpr int max_Q1D = CPA_Q1D; \
-  constexpr int max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D; \
-  RAJA_TEAM_SHARED double sm0[max_DQ*max_DQ*max_DQ]; \
-  RAJA_TEAM_SHARED double sm1[max_DQ*max_DQ*max_DQ]; \
-  RAJA_TEAM_SHARED double sm2[max_DQ*max_DQ*max_DQ]; \
-  RAJA_TEAM_SHARED double sm3[max_DQ*max_DQ*max_DQ]; \
-  RAJA_TEAM_SHARED double sm4[max_DQ*max_DQ*max_DQ]; \
-  RAJA_TEAM_SHARED double sm5[max_DQ*max_DQ*max_DQ]; \
-  double (*u)[max_D1D][max_D1D] = (double (*)[max_D1D][max_D1D]) sm0; \
-  double (*Bu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm1; \
-  double (*Gu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm2; \
-  double (*BBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3; \
-  double (*GBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4; \
-  double (*BGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm5; \
-  double (*GBBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm0; \
-  double (*BGBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm1; \
-  double (*BBGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm2; \
-  double (*DGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;  \
-  double (*BDGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4; \
-  double (*BBDGu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm5;
+  constexpr Index_type max_D1D = conv::D1D; \
+  constexpr Index_type max_Q1D = conv::Q1D; \
+  constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D; \
+  RAJA_TEAM_SHARED Real_type sm0[max_DQ*max_DQ*max_DQ]; \
+  RAJA_TEAM_SHARED Real_type sm1[max_DQ*max_DQ*max_DQ]; \
+  RAJA_TEAM_SHARED Real_type sm2[max_DQ*max_DQ*max_DQ]; \
+  RAJA_TEAM_SHARED Real_type sm3[max_DQ*max_DQ*max_DQ]; \
+  RAJA_TEAM_SHARED Real_type sm4[max_DQ*max_DQ*max_DQ]; \
+  RAJA_TEAM_SHARED Real_type sm5[max_DQ*max_DQ*max_DQ]; \
+  Real_type (*u)[max_D1D][max_D1D] = (Real_type (*)[max_D1D][max_D1D]) sm0; \
+  Real_type (*Bu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm1; \
+  Real_type (*Gu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm2; \
+  Real_type (*BBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3; \
+  Real_type (*GBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4; \
+  Real_type (*BGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm5; \
+  Real_type (*GBBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm0; \
+  Real_type (*BGBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm1; \
+  Real_type (*BBGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm2; \
+  Real_type (*DGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;  \
+  Real_type (*BDGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4; \
+  Real_type (*BBDGu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm5;
 
 
 #define CONVECTION3DPA_0_CPU \
-  constexpr int max_D1D = CPA_D1D; \
-  constexpr int max_Q1D = CPA_Q1D; \
-  constexpr int max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D; \
-  double sm0[max_DQ*max_DQ*max_DQ]; \
-  double sm1[max_DQ*max_DQ*max_DQ]; \
-  double sm2[max_DQ*max_DQ*max_DQ]; \
-  double sm3[max_DQ*max_DQ*max_DQ]; \
-  double sm4[max_DQ*max_DQ*max_DQ]; \
-  double sm5[max_DQ*max_DQ*max_DQ]; \
-  double (*u)[max_D1D][max_D1D] = (double (*)[max_D1D][max_D1D]) sm0; \
-  double (*Bu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm1; \
-  double (*Gu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm2; \
-  double (*BBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3; \
-  double (*GBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4; \
-  double (*BGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm5; \
-  double (*GBBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm0; \
-  double (*BGBu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm1; \
-  double (*BBGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm2; \
-  double (*DGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm3;  \
-  double (*BDGu)[max_Q1D][max_Q1D] = (double (*)[max_Q1D][max_Q1D])sm4; \
-  double (*BBDGu)[max_D1D][max_Q1D] = (double (*)[max_D1D][max_Q1D])sm5;
+  constexpr Index_type max_D1D = conv::D1D; \
+  constexpr Index_type max_Q1D = conv::Q1D; \
+  constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D; \
+  Real_type sm0[max_DQ*max_DQ*max_DQ]; \
+  Real_type sm1[max_DQ*max_DQ*max_DQ]; \
+  Real_type sm2[max_DQ*max_DQ*max_DQ]; \
+  Real_type sm3[max_DQ*max_DQ*max_DQ]; \
+  Real_type sm4[max_DQ*max_DQ*max_DQ]; \
+  Real_type sm5[max_DQ*max_DQ*max_DQ]; \
+  Real_type (*u)[max_D1D][max_D1D] = (Real_type (*)[max_D1D][max_D1D]) sm0; \
+  Real_type (*Bu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm1; \
+  Real_type (*Gu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm2; \
+  Real_type (*BBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3; \
+  Real_type (*GBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4; \
+  Real_type (*BGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm5; \
+  Real_type (*GBBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm0; \
+  Real_type (*BGBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm1; \
+  Real_type (*BBGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm2; \
+  Real_type (*DGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;  \
+  Real_type (*BDGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4; \
+  Real_type (*BBDGu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm5;
 
 #define CONVECTION3DPA_1 \
   u[dz][dy][dx] = CPA_X(dx,dy,dz,e);
@@ -275,7 +278,7 @@ Index_type NE = m_NE;
 #define CONVECTION3DPA_2 \
   Real_type Bu_ = 0.0; \
   Real_type Gu_ = 0.0; \
-  for (Index_type dx = 0; dx < CPA_D1D; ++dx) \
+  for (Index_type dx = 0; dx < conv::D1D; ++dx) \
   { \
     const Real_type bx = CPA_B(qx,dx); \
     const Real_type gx = CPA_G(qx,dx); \
@@ -290,7 +293,7 @@ Index_type NE = m_NE;
   Real_type BBu_ = 0.0; \
   Real_type GBu_ = 0.0; \
   Real_type BGu_ = 0.0; \
-  for (Index_type dy = 0; dy < CPA_D1D; ++dy) \
+  for (Index_type dy = 0; dy < conv::D1D; ++dy) \
   { \
     const Real_type bx = CPA_B(qy,dy); \
     const Real_type gx = CPA_G(qy,dy); \
@@ -306,7 +309,7 @@ Index_type NE = m_NE;
   Real_type GBBu_ = 0.0; \
   Real_type BGBu_ = 0.0; \
   Real_type BBGu_ = 0.0; \
-  for (Index_type dz = 0; dz < CPA_D1D; ++dz) \
+  for (Index_type dz = 0; dz < conv::D1D; ++dz) \
   { \
     const Real_type bx = CPA_B(qz,dz); \
     const Real_type gx = CPA_G(qz,dz); \
@@ -329,7 +332,7 @@ Index_type NE = m_NE;
 
 #define CONVECTION3DPA_6 \
   Real_type BDGu_ = 0.0; \
-  for (Index_type qz = 0; qz < CPA_Q1D; ++qz) \
+  for (Index_type qz = 0; qz < conv::Q1D; ++qz) \
   { \
     const Real_type w = CPA_Bt(dz,qz); \
     BDGu_ += w * DGu[qz][qy][qx]; \
@@ -338,7 +341,7 @@ Index_type NE = m_NE;
 
 #define CONVECTION3DPA_7 \
   Real_type BBDGu_ = 0.0; \
-  for (Index_type qy = 0; qy < CPA_Q1D; ++qy) \
+  for (Index_type qy = 0; qy < conv::Q1D; ++qy) \
   { \
     const Real_type w = CPA_Bt(dy,qy); \
     BBDGu_ += w * BDGu[dz][qy][qx]; \
@@ -347,7 +350,7 @@ Index_type NE = m_NE;
 
 #define CONVECTION3DPA_8 \
   Real_type BBBDGu = 0.0; \
-  for (Index_type qx = 0; qx < CPA_Q1D; ++qx) \
+  for (Index_type qx = 0; qx < conv::Q1D; ++qx) \
   { \
     const Real_type w = CPA_Bt(dx,qx); \
     BBBDGu += w * BBDGu[dz][dy][qx]; \
@@ -390,7 +393,7 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = CPA_Q1D * CPA_Q1D * CPA_Q1D;
+  static const size_t default_gpu_block_size = conv::Q1D * conv::Q1D * conv::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;

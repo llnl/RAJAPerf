@@ -25,31 +25,32 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
 {
   m_NE_default = 15625;
 
-  setDefaultProblemSize(m_NE_default*CPA_Q1D*CPA_Q1D*CPA_Q1D);
+  setDefaultProblemSize(m_NE_default*conv::D1D*conv::D1D*conv::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (CPA_Q1D*CPA_Q1D*CPA_Q1D)/2) / (CPA_Q1D*CPA_Q1D*CPA_Q1D), Index_type(1));
+  //Define problem size in terms of DOFS
+  m_NE = std::max((getTargetProblemSize() + (conv::D1D*conv::D1D*conv::D1D)/2) / (conv::D1D*conv::D1D*conv::D1D), Index_type(1));
 
-  setActualProblemSize( m_NE*CPA_Q1D*CPA_Q1D*CPA_Q1D );
+  setActualProblemSize( m_NE*conv::D1D*conv::D1D*conv::D1D );
 
-  setItsPerRep( m_NE*CPA_Q1D*CPA_Q1D*CPA_Q1D );
+  setItsPerRep( m_NE*conv::D1D*conv::D1D*conv::D1D );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 3*sizeof(Real_type) * CPA_Q1D*CPA_D1D + // b, bt, g
-                      1*sizeof(Real_type) * CPA_D1D*CPA_D1D*CPA_D1D*m_NE + // x
-               CPA_VDIM*sizeof(Real_type) * CPA_Q1D*CPA_Q1D*CPA_Q1D*m_NE ); // d
+  setBytesReadPerRep( 3*sizeof(Real_type) * conv::Q1D*conv::D1D + // b, bt, g
+                      1*sizeof(Real_type) * conv::D1D*conv::D1D*conv::D1D*m_NE + // x
+               conv::VDIM*sizeof(Real_type) * conv::Q1D*conv::Q1D*conv::Q1D*m_NE ); // d
   setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * CPA_D1D*CPA_D1D*CPA_D1D*m_NE ); // y
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * conv::D1D*conv::D1D*conv::D1D*m_NE ); // y
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(m_NE * (
-                         4 * CPA_D1D * CPA_Q1D * CPA_D1D * CPA_D1D + //2
-                         6 * CPA_D1D * CPA_Q1D * CPA_Q1D * CPA_D1D + //3
-                         6 * CPA_D1D * CPA_Q1D * CPA_Q1D * CPA_Q1D + //4
-                         5 * CPA_Q1D * CPA_Q1D * CPA_Q1D +  // 5
-                         2 * CPA_Q1D * CPA_D1D * CPA_Q1D * CPA_Q1D + // 6
-                         2 * CPA_Q1D * CPA_D1D * CPA_Q1D * CPA_D1D + // 7
-                         (1 + 2*CPA_Q1D) * CPA_D1D * CPA_D1D * CPA_D1D // 8
+                         4 * conv::D1D * conv::Q1D * conv::D1D * conv::D1D + //2
+                         6 * conv::D1D * conv::Q1D * conv::Q1D * conv::D1D + //3
+                         6 * conv::D1D * conv::Q1D * conv::Q1D * conv::Q1D + //4
+                         5 * conv::Q1D * conv::Q1D * conv::Q1D +  // 5
+                         2 * conv::Q1D * conv::D1D * conv::Q1D * conv::Q1D + // 6
+                         2 * conv::Q1D * conv::D1D * conv::Q1D * conv::D1D + // 7
+                         (1 + 2*conv::Q1D) * conv::D1D * conv::D1D * conv::D1D // 8
                          ));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
@@ -68,17 +69,17 @@ CONVECTION3DPA::~CONVECTION3DPA()
 void CONVECTION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B,  Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt, Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_G, Index_type(CPA_Q1D*CPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(CPA_Q1D*CPA_Q1D*CPA_Q1D*CPA_VDIM*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(CPA_D1D*CPA_D1D*CPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B,  Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt, Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_G, Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(conv::Q1D*conv::Q1D*conv::Q1D*conv::VDIM*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, Index_type(conv::D1D*conv::D1D*conv::D1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, Index_type(conv::D1D*conv::D1D*conv::D1D*m_NE), Real_type(0.0), vid);
 }
 
 void CONVECTION3DPA::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_Y, CPA_D1D*CPA_D1D*CPA_D1D*m_NE, vid);
+  checksum[vid][tune_idx] += calcChecksum(m_Y, conv::D1D*conv::D1D*conv::D1D*m_NE, vid);
 }
 
 void CONVECTION3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
