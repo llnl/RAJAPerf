@@ -138,7 +138,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
 
   // output volumes and moments on the host
-  allocData ( m_vv, nvals_per_pair * n_subz_intsc, Base_Seq ) ;
+  allocData ( DataSpace::Host, m_vv, nvals_per_pair * n_subz_intsc ) ;
 }
 
 
@@ -268,7 +268,7 @@ void INTSC_HEXHEX::tearDown(VariantID vid,
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
   deallocData ( m_vv_out, vid ) ;
-  deallocData ( m_vv, Base_Seq ) ;
+  deallocData ( DataSpace::Host, m_vv ) ;
 }
 
 } // end namespace apps
