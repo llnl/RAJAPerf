@@ -63,6 +63,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   running_variant = NumVariants;
   running_tuning = getUnknownTuningIdx();
 
+  checksum_reference = 0.0;
   checksum_reference_variant = NumVariants;
   checksum_reference_tuning = getUnknownTuningIdx();
 
@@ -342,6 +343,7 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
 
   if (checksum_reference_variant == NumVariants) {
     // use first run variant tuning as checksum reference
+    checksum_reference = new_checksum;
     checksum_reference_variant = vid;
     checksum_reference_tuning = tune_idx;
   }
@@ -447,6 +449,9 @@ void KernelBase::print(std::ostream& os) const
       os << "\t\t\t\t\t" << tot_time[j][t] << std::endl;
     }
   }
+  os << "\t\t\t checksum_reference_variant = " << getVariantName(checksum_reference_variant) << std::endl;
+  os << "\t\t\t checksum_reference_tuning = " << checksum_reference_tuning << std::endl;
+  os << "\t\t\t checksum_reference = " << checksum_reference << std::endl;
   os << "\t\t\t checksum_min: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))

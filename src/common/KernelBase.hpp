@@ -289,12 +289,7 @@ public:
     if (checksum_reference_variant == NumVariants) {
       throw std::runtime_error("Can't get reference checksum average if kernel was not run");
     }
-    if (checksum_tolerance == ChecksumTolerance::zero) {
-      // avoid tiny errors when taking the average
-      return checksum_min[checksum_reference_variant].at(checksum_reference_tuning);
-    } else {
-      return getChecksumAverage(checksum_reference_variant, checksum_reference_tuning);
-    }
+    return checksum_reference;
   }
   Checksum_type getLastChecksum() const
   {
@@ -734,6 +729,7 @@ private:
   VariantID running_variant;
   size_t running_tuning;
 
+  Checksum_type checksum_reference;
   VariantID checksum_reference_variant;
   size_t checksum_reference_tuning;
 
