@@ -102,9 +102,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
-
-             if (itm.get_local_id(0) == 0)
-             {
+             if (itm.get_local_id(0) == 0) {
                SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
                  SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
                    DIFFUSION3DPA_2;
@@ -136,10 +134,9 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             if (itm.get_local_id(0) == 0)
-               {
-               SYCL_FOREACH_THREAD(d, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(q, 2, DPA_Q1D) {
+             if (itm.get_local_id(0) == 0) {
+               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
                    DIFFUSION3DPA_6;
                  }
                }
@@ -272,6 +269,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
                 } // lambda (dz)
               );  //RAJA::loop<inner_z>
 
+              ctx.teamSync();
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                 [&](Index_type RAJA_UNUSED_ARG(dz)) {
@@ -334,7 +332,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
                        [&](Index_type qx) {
 
-                         DIFFUSION3DPA_5;
+                          DIFFUSION3DPA_5;
 
                        } // lambda (qx)
                      ); // RAJA::loop<inner_x>
@@ -348,9 +346,9 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                [&](Index_type RAJA_UNUSED_ARG(dz)) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](Index_type d) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](Index_type q) {
+                       [&](Index_type qx) {
 
                          DIFFUSION3DPA_6;
 
