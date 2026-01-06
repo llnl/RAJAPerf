@@ -76,15 +76,13 @@ void NODAL_ACCUMULATION_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   setRealZones_3d(m_real_zones, *m_domain);
 }
 
-void NODAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t tune_idx)
+void NODAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_x, m_nodal_array_length, vid);
 }
 
 void NODAL_ACCUMULATION_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_x, vid);
   deallocData(m_vol, vid);
   deallocData(m_real_zones, vid);

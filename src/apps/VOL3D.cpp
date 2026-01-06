@@ -78,15 +78,13 @@ void VOL3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_vnormq = 0.083333333333333333; /* vnormq = 1/12 */
 }
 
-void VOL3D::updateChecksum(VariantID vid, size_t tune_idx)
+void VOL3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_vol, m_array_length, vid);
 }
 
 void VOL3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_x, vid);
   deallocData(m_y, vid);
   deallocData(m_z, vid);

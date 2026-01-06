@@ -70,7 +70,7 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
   }
 }
 
-void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   for (Index_type v = 0; v < m_num_vars; ++v) {
     addToChecksum(m_vars[v], m_var_size, vid);

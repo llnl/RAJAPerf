@@ -67,20 +67,18 @@ POLYBENCH_GEMM::~POLYBENCH_GEMM()
 
 void POLYBENCH_GEMM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_A, m_ni * m_nk, vid);
   allocAndInitData(m_B, m_nk * m_nj, vid);
   allocAndInitDataConst(m_C, m_ni * m_nj, 0.0, vid);
 }
 
-void POLYBENCH_GEMM::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_GEMM::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_C, m_ni * m_nj, vid);
 }
 
 void POLYBENCH_GEMM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_C, vid);

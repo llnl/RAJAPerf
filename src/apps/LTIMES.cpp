@@ -75,15 +75,13 @@ void LTIMES::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_psidat, int(m_psilen), vid);
 }
 
-void LTIMES::updateChecksum(VariantID vid, size_t tune_idx)
+void LTIMES::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_phidat, m_philen, vid);
 }
 
 void LTIMES::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_phidat, vid);
   deallocData(m_elldat, vid);
   deallocData(m_psidat, vid);

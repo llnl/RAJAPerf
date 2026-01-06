@@ -104,15 +104,13 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndCopyHostData(m_idx2              , g_idx2              , 37800             , vid);
 }
 
-void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
+void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_Xdat, m_Xlen, vid);
 }
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_Bdat, vid);
   deallocData(m_Adat, vid);
   deallocData(m_Fdat, vid);

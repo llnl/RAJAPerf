@@ -177,7 +177,7 @@ void COUPLE::runOpenMPVariant(VariantID vid)
 RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(COUPLE, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 
-void COUPLE::updateChecksum(VariantID vid, size_t tune_idx)
+void COUPLE::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   Index_type max_loop_index = m_domain->lrn;
 
@@ -188,8 +188,6 @@ void COUPLE::updateChecksum(VariantID vid, size_t tune_idx)
 
 void COUPLE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_t0, vid);
   deallocData(m_t1, vid);
   deallocData(m_t2, vid);

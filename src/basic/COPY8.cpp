@@ -68,7 +68,7 @@ void COPY8::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_x7, getActualProblemSize(), vid);
 }
 
-void COPY8::updateChecksum(VariantID vid, size_t tune_idx)
+void COPY8::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_y0, getActualProblemSize(), vid);
   addToChecksum(m_y1, getActualProblemSize(), vid);
@@ -82,7 +82,6 @@ void COPY8::updateChecksum(VariantID vid, size_t tune_idx)
 
 void COPY8::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x0, vid);
   deallocData(m_x1, vid);
   deallocData(m_x2, vid);

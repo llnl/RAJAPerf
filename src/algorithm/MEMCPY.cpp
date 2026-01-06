@@ -54,14 +54,13 @@ void MEMCPY::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_y, getActualProblemSize(), -1.234567e89, vid);
 }
 
-void MEMCPY::updateChecksum(VariantID vid, size_t tune_idx)
+void MEMCPY::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void MEMCPY::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

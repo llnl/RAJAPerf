@@ -91,7 +91,7 @@ void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_sum, m_array_length, Real_type(0.0), vid);
 }
 
-void EDGE3D::updateChecksum(VariantID vid, size_t tune_idx)
+void EDGE3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_sum, m_array_length, vid);
 }

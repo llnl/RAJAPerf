@@ -618,7 +618,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 
 
-void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
+void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;

@@ -66,7 +66,7 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_c0, vid);
 }
 
-void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
+void INT_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   Real_ptr px_host = m_px;
 
@@ -91,7 +91,6 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INT_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_px, vid);
 }
 

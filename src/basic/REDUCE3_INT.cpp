@@ -66,7 +66,7 @@ void REDUCE3_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_vmax_init = std::numeric_limits<Int_type>::min();
 }
 
-void REDUCE3_INT::updateChecksum(VariantID vid, size_t tune_idx)
+void REDUCE3_INT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_vsum);
   addToChecksum(m_vmin);
@@ -75,7 +75,6 @@ void REDUCE3_INT::updateChecksum(VariantID vid, size_t tune_idx)
 
 void REDUCE3_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_vec, vid);
 }
 

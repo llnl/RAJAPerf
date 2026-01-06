@@ -55,14 +55,13 @@ void INIT_VIEW1D_OFFSET::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
   m_val = 0.00000123;
 }
 
-void INIT_VIEW1D_OFFSET::updateChecksum(VariantID vid, size_t tune_idx)
+void INIT_VIEW1D_OFFSET::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_a, getActualProblemSize(), vid);
 }
 
 void INIT_VIEW1D_OFFSET::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
 }
 

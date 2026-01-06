@@ -58,14 +58,13 @@ void TRIDIAG_ELIM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_z, m_N, vid);
 }
 
-void TRIDIAG_ELIM::updateChecksum(VariantID vid, size_t tune_idx)
+void TRIDIAG_ELIM::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_xout, m_N, vid);
 }
 
 void TRIDIAG_ELIM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_xout, vid);
   deallocData(m_xin, vid);
   deallocData(m_y, vid);

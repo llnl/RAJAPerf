@@ -98,7 +98,7 @@ void ENERGY::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_q_cut, vid);
 }
 
-void ENERGY::updateChecksum(VariantID vid, size_t tune_idx)
+void ENERGY::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_e_new, getActualProblemSize(), vid);
   addToChecksum(m_q_new, getActualProblemSize(), vid);
@@ -106,8 +106,6 @@ void ENERGY::updateChecksum(VariantID vid, size_t tune_idx)
 
 void ENERGY::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_e_new, vid);
   deallocData(m_e_old, vid);
   deallocData(m_delvc, vid);

@@ -85,7 +85,6 @@ POLYBENCH_3MM::~POLYBENCH_3MM()
 
 void POLYBENCH_3MM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_A, m_ni * m_nk, vid);
   allocAndInitData(m_B, m_nk * m_nj, vid);
   allocAndInitData(m_C, m_nj * m_nm, vid);
@@ -95,14 +94,13 @@ void POLYBENCH_3MM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_G, m_ni * m_nl, 0.0, vid);
 }
 
-void POLYBENCH_3MM::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_3MM::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_G, m_ni * m_nl, vid);
 }
 
 void POLYBENCH_3MM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_C, vid);

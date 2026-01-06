@@ -56,14 +56,13 @@ void DAXPY_ATOMIC::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_a, vid);
 }
 
-void DAXPY_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx)
+void DAXPY_ATOMIC::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void DAXPY_ATOMIC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

@@ -74,14 +74,13 @@ void POLYBENCH_ADI::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_Q, m_n * m_n, vid);
 }
 
-void POLYBENCH_ADI::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_ADI::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_U, m_n * m_n, vid);
 }
 
 void POLYBENCH_ADI::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_U, vid);
   deallocData(m_V, vid);
   deallocData(m_P, vid);

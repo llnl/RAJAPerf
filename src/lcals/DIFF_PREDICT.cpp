@@ -57,14 +57,13 @@ void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_cx, m_array_length, vid);
 }
 
-void DIFF_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
+void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_px, m_array_length, vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_px, vid);
   deallocData(m_cx, vid);
 }

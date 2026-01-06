@@ -54,14 +54,13 @@ void SORT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue(m_x, getActualProblemSize()*getRunReps(), vid);
 }
 
-void SORT::updateChecksum(VariantID vid, size_t tune_idx)
+void SORT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_x, getActualProblemSize()*getRunReps(), vid);
 }
 
 void SORT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
 }
 

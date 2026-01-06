@@ -55,14 +55,13 @@ void ADD::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_c, getActualProblemSize(), 0.0, vid);
 }
 
-void ADD::updateChecksum(VariantID vid, size_t tune_idx)
+void ADD::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_c, getActualProblemSize(), vid);
 }
 
 void ADD::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
   deallocData(m_b, vid);
   deallocData(m_c, vid);

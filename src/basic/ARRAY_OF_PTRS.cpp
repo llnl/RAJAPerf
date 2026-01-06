@@ -56,7 +56,7 @@ void ARRAY_OF_PTRS::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_x, m_array_size*getActualProblemSize(), vid);
 }
 
-void ARRAY_OF_PTRS::updateChecksum(VariantID vid, size_t tune_idx)
+void ARRAY_OF_PTRS::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_y, getActualProblemSize(), vid);
 }

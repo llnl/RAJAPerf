@@ -55,14 +55,14 @@ void ATOMIC::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_final = -static_cast<int>(vid);
 }
 
-void ATOMIC::updateChecksum(VariantID vid, size_t tune_idx)
+void ATOMIC::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_final);
 }
 
-void ATOMIC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ATOMIC::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
+
 }
 
 } // end namespace algorithm

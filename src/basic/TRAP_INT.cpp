@@ -66,14 +66,14 @@ void TRAP_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_sumx = 0;
 }
 
-void TRAP_INT::updateChecksum(VariantID vid, size_t tune_idx)
+void TRAP_INT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_sumx);
 }
 
-void TRAP_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRAP_INT::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
+
 }
 
 } // end namespace basic

@@ -247,7 +247,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid,
-                                  size_t tune_idx)
+                                  size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;

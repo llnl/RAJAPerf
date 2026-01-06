@@ -68,7 +68,7 @@ void MASS3DEA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
                                  MEA_D1D*MEA_D1D*MEA_D1D*m_NE), Real_type(0.0), vid);
 }
 
-void MASS3DEA::updateChecksum(VariantID vid, size_t tune_idx)
+void MASS3DEA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_M, MEA_D1D*MEA_D1D*MEA_D1D*
                                           MEA_D1D*MEA_D1D*MEA_D1D*m_NE, vid);
@@ -76,8 +76,6 @@ void MASS3DEA::updateChecksum(VariantID vid, size_t tune_idx)
 
 void MASS3DEA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_B, vid);
   deallocData(m_D, vid);
   deallocData(m_M, vid);

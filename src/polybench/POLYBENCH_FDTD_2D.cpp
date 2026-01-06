@@ -96,14 +96,13 @@ void POLYBENCH_FDTD_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   allocAndInitData(m_fict, m_tsteps, vid);
 }
 
-void POLYBENCH_FDTD_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_FDTD_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_hz, m_nx * m_ny, vid);
 }
 
 void POLYBENCH_FDTD_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_fict, vid);
   deallocData(m_ex, vid);
   deallocData(m_ey, vid);

@@ -68,14 +68,13 @@ POLYBENCH_JACOBI_1D::~POLYBENCH_JACOBI_1D()
 
 void POLYBENCH_JACOBI_1D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_Ainit, m_N, vid);
   allocAndInitData(m_Binit, m_N, vid);
   allocData(m_A, m_N, vid);
   allocData(m_B, m_N, vid);
 }
 
-void POLYBENCH_JACOBI_1D::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_JACOBI_1D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_A, m_N, vid);
   addToChecksum(m_B, m_N, vid);
@@ -83,7 +82,6 @@ void POLYBENCH_JACOBI_1D::updateChecksum(VariantID vid, size_t tune_idx)
 
 void POLYBENCH_JACOBI_1D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_Ainit, vid);

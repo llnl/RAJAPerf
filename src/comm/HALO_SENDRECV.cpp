@@ -60,7 +60,7 @@ void HALO_SENDRECV::setUp(VariantID vid, size_t tune_idx)
   setUp_base(m_my_mpi_rank, m_mpi_dims.data(), m_num_vars, vid, tune_idx);
 }
 
-void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_SENDRECV::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
 

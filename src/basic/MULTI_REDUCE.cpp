@@ -122,14 +122,13 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(DataSpace::Host, m_values_final, m_num_bins, 0.0);
 }
 
-void MULTI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
+void MULTI_REDUCE::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(DataSpace::Host, m_values_final, m_num_bins);
 }
 
 void MULTI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_bins, vid);
   deallocData(m_data, vid);
   deallocData(DataSpace::Host, m_values_init);

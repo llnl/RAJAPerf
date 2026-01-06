@@ -57,7 +57,7 @@ void INIT3::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_in2, getActualProblemSize(), vid);
 }
 
-void INIT3::updateChecksum(VariantID vid, size_t tune_idx)
+void INIT3::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_out1, getActualProblemSize(), vid);
   addToChecksum(m_out2, getActualProblemSize(), vid);
@@ -66,7 +66,6 @@ void INIT3::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INIT3::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_out1, vid);
   deallocData(m_out2, vid);
   deallocData(m_out3, vid);

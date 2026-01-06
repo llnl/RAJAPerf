@@ -81,7 +81,7 @@ void HALO_EXCHANGE::setUp(VariantID vid, size_t tune_idx)
   }
 }
 
-void HALO_EXCHANGE::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_EXCHANGE::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   for (Index_type v = 0; v < m_num_vars; ++v) {
     addToChecksum(m_vars[v], m_var_size, vid);

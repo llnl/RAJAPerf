@@ -80,15 +80,13 @@ void DEL_DOT_VEC_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_half = 0.5;
 }
 
-void DEL_DOT_VEC_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void DEL_DOT_VEC_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_div, m_array_length, vid);
 }
 
 void DEL_DOT_VEC_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_x, vid);
   deallocData(m_y, vid);
   deallocData(m_real_zones, vid);

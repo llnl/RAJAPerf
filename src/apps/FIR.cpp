@@ -60,15 +60,13 @@ void FIR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_out, getActualProblemSize(), 0.0, vid);
 }
 
-void FIR::updateChecksum(VariantID vid, size_t tune_idx)
+void FIR::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_out, getActualProblemSize(), vid);
 }
 
 void FIR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_in, vid);
   deallocData(m_out, vid);
 }

@@ -65,14 +65,13 @@ void FIRST_MIN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_minloc = -1;
 }
 
-void FIRST_MIN::updateChecksum(VariantID vid, size_t tune_idx)
+void FIRST_MIN::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_minloc);
 }
 
 void FIRST_MIN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
 }
 

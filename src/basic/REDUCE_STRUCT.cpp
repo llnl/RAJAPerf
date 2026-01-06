@@ -71,7 +71,7 @@ void REDUCE_STRUCT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 }
 
-void REDUCE_STRUCT::updateChecksum(VariantID vid, size_t tune_idx)
+void REDUCE_STRUCT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_points.GetCenter()[0]);
   addToChecksum(m_points.GetXMin());
@@ -85,7 +85,6 @@ void REDUCE_STRUCT::updateChecksum(VariantID vid, size_t tune_idx)
 
 void REDUCE_STRUCT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

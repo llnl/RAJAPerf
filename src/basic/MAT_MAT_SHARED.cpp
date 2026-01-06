@@ -62,12 +62,11 @@ void MAT_MAT_SHARED::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) 
   allocAndInitDataConst(m_C, NN, 0.0, vid);
 }
 
-void MAT_MAT_SHARED::updateChecksum(VariantID vid, size_t tune_idx) {
+void MAT_MAT_SHARED::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
   addToChecksum(m_C, m_N*m_N, vid);
 }
 
 void MAT_MAT_SHARED::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
-  (void)vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_C, vid);

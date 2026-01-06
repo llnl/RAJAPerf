@@ -67,14 +67,13 @@ void GEN_LIN_RECUR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_sb, m_N, vid);
 }
 
-void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t tune_idx)
+void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_b5, getActualProblemSize(), vid);
 }
 
 void GEN_LIN_RECUR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_b5, vid);
   deallocData(m_stb5, vid);
   deallocData(m_sa, vid);

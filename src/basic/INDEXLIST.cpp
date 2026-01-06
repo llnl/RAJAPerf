@@ -60,7 +60,7 @@ void INDEXLIST::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_len = -1;
 }
 
-void INDEXLIST::updateChecksum(VariantID vid, size_t tune_idx)
+void INDEXLIST::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(m_list, getActualProblemSize(), vid);
   addToChecksum(m_len);
@@ -68,7 +68,6 @@ void INDEXLIST::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INDEXLIST::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_list, vid);
 }

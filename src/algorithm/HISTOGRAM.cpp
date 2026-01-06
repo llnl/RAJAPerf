@@ -120,14 +120,13 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(DataSpace::Host, m_counts_final, m_num_bins, static_cast<Data_type>(0));
 }
 
-void HISTOGRAM::updateChecksum(VariantID vid, size_t tune_idx)
+void HISTOGRAM::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(DataSpace::Host, m_counts_final, m_num_bins);
 }
 
 void HISTOGRAM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_bins, vid);
   deallocData(DataSpace::Host, m_counts_init);
   deallocData(DataSpace::Host, m_counts_final);
