@@ -47,7 +47,6 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   setItsPerRep(m_NE * mpa3d_at::D1D * mpa3d_at::D1D);
   setKernelsPerRep(1);
 
-  // Need to also account for the indirection array
   setBytesReadPerRep(2 * sizeof(Real_type) * mpa3d_at::Q1D * mpa3d_at::D1D + // B, Bt
                      1 * sizeof(Index_type) * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * m_NE + //ElemToDoF
                      1 * sizeof(Real_type) * m_Tot_Dofs + // X
