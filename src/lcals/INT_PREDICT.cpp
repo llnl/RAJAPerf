@@ -81,7 +81,7 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
     px_host[i] -= m_px_initval;
   }
 
-  checksum[vid][tune_idx] += calcChecksum(px_host, getActualProblemSize(), vid);
+  addToChecksum(px_host, getActualProblemSize(), vid);
 
   if (ds != hds) {
     copyData(ds, m_px, hds, px_host, m_array_length);

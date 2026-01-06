@@ -122,7 +122,7 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void HISTOGRAM::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_counts_final, m_num_bins);
+  addToChecksum(DataSpace::Host, m_counts_final, m_num_bins);
 }
 
 void HISTOGRAM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

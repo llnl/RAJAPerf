@@ -58,7 +58,7 @@ void PI_ATOMIC::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void PI_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += static_cast<Checksum_type>(m_pi_final);
+  addToChecksum(m_pi_final);
 }
 
 void PI_ATOMIC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

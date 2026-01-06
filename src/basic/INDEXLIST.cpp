@@ -62,8 +62,8 @@ void INDEXLIST::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void INDEXLIST::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_list, getActualProblemSize(), vid);
-  checksum[vid][tune_idx] += Checksum_type(m_len);
+  addToChecksum(m_list, getActualProblemSize(), vid);
+  addToChecksum(m_len);
 }
 
 void INDEXLIST::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

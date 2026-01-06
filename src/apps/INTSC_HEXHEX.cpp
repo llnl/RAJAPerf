@@ -258,8 +258,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum
-      (m_vv_out, nvals_per_pair*n_subz_intsc, vid  );
+  addToChecksum(m_vv_out, nvals_per_pair*n_subz_intsc, vid);
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid,

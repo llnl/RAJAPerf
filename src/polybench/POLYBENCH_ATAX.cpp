@@ -76,7 +76,7 @@ void POLYBENCH_ATAX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void POLYBENCH_ATAX::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_y, m_N, vid);
+  addToChecksum(m_y, m_N, vid);
 }
 
 void POLYBENCH_ATAX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

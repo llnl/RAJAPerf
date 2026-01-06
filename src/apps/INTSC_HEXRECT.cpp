@@ -632,7 +632,7 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
       ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
+  addToChecksum(m_records, 4L*m_nrecords, vid);
 }
 
 void INTSC_HEXRECT::tearDown(VariantID vid,

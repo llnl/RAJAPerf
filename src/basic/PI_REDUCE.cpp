@@ -59,7 +59,7 @@ void PI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void PI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += Checksum_type(m_pi);
+  addToChecksum(m_pi);
 }
 
 void PI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

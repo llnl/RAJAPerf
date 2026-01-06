@@ -98,7 +98,7 @@ void POLYBENCH_FDTD_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
 void POLYBENCH_FDTD_2D::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_hz, m_nx * m_ny, vid);
+  addToChecksum(m_hz, m_nx * m_ny, vid);
 }
 
 void POLYBENCH_FDTD_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -128,7 +128,6 @@ TEST(ShortSuiteTest, Basic)
     rajaperf::KernelBase* kernel = kernels[ik];
 
     rajaperf::Checksum_type cksum_tol = kernel->getChecksumTolerance();
-    rajaperf::Checksum_type cksum_ref = kernel->getReferenceChecksum();
 
     //
     // Check execution time is greater than zero and checksum diff is 
@@ -144,8 +143,7 @@ TEST(ShortSuiteTest, Basic)
 
           double rtime = kernel->getTotTime(vid, tune_idx);
 
-          rajaperf::Checksum_type cksum = kernel->getChecksum(vid, tune_idx); 
-          rajaperf::Checksum_type cksum_diff = std::abs(cksum_ref - cksum);
+          rajaperf::Checksum_type cksum_diff = kernel->getChecksumMaxDifference(vid, tune_idx);
 
           // Print kernel information when running test manually
           std::cout << "Check kernel, variant, tuning : "

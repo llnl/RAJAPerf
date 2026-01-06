@@ -124,7 +124,7 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void MULTI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_values_final, m_num_bins);
+  addToChecksum(DataSpace::Host, m_values_final, m_num_bins);
 }
 
 void MULTI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

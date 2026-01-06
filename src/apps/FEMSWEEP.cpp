@@ -106,7 +106,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_Xdat, m_Xlen, vid);
+  addToChecksum(m_Xdat, m_Xlen, vid);
 }
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

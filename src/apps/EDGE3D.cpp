@@ -93,7 +93,7 @@ void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void EDGE3D::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, vid  );
+  addToChecksum(m_sum, m_array_length, vid);
 }
 
 void EDGE3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

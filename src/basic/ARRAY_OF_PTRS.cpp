@@ -58,7 +58,7 @@ void ARRAY_OF_PTRS::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void ARRAY_OF_PTRS::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_y, getActualProblemSize(), vid);
+  addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void ARRAY_OF_PTRS::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

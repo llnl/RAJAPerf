@@ -83,8 +83,7 @@ void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void MASSVEC3DPA::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] +=
-      calcChecksum(m_Y, MVPA_DIM * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
+  addToChecksum(m_Y, MVPA_DIM * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
 }
 
 void MASSVEC3DPA::tearDown(VariantID vid,

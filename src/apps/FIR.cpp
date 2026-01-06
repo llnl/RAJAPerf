@@ -62,7 +62,7 @@ void FIR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void FIR::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_out, getActualProblemSize(), vid);
+  addToChecksum(m_out, getActualProblemSize(), vid);
 }
 
 void FIR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

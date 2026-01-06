@@ -73,7 +73,7 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
 void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
 {
   for (Index_type v = 0; v < m_num_vars; ++v) {
-    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
+    addToChecksum(m_vars[v], m_var_size, vid);
   }
 
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
@@ -81,9 +81,9 @@ void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
   for (Index_type l = 0; l < s_num_neighbors; ++l) {
     Index_type buffer_len = m_num_vars * m_pack_index_list_lengths[l];
     if (separate_buffers) {
-      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_send_buffers[l], buffer_len);
+      addToChecksum(DataSpace::Host, m_send_buffers[l], buffer_len);
     } else {
-      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_send_buffers[l], buffer_len);
+      addToChecksum(getMPIDataSpace(vid), m_send_buffers[l], buffer_len);
     }
   }
 }

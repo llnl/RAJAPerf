@@ -75,8 +75,8 @@ void POLYBENCH_MVT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void POLYBENCH_MVT::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_x1, m_N, vid);
-  checksum[vid][tune_idx] += calcChecksum(m_x2, m_N, vid);
+  addToChecksum(m_x1, m_N, vid);
+  addToChecksum(m_x2, m_N, vid);
 }
 
 void POLYBENCH_MVT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

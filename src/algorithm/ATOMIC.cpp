@@ -57,7 +57,7 @@ void ATOMIC::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void ATOMIC::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += static_cast<Checksum_type>(m_final);
+  addToChecksum(m_final);
 }
 
 void ATOMIC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

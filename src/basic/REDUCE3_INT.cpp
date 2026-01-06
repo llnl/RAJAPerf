@@ -68,9 +68,9 @@ void REDUCE3_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void REDUCE3_INT::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += m_vsum;
-  checksum[vid][tune_idx] += m_vmin;
-  checksum[vid][tune_idx] += m_vmax;
+  addToChecksum(m_vsum);
+  addToChecksum(m_vmin);
+  addToChecksum(m_vmax);
 }
 
 void REDUCE3_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

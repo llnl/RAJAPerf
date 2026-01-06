@@ -68,7 +68,7 @@ void TRAP_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void TRAP_INT::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += m_sumx;
+  addToChecksum(m_sumx);
 }
 
 void TRAP_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

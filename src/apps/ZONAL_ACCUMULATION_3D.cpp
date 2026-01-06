@@ -77,7 +77,7 @@ void ZONAL_ACCUMULATION_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
 
 void ZONAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_vol, m_zonal_array_length, vid);
+  addToChecksum(m_vol, m_zonal_array_length, vid);
 }
 
 void ZONAL_ACCUMULATION_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -764,7 +764,7 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
         if ( run_params.showProgress() ) {
           Checksum_type cksum_tol = kernel->getChecksumTolerance();
           Checksum_type cksum_ref = kernel->getReferenceChecksum();
-          Checksum_type cksum = kernel->getChecksum(vid, tune_idx);
+          Checksum_type cksum = kernel->getLastChecksum();
           Checksum_type cksum_diff = std::abs(cksum_ref - cksum);
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
           {
@@ -1463,7 +1463,6 @@ void Executor::writeChecksumReport(ostream& file)
       file << dot_line << endl;
 
       Checksum_type cksum_tol = kern->getChecksumTolerance();
-      Checksum_type cksum_ref = kern->getReferenceChecksum();
 
       // get vector of checksums and diffs
       std::vector<std::vector<Checksum_type>> checksums(variant_ids.size());
@@ -1476,8 +1475,8 @@ void Executor::writeChecksumReport(ostream& file)
         checksums_abs_diff[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
           if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            checksums[iv][tune_idx] = kern->getChecksum(vid, tune_idx);
-            checksums_abs_diff[iv][tune_idx] = std::abs(cksum_ref - kern->getChecksum(vid, tune_idx));
+            checksums[iv][tune_idx] = kern->getChecksumAverage(vid, tune_idx);
+            checksums_abs_diff[iv][tune_idx] = kern->getChecksumMaxDifference(vid, tune_idx);
           }
         }
       }

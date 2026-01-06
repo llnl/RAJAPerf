@@ -63,7 +63,7 @@ void MAT_MAT_SHARED::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) 
 }
 
 void MAT_MAT_SHARED::updateChecksum(VariantID vid, size_t tune_idx) {
-  checksum[vid][tune_idx] += calcChecksum(m_C, m_N*m_N, vid);
+  addToChecksum(m_C, m_N*m_N, vid);
 }
 
 void MAT_MAT_SHARED::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {

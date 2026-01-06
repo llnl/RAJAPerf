@@ -174,7 +174,9 @@ void KernelBase::addVariantTuning(VariantID vid, std::string name,
 
   variant_tuning_names[vid].emplace_back(std::move(name));
   variant_tuning_methods[vid].emplace_back(method);
-  checksum[vid].emplace_back(0.0);
+  checksum_min[vid].emplace_back(std::numeric_limits<Checksum_type>::max());
+  checksum_max[vid].emplace_back(-std::numeric_limits<Checksum_type>::max());
+  checksum_sum[vid].emplace_back(0.0);
   num_exec[vid].emplace_back(0);
   min_time[vid].emplace_back(std::numeric_limits<double>::max());
   max_time[vid].emplace_back(-std::numeric_limits<double>::max());
@@ -330,11 +332,13 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
 
   this->runKernel(vid, tune_idx);
 
-  Checksum_type old_checksum = checksum[vid][tune_idx];
-  checksum[vid][tune_idx] = 0.0;
+  checksum.reset();
   this->updateChecksum(vid, tune_idx);
-  checksum[vid][tune_idx] *= checksum_scale_factor;
-  checksum[vid][tune_idx] += old_checksum;
+  Checksum_type new_checksum = getLastChecksum();
+
+  checksum_min[vid].at(tune_idx) = std::min(new_checksum, checksum_min[vid].at(tune_idx));
+  checksum_max[vid].at(tune_idx) = std::max(new_checksum, checksum_max[vid].at(tune_idx));
+  checksum_sum[vid].at(tune_idx) += new_checksum;
 
   if (checksum_reference_variant == NumVariants) {
     // use first run variant tuning as checksum reference
@@ -443,12 +447,28 @@ void KernelBase::print(std::ostream& os) const
       os << "\t\t\t\t\t" << tot_time[j][t] << std::endl;
     }
   }
-  os << "\t\t\t checksum: " << std::endl;
+  os << "\t\t\t checksum_min: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
                      << " :" << std::endl;
-    for (size_t t = 0; t < checksum[j].size(); ++t) {
-      os << "\t\t\t\t\t" << checksum[j][t] << std::endl;
+    for (size_t t = 0; t < checksum_min[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_min[j][t] << std::endl;
+    }
+  }
+  os << "\t\t\t checksum_max: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < checksum_max[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_max[j][t] << std::endl;
+    }
+  }
+  os << "\t\t\t checksum_sum: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < checksum_sum[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_sum[j][t].get() << std::endl;
     }
   }
   os << std::endl;

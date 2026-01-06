@@ -75,7 +75,7 @@ void POLYBENCH_GEMM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void POLYBENCH_GEMM::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_C, m_ni * m_nj, vid);
+  addToChecksum(m_C, m_ni * m_nj, vid);
 }
 
 void POLYBENCH_GEMM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
