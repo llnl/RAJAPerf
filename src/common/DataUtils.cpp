@@ -14,6 +14,7 @@
 
 #include "KernelBase.hpp"
 
+#include "RAJA/util/reduce.hpp"
 #include "RAJA/internal/MemUtils_CPU.hpp"
 
 #include <cstdlib>
@@ -577,22 +578,12 @@ void initData(Real_type& d)
 template < typename Data_getter >
 Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 {
-  Checksum_type tchk = 0.0;
-  Checksum_type ckahan = 0.0;
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
   for (Size_type j = 0; j < len; ++j) {
-    Checksum_type x = (std::abs(std::sin(j+1.0))+0.5) * data(j);
-    Checksum_type y = x - ckahan;
-    volatile Checksum_type t = tchk + y;
-    volatile Checksum_type z = t - tchk;
-    ckahan = z - y;
-    tchk = t;
-#if 0 // RDH DEBUG
-    if ( (j % 10000000) == 0 ) {
-      getCout() << "j : tchk = " << std::setprecision(std::numeric_limits<double>::max_digits10) << j << " : " << tchk << std::endl;
-    }
-#endif
+    chk += (std::abs(std::sin(j+1.0))+0.5) * data(j);
   }
-  return tchk;
+  return chk.get();
 }
 
 Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
