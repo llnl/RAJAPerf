@@ -526,8 +526,9 @@ void Executor::reportRunSummary(ostream& str) const
 
     str << endl;
 
-    constexpr bool to_file = false;
-    writeKernelInfoSummary(str, kernels, to_file);
+    constexpr bool to_file = true;
+    constexpr bool include_data = true;
+    writeKernelInfoSummary(str, kernels, !to_file, !include_data);
 
   }
 
@@ -537,7 +538,8 @@ void Executor::reportRunSummary(ostream& str) const
 
 void Executor::writeKernelInfoSummary(ostream& str,
                                       vector<KernelBase*> const& kernels,
-                                      bool to_file) const
+                                      bool to_file,
+                                      bool include_data) const
 {
   if ( to_file ) {
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -549,10 +551,14 @@ void Executor::writeKernelInfoSummary(ostream& str,
 #endif
   }
 
+  size_t prec = 6;
+
 //
 // Set up column headers and column widths for kernel summary output.
 //
-  size_t     kercol_width = 0;
+  size_t     kernel_width = 0;
+  size_t     variant_width = 0;
+  size_t     tuning_width = 0;
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
@@ -565,11 +571,24 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type bytesAtomicModifyWrittenrep_width = 0;
   size_t     checksumConsistency_width = 0;
   size_t     operationalComplexity_width = 0;
+  size_t     meanTime_width = include_data ? prec : 0;
+  size_t     minTime_width = include_data ? prec : 0;
+  size_t     maxTime_width = include_data ? prec : 0;
 
   size_t     dash_width = 0;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
-    kercol_width = max(kercol_width, kernels[ik]->getName().size());
+    kernel_width = max(kernel_width, kernels[ik]->getName().size());
+    if (include_data) {
+      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+        size_t iv_width = getVariantName(variant_ids[iv]).size();
+        for (std::string const& tuning_name :
+             kernels[ik]->getVariantTuningNames(variant_ids[iv])) {
+          variant_width = max(variant_width, iv_width);
+          tuning_width = max(tuning_width, tuning_name.size());
+        }
+      }
+    }
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
@@ -586,10 +605,24 @@ void Executor::writeKernelInfoSummary(ostream& str,
 
   const string sepchr(" , ");
 
-  string kern_head("Kernels");
-  kercol_width = max( kern_head.size(),
-                      kercol_width ) + 2;
-  dash_width += kercol_width;
+  string kernel_head("Kernel");
+  kernel_width = max( kernel_head.size(),
+                      kernel_width ) + 2;
+  dash_width += kernel_width;
+
+  string variant_head("Variant");
+  if (include_data) {
+    variant_width = max( variant_head.size(),
+                        variant_width ) + 2;
+    dash_width += variant_width + static_cast<Index_type>(sepchr.size());
+  }
+
+  string tuning_head("Tuning");
+  if (include_data) {
+    tuning_width = max( tuning_head.size(),
+                        tuning_width ) + 2;
+    dash_width += tuning_width + static_cast<Index_type>(sepchr.size());
+  }
 
   double psize = log10( static_cast<double>(psize_width) );
   string psize_head("Problem size");
@@ -667,8 +700,33 @@ void Executor::writeKernelInfoSummary(ostream& str,
                                      operationalComplexity_width ) + 2;
   dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
 
-  str           <<left << setw(kercol_width) << kern_head
-      << sepchr <<right<< setw(psize_width) << psize_head
+  string meanTime_head("Mean time (sec.)");
+  if (include_data) {
+    meanTime_width = max( meanTime_head.size(),
+                          meanTime_width ) + 3;
+    dash_width += meanTime_width + static_cast<Index_type>(sepchr.size());
+  }
+
+  string minTime_head("Min time (sec.)");
+  if (include_data) {
+    minTime_width = max( minTime_head.size(),
+                         minTime_width ) + 3;
+    dash_width += minTime_width + static_cast<Index_type>(sepchr.size());
+  }
+
+  string maxTime_head("Max time (sec.)");
+  if (include_data) {
+    maxTime_width = max( maxTime_head.size(),
+                         maxTime_width ) + 3;
+    dash_width += maxTime_width + static_cast<Index_type>(sepchr.size());
+  }
+
+  str           <<left << setw(kernel_width) << kernel_head;
+  if (include_data) {
+    str << sepchr <<left<< setw(variant_width) << variant_head
+        << sepchr <<left<< setw(tuning_width) << tuning_head;
+  }
+  str << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
@@ -680,8 +738,13 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
       << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
-      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
-      << endl;
+      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head;
+  if (include_data) {
+    str << sepchr <<right<< setw(meanTime_width) << meanTime_head
+        << sepchr <<right<< setw(minTime_width) << minTime_head
+        << sepchr <<right<< setw(maxTime_width) << maxTime_head;
+  }
+  str << endl;
 
   if ( !to_file ) {
     for (size_t i = 0; i < dash_width; ++i) {
@@ -690,10 +753,15 @@ void Executor::writeKernelInfoSummary(ostream& str,
     str << endl;
   }
 
-  for (size_t ik = 0; ik < kernels.size(); ++ik) {
-    KernelBase* kern = kernels[ik];
-    str           <<left << setw(kercol_width) << kern->getName()
-        << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
+  auto output_for_kvt = [&](KernelBase* kern, VariantID vid, size_t tune_idx) {
+    str           <<left << setw(kernel_width) << kern->getName();
+    if (include_data) {
+        string const& variant_name = getVariantName(vid);
+        string const& tuning_name = kern->getVariantTuningName(vid, tune_idx);
+      str << sepchr <<left<< setw(variant_width) << variant_name
+          << sepchr <<left<< setw(tuning_width) << tuning_name;
+    }
+    str << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
@@ -705,8 +773,30 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
         << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
-        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
-        << endl;
+        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")");
+    if (include_data) {
+      str << sepchr <<right<< setw(meanTime_width) << setprecision(prec) << std::fixed
+          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Average, kern, vid, tune_idx)
+          << sepchr <<right<< setw(minTime_width) << setprecision(prec) << std::fixed
+          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Minimum, kern, vid, tune_idx)
+          << sepchr <<right<< setw(maxTime_width) << setprecision(prec) << std::fixed
+          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Maximum, kern, vid, tune_idx);
+    }
+    str << endl;
+  };
+
+  for (size_t ik = 0; ik < kernels.size(); ++ik) {
+    KernelBase* kern = kernels[ik];
+    if (include_data) {
+      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+        VariantID vid = variant_ids[iv];
+        for (size_t tune_idx = 0; tune_idx < kern->getNumVariantTunings(vid); ++tune_idx) {
+          output_for_kvt(kern, vid, tune_idx);
+        }
+      }
+    } else {
+      output_for_kvt(kern, NumVariants, 0);
+    }
   }
 
   str.flush();
@@ -738,13 +828,6 @@ void Executor::runSuite()
 
   } // iterate over passes through suite
 
-}
-
-template < typename Kernel >
-KernelBase* Executor::makeKernel()
-{
-  Kernel* kernel = new Kernel(run_params);
-  return kernel;
 }
 
 void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
@@ -956,7 +1039,6 @@ void Executor::outputRunData()
   //
   // Generate output file prefix (including directory path).
   //
-  string out_fprefix;
   string outdir = recursiveMkdir(run_params.getOutputDirName());
   if ( !outdir.empty() ) {
 #if defined(_WIN32)
@@ -965,7 +1047,7 @@ void Executor::outputRunData()
     chdir(outdir.c_str());
 #endif
   }
-  out_fprefix = "./" + run_params.getOutputFilePrefix();
+  string out_fprefix = "./" + run_params.getOutputFilePrefix();
 
 
   vector<FOMGroup> fom_groups;
@@ -975,7 +1057,15 @@ void Executor::outputRunData()
     unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernels.csv");
     if ( *file ) {
       constexpr bool to_file = true;
-      writeKernelInfoSummary(*file, kernels, to_file);
+      constexpr bool include_data = true;
+      writeKernelInfoSummary(*file, kernels, to_file, !include_data);
+    }
+
+    file = openOutputFile(out_fprefix + "-kernel-data.csv");
+    if ( *file ) {
+      constexpr bool to_file = true;
+      constexpr bool include_data = true;
+      writeKernelInfoSummary(*file, kernels, to_file, include_data);
     }
 
     file = openOutputFile(out_fprefix + "-checksum.txt");
@@ -1011,7 +1101,14 @@ void Executor::outputRunData()
 
     if ( *file ) {
       constexpr bool to_file = true;
-      writeKernelInfoSummary(*file, mykernel, to_file);
+      constexpr bool include_data = true;
+      writeKernelInfoSummary(*file, mykernel, to_file, !include_data);
+    }
+
+    if ( *file ) {
+      constexpr bool to_file = true;
+      constexpr bool include_data = true;
+      writeKernelInfoSummary(*file, mykernel, to_file, include_data);
     }
 
     writeSeparator(*file);
@@ -1758,7 +1855,7 @@ long double Executor::getReportDataEntry(CSVRepMode mode,
                                          RunParams::CombinerOpt combiner,
                                          KernelBase* kern,
                                          VariantID vid,
-                                         size_t tune_idx)
+                                         size_t tune_idx) const
 {
   long double retval = 0.0;
   switch ( mode ) {
