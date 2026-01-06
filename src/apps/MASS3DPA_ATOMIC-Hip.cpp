@@ -24,13 +24,12 @@ namespace apps {
 
 template < size_t block_size >
   __launch_bounds__(block_size)
-__global__ void Mass3DPA_Atomic(const Real_ptr B, const Real_ptr Bt,
+__global__ void Mass3DPA_Atomic(const Real_ptr B,
                                 const Real_ptr D, const Real_ptr X, const Index_ptr ElemToDoF, Real_ptr Y) {
 
   const Index_type e = blockIdx.x;
 
   MASS3DPA_ATOMIC_0_GPU;
-
 
   GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
     GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
@@ -124,7 +123,7 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
       RPlaunchHipKernel( (Mass3DPA_Atomic<block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
-                         B, Bt, D, X, ElemToDoF, Y );
+                         B, D, X, ElemToDoF, Y );
 
     }
     stopTimer();

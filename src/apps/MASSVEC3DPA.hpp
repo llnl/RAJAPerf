@@ -273,6 +273,9 @@ public:
   template <size_t work_group_size>
   void runSyclVariantImpl(VariantID vid);
 
+  template<typename inner_x, typename inner_y, typename inner_z, typename RESOURCE>
+  void runRAJAImpl(RESOURCE &res);
+
 private:
   static const size_t default_gpu_block_size = mvpa::Q1D * mvpa::Q1D * mvpa::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
