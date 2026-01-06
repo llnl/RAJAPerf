@@ -28,8 +28,9 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() );
+  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // px(0)
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(17 * getActualProblemSize());
 

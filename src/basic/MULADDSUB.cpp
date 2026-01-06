@@ -28,8 +28,9 @@ MULADDSUB::MULADDSUB(const RunParams& params)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 3*sizeof(Real_type) * getActualProblemSize()  );
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // in1, in2
+  setBytesWrittenPerRep( 3*sizeof(Real_type) * getActualProblemSize()  ); // out1, out2, out3
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * getActualProblemSize());
 

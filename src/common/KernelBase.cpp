@@ -56,6 +56,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   kernels_per_rep = -1;
   bytes_read_per_rep = -1;
   bytes_written_per_rep = -1;
+  bytes_modify_written_per_rep = -1;
   bytes_atomic_modify_written_per_rep = -1;
   FLOPs_per_rep = -1;
 
@@ -87,6 +88,10 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
+  Bytes_Touched_Rep_attr = cali_create_attribute("BytesTouched/Rep", CALI_TYPE_INT,
+                                                 CALI_ATTR_ASVALUE |
+                                                 CALI_ATTR_AGGREGATABLE |
+                                                 CALI_ATTR_SKIP_EVENTS);
   Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_INT,
                                               CALI_ATTR_ASVALUE |
                                               CALI_ATTR_AGGREGATABLE |
@@ -95,6 +100,10 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                                  CALI_ATTR_ASVALUE |
                                                  CALI_ATTR_AGGREGATABLE |
                                                  CALI_ATTR_SKIP_EVENTS);
+  Bytes_ModifyWritten_Rep_attr = cali_create_attribute("BytesModifyWritten/Rep", CALI_TYPE_INT,
+                                                       CALI_ATTR_ASVALUE |
+                                                       CALI_ATTR_AGGREGATABLE |
+                                                       CALI_ATTR_SKIP_EVENTS);
   Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_INT,
                                                              CALI_ATTR_ASVALUE |
                                                              CALI_ATTR_AGGREGATABLE |
@@ -384,6 +393,7 @@ void KernelBase::print(std::ostream& os) const
   os << "\t\t\t kernels_per_rep = " << kernels_per_rep << std::endl;
   os << "\t\t\t bytes_read_per_rep = " << bytes_read_per_rep << std::endl;
   os << "\t\t\t bytes_written_per_rep = " << bytes_written_per_rep << std::endl;
+  os << "\t\t\t bytes_modify_written_per_rep = " << bytes_modify_written_per_rep << std::endl;
   os << "\t\t\t bytes_atomic_modify_written_per_rep = " << bytes_atomic_modify_written_per_rep << std::endl;
   os << "\t\t\t FLOPs_per_rep = " << FLOPs_per_rep << std::endl;
   os << "\t\t\t num_exec: " << std::endl;
@@ -443,8 +453,10 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Iters_Rep_attr, getItsPerRep());
     cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
     cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
     cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
     cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_ModifyWritten_Rep_attr, getBytesModifyWrittenPerRep());
     cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
     cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
     cali_set_helper(BlockSize_attr, getBlockSize());
@@ -495,8 +507,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(max#Kernels/Rep)", "as": "Kernels/Rep" },
           { "expr": "any(max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(max#BlockSize)", "as": "BlockSize" },
@@ -522,8 +536,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(any#max#Kernels/Rep)", "as": "Kernels/Rep" },
           { "expr": "any(any#max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(any#max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(any#max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(any#max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(any#max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(any#max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(any#max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(any#max#BlockSize)", "as": "BlockSize" },

@@ -47,19 +47,20 @@ POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
 
   setItsPerRep( m_ni*m_nj + m_nj*m_nl + m_ni*m_nl );
   setKernelsPerRep(3);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk +
-                      1*sizeof(Real_type ) * m_nj * m_nk +
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk + // A
+                      1*sizeof(Real_type ) * m_nj * m_nk + // B
 
-                      1*sizeof(Real_type ) * m_nj * m_nm +
-                      1*sizeof(Real_type ) * m_nl * m_nm +
+                      1*sizeof(Real_type ) * m_nj * m_nm + // C
+                      1*sizeof(Real_type ) * m_nl * m_nm + // D
 
-                      1*sizeof(Real_type ) * m_ni * m_nj +
-                      1*sizeof(Real_type ) * m_nj * m_nl );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj +
+                      1*sizeof(Real_type ) * m_ni * m_nj + // E
+                      1*sizeof(Real_type ) * m_nj * m_nl ); // F
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj + // E
 
-                         1*sizeof(Real_type ) * m_nj * m_nl +
+                         1*sizeof(Real_type ) * m_nj * m_nl + // F
 
-                         1*sizeof(Real_type ) * m_ni * m_nl );
+                         1*sizeof(Real_type ) * m_ni * m_nl ); // G
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_ni*m_nj*m_nk +
                  2 * m_nj*m_nl*m_nm +

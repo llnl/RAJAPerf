@@ -80,20 +80,49 @@ Information reported in the file for each kernel is:
   * **Kernels/rep** -- total number of loop structures run (or GPU kernels 
     launched) in each kernel repetition.
   * **Bytes/rep** -- Total number of bytes read from and written to memory for 
-    each repetition of kernel.
+    each repetition of kernel. This is a best case scenario of the total traffic
+    to and from memory assuming perfect cache reuse and ignoring partial usage
+    of data in some memory transactions.
   * **FLOPs/rep** -- Total number of floating point operations executed for 
     each repetition of kernel. Currently, we count arithmetic operations 
     (+, -, *, /) and functions, such as exp, sin, etc. as one FLOP. We do not 
     currently count operations like abs and comparisons (<, >, etc.) in the 
     FLOP count. So these numbers are rough estimates. For actual FLOP counts, 
     a performance analysis tool should be used.
+  * **BytesTouched/rep** -- Total number of bytes accessed in memory for each
+    repetition of kernel. This is a best case scenario for the amount of cache
+    needed to fit all of the data used by the kernel ignoring partial usage of
+    some cache lines.
   * **BytesRead/rep** -- Total number of bytes read from memory for 
     each repetition of kernel.
   * **BytesWritten/rep** -- Total number of bytes written to memory for 
     each repetition of kernel.
-  * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified by 
-    atomic operations in a kernel. If a kernel contains no atomic operations, 
+  * **BytesModifyWritten/rep** -- Total number of bytes modified in memory for
+    each repetition of kernel. The intersection of bytes in both ``BytesRead/rep``
+    and ``BytesWritten/rep``.
+  * **BytesAtomicModifyWritten/rep** -- Total number of bytes modified in memory
+    by atomic operations in a kernel. If a kernel contains no atomic operations,
     the value of zero is reported.
+  * **ChecksumConsistency** -- The consistency of the checksums of the kernel.
+    Kernels that always get the same checksum are ``Consistent``, kernels that
+    can get different checksums for each variant tuning are
+    ``ConsistentPerVariantTuning``, and kernels with checksums that can vary from
+    run to run are ``Inconsistent``.
+  * **OperationalComplexity** -- The operational complexity of the kernel, where
+    N is the *problem size* of the kernel.
+
+  ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
+           like DRAM or HBM under idealized conditions. They assume caching is
+           perfect so even if the same byte is read multiple times then it
+           assumes that the byte is only read from memory once.
+
+  ..note:: The Bytes*/rep and FLOPs/rep counts are estimates for kernels
+           involving randomness or difficult to count algorithms.
+
+  ..note:: The Bytes*/rep and FLOPs/rep counts are intended to help give a
+           reasonable approximation of the achieved bandwidth and flop rate.
+           The kernels that perform significantly outside of expectations are
+           good candidates for more detailed performance studies.
 
 .. _output_probsize-label:
 
