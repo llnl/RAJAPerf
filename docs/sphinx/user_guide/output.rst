@@ -110,7 +110,8 @@ Information reported in the file for each kernel is:
     run to run are ``Inconsistent``.
   * **OperationalComplexity** -- The operational complexity of the kernel, where
     N is the *problem size* of the kernel.
-  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly nested loop.
+  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
+    nested loop. This should only count parallelized dimensions.
   * **ProblemDimensionality** -- Dimensionality of the problem the kernel is solving,
     regardless of implementation dimensionality. For example, a 3D kernel may layout
     data in 1D, but its problem dimensionality will still be 3.
