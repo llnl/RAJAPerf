@@ -89,40 +89,40 @@
 
 // Number of Dofs/Qpts in 1D
 namespace mea{
-constexpr RAJA::Index_type MEA_D1D = 4;
-constexpr RAJA::Index_type MEA_Q1D = 5;
+constexpr RAJA::Index_type D1D = 4;
+constexpr RAJA::Index_type Q1D = 5;
 }
-#define MEA_B(x, y) B[x + mea::MEA_Q1D * y]
+#define MEA_B(x, y) B[x + mea::Q1D * y]
 #define MEA_M(i1, i2, i3, j1, j2, j3, e)                                   \
-  M[i1 + mea::MEA_D1D * (i2 + mea::MEA_D1D * (i3 + mea::MEA_D1D * (j1 + mea::MEA_D1D * (j2 + mea::MEA_D1D * (j3 + mea::MEA_D1D * e)))))]
+  M[i1 + mea::D1D * (i2 + mea::D1D * (i3 + mea::D1D * (j1 + mea::D1D * (j2 + mea::D1D * (j3 + mea::D1D * e)))))]
 
 #define MEA_D(qx, qy, qz, e)                                           \
-  D[qx + mea::MEA_Q1D * qy + mea::MEA_Q1D * mea::MEA_Q1D * qz +                        \
-    mea::MEA_Q1D * mea::MEA_Q1D * mea::MEA_Q1D * e]
+  D[qx + mea::Q1D * qy + mea::Q1D * mea::Q1D * qz +                        \
+    mea::Q1D * mea::Q1D * mea::Q1D * e]
 
-#define MASS3DEA_0 RAJA_TEAM_SHARED Real_type s_B[mea::MEA_Q1D][mea::MEA_D1D];
+#define MASS3DEA_0 RAJA_TEAM_SHARED Real_type s_B[mea::Q1D][mea::D1D];
 
-#define MASS3DEA_0_CPU Real_type s_B[mea::MEA_Q1D][mea::MEA_D1D];
+#define MASS3DEA_0_CPU Real_type s_B[mea::Q1D][mea::D1D];
 
 #define MASS3DEA_1 s_B[q][d] = MEA_B(q, d);
 
 #define MASS3DEA_2                                                      \
-  RAJA_TEAM_SHARED Real_type s_D[mea::MEA_Q1D][mea::MEA_Q1D][mea::MEA_Q1D];
+  RAJA_TEAM_SHARED Real_type s_D[mea::Q1D][mea::Q1D][mea::Q1D];
 
 #define MASS3DEA_2_CPU                                                  \
-  Real_type s_D[mea::MEA_Q1D][mea::MEA_Q1D][mea::MEA_Q1D];
+  Real_type s_D[mea::Q1D][mea::Q1D][mea::Q1D];
 
 #define MASS3DEA_3 s_D[k1][k2][k3] = MEA_D(k1, k2, k3, e);
 
 #define MASS3DEA_4                                                      \
-  for (Index_type j1 = 0; j1 < mea::MEA_D1D; ++j1) {                                \
-    for (Index_type j2 = 0; j2 < mea::MEA_D1D; ++j2) {                              \
-      for (Index_type j3 = 0; j3 < mea::MEA_D1D; ++j3) {                            \
+  for (Index_type j1 = 0; j1 < mea::D1D; ++j1) {                                \
+    for (Index_type j2 = 0; j2 < mea::D1D; ++j2) {                              \
+      for (Index_type j3 = 0; j3 < mea::D1D; ++j3) {                            \
                                                                         \
         Real_type val = 0.0;                                               \
-        for (Index_type k1 = 0; k1 < mea::MEA_Q1D; ++k1) {                          \
-          for (Index_type k2 = 0; k2 < mea::MEA_Q1D; ++k2) {                        \
-            for (Index_type k3 = 0; k3 < mea::MEA_Q1D; ++k3) {                      \
+        for (Index_type k1 = 0; k1 < mea::Q1D; ++k1) {                          \
+          for (Index_type k2 = 0; k2 < mea::Q1D; ++k2) {                        \
+            for (Index_type k3 = 0; k3 < mea::Q1D; ++k3) {                      \
                                                                         \
               val += s_B[k1][i1] * s_B[k1][j1] * s_B[k2][i2]            \
                 * s_B[k2][j2] *                                         \
@@ -167,7 +167,7 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = mea::MEA_D1D * mea::MEA_D1D * mea::MEA_D1D;
+  static const size_t default_gpu_block_size = mea::D1D * mea::D1D * mea::D1D;
   using gpu_block_sizes_type =
       integer::list_type<default_gpu_block_size>;
 

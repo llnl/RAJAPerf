@@ -34,8 +34,8 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
 
   case Base_SYCL: {
 
-    const ::sycl::range<3> workGroupSize(mea::MEA_Q1D, mea::MEA_Q1D, mea::MEA_Q1D);
-    const ::sycl::range<3> gridSize(mea::MEA_Q1D,mea::MEA_Q1D,mea::MEA_Q1D*NE);
+    const ::sycl::range<3> workGroupSize(mea::Q1D, mea::Q1D, mea::Q1D);
+    const ::sycl::range<3> gridSize(mea::Q1D,mea::Q1D,mea::Q1D*NE);
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -44,8 +44,8 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
       constexpr size_t shmem = 0;
       qu->submit([&](::sycl::handler& h) {
 
-      ::sycl::local_accessor<Real_type, 2> s_B(::sycl::range<2>(mea::MEA_Q1D,mea::MEA_D1D),h);
-      ::sycl::local_accessor<Real_type, 3> s_D(::sycl::range<3>(mea::MEA_Q1D,mea::MEA_Q1D,mea::MEA_Q1D),h);
+      ::sycl::local_accessor<Real_type, 2> s_B(::sycl::range<2>(mea::Q1D,mea::D1D),h);
+      ::sycl::local_accessor<Real_type, 3> s_D(::sycl::range<3>(mea::Q1D,mea::Q1D,mea::Q1D),h);
 
       h.parallel_for
         (::sycl::nd_range<3>(gridSize, workGroupSize),
@@ -54,8 +54,8 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
            const Index_type e = itm.get_group(2);
 
            SYCL_FOREACH_THREAD(iz, 0, 1) {
-             SYCL_FOREACH_THREAD(d, 2, mea::MEA_D1D) {
-               SYCL_FOREACH_THREAD(q, 1, mea::MEA_Q1D) {
+             SYCL_FOREACH_THREAD(d, 2, mea::D1D) {
+               SYCL_FOREACH_THREAD(q, 1, mea::Q1D) {
                  MASS3DEA_1
                }
              }
@@ -64,9 +64,9 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
            //not needed as we dynamicaly allocate shared memory in sycl
            //MASS3DEA_2
 
-           SYCL_FOREACH_THREAD(k1, 2, mea::MEA_Q1D) {
-             SYCL_FOREACH_THREAD(k2, 1, mea::MEA_Q1D) {
-               SYCL_FOREACH_THREAD(k3, 0, mea::MEA_Q1D) {
+           SYCL_FOREACH_THREAD(k1, 2, mea::Q1D) {
+             SYCL_FOREACH_THREAD(k2, 1, mea::Q1D) {
+               SYCL_FOREACH_THREAD(k3, 0, mea::Q1D) {
                  MASS3DEA_3
                }
              }
@@ -74,9 +74,9 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
 
            itm.barrier(::sycl::access::fence_space::local_space);
 
-           SYCL_FOREACH_THREAD(i1, 2, mea::MEA_D1D) {
-             SYCL_FOREACH_THREAD(i2, 1, mea::MEA_D1D) {
-               SYCL_FOREACH_THREAD(i3, 0, mea::MEA_D1D) {
+           SYCL_FOREACH_THREAD(i1, 2, mea::D1D) {
+             SYCL_FOREACH_THREAD(i2, 1, mea::D1D) {
+               SYCL_FOREACH_THREAD(i3, 0, mea::D1D) {
                  MASS3DEA_4
                }
              }
@@ -105,7 +105,7 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
 
     using inner_z = RAJA::LoopPolicy<RAJA::sycl_local_0_loop>;
 
-    constexpr size_t shmem = (mea::MEA_Q1D*mea::MEA_D1D + mea::MEA_Q1D*mea::MEA_Q1D*mea::MEA_Q1D)*sizeof(Real_type);
+    constexpr size_t shmem = (mea::Q1D*mea::D1D + mea::Q1D*mea::Q1D*mea::Q1D)*sizeof(Real_type);
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -113,23 +113,23 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),
-                           RAJA::Threads(mea::MEA_D1D, mea::MEA_D1D, mea::MEA_D1D), shmem),
+                           RAJA::Threads(mea::D1D, mea::D1D, mea::D1D), shmem),
         [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
             [&](Index_type e) {
 
-              Real_ptr s_B_ptr = ctx.getSharedMemory<Real_type>(mea::MEA_Q1D*mea::MEA_D1D);
-              Real_ptr s_D_ptr = ctx.getSharedMemory<Real_type>(mea::MEA_Q1D*mea::MEA_Q1D*mea::MEA_Q1D);
+              Real_ptr s_B_ptr = ctx.getSharedMemory<Real_type>(mea::Q1D*mea::D1D);
+              Real_ptr s_D_ptr = ctx.getSharedMemory<Real_type>(mea::Q1D*mea::Q1D*mea::Q1D);
 
-              Real_type (*s_B)[mea::MEA_D1D] = (Real_type (*)[mea::MEA_D1D]) s_B_ptr;
-              Real_type (*s_D)[mea::MEA_Q1D][mea::MEA_Q1D] = (Real_type (*)[mea::MEA_Q1D][mea::MEA_Q1D]) s_B_ptr;
+              Real_type (*s_B)[mea::D1D] = (Real_type (*)[mea::D1D]) s_B_ptr;
+              Real_type (*s_D)[mea::Q1D][mea::Q1D] = (Real_type (*)[mea::Q1D][mea::Q1D]) s_B_ptr;
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                 [&](Index_type ) {
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
                     [&](Index_type d) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                         [&](Index_type q) {
                           MASS3DEA_1
                         }
@@ -142,11 +142,11 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
               //not needed as we dynamicaly allocate shared memory in sycl
               //MASS3DEA_2
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                 [&](Index_type k1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                     [&](Index_type k2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                         [&](Index_type k3) {
                           MASS3DEA_3
                         }
@@ -158,11 +158,11 @@ void MASS3DEA::runSyclVariantImpl(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
                 [&](Index_type i1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
                     [&](Index_type i2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
                         [&](Index_type i3) {
                           MASS3DEA_4
                         }

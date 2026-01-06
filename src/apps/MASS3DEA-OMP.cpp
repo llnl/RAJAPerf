@@ -39,25 +39,25 @@ void MASS3DEA::runOpenMPVariant(VariantID vid) {
 
         MASS3DEA_0_CPU
 
-        CPU_FOREACH(d, x, mea::MEA_D1D) {
-          CPU_FOREACH(q, y, mea::MEA_Q1D) {
+        CPU_FOREACH(d, x, mea::D1D) {
+          CPU_FOREACH(q, y, mea::Q1D) {
             MASS3DEA_1
           }
         }
 
         MASS3DEA_2_CPU
 
-        CPU_FOREACH(k1, x, mea::MEA_Q1D) {
-          CPU_FOREACH(k2, y, mea::MEA_Q1D) {
-            CPU_FOREACH(k3, z, mea::MEA_Q1D) {
+        CPU_FOREACH(k1, x, mea::Q1D) {
+          CPU_FOREACH(k2, y, mea::Q1D) {
+            CPU_FOREACH(k3, z, mea::Q1D) {
               MASS3DEA_3
             }
           }
         }
 
-        CPU_FOREACH(i1, x, mea::MEA_D1D) {
-          CPU_FOREACH(i2, y, mea::MEA_D1D) {
-            CPU_FOREACH(i3, z, mea::MEA_D1D) {
+        CPU_FOREACH(i1, x, mea::D1D) {
+          CPU_FOREACH(i2, y, mea::D1D) {
+            CPU_FOREACH(i3, z, mea::D1D) {
               MASS3DEA_4
             }
           }
@@ -101,9 +101,9 @@ void MASS3DEA::runOpenMPVariant(VariantID vid) {
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                 [&](Index_type ) {
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
                     [&](Index_type d) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                         [&](Index_type q) {
                           MASS3DEA_1
                         }
@@ -115,11 +115,11 @@ void MASS3DEA::runOpenMPVariant(VariantID vid) {
 
               MASS3DEA_2
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                 [&](Index_type k1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                     [&](Index_type k2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::MEA_Q1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
                         [&](Index_type k3) {
                           MASS3DEA_3
                         }
@@ -131,11 +131,11 @@ void MASS3DEA::runOpenMPVariant(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
                 [&](Index_type i1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
                     [&](Index_type i2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::MEA_D1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
                         [&](Index_type i3) {
                           MASS3DEA_4
                         }

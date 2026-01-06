@@ -40,38 +40,38 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
         MASSVEC3DPA_0_CPU;
 
-        SHARED_LOOP_2D(q, d, MVPA_Q1D, MVPA_D1D) {
+        SHARED_LOOP_2D(q, d, mvpa::Q1D, mvpa::D1D) {
           MASSVEC3DPA_1;
         }
 
         for (Index_type c = 0; c < 3; ++c) {
-          SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
 
             MASSVEC3DPA_2;
           }
 
-          SHARED_LOOP_3D(qx, dy, dz, MVPA_Q1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D) {
 
             MASSVEC3DPA_3;
           }
 
-          SHARED_LOOP_3D(qx, qy, dz, MVPA_Q1D, MVPA_Q1D, MVPA_D1D) {
+          SHARED_LOOP_3D(qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D) {
             MASSVEC3DPA_4;
           }
 
-          SHARED_LOOP_3D(qx, qy, qz, MVPA_Q1D, MVPA_Q1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D) {
             MASSVEC3DPA_5;
           }
 
-          SHARED_LOOP_3D(dx, qy, qz, MVPA_D1D, MVPA_Q1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D) {
             MASSVEC3DPA_6;
           }
 
-          SHARED_LOOP_3D(dx, dy, qz, MVPA_D1D, MVPA_D1D, MVPA_Q1D) {
+          SHARED_LOOP_3D(dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D) {
             MASSVEC3DPA_7;
           }
 
-          SHARED_LOOP_3D(dx, dy, dz, MVPA_D1D, MVPA_D1D, MVPA_D1D) {
+          SHARED_LOOP_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
             MASSVEC3DPA_8;
           }
 
@@ -116,9 +116,9 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
             //Masking out of the z-dimension thread is done with GPU versions
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
               [&](Index_type) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                   [&](Index_type d) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                       [&](Index_type q) {
                         MASSVEC3DPA_1;
                       } // lambda (q)
@@ -130,11 +130,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             for (Index_type c = 0; c < 3; ++c) {
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                       [&](Index_type dx) {
                         MASSVEC3DPA_2;
                       } // lambda (dx)
@@ -146,11 +146,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                       [&](Index_type qx) {
                         MASSVEC3DPA_3;
                       } // lambda (qx)
@@ -162,11 +162,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                       [&](Index_type qx) {
                         MASSVEC3DPA_4;
                       } // lambda (qx)
@@ -178,11 +178,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                       [&](Index_type qx) {
                         MASSVEC3DPA_5;
                       } // lambda (qx)
@@ -194,11 +194,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                       [&](Index_type dx) {
                         MASSVEC3DPA_6;
                       } // lambda (dx)
@@ -210,11 +210,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                       [&](Index_type dx) {
                         MASSVEC3DPA_7;
                       } // lambda (dx)
@@ -226,11 +226,11 @@ void MASSVEC3DPA::runOpenMPVariant(VariantID vid)
 
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MVPA_D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D),
                       [&](Index_type dx) {
                       MASSVEC3DPA_8;
                       } // lambda (dx)

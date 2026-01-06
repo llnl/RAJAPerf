@@ -25,20 +25,20 @@ MASS3DEA::MASS3DEA(const RunParams& params)
 {
   m_NE_default = 8000;
 
-  setDefaultProblemSize(m_NE_default*mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D);
+  setDefaultProblemSize(m_NE_default*mea::D1D*mea::D1D*mea::D1D);
   setDefaultReps(1);
 
-  const Index_type ea_mat_entries = mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D;
+  const Index_type ea_mat_entries = mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D;
 
   m_NE = std::max((getTargetProblemSize() + (ea_mat_entries)/2) / (ea_mat_entries), Index_type(1));
 
   setActualProblemSize( m_NE*ea_mat_entries );
 
-  setItsPerRep( m_NE*mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D );
+  setItsPerRep( m_NE*mea::D1D*mea::D1D*mea::D1D );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 1*sizeof(Real_type) * mea::MEA_Q1D*mea::MEA_D1D + // B
-                      1*sizeof(Real_type) * mea::MEA_Q1D*mea::MEA_Q1D*mea::MEA_Q1D*m_NE ); // D
+  setBytesReadPerRep( 1*sizeof(Real_type) * mea::Q1D*mea::D1D + // B
+                      1*sizeof(Real_type) * mea::Q1D*mea::Q1D*mea::Q1D*m_NE ); // D
   setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
@@ -61,16 +61,16 @@ MASS3DEA::~MASS3DEA()
 void MASS3DEA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, Index_type(mea::MEA_Q1D*mea::MEA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(mea::MEA_Q1D*mea::MEA_Q1D*mea::MEA_Q1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_M, Index_type(mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*
-                                 mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, Index_type(mea::Q1D*mea::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(mea::Q1D*mea::Q1D*mea::Q1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_M, Index_type(mea::D1D*mea::D1D*mea::D1D*
+                                 mea::D1D*mea::D1D*mea::D1D*m_NE), Real_type(0.0), vid);
 }
 
 void MASS3DEA::updateChecksum(VariantID vid, size_t tune_idx)
 {
-  checksum[vid][tune_idx] += calcChecksum(m_M, mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*
-                                          mea::MEA_D1D*mea::MEA_D1D*mea::MEA_D1D*m_NE, vid);
+  checksum[vid][tune_idx] += calcChecksum(m_M, mea::D1D*mea::D1D*mea::D1D*
+                                          mea::D1D*mea::D1D*mea::D1D*m_NE, vid);
 }
 
 void MASS3DEA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
