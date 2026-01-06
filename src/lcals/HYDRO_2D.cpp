@@ -74,6 +74,7 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   setMaxLoopDimensions(2);
   setMaxArrayDimensions(2);
   setNumArrays(11);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

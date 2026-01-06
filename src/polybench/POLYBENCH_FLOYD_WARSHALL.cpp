@@ -51,7 +51,7 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(2);
   setNumArrays(2);
-
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

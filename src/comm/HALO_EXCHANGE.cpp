@@ -56,6 +56,7 @@ HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(1);
   setNumArrays(5); // vars, pack_buffers, unpack_buffers, pack_index_lists, unpack_index_lists
+  setProblemDimensionality(3);
 
   setUsesFeature(Forall);
   setUsesFeature(MPI);

@@ -68,6 +68,7 @@ ENERGY::ENERGY(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(15);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
 

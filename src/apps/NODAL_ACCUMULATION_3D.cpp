@@ -58,6 +58,7 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(2); // m_x, m_vol
+  setProblemDimensionality(3);
 
   setUsesFeature(Forall);
   setUsesFeature(Atomic);

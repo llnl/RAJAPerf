@@ -75,6 +75,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setMaxLoopDimensions(5);
   setMaxArrayDimensions(2);
   setNumArrays(15); // 6x *dat + 9x Index_ptr
+  setProblemDimensionality(3);
 
   setUsesFeature(Launch);
   //setUsesFeature(View);

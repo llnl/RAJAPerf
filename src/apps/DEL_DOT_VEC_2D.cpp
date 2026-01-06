@@ -52,6 +52,7 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(2);
   setNumArrays(5); // m_x, m_y, m_xdot, m_ydot, m_div
+  setProblemDimensionality(2);
 
   setUsesFeature(Forall);
 

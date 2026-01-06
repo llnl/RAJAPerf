@@ -42,6 +42,7 @@ EMPTY::EMPTY(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(0);
   setNumArrays(0);
+  setProblemDimensionality(0);
 
   setUsesFeature(Forall);
 

@@ -77,6 +77,9 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

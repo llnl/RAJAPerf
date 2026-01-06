@@ -56,6 +56,7 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   setMaxLoopDimensions(2); // Do not count TSTEPS as it is not a part of the kernel
   setMaxArrayDimensions(2);
   setNumArrays(2);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

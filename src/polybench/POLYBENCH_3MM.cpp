@@ -78,6 +78,7 @@ POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(2);
   setNumArrays(7);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

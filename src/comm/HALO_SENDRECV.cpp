@@ -46,6 +46,7 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(1);
   setNumArrays(7);
+  setProblemDimensionality(3);
 
   setUsesFeature(Forall);
   setUsesFeature(MPI);

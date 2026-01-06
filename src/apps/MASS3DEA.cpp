@@ -53,6 +53,7 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setMaxLoopDimensions(10);
   setMaxArrayDimensions(3); // s_D
   setNumArrays(6); // s_B, s_D, m_B, m_Bt, m_D, m_M 
+  setProblemDimensionality(3);
 
   setUsesFeature(Launch);
 

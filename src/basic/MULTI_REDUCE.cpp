@@ -49,6 +49,7 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(3);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Atomic);

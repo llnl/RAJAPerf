@@ -42,6 +42,7 @@ COPY8::COPY8(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(16);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
 

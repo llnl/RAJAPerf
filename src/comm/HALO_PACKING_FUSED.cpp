@@ -46,6 +46,7 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(1);
   setNumArrays(5); // vars, pack_buffers, unpack_buffers, pack_index_lists, unpack_index_lists
+  setProblemDimensionality(3);
 
   setUsesFeature(Workgroup);
 

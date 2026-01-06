@@ -44,6 +44,7 @@ ARRAY_OF_PTRS::ARRAY_OF_PTRS(const RunParams& params)
   setMaxLoopDimensions(2);
   setMaxArrayDimensions(2);
   setNumArrays(2);
+  setProblemDimensionality(2);
 
   setUsesFeature(Forall);
 

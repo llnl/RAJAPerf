@@ -50,6 +50,7 @@ EOS::EOS(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(4);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
 

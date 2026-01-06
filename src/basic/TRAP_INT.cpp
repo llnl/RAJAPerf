@@ -42,6 +42,7 @@ TRAP_INT::TRAP_INT(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(0);
   setNumArrays(0);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);

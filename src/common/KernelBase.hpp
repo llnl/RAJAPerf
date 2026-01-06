@@ -129,6 +129,7 @@ public:
   void setMaxArrayDimensions(Index_type arrdim) { array_dimension = arrdim; }
   void setNumArrays(Index_type narr) { num_arrays = narr; }
   void setBatchSize(Index_type bsize) { batch_size = bsize; }
+  void setProblemDimensionality(Index_type pdim) { problem_dimensionality = pdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -221,6 +222,7 @@ public:
   Index_type getMaxArrayDimensions() const { return array_dimension; };
   Index_type getNumArrays() const { return num_arrays; };
   Index_type getBatchSize() const { return batch_size; };
+  Index_type getProblemDimensionality() const { return problem_dimensionality; };
 
   Index_type getTargetProblemSize() const;
   Index_type getRunReps() const;
@@ -680,6 +682,7 @@ private:
   Index_type array_dimension;
   Index_type num_arrays;
   Index_type batch_size;
+  Index_type problem_dimensionality;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
@@ -726,6 +729,7 @@ private:
   cali_id_t MaxArrayDimensions_attr;
   cali_id_t NumArrays_attr;
   cali_id_t BatchSize_attr;
+  cali_id_t ProblemDimensionality_attr;
 
 
   // we need a Caliper Manager object per variant

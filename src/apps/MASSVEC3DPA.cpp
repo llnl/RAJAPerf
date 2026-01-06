@@ -60,6 +60,9 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(4);
+  setProblemDimensionality(3);
+
   setUsesFeature(Launch);
 
   addVariantTunings();

@@ -60,6 +60,7 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(2);
   setNumArrays(3);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

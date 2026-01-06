@@ -51,6 +51,7 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setMaxLoopDimensions(6);
   setMaxArrayDimensions(2);
   setNumArrays(3); // A, B, C
+  setProblemDimensionality(2);
 
   setUsesFeature(Launch);
 

@@ -53,6 +53,7 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(1);
   setNumArrays(1);
+  setProblemDimensionality(3);
 
   setUsesFeature(Kernel);
 

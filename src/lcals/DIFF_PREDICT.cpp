@@ -42,6 +42,7 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setMaxLoopDimensions(1);
   setMaxArrayDimensions(1);
   setNumArrays(2);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
 

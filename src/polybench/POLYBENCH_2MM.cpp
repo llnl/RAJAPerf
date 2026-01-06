@@ -69,6 +69,7 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(2);
   setNumArrays(5);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

@@ -57,6 +57,7 @@ MASS3DPA::MASS3DPA(const RunParams& params)
   setMaxLoopDimensions(5);
   setMaxArrayDimensions(3);
   setNumArrays(14);
+  setProblemDimensionality(3);
 
   setUsesFeature(Launch);
 

@@ -57,6 +57,7 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   setMaxLoopDimensions(3);
   setMaxArrayDimensions(3);
   setNumArrays(2);
+  setProblemDimensionality(3);
 
   setUsesFeature(Kernel);
 

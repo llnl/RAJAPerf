@@ -61,6 +61,7 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   setMaxLoopDimensions(2);
   setMaxArrayDimensions(2);
   setNumArrays(4);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 

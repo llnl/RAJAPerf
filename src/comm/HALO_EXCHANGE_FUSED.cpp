@@ -52,6 +52,9 @@ HALO_EXCHANGE_FUSED::HALO_EXCHANGE_FUSED(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Workgroup);
   setUsesFeature(MPI);
 

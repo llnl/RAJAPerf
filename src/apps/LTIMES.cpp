@@ -61,6 +61,7 @@ LTIMES::LTIMES(const RunParams& params)
   setMaxLoopDimensions(4);
   setMaxArrayDimensions(3);
   setNumArrays(3);
+  setProblemDimensionality(3);
 
   setUsesFeature(Kernel);
   setUsesFeature(Launch);
