@@ -669,8 +669,8 @@ private:
 
   Complexity complexity;
 
-  Index_type num_nested_perfect_loops;
-  Index_type problem_dimensionality;
+  Index_type num_nested_perfect_loops = -1;
+  Index_type problem_dimensionality = -1;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
