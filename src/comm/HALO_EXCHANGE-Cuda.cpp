@@ -49,6 +49,8 @@ __global__ void halo_exchange_unpack(Real_ptr buffer, Int_ptr list, Real_ptr var
 template < size_t block_size >
 void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -58,7 +60,8 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -130,7 +133,8 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -196,7 +200,7 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace comm
 } // end namespace rajaperf

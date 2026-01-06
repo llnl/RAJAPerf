@@ -12,8 +12,8 @@
 Running the RAJA Performance Suite
 *********************************************
 
-This section describes how to run the Suite, after the Suite code is compiled 
-following the instructions provided in :ref:`build-label`. 
+This section describes how to run the Suite. Instructions for configuring and
+building the Suite are provided in :ref:`build-label`. 
 
 .. _run_test-label:
 
@@ -31,7 +31,7 @@ To run the test, type the test executable name::
 This will run a few iterations of each kernel and variant that was built 
 based on the CMake options specified to configure the build. 
 
-You can also run an individual kernel by setting an environment variable
+You can also test an individual kernel by setting an environment variable
 to the name of the kernel you want to run. For example, 
 if you use a csh/tcsh shell::
 
@@ -51,32 +51,19 @@ kernel.
 Running the Suite
 ==================
 
-After compilation, the main executable will reside in the ``bin`` subdirectory 
-of the build space. The executable will be able to run all kernels and 
-variants that have been built depending on which CMake options were specified
-to configure the build.
+After compilation, the RAJA Performance Suite executable will reside in the
+``bin`` subdirectory of the build space. The executable will be able to run
+all kernels and variants that have been built depending on which CMake options
+were specified to configure the build.
 
-To run the Suite in its default mode, type the executable name with no 
-command-line arguments::
-
-  $ ./bin/raja-perf.exe
-
-This will run all kernels and variants that have been built in their default
-configurations. Information describing how the Suite will run along with
-some information about each kernel will appear on the screen. More information
-about kernel and execution details will also appear in a run report files 
-generated in the run directory after Suite execution completes. 
-
-.. note:: You can pass the ``--dryrun`` command-line option to the executable to see a summary of how the Suite will execute without actually running it.
-
-The Suite can be run in a variety of ways determined by the command-line 
+The Suite can be run in many different ways chosen by the command-line 
 options passed to the executable. For example, you can run or exclude subsets 
 of kernels, variants, or groups. You can also pass options to set problem 
 sizes, number of times each kernel is run (sampled), and many other run 
 parameters. The goal is to build the code once and use scripts or other means 
 to run the Suite in different ways for the analyses you want to perform.
 
-Each option appears in a *long form* with a double hyphen prefix (i.e., '--').
+Many options appear in a *long form* with a double hyphen prefix (i.e., '--').
 Commonly used options are also available in a one or two character *short form*
 with a single hyphen prefix (i.e., '-') for convenience. To see available 
 options along with a brief description of each, pass the `--help` or `-h` 
@@ -91,16 +78,56 @@ or::
 .. note:: To see all available Suite execution options, pass the `--help` or 
           `-h` option to the executable.
 
+.. important:: We do not describe most of the Suite execution options in this
+               guide since the runtime help output is the main reference for
+               available options, defaults, and arguments they accept.
+
+To run the Suite in its default mode, type the executable name with no 
+command-line arguments::
+
+  $ ./bin/raja-perf.exe
+
+This will run all kernels and variants that have been built in their default
+configurations. Information describing how the Suite will run along with
+some information about each kernel will appear on the screen. More information
+about kernel and execution details will also appear in a run report files 
+generated in the run directory after Suite execution completes. 
+
+.. note:: You can pass the ``--dryrun`` command-line option to the executable
+          to see a summary of how the Suite will execute by showing run
+          parameters without actually running it. You can pass any other
+          command-line options when doing a "dry run" and you will see
+          that the given options are represented in the screen output.
+
 Lastly, the program will report specific errors if given incorrect input, such
 as an option that requires a value and no value is provided. It will also emit 
 a summary of command-line arguments it was given if the input contains 
-something that the code does not know how to parse. 
+something that the code does not know how to parse. For example, running the
+command::
 
-.. note: The Suite executable will attempt to provide helpful information
-         if it is given incorrect input, such as command-line arguments that 
-         it does not know how to parse. Ill-formed input will be noted in
-         screen output, hopefully making it easy for users to correct erroneous 
-         usage, such as mis-spelled option names.
+  $ ./bin/raja-perf.exe --dry-run -k DAXPY Foo
+
+will report the following in the screen output::
+
+  ...
+  kernel_input =
+        DAXPY
+	Foo
+  invalid_kernel_input =
+	Foo
+  ...
+  Suite will not be run now due to bad input.
+    See run parameters or option messages above.
+
+The output indicates that the kernel input is invalid because the string Foo
+is not the name of a kernel in the Suite, while DAXPY is the name of a kernel
+in the Suite.
+
+.. note:: The Suite executable will attempt to provide helpful information
+          if it is given incorrect input, such as command-line arguments that 
+          it does not know how to parse. Ill-formed input will be noted in
+          screen output, hopefully making it easy for users to correct
+          erroneous usage, such as mis-spelled option names.
 
 .. _run_mpi-label:
 
@@ -108,8 +135,18 @@ something that the code does not know how to parse.
 Running with MPI
 ==================
 
-Running the Suite with MPI is just like running any other MPI application.
-For example::
+The Suite can be configured and compiled to run in a distributed memory
+parallel mode using MPI. Running the Suite on multiple MPI ranks will execute
+the same code for each kernel on each rank with minimal synchronization points
+to gather execution timing data from all ranks. This capability is provided so
+that individual kernel performance more closely aligns with how such kernels 
+would perform in a real application. For example, compute node memory bandwidth
+may be different when running on a many core system using OpenMP multithreading
+to exercise all cores than when each core is mapped to an MPI rank.
+
+Running the Suite on multiple MPI ranks is just like running any other MPI
+application. For example, issuing the following command on a machine with
+slurm scheduling::
 
   $ srun -n 2 ./bin/raja-perf.exe
 
@@ -143,8 +180,9 @@ other variants.
 Additional Caliper Use Cases
 ============================
 
-If you specified building with Caliper (``-DRAJA_PERFSUITE_USE_CALIPER=On``),
-the generation of Caliper .cali files are automated for the most part.
+If you specified enabling Caliper in the build configuration (passing the option
+``-DRAJA_PERFSUITE_USE_CALIPER=On`` to CMake), Caliper .cali output files will
+be generated.
 
 However, there are a couple of other supported use cases.
 
@@ -179,16 +217,16 @@ starting weights (sum to 1.0) which include:
 
 .. note:: Caveats: 
 
-          #. When collecting PAPI data in this way you'll be limited to running              only one variant, since Caliper maintains only one PAPI context.
+          #. When collecting PAPI data in this way, you'll be limited to running
+             only one kernel variant, since Caliper maintains only one PAPI
+             context.
           #. Small kernels should be run at large problem sizes to minimize 
              anomalous readings.
           #. Measured values are only relevant for the innermost level of the 
              Caliper tree hierarchy, i.e. Kernel.Tuning under investigation.
           #. Some lower level derived quantities may appear anomalous 
              with negative values. Collecting raw counters can help identify 
-             the discrepancy.
-
-``-atsc topdown-counters.all``
+             the discrepancy:  ``-atsc topdown-counters.all``
 
 .. note:: Other caveats: Raw counter values are often noisy and require a lot 
           of accommodation to collect accurate data including: 
@@ -215,7 +253,7 @@ Some helpful references:
 Generating trace events (time-series) for viewing in chrome://tracing or Perfetto
 ---------------------------------------------------------------------------------
 
-`Perfetto <https://ui.perfetto.dev/>`_
+Perfetto user documentation is available at `Perfetto <https://ui.perfetto.dev/>`_.
 
 Use Caliper's event trace service to collect timestamp info, where kernel 
 timing can be viewed using browser trace profile views. For example,

@@ -27,7 +27,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void INIT_VIEW1D_OFFSET::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INIT_VIEW1D_OFFSET::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
@@ -38,7 +38,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_U
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(a) device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
@@ -56,7 +57,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_U
      INIT_VIEW1D_OFFSET_VIEW_RAJA;
 
      startTimer();
-     for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+     // Loop counter increment uses macro to quiet C++20 compiler warning
+     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
          RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
@@ -70,6 +72,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_U
      getCout() << "\n  INIT_VIEW1D_OFFSET : Unknown OMP Targetvariant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

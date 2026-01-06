@@ -10,6 +10,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+
 #include <iostream>
 
 namespace rajaperf
@@ -20,7 +22,6 @@ namespace comm
 
 void HALO_PACKING_FUSED::runOpenMPVariantDirect(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
   const Index_type run_reps = getRunReps();
 
@@ -33,7 +34,8 @@ void HALO_PACKING_FUSED::runOpenMPVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Index_type pack_index = 0;
 
@@ -144,7 +146,8 @@ void HALO_PACKING_FUSED::runOpenMPVariantDirect(VariantID vid)
       HALO_PACKING_FUSED_MANUAL_LAMBDA_FUSER_SETUP;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Index_type pack_index = 0;
 
@@ -248,15 +251,11 @@ void HALO_PACKING_FUSED::runOpenMPVariantDirect(VariantID vid)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-#endif
 }
 
 template < typename dispatch_helper >
 void HALO_PACKING_FUSED::runOpenMPVariantWorkGroup(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
   const Index_type run_reps = getRunReps();
 
@@ -307,7 +306,8 @@ void HALO_PACKING_FUSED::runOpenMPVariantWorkGroup(VariantID vid)
       pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Real_ptr buffer = pack_buffers[l];
@@ -357,62 +357,38 @@ void HALO_PACKING_FUSED::runOpenMPVariantWorkGroup(VariantID vid)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-#endif
 }
 
-void HALO_PACKING_FUSED::runOpenMPVariant(VariantID vid, size_t tune_idx)
+
+void HALO_PACKING_FUSED::defineOpenMPVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_OpenMP || vid == Lambda_OpenMP) {
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_OpenMP || vid == Lambda_OpenMP) {
 
-      runOpenMPVariantDirect(vid);
+      addVariantTuning<&HALO_PACKING_FUSED::runOpenMPVariantDirect>(
+          vid, "direct");
 
     }
 
-    t += 1;
+    if (vid == RAJA_OpenMP) {
+
+      seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+
+        addVariantTuning<&HALO_PACKING_FUSED::runOpenMPVariantWorkGroup<
+                             decltype(dispatch_helper)>>(
+            vid, decltype(dispatch_helper)::get_name());
+
+      });
+
+    }
 
   }
 
-  if (vid == RAJA_OpenMP) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      if (tune_idx == t) {
-
-        runOpenMPVariantWorkGroup<decltype(dispatch_helper)>(vid);
-
-      }
-
-      t += 1;
-
-    });
-
-  }
-}
-
-void HALO_PACKING_FUSED::setOpenMPTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_OpenMP || vid == Lambda_OpenMP) {
-
-    addVariantTuningName(vid, "direct");
-
-  }
-
-  if (vid == RAJA_OpenMP) {
-
-    seq_for(workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-      addVariantTuningName(vid, decltype(dispatch_helper)::get_name());
-
-    });
-
-  }
 }
 
 } // end namespace comm
 } // end namespace rajaperf
+
+#endif

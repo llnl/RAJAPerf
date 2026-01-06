@@ -33,14 +33,17 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setItsPerRep( m_N * m_N*m_N );
   setKernelsPerRep(m_N);
-  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
-  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N );
+  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pin
+  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pout
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
 
   checksum_scale_factor = 1.0 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
+
+  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
 
   setComplexity(Complexity::N_to_the_three_halves);
 
@@ -52,27 +55,7 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_FLOYD_WARSHALL::~POLYBENCH_FLOYD_WARSHALL()

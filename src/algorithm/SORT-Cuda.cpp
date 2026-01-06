@@ -22,7 +22,7 @@ namespace algorithm
 {
 
 
-void SORT::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void SORT::runCudaVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -35,7 +35,8 @@ void SORT::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::sort< RAJA::cuda_exec<default_gpu_block_size, true /*async*/> >(res, RAJA_SORT_ARGS);
 
@@ -46,6 +47,8 @@ void SORT::runCudaVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
      getCout() << "\n  SORT : Unknown Cuda variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(SORT, Cuda, RAJA_CUDA)
 
 } // end namespace algorithm
 } // end namespace rajaperf

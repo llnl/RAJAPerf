@@ -10,6 +10,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
+
 #include <iostream>
 
 namespace rajaperf
@@ -17,11 +19,9 @@ namespace rajaperf
 namespace algorithm
 {
 
-
-void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void REDUCE_SUM::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -33,7 +33,8 @@ void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type sum = m_sum_init;
 
@@ -57,7 +58,8 @@ void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
                                };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type sum = m_sum_init;
 
@@ -78,10 +80,11 @@ void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> sum(m_sum_init);
 
@@ -96,10 +99,11 @@ void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           Real_type tsum = m_sum_init;
 
@@ -131,19 +135,26 @@ void REDUCE_SUM::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-  RAJA_UNUSED_VAR(tune_idx);
-#endif
 }
 
-void REDUCE_SUM::setOpenMPTuningDefinitions(VariantID vid)
+void REDUCE_SUM::defineOpenMPVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_OpenMP) {
-    addVariantTuningName(vid, "new");
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
+
+    addVariantTuning<&REDUCE_SUM::runOpenMPVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_OpenMP) {
+
+      addVariantTuning<&REDUCE_SUM::runOpenMPVariant<1>>(
+          vid, "new");
+
+    }
+
   }
 }
 
 } // end namespace algorithm
 } // end namespace rajaperf
+
+#endif

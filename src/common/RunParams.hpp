@@ -133,6 +133,35 @@ public:
   }
 
   /*!
+   * \brief Enumeration indicating how to run warmup kernels
+   */
+  enum WarmupMode {
+    Disable,       /*!< no warmup kernels will be run */
+    Default,       /*!< run minimal set of warmup kernels based kernels to run */
+    PerfRunSame,   /*!< run warmup pass of each kernel to run */
+    Explicit,      /*!< run warmup pass of each kernel explicitly named for warmup in input */
+  };
+
+  /*!
+   * \brief Translate SizeMeaning enum value to string
+   */
+  static std::string WarmupModeToStr(WarmupMode wm)
+  {
+    switch (wm) {
+      case WarmupMode::Disable:
+        return "Disable";
+      case WarmupMode::Default:
+        return "Default";
+      case WarmupMode::PerfRunSame:
+        return "PerfRunSame";
+      case WarmupMode::Explicit:
+        return "Explicit";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
    * \brief Return state of input parsed to this point.
    */
   InputOpt getInputState() const { return input_state; }
@@ -252,9 +281,10 @@ public:
   const std::string& getAddToCaliperConfig() const { return add_to_cali_config; }
 #endif
 
-  bool getDisableWarmup() const { return disable_warmup; }
+  WarmupMode getWarmupMode() const { return warmup_mode; }
 
-  const std::set<KernelID>& getWarmupKernelIDsToRun() const { return run_warmup_kernels; }
+  const std::set<KernelID>& getSpecifiedWarmupKernelIDs() const
+    { return specified_warmup_kernel_ids; }
   const std::set<KernelID>& getKernelIDsToRun() const { return run_kernels; }
   const std::set<VariantID>& getVariantIDsToRun() const { return run_variants; }
   VariantID getReferenceVariantID() const { return reference_vid; }
@@ -282,6 +312,9 @@ private:
   void printFeatureNames(std::ostream& str) const;
   void printFeatureKernels(std::ostream& str) const;
   void printKernelFeatures(std::ostream& str) const;
+  void printChecksumConsistencyNames(std::ostream& str) const;
+  void printChecksumConsistencyKernels(std::ostream& str) const;
+  void printKernelChecksumConsistencies(std::ostream& str) const;
   void printComplexityNames(std::ostream& str) const;
   void printComplexityKernels(std::ostream& str) const;
   void printKernelComplexities(std::ostream& str) const;
@@ -364,6 +397,8 @@ private:
   DataSpace syclMPIDataSpace = DataSpace::SyclPinned;
   DataSpace kokkosMPIDataSpace = DataSpace::Copy;
 
+  WarmupMode warmup_mode;
+
   //
   // Arrays to hold input strings for valid/invalid input. Helpful for
   // debugging command line args.
@@ -398,9 +433,7 @@ private:
   std::string add_to_cali_config;
 #endif
 
-  bool disable_warmup;
-
-  std::set<KernelID>  run_warmup_kernels;
+  std::set<KernelID>  specified_warmup_kernel_ids;
   std::set<KernelID>  run_kernels;
   std::set<VariantID> run_variants;
 

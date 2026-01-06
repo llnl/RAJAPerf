@@ -4,7 +4,7 @@ jobs:
   docker_build_and_test:
     strategy:
       matrix:
-        target: [gcc12, gcc13, clang13, clang15, rocm6, rocm6_desul, intel2024, intel2024_debug, intel2024_sycl]
+        target: [gcc12, gcc12_debug, gcc13, gcc13_desul, clang14_debug, clang14_desul, intel2024_0, intel2024_0_debug, rocm6_4_3_desul]
     runs-on: ubuntu-latest
     steps:
     - run: |
@@ -30,7 +30,7 @@ jobs:
         with:
           build-dir: build
           options:
-            CMAKE_CXX_STANDARD=14
+            CMAKE_CXX_STANDARD=17
             ENABLE_OPENMP=Off
             CMAKE_BUILD_TYPE=Release
           run-build: true

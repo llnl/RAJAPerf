@@ -28,9 +28,11 @@ namespace apps
 #define g_wg_sz (integer::greater_of_squarest_factor_pair(work_group_size/m_wg_sz))
 #define z_wg_sz (integer::lesser_of_squarest_factor_pair(work_group_size/m_wg_sz))
 
-template <size_t work_group_size >
-void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
+template <size_t work_group_size, size_t tune_idx >
+void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -46,7 +48,8 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
     sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
@@ -70,7 +73,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
 
   } else if ( vid == RAJA_SYCL ) {
 
-    if (tune_idx == 0) {
+    if constexpr (tune_idx == 0) {
 
       using EXEC_POL =
         RAJA::KernelPolicy<
@@ -88,7 +91,8 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -103,7 +107,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       }
       stopTimer();
 
-    } else if (tune_idx == 1) {
+    } else if constexpr (tune_idx == 1) {
 
       constexpr bool async = true;
 
@@ -124,7 +128,8 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_wg_sz);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
@@ -161,67 +166,37 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void LTIMES_NOVIEW::runSyclVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(work_group_size)) {
-
-      if (vid == RAJA_SYCL) {
-
-        if (tune_idx == t) {
-          setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, 0);
-
-        }
-
-        t += 1;
-
-        if (tune_idx == t) {
-          setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, 1);
-
-        }
-
-        t += 1;
-
-      } else {
-
-        if (tune_idx == t) {
-          setBlockSize(work_group_size);
-          runSyclVariantImpl<work_group_size>(vid, 0);
-
-        }
-
-        t += 1;
-      }
-
-    }
-
-  });
-}
-
-void LTIMES_NOVIEW::setSyclTuningDefinitions(VariantID vid)
+void LTIMES_NOVIEW::defineSyclVariantTunings()
 {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
+  for (VariantID vid : {Base_SYCL, RAJA_SYCL}) {
 
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(work_group_size)) {
+    seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
 
-      if (vid == RAJA_SYCL) {
-        addVariantTuningName(vid, "kernel_"+std::to_string(work_group_size));
-        addVariantTuningName(vid, "launch_"+std::to_string(work_group_size));
-      } else {
-        addVariantTuningName(vid, "block_"+std::to_string(work_group_size));
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(work_group_size)) {
+
+        if (vid == RAJA_SYCL) {
+
+          addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 0>>(
+              vid, "kernel_"+std::to_string(work_group_size));
+
+          addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 1>>(
+              vid, "launch_"+std::to_string(work_group_size));
+
+        } else {
+
+          addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 0>>(
+              vid, "block_"+std::to_string(work_group_size));
+
+        }
+
       }
 
-    }
+    });
 
-  });
+  }
 
 }
 

@@ -14,8 +14,7 @@
 namespace rajaperf {
 namespace stream {
 
-void TRIAD::runKokkosVariant(VariantID vid,
-                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void TRIAD::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -32,7 +31,8 @@ void TRIAD::runKokkosVariant(VariantID vid,
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
       Kokkos::parallel_for(
           "TRIAD_Kokkos, Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
@@ -56,6 +56,8 @@ void TRIAD::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(b, b_view, iend);
   moveDataToHostFromKokkosView(c, c_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRIAD, Kokkos, Kokkos_Lambda)
 
 } // end namespace stream
 } // end namespace rajaperf

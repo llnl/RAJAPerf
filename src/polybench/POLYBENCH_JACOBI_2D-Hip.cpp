@@ -79,6 +79,8 @@ __global__ void poly_jacobi_2D_lam(Index_type N, Lambda body)
 template < size_t block_size >
 void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -88,7 +90,8 @@ void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       JACOBI_2D_THREADS_PER_BLOCK_HIP;
       JACOBI_2D_NBLOCKS_HIP;
@@ -112,7 +115,8 @@ void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       JACOBI_2D_THREADS_PER_BLOCK_HIP;
       JACOBI_2D_NBLOCKS_HIP;
@@ -161,7 +165,8 @@ void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
@@ -189,7 +194,7 @@ void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace polybench
 } // end namespace rajaperf

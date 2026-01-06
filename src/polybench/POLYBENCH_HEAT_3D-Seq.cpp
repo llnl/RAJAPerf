@@ -19,7 +19,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps= getRunReps();
 
@@ -30,7 +30,8 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 1; i < N-1; ++i ) {
           for (Index_type j = 1; j < N-1; ++j ) {
@@ -67,7 +68,8 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                                    };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 1; i < N-1; ++i ) {
           for (Index_type j = 1; j < N-1; ++j ) {
@@ -109,7 +111,8 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
@@ -149,6 +152,8 @@ void POLYBENCH_HEAT_3D::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

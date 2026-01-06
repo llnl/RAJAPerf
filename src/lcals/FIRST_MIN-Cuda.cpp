@@ -63,6 +63,8 @@ __global__ void first_min(Real_ptr x,
 template < size_t block_size, typename MappingHelper >
 void FIRST_MIN::runCudaVariantBase(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -82,7 +84,8 @@ void FIRST_MIN::runCudaVariantBase(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(MyMinLoc*, dminloc, mymin_block, grid_size, 1);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       FIRST_MIN_MINLOC_INIT;
       RAJAPERF_CUDA_REDUCER_INITIALIZE_VALUE(mymin, dminloc, mymin_block, grid_size, 1);
@@ -114,6 +117,8 @@ void FIRST_MIN::runCudaVariantBase(VariantID vid)
 template < size_t block_size, typename MappingHelper >
 void FIRST_MIN::runCudaVariantRAJA(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using exec_policy = std::conditional_t<MappingHelper::direct,
       RAJA::cuda_exec<block_size, true /*async*/>,
       RAJA::cuda_exec_occ_calc<block_size, true /*async*/>>;
@@ -129,7 +134,8 @@ void FIRST_MIN::runCudaVariantRAJA(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::ReduceMinLoc<RAJA::cuda_reduce,
                           Real_type, Index_type> minloc(m_xmin_init,
@@ -153,6 +159,8 @@ void FIRST_MIN::runCudaVariantRAJA(VariantID vid)
 template < size_t block_size, typename MappingHelper >
 void FIRST_MIN::runCudaVariantRAJANewReduce(VariantID vid)
 {
+  setBlockSize(block_size);
+
   using exec_policy = std::conditional_t<MappingHelper::direct,
       RAJA::cuda_exec<block_size, true /*async*/>,
       RAJA::cuda_exec_occ_calc<block_size, true /*async*/>>;
@@ -168,7 +176,8 @@ void FIRST_MIN::runCudaVariantRAJANewReduce(VariantID vid)
   if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                         m_initloc);
@@ -193,72 +202,11 @@ void FIRST_MIN::runCudaVariantRAJANewReduce(VariantID vid)
   }
 }
 
-void FIRST_MIN::runCudaVariant(VariantID vid, size_t tune_idx)
+
+void FIRST_MIN::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
-
-          if ( vid == Base_CUDA ) {
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantBase<decltype(block_size){},
-                                 decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          } else if ( vid == RAJA_CUDA ) {
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantRAJA<decltype(block_size){},
-                                 decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantRAJANewReduce<decltype(block_size){},
-                                          decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
-
-          }
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  FIRST_MIN : Unknown Cuda variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void FIRST_MIN::setCudaTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -271,22 +219,31 @@ void FIRST_MIN::setCudaTuningDefinitions(VariantID vid)
 
             auto algorithm_helper = gpu_algorithm::block_host_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      std::to_string(block_size));
+            addVariantTuning<&FIRST_MIN::runCudaVariantBase<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
             RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
           } else if ( vid == RAJA_CUDA ) {
 
             auto algorithm_helper = gpu_algorithm::block_device_helper{};
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      std::to_string(block_size));
+            addVariantTuning<&FIRST_MIN::runCudaVariantRAJA<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
 
-            addVariantTuningName(vid, decltype(algorithm_helper)::get_name()+"_"+
-                                      decltype(mapping_helper)::get_name()+"_"+
-                                      "new_"+std::to_string(block_size));
+            addVariantTuning<&FIRST_MIN::runCudaVariantRAJANewReduce<
+                                 decltype(block_size){},
+                                 decltype(mapping_helper)>>(
+                vid, decltype(algorithm_helper)::get_name()+"_"+
+                     decltype(mapping_helper)::get_name()+"_"+
+                     "new_"+std::to_string(block_size));
             RAJA_UNUSED_VAR(algorithm_helper); // to quiet compiler warning
 
           }

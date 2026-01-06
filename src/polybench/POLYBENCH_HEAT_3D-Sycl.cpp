@@ -32,6 +32,8 @@ namespace polybench
 template < size_t work_group_size >
 void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -42,7 +44,8 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       sycl::range<3> global_dim(i_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, i_wg_sz),
                                 j_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, j_wg_sz),
@@ -102,7 +105,8 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
@@ -132,7 +136,7 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace polybench
 } // end namespace rajaperf

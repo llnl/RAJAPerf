@@ -18,7 +18,7 @@
 namespace rajaperf {
 namespace apps {
 
-void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DIFFUSION3DPA::runSeqVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
 
   DIFFUSION3DPA_DATA_SETUP;
@@ -28,7 +28,8 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   case Base_Seq: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type e = 0; e < NE; ++e) {
 
@@ -126,7 +127,8 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Grid is empty as the host does not need a compute grid to be specified
       RAJA::launch<launch_policy>( res,
@@ -315,6 +317,8 @@ void DIFFUSION3DPA::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
               << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DIFFUSION3DPA, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

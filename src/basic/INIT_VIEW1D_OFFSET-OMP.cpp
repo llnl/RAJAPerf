@@ -18,7 +18,7 @@ namespace basic
 {
 
 
-void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -33,7 +33,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -53,7 +54,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_
                                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -77,7 +79,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_
                                   };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), initview1doffset_lam);
@@ -98,6 +101,8 @@ void INIT_VIEW1D_OFFSET::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INIT_VIEW1D_OFFSET, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

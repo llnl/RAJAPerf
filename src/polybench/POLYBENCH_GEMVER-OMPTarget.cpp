@@ -26,7 +26,7 @@ namespace polybench
   //
   const size_t threads_per_team = 256;
 
-void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -35,7 +35,8 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(A,u1,v1,u2,v2) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
@@ -102,7 +103,8 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
     using EXEC_POL3 = RAJA::omp_target_parallel_for_exec<threads_per_team>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL1>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},
@@ -160,6 +162,8 @@ void POLYBENCH_GEMVER::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNU
      getCout() << "\n  POLYBENCH_GEMVER : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMVER, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

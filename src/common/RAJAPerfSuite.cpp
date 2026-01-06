@@ -95,6 +95,7 @@
 #include "apps/LTIMES_NOVIEW.hpp"
 #include "apps/MASS3DEA.hpp"
 #include "apps/MASS3DPA.hpp"
+#include "apps/MASSVEC3DPA.hpp"
 #include "apps/MATVEC_3D_STENCIL.hpp"
 #include "apps/NODAL_ACCUMULATION_3D.hpp"
 #include "apps/PRESSURE.hpp"
@@ -165,7 +166,7 @@ static const std::string GroupNames [] =
  * IMPORTANT: This is only modified when a kernel is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE KernelID enum IN HEADER FILE!!! 
+ *            ITEMS IN THE KernelID enum IN HEADER FILE!!!
  *
  *******************************************************************************
  */
@@ -253,6 +254,7 @@ static const std::string KernelNames [] =
   std::string("Apps_LTIMES_NOVIEW"),
   std::string("Apps_MASS3DEA"),
   std::string("Apps_MASS3DPA"),
+  std::string("Apps_MASSVEC3DPA"),
   std::string("Apps_MATVEC_3D_STENCIL"),
   std::string("Apps_NODAL_ACCUMULATION_3D"),
   std::string("Apps_PRESSURE"),
@@ -366,6 +368,31 @@ static const std::string FeatureNames [] =
   std::string("Unknown Feature")  // Keep this at the end and DO NOT remove....
 
 }; // END FeatureNames
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Array of names for each CHECKSUMCONSISTENCY class used in suite.
+ *
+ * IMPORTANT: This is only modified when a new checksum consistency class is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ChecksumConsistency enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string ChecksumConsistencyNames [] =
+{
+  std::string("Consistent"),
+
+  std::string("ConsistentPerVariantTuning"),
+
+  std::string("Inconsistent"),
+
+  std::string("Unknown ChecksumConsistency")  // Keep this at the end and DO NOT remove....
+
+}; // END ChecksumConsistencyNames
 
 
 /*!
@@ -653,6 +680,19 @@ const std::string& getFeatureName(FeatureID fid)
 /*
  *******************************************************************************
  *
+ * Return checksum consistency name associated with ChecksumConsistency enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getChecksumConsistencyName(ChecksumConsistency cc)
+{
+  return ChecksumConsistencyNames[static_cast<int>(cc)];
+}
+
+
+/*
+ *******************************************************************************
+ *
  * Return complexity name associated with Complexity enum value.
  *
  *******************************************************************************
@@ -737,7 +777,7 @@ bool isDataSpaceAvailable(DataSpace dataSpace)
     case DataSpace::HipDeviceFine: {
       ret_val = true;
       break;
-    } 
+    }
 #endif
 
 #if defined(RAJA_ENABLE_SYCL)
@@ -871,10 +911,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new basic::REDUCE3_INT(run_params);
        break;
     }
-    case Basic_REDUCE_STRUCT : { 
+    case Basic_REDUCE_STRUCT : {
         kernel = new basic::REDUCE_STRUCT(run_params);
         break;
-    } 	
+    }
     case Basic_TRAP_INT : {
        kernel = new basic::TRAP_INT(run_params);
        break;
@@ -1063,9 +1103,13 @@ KernelBase* getKernelObject(KernelID kid,
     case Apps_MASS3DEA : {
        kernel = new apps::MASS3DEA(run_params);
        break;
-    }      
+    }
     case Apps_MASS3DPA : {
        kernel = new apps::MASS3DPA(run_params);
+       break;
+    }
+    case Apps_MASSVEC3DPA : {
+       kernel = new apps::MASSVEC3DPA(run_params);
        break;
     }
     case Apps_MATVEC_3D_STENCIL : {

@@ -27,7 +27,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -43,7 +43,8 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       Real_ptr ya = y;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -86,7 +87,8 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       auto res{getOmpTargetResource()}; 
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type txsum = m_init_sum;
         Real_type tysum = m_init_sum;
@@ -133,6 +135,8 @@ void REDUCE_STRUCT::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(REDUCE_STRUCT, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

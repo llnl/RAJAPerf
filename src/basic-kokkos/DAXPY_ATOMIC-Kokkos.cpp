@@ -18,7 +18,7 @@
 namespace rajaperf {
 namespace basic {
 
-void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void DAXPY_ATOMIC::runKokkosVariant(VariantID vid)
 {
 
   const Index_type run_reps = getRunReps();
@@ -40,7 +40,8 @@ void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Kokkos::parallel_for(
           "DAXPY_ATOMIC_Kokkos Kokkos_Lambda",
@@ -64,6 +65,8 @@ void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   moveDataToHostFromKokkosView(x, x_view, iend);
   moveDataToHostFromKokkosView(y, y_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY_ATOMIC, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

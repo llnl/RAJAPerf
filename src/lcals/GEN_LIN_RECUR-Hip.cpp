@@ -51,6 +51,8 @@ __global__ void genlinrecur2(Real_ptr b5, Real_ptr stb5,
 template < size_t block_size >
 void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -60,7 +62,8 @@ void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        constexpr size_t shmem = 0;
 
@@ -90,7 +93,8 @@ void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
          RAJA::RangeSegment(0, N), [=] __device__ (Index_type k) {
@@ -110,7 +114,7 @@ void GEN_LIN_RECUR::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace lcals
 } // end namespace rajaperf

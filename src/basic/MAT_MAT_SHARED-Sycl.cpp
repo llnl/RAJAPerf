@@ -22,6 +22,8 @@ namespace basic {
 template < size_t work_group_size >
 void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   constexpr Index_type tile_size = integer::sqrt(work_group_size);
   static_assert(tile_size*tile_size == work_group_size, "Invalid block_size");
 
@@ -45,7 +47,8 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
   if (vid == Base_SYCL) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       qu->submit([&](::sycl::handler& h) {
 
@@ -103,7 +106,8 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
     using threads_y = RAJA::LoopPolicy<RAJA::sycl_local_1_direct>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(Nx, Ny),
@@ -193,7 +197,7 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
 }
 
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MAT_MAT_SHARED, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace basic
 } // end namespace rajaperf

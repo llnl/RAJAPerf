@@ -39,23 +39,29 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
                 m_n +
                 m_n );
   setKernelsPerRep(4);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_n * m_n +
-                      4*sizeof(Real_type ) * m_n +
+  setBytesReadPerRep( 4*sizeof(Real_type ) * m_n + // u1, v1, u2, v2
 
-                      1*sizeof(Real_type ) * m_n * m_n +
-                      1*sizeof(Real_type ) * m_n +
+                      1*sizeof(Real_type ) * m_n * m_n + // A
+                      1*sizeof(Real_type ) * m_n + // y
 
-                      2*sizeof(Real_type ) * m_n +
+                      1*sizeof(Real_type ) * m_n + // z
 
-                      1*sizeof(Real_type ) * m_n * m_n +
-                      2*sizeof(Real_type ) * m_n );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_n * m_n +
+                      1*sizeof(Real_type ) * m_n * m_n + // A
+                      2*sizeof(Real_type ) * m_n ); // x
+  setBytesWrittenPerRep( 0 +
 
-                         1*sizeof(Real_type ) * m_n +
+                         1*sizeof(Real_type ) * m_n + // x
 
-                         1*sizeof(Real_type ) * m_n +
+                         0 +
 
-                         1*sizeof(Real_type ) * m_n );
+                         1*sizeof(Real_type ) * m_n ); // w
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type ) * m_n * m_n + // A
+
+                               0 +
+
+                               1*sizeof(Real_type ) * m_n + // x
+
+                               0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(4 * m_n*m_n +
                  3 * m_n*m_n +
@@ -65,6 +71,8 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
   checksum_scale_factor = 0.001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
 
   setComplexity(Complexity::N);
 
@@ -77,27 +85,7 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
   setUsesFeature(Forall);
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_GEMVER::~POLYBENCH_GEMVER()

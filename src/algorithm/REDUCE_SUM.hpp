@@ -53,18 +53,18 @@ public:
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setSeqTuningDefinitions(VariantID vid);
-  void setOpenMPTuningDefinitions(VariantID vid);
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  template < size_t tune_idx >
+  void runSeqVariant(VariantID vid);
+
+  template < size_t tune_idx >
+  void runOpenMPVariant(VariantID vid);
 
   void runCudaVariantCub(VariantID vid);
   template < size_t block_size, typename MappingHelper >
@@ -81,6 +81,8 @@ public:
   void runHipVariantRAJA(VariantID vid);
   template < size_t block_size, typename MappingHelper >
   void runHipVariantRAJANewReduce(VariantID vid);
+
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t work_group_size >
   void runSyclVariantImpl(VariantID vid);

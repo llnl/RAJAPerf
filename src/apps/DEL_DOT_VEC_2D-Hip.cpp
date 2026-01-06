@@ -51,6 +51,8 @@ __global__ void deldotvec2d(Real_ptr div,
 template < size_t block_size >
 void DEL_DOT_VEC_2D::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = m_domain->n_real_zones;
@@ -62,7 +64,8 @@ void DEL_DOT_VEC_2D::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -85,7 +88,8 @@ void DEL_DOT_VEC_2D::runHipVariantImpl(VariantID vid)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto deldotvec2d_lambda = [=] __device__ (Index_type ii) {
         DEL_DOT_VEC_2D_BODY_INDEX;
@@ -111,7 +115,8 @@ void DEL_DOT_VEC_2D::runHipVariantImpl(VariantID vid)
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
          zones, [=] __device__ (Index_type i) {
@@ -126,7 +131,7 @@ void DEL_DOT_VEC_2D::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DEL_DOT_VEC_2D, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DEL_DOT_VEC_2D, Hip, Base_HIP, Lambda_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

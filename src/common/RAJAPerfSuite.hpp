@@ -155,6 +155,7 @@ enum KernelID {
   Apps_LTIMES_NOVIEW,
   Apps_MASS3DEA,
   Apps_MASS3DPA,
+  Apps_MASSVEC3DPA,
   Apps_MATVEC_3D_STENCIL,
   Apps_NODAL_ACCUMULATION_3D,
   Apps_PRESSURE,
@@ -264,6 +265,31 @@ enum FeatureID {
 #endif
 
   NumFeatures // Keep this one last and NEVER comment out (!!)
+
+};
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Enumeration defining unique id for each CHECKSUMCONSISTENCY class used in suite.
+ *
+ * IMPORTANT: This is only modified when a new checksum consistency class is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ChecksumConsistencyNames ARRAY IN IMPLEMENTATION FILE!!!
+ *
+ *******************************************************************************
+ */
+enum struct ChecksumConsistency {
+
+  Consistent = 0, // all variant tunings always get the same checksum
+
+  ConsistentPerVariantTuning, // the checksum for a variant tuning is always the same but may differ with that of other variant tunings for example because of reordering of floating point operations
+
+  Inconsistent, // the checksum of a variant tuning may vary from run to run, for example due to the use of atomics
+
+  NumChecksumConsistencies // Keep this one last and NEVER comment out (!!)
 
 };
 
@@ -416,6 +442,15 @@ bool isVariantGPU(VariantID vid);
  *******************************************************************************
  */
 const std::string& getFeatureName(FeatureID vid);
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Return checksum consistency name associated with ChecksumConsistency enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getChecksumConsistencyName(ChecksumConsistency cc);
 
 /*!
  *******************************************************************************

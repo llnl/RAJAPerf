@@ -7,13 +7,13 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
-if [[ $# -lt 2 ]]; then
+if [[ $# -lt 3 ]]; then
   echo
-  echo "You must pass 2 or more arguments to the script (in this order): "
+  echo "You must pass 3 or more arguments to the script (in this order): "
   echo "   1) cray-mpich compiler version number"
-  echo "   1) HIP compiler version number"
-  echo "   2) HIP compute architecture"
-  echo "   3...) optional arguments to cmake"
+  echo "   2) HIP compiler version number"
+  echo "   3) HIP compute architecture"
+  echo "   4...) optional arguments to cmake"
   echo
   echo "For example: "
   echo "    toss4_cray-mpich_amdclang.sh 8.1.14 4.1.0 gfx906"

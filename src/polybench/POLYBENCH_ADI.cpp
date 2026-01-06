@@ -34,16 +34,17 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   setActualProblemSize( (m_n-2) * (m_n-2) );
 
   setKernelsPerRep( 2 );
-  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
-                      2*sizeof(Real_type ) * (m_n-2) * (m_n-2) +
+  setBytesReadPerRep( 1*sizeof(Real_type ) * (m_n-2) * (m_n  ) + // u
 
-                      1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
-                      2*sizeof(Real_type ) * (m_n-2) * (m_n-2) );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_n-2) * (m_n-1) +
-                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) +
+                      1*sizeof(Real_type ) * (m_n-2) * (m_n  ) ); // v
+  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_n-2) * (    1) + // p, q
+                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) + // v
 
-                         2*sizeof(Real_type ) * (m_n-2) * (m_n-1) +
-                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) );
+                         2*sizeof(Real_type ) * (m_n-2) * (    1) + // p, q
+                         1*sizeof(Real_type ) * (m_n-2) * (m_n  ) ); // u
+  setBytesModifyWrittenPerRep( 2*sizeof(Real_type ) * (m_n-2) * (m_n-2) + // p, q
+
+                               2*sizeof(Real_type ) * (m_n-2) * (m_n-2) ); // p, q
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( (13 + 2) * (m_n-2)*(m_n-2) +
                   (13 + 2) * (m_n-2)*(m_n-2) );
@@ -51,6 +52,8 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   checksum_scale_factor = 0.0000001 *
               ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                            getActualProblemSize() );
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
   setComplexity(Complexity::N);
 
@@ -61,27 +64,7 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
 
   setUsesFeature(Kernel);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  addVariantTunings();
 }
 
 POLYBENCH_ADI::~POLYBENCH_ADI()
