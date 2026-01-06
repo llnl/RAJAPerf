@@ -60,7 +60,7 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
 
   setComplexity(Complexity::N);
 
-  setMaxPerfectLoopDimensions(4);
+  setMaxPerfectLoopDimensions(3);
   setProblemDimensionality(3);
 
   setUsesFeature(Launch);
