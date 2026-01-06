@@ -36,7 +36,7 @@
 ///       for(int dx=0; dx<mpa3d_at::D1D; ++dx) {
 ///         int j          = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);
 ///         //missing dof_map for lexicographical ordering
-///         thread_dofs[j] = m_elemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D *
+///         thread_dofs[j] = elemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D *
 ///         mpa3d_at::D1D * e]; sm_X[dz][dy][dx]  = X[thread_dofs[j]];
 ///       }
 ///     }
@@ -205,6 +205,8 @@ constexpr int Q1D = 4;
   sm_B[q][d] = MPAT_B(q, d);                                                   \
   sm_Bt[d][q] = sm_B[q][d];
 
+//flop counts
+//2 * D1D
 #define MASS3DPA_ATOMIC_3                                                      \
   double u = 0.0;                                                              \
   for (int dx = 0; dx < mpa3d_at::D1D; ++dx) {                                 \
@@ -212,6 +214,7 @@ constexpr int Q1D = 4;
   }                                                                            \
   DDQ[dz][dy][qx] = u;
 
+//2 * D1D
 #define MASS3DPA_ATOMIC_4                                                      \
   double u = 0.0;                                                              \
   for (int dy = 0; dy < mpa3d_at::D1D; ++dy) {                                 \
@@ -219,6 +222,7 @@ constexpr int Q1D = 4;
   }                                                                            \
   DQQ[dz][qy][qx] = u;
 
+//2 * D1D + 1 
 #define MASS3DPA_ATOMIC_5                                                      \
   double u = 0.0;                                                              \
   for (int dz = 0; dz < mpa3d_at::D1D; ++dz) {                                 \
@@ -226,6 +230,7 @@ constexpr int Q1D = 4;
   }                                                                            \
   QQQ[qz][qy][qx] = u * MPAT_D(qx, qy, qz, e);
 
+//2 * Q1D
 #define MASS3DPA_ATOMIC_6                                                      \
   double u = 0.0;                                                              \
   for (int qx = 0; qx < mpa3d_at::Q1D; ++qx) {                                 \
@@ -233,6 +238,7 @@ constexpr int Q1D = 4;
   }                                                                            \
   QQD[qz][qy][dx] = u;
 
+//2 * Q1D
 #define MASS3DPA_ATOMIC_7                                                      \
   double u = 0.0;                                                              \
   for (int qy = 0; qy < mpa3d_at::Q1D; ++qy) {                                 \
@@ -240,6 +246,7 @@ constexpr int Q1D = 4;
   }                                                                            \
   QDD[qz][dy][dx] = u;
 
+//2 * Q1D + 1
 #define MASS3DPA_ATOMIC_8                                                      \
   double u = 0.0;                                                              \
   for (int qz = 0; qz < mpa3d_at::Q1D; ++qz) {                                 \
@@ -361,7 +368,7 @@ private:
   Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
-  Index_type m_NE_default;
+  Index_type m_DOF_default;
 };
 
 } // end namespace apps

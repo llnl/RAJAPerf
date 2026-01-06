@@ -19,39 +19,44 @@ namespace apps {
 
 MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASS3DPA_ATOMIC, params) {
-  m_NE_default = 8000;
 
-  m_Nx = 2;
-  m_Ny = 1;
-  m_Nz = 1;
+  m_DOF_default = 1000000;
+
   m_P = mpa3d_at::D1D - 1; // polynomial order
 
+  m_NE = m_DOF_default/pow(m_P,3); //approximate how many elements we need
+
+  //How does this work??
+  //getTargetProblemSize();
+  //m_NE = std::max(static_cast<Index_type>( (getTargetProblemSize() +   , Index_type(1));
+
+  //Construct the mesh
+  m_Nx = static_cast<int>(std::cbrt(m_NE));
+  m_Ny = m_Nx;
+  m_Nz = m_Ny;
   m_NE = m_Nx * m_Ny * m_Nz;
 
-
+  //compute true number of dofs
   m_Tot_Dofs = (m_Nx * m_P + 1) * (m_Ny * m_P + 1) * (m_Nz * m_P + 1);
 
   setDefaultProblemSize(m_Tot_Dofs);
   setDefaultReps(50);
 
-  m_NE = m_Nx * m_Ny * m_Nz; // std::max((getTargetProblemSize() +
-                             // (m_Tot_Dofs)/2) / (m_Tot_Dofs), Index_type(1));
-
   setActualProblemSize(m_Tot_Dofs);
 
-  setItsPerRep(m_NE * mpa3d_at::Q1D * mpa3d_at::Q1D);
+  setItsPerRep(m_NE * mpa3d_at::D1D * mpa3d_at::D1D);
   setKernelsPerRep(1);
 
   // Need to also account for the indirection array
-  setBytesReadPerRep(2 * sizeof(Real_type) * mpa3d_at::Q1D *
-                         mpa3d_at::D1D + // B, Bt
-                     2 * sizeof(Real_type) * mpa3d_at::D1D * mpa3d_at::D1D *
-                         mpa3d_at::D1D * m_NE + // X, Y
-                     1 * sizeof(Real_type) * mpa3d_at::Q1D * mpa3d_at::Q1D *
-                         mpa3d_at::Q1D * m_NE); // D
+  setBytesReadPerRep(2 * sizeof(Real_type) * mpa3d_at::Q1D * mpa3d_at::D1D + // B, Bt
+                     1 * sizeof(Index_type) * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * m_NE + //ElemToDoF
+                     1 * sizeof(Real_type) * m_Tot_Dofs + // X
+                     1 * sizeof(Real_type) * mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D * m_NE); // D
+
   setBytesWrittenPerRep(1 * sizeof(Real_type) * mpa3d_at::D1D * mpa3d_at::D1D *
                         mpa3d_at::D1D * m_NE); // Y
-  setBytesAtomicModifyWrittenPerRep(0);
+
+  setBytesAtomicModifyWrittenPerRep(m_Tot_Dofs);
 
   setFLOPsPerRep(
       m_NE *
@@ -90,11 +95,11 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
 
   // Compute table elem to dof table size
   const int ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);
-  const int total_size = ndof_per_elem * ndof_per_elem;
+  const int total_size = ndof_per_elem * m_NE;
 
   auto a_elemToDoF = allocDataForInit(m_ElemToDoF, total_size, vid);
-  buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_ElemToDoF);  
-  
+  buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_ElemToDoF);
+
 }
 
 void MASS3DPA_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx) {
