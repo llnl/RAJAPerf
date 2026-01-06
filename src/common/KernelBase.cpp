@@ -610,7 +610,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     std::string check_profile;
     // If both not empty
     if (!updatedSpotConfig.empty() && !updatedCaliConfig.empty()) {
-      check_profile = "spot(" + updatedSpotConfig + ")," + updatedCaliConfig;
+      check_profile = updatedCaliConfig + ",spot(" + updatedSpotConfig + ")";
     }
     else if (!updatedSpotConfig.empty()) {
       check_profile = "spot(" + updatedSpotConfig + ")";
@@ -636,24 +636,27 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     cali::ConfigManager m;
     mgr[vid][tstr] = m;
     std::string vstr = getVariantName(vid);
-    std::string profile;
+    std::string profile = "";
+    std::string sprofile = "";
+    std::string ccprofile = "";
+    if (!updatedCaliConfig.empty()) {
+      ccprofile += updatedCaliConfig + ",";
+    }
     // If --outfile not provided, give generic name
     if (outfile == "RAJAPerf") {
-      profile = "spot(output=" + vstr + "-" + tstr + ".cali";
+      sprofile = "spot(output=" + vstr + "-" + tstr + ".cali";
     }
     else {
       // Ensure cali files for each variant/tuning are not same file name
       if (num_variants_tunings > 1)
         throw std::runtime_error("Error: Cannot use '--outfile' with Caliper if running multiple variants/tunings. Must be running single variant & tuning.");
-      profile = "spot(output=" + outfile + ".cali";
+      sprofile = "spot(output=" + outfile + ".cali";
     }
     if(!updatedSpotConfig.empty()) {
-      profile += "," + updatedSpotConfig;
+      sprofile += "," + updatedSpotConfig;
     }
-    profile += ")";
-    if (!updatedCaliConfig.empty()) {
-      profile += "," + updatedCaliConfig;
-    }
+    sprofile += ")";
+    profile = ccprofile + sprofile;
     std::cout << "Profile: " << profile << std::endl;
     mgr[vid][tstr].add_option_spec(kernel_info_spec);
     mgr[vid][tstr].set_default_parameter("rajaperf_kernel_info", "true");
