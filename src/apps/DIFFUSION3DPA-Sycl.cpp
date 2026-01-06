@@ -37,8 +37,8 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
   case Base_SYCL: {
 
-    const ::sycl::range<3> workGroupSize(DPA_Q1D, DPA_Q1D, DPA_Q1D);
-    const ::sycl::range<3> gridSize(DPA_Q1D,DPA_Q1D,DPA_Q1D*NE);
+    const ::sycl::range<3> workGroupSize(diff::Q1D, diff::Q1D, diff::Q1D);
+    const ::sycl::range<3> gridSize(diff::Q1D,diff::Q1D,diff::Q1D*NE);
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -46,8 +46,8 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
       qu->submit([&](::sycl::handler& h) {
 
-        constexpr Index_type MQ1 = DPA_Q1D;
-        constexpr Index_type MD1 = DPA_D1D;
+        constexpr Index_type MQ1 = diff::Q1D;
+        constexpr Index_type MD1 = diff::D1D;
         constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
         auto sBG_vec = ::sycl::local_accessor<Real_type, 1>(::sycl::range<1>(MQ1*MD1), h);
@@ -95,72 +95,72 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              Real_type (*QDD1)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_1);
              Real_type (*QDD2)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_2);
 
-             SYCL_FOREACH_THREAD(dz, 0, DPA_D1D) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(dx, 2, DPA_D1D) {
+             SYCL_FOREACH_THREAD(dz, 0, diff::D1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(dx, 2, diff::D1D) {
                    DIFFUSION3DPA_1;
                  }
                }
              }
              if (itm.get_local_id(0) == 0) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, diff::Q1D) {
                    DIFFUSION3DPA_2;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(dz, 0, DPA_D1D) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
+             SYCL_FOREACH_THREAD(dz, 0, diff::D1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, diff::Q1D) {
                    DIFFUSION3DPA_3;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(dz, 0, DPA_D1D) {
-               SYCL_FOREACH_THREAD(qy, 1, DPA_Q1D) {
-                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
+             SYCL_FOREACH_THREAD(dz, 0, diff::D1D) {
+               SYCL_FOREACH_THREAD(qy, 1, diff::Q1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, diff::Q1D) {
                    DIFFUSION3DPA_4;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(qz, 0, DPA_Q1D) {
-               SYCL_FOREACH_THREAD(qy, 1, DPA_Q1D) {
-                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
+             SYCL_FOREACH_THREAD(qz, 0, diff::Q1D) {
+               SYCL_FOREACH_THREAD(qy, 1, diff::Q1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, diff::Q1D) {
                    DIFFUSION3DPA_5;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
              if (itm.get_local_id(0) == 0) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(qx, 2, DPA_Q1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(qx, 2, diff::Q1D) {
                    DIFFUSION3DPA_6;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(qz, 0, DPA_Q1D) {
-               SYCL_FOREACH_THREAD(qy, 1, DPA_Q1D) {
-                 SYCL_FOREACH_THREAD(dx, 2, DPA_D1D) {
+             SYCL_FOREACH_THREAD(qz, 0, diff::Q1D) {
+               SYCL_FOREACH_THREAD(qy, 1, diff::Q1D) {
+                 SYCL_FOREACH_THREAD(dx, 2, diff::D1D) {
                    DIFFUSION3DPA_7;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(qz, 0, DPA_Q1D) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(dx, 2, DPA_D1D) {
+             SYCL_FOREACH_THREAD(qz, 0, diff::Q1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(dx, 2, diff::D1D) {
                    DIFFUSION3DPA_8;
                  }
                }
              }
              itm.barrier(::sycl::access::fence_space::local_space);
-             SYCL_FOREACH_THREAD(dz, 0, DPA_D1D) {
-               SYCL_FOREACH_THREAD(dy, 1, DPA_D1D) {
-                 SYCL_FOREACH_THREAD(dx, 2, DPA_D1D) {
+             SYCL_FOREACH_THREAD(dz, 0, diff::D1D) {
+               SYCL_FOREACH_THREAD(dy, 1, diff::D1D) {
+                 SYCL_FOREACH_THREAD(dx, 2, diff::D1D) {
                    DIFFUSION3DPA_9;
                  }
                }
@@ -197,8 +197,8 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
     size_t shmem = 0;
     {
-      constexpr Index_type MQ1 = DPA_Q1D;
-      constexpr Index_type MD1 = DPA_D1D;
+      constexpr Index_type MQ1 = diff::Q1D;
+      constexpr Index_type MD1 = diff::D1D;
       constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
       const size_t local_mats = 6;
@@ -211,7 +211,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
       RAJA::launch<launch_policy>( res,
                              RAJA::LaunchParams(RAJA::Teams(NE),
-                             RAJA::Threads(DPA_Q1D, DPA_Q1D, DPA_Q1D), shmem),
+                             RAJA::Threads(diff::Q1D, diff::Q1D, diff::Q1D), shmem),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
             const bool symmetric = true;
@@ -220,8 +220,8 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
             [&](Index_type e) {
 
               //Redefine inside the lambda to keep consistent with base version
-              constexpr Index_type MQ1 = DPA_Q1D;
-              constexpr Index_type MD1 = DPA_D1D;
+              constexpr Index_type MQ1 = diff::Q1D;
+              constexpr Index_type MD1 = diff::D1D;
               constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
               Real_ptr sBG = ctx.getSharedMemory<Real_type>(MQ1*MD1);
@@ -253,11 +253,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
              Real_type (*QDD1)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_1);
              Real_type (*QDD2)[MD1][MD1]   = (Real_type (*)[MD1][MD1]) (sm0_2);
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                         [&](Index_type dx) {
 
                           DIFFUSION3DPA_1;
@@ -273,9 +273,9 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                 [&](Index_type RAJA_UNUSED_ARG(dz)) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_2;
@@ -289,11 +289,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_3;
@@ -307,11 +307,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                     [&](Index_type qy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_4;
@@ -325,11 +325,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                    [&](Index_type qy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                        [&](Index_type qx) {
 
                           DIFFUSION3DPA_5;
@@ -345,9 +345,9 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                [&](Index_type RAJA_UNUSED_ARG(dz)) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                    [&](Index_type dy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                        [&](Index_type qx) {
 
                          DIFFUSION3DPA_6;
@@ -361,11 +361,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                    [&](Index_type qy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
                          DIFFUSION3DPA_7;
@@ -379,11 +379,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                    [&](Index_type dy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
                          DIFFUSION3DPA_8;
@@ -397,11 +397,11 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                [&](Index_type dz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                    [&](Index_type dy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
                          DIFFUSION3DPA_9;

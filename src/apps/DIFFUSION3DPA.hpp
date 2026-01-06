@@ -16,8 +16,8 @@
 ///
 /// for (int e = 0; e < NE; ++e) {
 ///
-///   constexpr int MQ1 = DPA_Q1D;
-///   constexpr int MD1 = DPA_D1D;
+///   constexpr int MQ1 = diff::Q1D;
+///   constexpr int MD1 = diff::D1D;
 ///   constexpr int MDQ = (MQ1 >  ? MQ1 : MD1;
 ///   double sBG[MQ1*MD1];
 ///   double (*B)[MD1] = (double (*)[MD1]) sBG;
@@ -42,35 +42,35 @@
 ///   double (*QDD1)[MD1][MD1] = (double (*)[MD1][MD1]) (sm0+1);
 ///   double (*QDD2)[MD1][MD1] = (double (*)[MD1][MD1]) (sm0+2);
 ///
-///   for(int dz=0; dz<DPA_D1D; ++dz)
+///   for(int dz=0; dz<diff::D1D; ++dz)
 ///   {
-///    for(int dy=0; dy<DPA_D1D; ++dy)
+///    for(int dy=0; dy<diff::D1D; ++dy)
 ///    {
-///      for(int dx=0; dx<DPA_D1D; ++dx)
+///      for(int dx=0; dx<diff::D1D; ++dx)
 ///      {
 ///        s_X[dz][dy][dx] = DPA_X(dx,dy,dz,e);
 ///      }
 ///    }
 ///  }
 ///
-///  for(int dy=0; dy<DPA_D1D; ++dy)
+///  for(int dy=0; dy<diff::D1D; ++dy)
 ///  {
-///    for(int qx=0; qx<DPA_Q1D; ++qx)
+///    for(int qx=0; qx<diff::Q1D; ++qx)
 ///    {
 ///      B[qx][dy] = DPA_b(qx,dy);
 ///      G[qx][dy] = DPA_g(qx,dy);
 ///    }
 ///  }
 ///
-///  for(int dz=0; dz<DPA_D1D; ++dz)
+///  for(int dz=0; dz<diff::D1D; ++dz)
 ///  {
-///    for(int dy=0; dy<DPA_D1D; ++dy)
+///    for(int dy=0; dy<diff::D1D; ++dy)
 ///    {
-///      for(int qx=0; qx<DPA_Q1D; ++qx)
+///      for(int qx=0; qx<diff::Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
-///        for (int dx = 0; dx < DPA_D1D; ++dx)
+///        for (int dx = 0; dx < diff::D1D; ++dx)
 ///        {
 ///          const double coords = s_X[dz][dy][dx];
 ///          u += coords * B[qx][dx];
@@ -82,15 +82,15 @@
 ///    }
 ///  }
 ///
-///  for(int dz=0; dz<DPA_D1D; ++dz)
+///  for(int dz=0; dz<diff::D1D; ++dz)
 ///  {
-///    for(int qy=0; qy<DPA_Q1D; ++qy)
+///    for(int qy=0; qy<diff::Q1D; ++qy)
 ///    {
-///      for(int qx=0; qx<DPA_Q1D; ++qx)
+///      for(int qx=0; qx<diff::Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
-///        for (int dy = 0; dy < DPA_D1D; ++dy)
+///        for (int dy = 0; dy < diff::D1D; ++dy)
 ///        {
 ///          u += DDQ1[dz][dy][qx] * B[qy][dy];
 ///          v += DDQ0[dz][dy][qx] * G[qy][dy];
@@ -103,15 +103,15 @@
 ///    }
 ///  }
 ///
-///  for(int qz=0; qz<DPA_Q1D; ++qz)
+///  for(int qz=0; qz<diff::Q1D; ++qz)
 ///  {
-///    for(int qy=0; qy<DPA_Q1D; ++qy)
+///    for(int qy=0; qy<diff::Q1D; ++qy)
 ///    {
-///      for(int qx=0; qx<DPA_Q1D; ++qx)
+///      for(int qx=0; qx<diff::Q1D; ++qx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MD1)
-///        for (int dz = 0; dz < DPA_D1D; ++dz)
+///        for (int dz = 0; dz < diff::D1D; ++dz)
 ///        {
 ///          u += DQQ0[dz][qy][qx] * B[qz][dz];
 ///          v += DQQ1[dz][qy][qx] * B[qz][dz];
@@ -136,24 +136,24 @@
 ///    }
 ///  }
 ///
-///  for(int dy=0; dy<DPA_D1D; ++dy)
+///  for(int dy=0; dy<diff::D1D; ++dy)
 ///  {
-///    for(int qx=0; qx<DPA_Q1D; ++qx)
+///    for(int qx=0; qx<diff::Q1D; ++qx)
 ///    {
 ///      Bt[dy][qx] = DPA_b(qx,dy);
 ///      Gt[dy][qx] = DPA_g(qx,dy);
 ///    }
 ///  }
 ///
-///  for(int qz=0; qz<DPA_Q1D; ++qz)
+///  for(int qz=0; qz<diff::Q1D; ++qz)
 ///  {
-///    for(int qy=0; qy<DPA_Q1D; ++qy)
+///    for(int qy=0; qy<diff::Q1D; ++qy)
 ///    {
-///      for(int dx=0; dx<DPA_D1D; ++dx)
+///      for(int dx=0; dx<diff::D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MQ1)
-///        for (int qx = 0; qx < DPA_Q1D; ++qx)
+///        for (int qx = 0; qx < diff::Q1D; ++qx)
 ///        {
 ///          u += QQQ0[qz][qy][qx] * Gt[dx][qx];
 ///          v += QQQ1[qz][qy][qx] * Bt[dx][qx];
@@ -166,15 +166,15 @@
 ///    }
 ///  }
 ///
-///  for(int qz=0; qz<DPA_Q1D; ++qz)
+///  for(int qz=0; qz<diff::Q1D; ++qz)
 ///  {
-///    for(int dy=0; dy<DPA_D1D; ++dy)
+///    for(int dy=0; dy<diff::D1D; ++dy)
 ///    {
-///      for(int dx=0; dx<DPA_D1D; ++dx)
+///      for(int dx=0; dx<diff::D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
-///        RAJAPERF_UNROLL(DPA_Q1D)
-///        for (int qy = 0; qy < DPA_Q1D; ++qy)
+///        RAJAPERF_UNROLL(diff::Q1D)
+///        for (int qy = 0; qy < diff::Q1D; ++qy)
 ///        {
 ///          u += QQD0[qz][qy][dx] * Bt[dy][qy];
 ///          v += QQD1[qz][qy][dx] * Gt[dy][qy];
@@ -187,15 +187,15 @@
 ///    }
 ///  }
 ///
-///  for(int dz=0; dz<DPA_D1D; ++dz)
+///  for(int dz=0; dz<diff::D1D; ++dz)
 ///  {
-///    for(int dy=0; dy<DPA_D1D; ++dy)
+///    for(int dy=0; dy<diff::D1D; ++dy)
 ///    {
-///      for(int dx=0; dx<DPA_D1D; ++dx)
+///      for(int dx=0; dx<diff::D1D; ++dx)
 ///      {
 ///        double u = 0.0, v = 0.0, w = 0.0;
 ///        RAJAPERF_UNROLL(MQ1)
-///        for (int qz = 0; qz < DPA_Q1D; ++qz)
+///        for (int qz = 0; qz < diff::Q1D; ++qz)
 ///        {
 ///          u += QDD0[qz][dy][dx] * Bt[dz][qz];
 ///          v += QDD1[qz][dy][dx] * Bt[dz][qz];
@@ -228,21 +228,23 @@
 #include "RAJA/RAJA.hpp"
 
 // Number of Dofs/Qpts in 1D
-#define DPA_D1D 3
-#define DPA_Q1D 4
-#define DPA_SYM 6
-#define DPA_b(x, y) Basis[x + DPA_Q1D * y]
-#define DPA_g(x, y) dBasis[x + DPA_Q1D * y]
+namespace diff {
+constexpr int D1D = 3;
+constexpr int Q1D = 4;
+constexpr int DPA_SYM = 6;
+}
+#define DPA_b(x, y) Basis[x + diff::Q1D * y]
+#define DPA_g(x, y) dBasis[x + diff::Q1D * y]
 #define DPA_X(dx, dy, dz, e)                                                   \
-  X[dx + DPA_D1D * dy + DPA_D1D * DPA_D1D * dz +                               \
-    DPA_D1D * DPA_D1D * DPA_D1D * e]
+  X[dx + diff::D1D * dy + diff::D1D * diff::D1D * dz +                               \
+    diff::D1D * diff::D1D * diff::D1D * e]
 #define DPA_Y(dx, dy, dz, e)                                                   \
-  Y[dx + DPA_D1D * dy + DPA_D1D * DPA_D1D * dz +                               \
-    DPA_D1D * DPA_D1D * DPA_D1D * e]
+  Y[dx + diff::D1D * dy + diff::D1D * diff::D1D * dz +                               \
+    diff::D1D * diff::D1D * diff::D1D * e]
 #define DPA_d(qx, qy, qz, s, e)                                                \
-  D[qx + DPA_Q1D * qy + DPA_Q1D * DPA_Q1D * qz +                               \
-    DPA_Q1D * DPA_Q1D * DPA_Q1D * s +                                          \
-    DPA_Q1D * DPA_Q1D * DPA_Q1D * DPA_SYM * e]
+  D[qx + diff::Q1D * qy + diff::Q1D * diff::Q1D * qz +                               \
+    diff::Q1D * diff::Q1D * diff::Q1D * s +                                          \
+    diff::Q1D * diff::Q1D * diff::Q1D * diff::DPA_SYM * e]
 
 // Half of B and G are stored in shared to get B, Bt, G and Gt.
 // Indices computation for SmemPADiffusionApply3D.
@@ -253,8 +255,8 @@
 #define DPA_sign(q, d) (((q) <= (d)) ? -1.0 : 1.0)
 
 #define DIFFUSION3DPA_0_GPU                                                    \
-  constexpr Index_type MQ1 = DPA_Q1D;                                          \
-  constexpr Index_type MD1 = DPA_D1D;                                          \
+  constexpr Index_type MQ1 = diff::Q1D;                                          \
+  constexpr Index_type MD1 = diff::D1D;                                          \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   RAJA_TEAM_SHARED Real_type sBG[MQ1 * MD1];                                   \
   Real_type(*B)[MD1] = (Real_type(*)[MD1])sBG;                                 \
@@ -280,8 +282,8 @@
   Real_type(*QDD2)[MD1][MD1] = (Real_type(*)[MD1][MD1])(sm0 + 2);
 
 #define DIFFUSION3DPA_0_CPU                                                    \
-  constexpr Index_type MQ1 = DPA_Q1D;                                          \
-  constexpr Index_type MD1 = DPA_D1D;                                          \
+  constexpr Index_type MQ1 = diff::Q1D;                                          \
+  constexpr Index_type MD1 = diff::D1D;                                          \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   Real_type sBG[MQ1 * MD1];                                                    \
   Real_type(*B)[MD1] = (Real_type(*)[MD1])sBG;                                 \
@@ -315,7 +317,7 @@
 #define DIFFUSION3DPA_3                                                        \
   Real_type u = 0.0, v = 0.0;                                                  \
   RAJAPERF_UNROLL(MD1)                                                         \
-  for (Index_type dx = 0; dx < DPA_D1D; ++dx) {                                \
+  for (Index_type dx = 0; dx < diff::D1D; ++dx) {                                \
     const Real_type coords = s_X[dz][dy][dx];                                  \
     u += coords * B[qx][dx];                                                   \
     v += coords * G[qx][dx];                                                   \
@@ -326,7 +328,7 @@
 #define DIFFUSION3DPA_4                                                        \
   Real_type u = 0.0, v = 0.0, w = 0.0;                                         \
   RAJAPERF_UNROLL(MD1)                                                         \
-  for (Index_type dy = 0; dy < DPA_D1D; ++dy) {                                \
+  for (Index_type dy = 0; dy < diff::D1D; ++dy) {                              \
     u += DDQ1[dz][dy][qx] * B[qy][dy];                                         \
     v += DDQ0[dz][dy][qx] * G[qy][dy];                                         \
     w += DDQ0[dz][dy][qx] * B[qy][dy];                                         \
@@ -338,7 +340,7 @@
 #define DIFFUSION3DPA_5                                                        \
   Real_type u = 0.0, v = 0.0, w = 0.0;                                         \
   RAJAPERF_UNROLL(MD1)                                                         \
-  for (Index_type dz = 0; dz < DPA_D1D; ++dz) {                                \
+  for (Index_type dz = 0; dz < diff::D1D; ++dz) {                                \
     u += DQQ0[dz][qy][qx] * B[qz][dz];                                         \
     v += DQQ1[dz][qy][qx] * B[qz][dz];                                         \
     w += DQQ2[dz][qy][qx] * G[qz][dz];                                         \
@@ -369,7 +371,7 @@
 #define DIFFUSION3DPA_7                                                        \
   Real_type u = 0.0, v = 0.0, w = 0.0;                                         \
   RAJAPERF_UNROLL(MQ1)                                                         \
-  for (Index_type qx = 0; qx < DPA_Q1D; ++qx) {                                \
+  for (Index_type qx = 0; qx < diff::Q1D; ++qx) {                                \
     u += QQQ0[qz][qy][qx] * Gt[dx][qx];                                        \
     v += QQQ1[qz][qy][qx] * Bt[dx][qx];                                        \
     w += QQQ2[qz][qy][qx] * Bt[dx][qx];                                        \
@@ -380,8 +382,8 @@
 
 #define DIFFUSION3DPA_8                                                        \
   Real_type u = 0.0, v = 0.0, w = 0.0;                                         \
-  RAJAPERF_UNROLL(DPA_Q1D)                                                     \
-  for (Index_type qy = 0; qy < DPA_Q1D; ++qy) {                                \
+  RAJAPERF_UNROLL(diff::Q1D)                                                     \
+  for (Index_type qy = 0; qy < diff::Q1D; ++qy) {                                \
     u += QQD0[qz][qy][dx] * Bt[dy][qy];                                        \
     v += QQD1[qz][qy][dx] * Gt[dy][qy];                                        \
     w += QQD2[qz][qy][dx] * Bt[dy][qy];                                        \
@@ -393,7 +395,7 @@
 #define DIFFUSION3DPA_9                                                        \
   Real_type u = 0.0, v = 0.0, w = 0.0;                                         \
   RAJAPERF_UNROLL(MQ1)                                                         \
-  for (Index_type qz = 0; qz < DPA_Q1D; ++qz) {                                \
+  for (Index_type qz = 0; qz < diff::Q1D; ++qz) {                                \
     u += QDD0[qz][dy][dx] * Bt[dz][qz];                                        \
     v += QDD1[qz][dy][dx] * Bt[dz][qz];                                        \
     w += QDD2[qz][dy][dx] * Gt[dz][qz];                                        \
@@ -429,7 +431,7 @@ public:
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = DPA_Q1D * DPA_Q1D * DPA_Q1D;
+  static const size_t default_gpu_block_size = diff::Q1D * diff::Q1D * diff::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
