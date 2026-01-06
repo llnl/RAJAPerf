@@ -288,7 +288,6 @@ buildElemToDofTable(int Nx, int Ny, int Nz, int p,
 {
   const int num_nodes_x = Nx * p + 1;
   const int num_nodes_y = Ny * p + 1;
-  const int num_nodes_z = Nz * p + 1;
 
   const int ndof_per_elem = (p + 1) * (p + 1) * (p + 1);
 

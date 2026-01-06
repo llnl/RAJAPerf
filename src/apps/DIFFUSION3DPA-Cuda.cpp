@@ -73,8 +73,8 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
   }
   __syncthreads();
   if (threadIdx.z == 0) {
-    GPU_FOREACH_THREAD_DIRECT(d, y, DPA_D1D) {
-      GPU_FOREACH_THREAD_DIRECT(q, x, DPA_Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, DPA_D1D) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, DPA_Q1D) {
         DIFFUSION3DPA_6;
       }
     }
@@ -103,6 +103,7 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
       }
     }
   }
+
 }
 
 template < size_t block_size >
@@ -127,9 +128,9 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel( (Diffusion3DPA<block_size>),
-                          NE, nthreads_per_block,
-                          shmem, res.get_stream(),
-                          Basis, dBasis, D, X, Y, symmetric );
+                         NE, nthreads_per_block,
+                         shmem, res.get_stream(),
+                         Basis, dBasis, D, X, Y, symmetric );
     }
     stopTimer();
 
@@ -248,7 +249,7 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
                        [&](Index_type qx) {
 
-                         DIFFUSION3DPA_5;
+                          DIFFUSION3DPA_5;
 
                        } // lambda (qx)
                      ); // RAJA::loop<inner_x>
@@ -262,9 +263,9 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                [&](Index_type RAJA_UNUSED_ARG(dz)) {
                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](Index_type d) {
+                   [&](Index_type dy) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](Index_type q) {
+                       [&](Index_type qx) {
 
                          DIFFUSION3DPA_6;
 
