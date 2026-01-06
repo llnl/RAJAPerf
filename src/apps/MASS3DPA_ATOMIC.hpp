@@ -12,8 +12,8 @@
 ///
 /// for (int e = 0; e < NE; ++e) {
 ///
-/// constexpr int MQ1 = mpa3d_at::Q1D;
-/// constexpr int MD1 = mpa3d_at::D1D;
+/// constexpr int MQ1 = mpa_at::Q1D;
+/// constexpr int MD1 = mpa_at::D1D;
 ///
 /// constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 ///
@@ -31,30 +31,30 @@
 ///
 ///   int thread_dofs[MD1 * MD1 * MD1];
 ///
-///   for(int dz=0; dz<mpa3d_at::D1D; ++dz) {
-///     for(int dy=0; dy<mpa3d_at::D1D; ++dy) {
-///       for(int dx=0; dx<mpa3d_at::D1D; ++dx) {
-///         int j          = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);
+///   for(int dz=0; dz<mpa_at::D1D; ++dz) {
+///     for(int dy=0; dy<mpa_at::D1D; ++dy) {
+///       for(int dx=0; dx<mpa_at::D1D; ++dx) {
+///         int j          = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 ///         //missing dof_map for lexicographical ordering
-///         thread_dofs[j] = elemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D *
-///         mpa3d_at::D1D * e]; sm_X[dz][dy][dx]  = X[thread_dofs[j]];
+///         thread_dofs[j] = elemToDoF[j + mpa_at::D1D * mpa_at::D1D *
+///         mpa_at::D1D * e]; sm_X[dz][dy][dx]  = X[thread_dofs[j]];
 ///       }
 ///     }
 ///   }
 ///
-///   for(int d=0; d<mpa3d_at::D1D; ++d) {
-///     for(int q=0; q<mpa3d_at::Q1D; ++q) {
+///   for(int d=0; d<mpa_at::D1D; ++d) {
+///     for(int q=0; q<mpa_at::Q1D; ++q) {
 ///       sm_B[q][d]  = MPAT_B(q, d);
 ///       sm_Bt[d][q] = sm_B[q][d];
 ///     }
 ///   }
 ///
 ///
-///   for(int dz=0; dz<mpa3d_at::D1D; ++dz) {
-///     for(int dy=0; dy<mpa3d_at::D1D; ++dy) {
-///       for(int qx=0; qx<mpa3d_at::Q1D; ++qx) {
+///   for(int dz=0; dz<mpa_at::D1D; ++dz) {
+///     for(int dy=0; dy<mpa_at::D1D; ++dy) {
+///       for(int qx=0; qx<mpa_at::Q1D; ++qx) {
 ///         double u = 0.0;
-///         for (int dx = 0; dx < mpa3d_at::D1D; ++dx)
+///         for (int dx = 0; dx < mpa_at::D1D; ++dx)
 ///         {
 ///           u += sm_X[dz][dy][dx] * sm_B[qx][dx];
 ///         }
@@ -63,12 +63,12 @@
 ///     }
 ///   }
 ///
-///   for(int dz=0; dz<mpa3d_at::D1D; ++dz) {
-///     for(int qy=0; qy<mpa3d_at::Q1D; ++qy) {
-///       for(int qx=0; qx<mpa3d_at::Q1D; ++qx) {
+///   for(int dz=0; dz<mpa_at::D1D; ++dz) {
+///     for(int qy=0; qy<mpa_at::Q1D; ++qy) {
+///       for(int qx=0; qx<mpa_at::Q1D; ++qx) {
 ///
 ///         double u = 0.0;
-///         for (int dy = 0; dy < mpa3d_at::D1D; ++dy)
+///         for (int dy = 0; dy < mpa_at::D1D; ++dy)
 ///         {
 ///           u += DDQ[dz][dy][qx] * sm_B[qy][dy];
 ///         }
@@ -77,11 +77,11 @@
 ///     }
 ///   }
 ///
-///   for(int qz=0; qz<mpa3d_at::Q1D; ++qz) {
-///     for(int qy=0; qy<mpa3d_at::Q1D; ++qy) {
-///       for(int qx=0; qx<mpa3d_at::Q1D; ++qx) {
+///   for(int qz=0; qz<mpa_at::Q1D; ++qz) {
+///     for(int qy=0; qy<mpa_at::Q1D; ++qy) {
+///       for(int qx=0; qx<mpa_at::Q1D; ++qx) {
 ///         double u = 0.0;
-///         for (int dz = 0; dz < mpa3d_at::D1D; ++dz)
+///         for (int dz = 0; dz < mpa_at::D1D; ++dz)
 ///         {
 ///           u += DQQ[dz][qy][qx] * sm_B[qz][dz];
 ///         }
@@ -90,11 +90,11 @@
 ///     }
 ///   }
 ///
-///   for(int qz=0; qz<mpa3d_at::Q1D; ++qz) {
-///     for(int qy=0; qy<mpa3d_at::Q1D; ++qy) {
-///       for(int dx=0; dx<mpa3d_at::D1D; ++dx) {
+///   for(int qz=0; qz<mpa_at::Q1D; ++qz) {
+///     for(int qy=0; qy<mpa_at::Q1D; ++qy) {
+///       for(int dx=0; dx<mpa_at::D1D; ++dx) {
 ///         double u = 0.0;
-///         for (int qx = 0; qx < mpa3d_at::Q1D; ++qx)
+///         for (int qx = 0; qx < mpa_at::Q1D; ++qx)
 ///         {
 ///           u += QQQ[qz][qy][qx] * sm_Bt[dx][qx];
 ///         }
@@ -103,11 +103,11 @@
 ///       }
 ///     }
 ///
-///       for(int qz=0; qz<mpa3d_at::Q1D; ++qz) {
-///         for(int dy=0; dy<mpa3d_at::D1D; ++dy) {
-///           for(int dx=0; dx<mpa3d_at::D1D; ++dx) {
+///       for(int qz=0; qz<mpa_at::Q1D; ++qz) {
+///         for(int dy=0; dy<mpa_at::D1D; ++dy) {
+///           for(int dx=0; dx<mpa_at::D1D; ++dx) {
 ///             double u = 0.0;
-///             for (int qy = 0; qy<mpa3d_at::Q1D; ++qy)
+///             for (int qy = 0; qy<mpa_at::Q1D; ++qy)
 ///             {
 ///             u += QQD[qz][qy][dx] * sm_Bt[dy][qy];
 ///             }
@@ -116,15 +116,15 @@
 ///         }
 ///       }
 ///
-///       for(int dz=0; dz<mpa3d_at::D1D; ++dz) {
-///         for(int dy=0; dy<mpa3d_at::D1D; ++dy) {
-///           for(int dx=0; dx<mpa3d_at::D1D; ++dx) {
+///       for(int dz=0; dz<mpa_at::D1D; ++dz) {
+///         for(int dy=0; dy<mpa_at::D1D; ++dy) {
+///           for(int dx=0; dx<mpa_at::D1D; ++dx) {
 ///             double u = 0.0;
-///             for (int qz = 0; qz < mpa3d_at::Q1D; ++qz)
+///             for (int qz = 0; qz < mpa_at::Q1D; ++qz)
 ///             {
 ///                u += QDD[qz][dy][dx] * sm_Bt[dz][qz];
 ///             }
-///             const int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);
+///             const int j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 ///             Y[thread_dofs[j]] += u; //atomic add
 ///           }
 ///         }
@@ -138,7 +138,6 @@
 
 #define MASS3DPA_ATOMIC_DATA_SETUP                                             \
   Real_ptr B = m_B;                                                            \
-  Real_ptr Bt = m_Bt;                                                          \
   Real_ptr D = m_D;                                                            \
   Real_ptr X = m_X;                                                            \
   Real_ptr Y = m_Y;                                                            \
@@ -151,20 +150,19 @@
 #include "RAJA/RAJA.hpp"
 
 // Number of Dofs/Qpts in 1D
-namespace mpa3d_at {
+namespace mpa_at {
 constexpr int D1D = 3;
 constexpr int Q1D = 4;
 } // namespace mpa3d_at
 
-#define MPAT_B(x, y) B[x + mpa3d_at::Q1D * y]
-#define MPAT_Bt(x, y) Bt[x + mpa3d_at::D1D * y]
+#define MPAT_B(x, y) B[x + mpa_at::Q1D * y]
 #define MPAT_D(qx, qy, qz, e)                                                  \
-  D[qx + mpa3d_at::Q1D * qy + mpa3d_at::Q1D * mpa3d_at::Q1D * qz +             \
-    mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D * e]
+  D[qx + mpa_at::Q1D * qy + mpa_at::Q1D * mpa_at::Q1D * qz +             \
+    mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * e]
 
 #define MASS3DPA_ATOMIC_0_CPU                                                  \
-  constexpr int MQ1 = mpa3d_at::Q1D;                                           \
-  constexpr int MD1 = mpa3d_at::D1D;                                           \
+  constexpr int MQ1 = mpa_at::Q1D;                                           \
+  constexpr int MD1 = mpa_at::D1D;                                           \
   constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
   double sm_B[MQ1][MD1];                                                       \
   double sm_Bt[MD1][MQ1];                                                      \
@@ -179,8 +177,8 @@ constexpr int Q1D = 4;
   int thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_0_GPU                                                  \
-  constexpr int MQ1 = mpa3d_at::Q1D;                                           \
-  constexpr int MD1 = mpa3d_at::D1D;                                           \
+  constexpr int MQ1 = mpa_at::Q1D;                                           \
+  constexpr int MD1 = mpa_at::D1D;                                           \
   constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
   RAJA_TEAM_SHARED double sm_B[MQ1][MD1];                                      \
   RAJA_TEAM_SHARED double sm_Bt[MD1][MQ1];                                     \
@@ -195,9 +193,9 @@ constexpr int Q1D = 4;
   RAJA_TEAM_SHARED int thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_1                                                      \
-  int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                      \
+  int j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);                      \
   thread_dofs[j] =                                                             \
-      ElemToDoF[j + mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * e];        \
+      ElemToDoF[j + mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * e];        \
   sm_X[dz][dy][dx] =                                                           \
       X[thread_dofs[j]]; // missing dof_map for lexicographical ordering
 
@@ -209,7 +207,7 @@ constexpr int Q1D = 4;
 //2 * D1D
 #define MASS3DPA_ATOMIC_3                                                      \
   double u = 0.0;                                                              \
-  for (int dx = 0; dx < mpa3d_at::D1D; ++dx) {                                 \
+  for (int dx = 0; dx < mpa_at::D1D; ++dx) {                                 \
     u += sm_X[dz][dy][dx] * sm_B[qx][dx];                                      \
   }                                                                            \
   DDQ[dz][dy][qx] = u;
@@ -217,7 +215,7 @@ constexpr int Q1D = 4;
 //2 * D1D
 #define MASS3DPA_ATOMIC_4                                                      \
   double u = 0.0;                                                              \
-  for (int dy = 0; dy < mpa3d_at::D1D; ++dy) {                                 \
+  for (int dy = 0; dy < mpa_at::D1D; ++dy) {                                 \
     u += DDQ[dz][dy][qx] * sm_B[qy][dy];                                       \
   }                                                                            \
   DQQ[dz][qy][qx] = u;
@@ -225,7 +223,7 @@ constexpr int Q1D = 4;
 //2 * D1D + 1 
 #define MASS3DPA_ATOMIC_5                                                      \
   double u = 0.0;                                                              \
-  for (int dz = 0; dz < mpa3d_at::D1D; ++dz) {                                 \
+  for (int dz = 0; dz < mpa_at::D1D; ++dz) {                                 \
     u += DQQ[dz][qy][qx] * sm_B[qz][dz];                                       \
   }                                                                            \
   QQQ[qz][qy][qx] = u * MPAT_D(qx, qy, qz, e);
@@ -233,7 +231,7 @@ constexpr int Q1D = 4;
 //2 * Q1D
 #define MASS3DPA_ATOMIC_6                                                      \
   double u = 0.0;                                                              \
-  for (int qx = 0; qx < mpa3d_at::Q1D; ++qx) {                                 \
+  for (int qx = 0; qx < mpa_at::Q1D; ++qx) {                                 \
     u += QQQ[qz][qy][qx] * sm_Bt[dx][qx];                                      \
   }                                                                            \
   QQD[qz][qy][dx] = u;
@@ -241,7 +239,7 @@ constexpr int Q1D = 4;
 //2 * Q1D
 #define MASS3DPA_ATOMIC_7                                                      \
   double u = 0.0;                                                              \
-  for (int qy = 0; qy < mpa3d_at::Q1D; ++qy) {                                 \
+  for (int qy = 0; qy < mpa_at::Q1D; ++qy) {                                 \
     u += QQD[qz][qy][dx] * sm_Bt[dy][qy];                                      \
   }                                                                            \
   QDD[qz][dy][dx] = u;
@@ -249,10 +247,10 @@ constexpr int Q1D = 4;
 //2 * Q1D + 1
 #define MASS3DPA_ATOMIC_8                                                      \
   double u = 0.0;                                                              \
-  for (int qz = 0; qz < mpa3d_at::Q1D; ++qz) {                                 \
+  for (int qz = 0; qz < mpa_at::Q1D; ++qz) {                                 \
     u += QDD[qz][dy][dx] * sm_Bt[dz][qz];                                      \
   }                                                                            \
-  const int j = dx + mpa3d_at::D1D * (dy + dz * mpa3d_at::D1D);                \
+  const int j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);                \
   RAJA::atomicAdd<RAJA::auto_atomic>(&Y[thread_dofs[j]], u); // atomic add
 
 namespace rajaperf {
@@ -349,7 +347,7 @@ public:
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D;
+  static const size_t default_gpu_block_size = mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;

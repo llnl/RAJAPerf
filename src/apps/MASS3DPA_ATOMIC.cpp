@@ -24,7 +24,7 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   setDefaultProblemSize(m_DOF_default);
 
   // polynomial order
-  m_P = mpa3d_at::D1D - 1;
+  m_P = mpa_at::D1D - 1;
 
   // approximate how many elements we need
   m_NE = std::max(static_cast<Index_type>(getTargetProblemSize() / pow(m_P, 3)),
@@ -44,32 +44,32 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
 
   setActualProblemSize(m_Tot_Dofs);
 
-  setItsPerRep(m_NE * mpa3d_at::D1D * mpa3d_at::D1D);
+  setItsPerRep(m_NE * mpa_at::D1D * mpa_at::D1D);
   setKernelsPerRep(1);
 
-  setBytesReadPerRep(2 * sizeof(Real_type) * mpa3d_at::Q1D *
-                         mpa3d_at::D1D + // B, Bt
-                     1 * sizeof(Index_type) * mpa3d_at::D1D * mpa3d_at::D1D *
-                         mpa3d_at::D1D * m_NE +           // ElemToDoF
+  setBytesReadPerRep(2 * sizeof(Real_type) * mpa_at::Q1D *
+                         mpa_at::D1D + // B, Bt
+                     1 * sizeof(Index_type) * mpa_at::D1D * mpa_at::D1D *
+                         mpa_at::D1D * m_NE +           // ElemToDoF
                      1 * sizeof(Real_type) * m_Tot_Dofs + // X
-                     1 * sizeof(Real_type) * mpa3d_at::Q1D * mpa3d_at::Q1D *
-                         mpa3d_at::Q1D * m_NE); // D
+                     1 * sizeof(Real_type) * mpa_at::Q1D * mpa_at::Q1D *
+                         mpa_at::Q1D * m_NE); // D
 
-  setBytesWrittenPerRep(1 * sizeof(Real_type) * mpa3d_at::D1D * mpa3d_at::D1D *
-                        mpa3d_at::D1D * m_NE); // Y
+  setBytesWrittenPerRep(1 * sizeof(Real_type) * mpa_at::D1D * mpa_at::D1D *
+                        mpa_at::D1D * m_NE); // Y
 
   setBytesAtomicModifyWrittenPerRep(m_Tot_Dofs);
 
   setFLOPsPerRep(
       m_NE *
-      (2 * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::Q1D +
-       2 * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::Q1D * mpa3d_at::Q1D +
-       2 * mpa3d_at::D1D * mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D +
-       mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D +
-       2 * mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::D1D +
-       2 * mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::D1D * mpa3d_at::D1D +
-       2 * mpa3d_at::Q1D * mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D +
-       mpa3d_at::D1D * mpa3d_at::D1D * mpa3d_at::D1D));
+      (2 * mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * mpa_at::Q1D +
+       2 * mpa_at::D1D * mpa_at::D1D * mpa_at::Q1D * mpa_at::Q1D +
+       2 * mpa_at::D1D * mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D +
+       mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D +
+       2 * mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * mpa_at::D1D +
+       2 * mpa_at::Q1D * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D +
+       2 * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D * mpa_at::D1D +
+       mpa_at::D1D * mpa_at::D1D * mpa_at::D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 
@@ -85,12 +85,10 @@ MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() {}
 void MASS3DPA_ATOMIC::setUp(VariantID vid,
                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
 
-  allocAndInitDataConst(m_B, Index_type(mpa3d_at::Q1D * mpa3d_at::D1D),
-                        Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt, Index_type(mpa3d_at::Q1D * mpa3d_at::D1D),
+  allocAndInitDataConst(m_B, Index_type(mpa_at::Q1D * mpa_at::D1D),
                         Real_type(1.0), vid);
   allocAndInitDataConst(
-      m_D, Index_type(mpa3d_at::Q1D * mpa3d_at::Q1D * mpa3d_at::Q1D * m_NE),
+      m_D, Index_type(mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * m_NE),
       Real_type(1.0), vid);
   allocAndInitDataConst(m_X, Index_type(m_Tot_Dofs), Real_type(1.0), vid);
   allocAndInitDataConst(m_Y, Index_type(m_Tot_Dofs), Real_type(0.0), vid);
@@ -112,7 +110,6 @@ void MASS3DPA_ATOMIC::tearDown(VariantID vid,
   (void)vid;
 
   deallocData(m_B, vid);
-  deallocData(m_Bt, vid);
   deallocData(m_D, vid);
   deallocData(m_X, vid);
   deallocData(m_Y, vid);
