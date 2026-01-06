@@ -114,6 +114,9 @@ Information reported in the file for each kernel is:
   * **MaxLoopDimensions** --  Number of levels in the largest nested loop.
   * **MaxArrayDimensions** -- Number of dimensions in the highest-dimensionality array.
   * **NumArrays** -- Total number of arrays initialized in the kernel.
+  * **ProblemDimensionality** -- Dimensionality of the problem the kernel is solving,
+    regardless of implementation dimensionality. For example, a 3D kernel may layout
+    data in 1D, but its problem dimensionality will still be 3.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
            like DRAM or HBM under idealized conditions. They assume caching is
