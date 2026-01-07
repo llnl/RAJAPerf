@@ -1270,7 +1270,7 @@ void Executor::outputRunData()
   //
   // Generate output file prefix (including directory path).
   //
-  outdir = recursiveMkdir(run_params.getOutputFilePrefix()+"-kernels");
+  outdir = recursiveMkdir(run_params.getOutputFilePrefix()+"-per-kernel");
   if ( !outdir.empty() ) {
 #if defined(_WIN32)
     _chdir(outdir.c_str());
