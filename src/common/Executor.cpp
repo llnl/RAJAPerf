@@ -917,7 +917,7 @@ void Executor::writeKernelRunDataSummary(ostream& str,
             << sepchr <<left << setw(tuning_width) << tuning_name
             << sepchr <<right<< setw(psize_width) << problem_size
             << sepchr <<left << setw(checksum_width) << checksum_result
-            << setprecision(prec) << std::defaultfloat
+            << showpoint << setprecision(prec) << std::defaultfloat
             << sepchr <<right<< setw(timePerRep_width) << time_per_rep
             << sepchr <<right<< setw(bandwidth_width) << bandwidth
             << sepchr <<right<< setw(flops_width) << flops
