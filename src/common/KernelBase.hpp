@@ -16,6 +16,7 @@
 #include "common/GPUUtils.hpp"
 
 #include "RAJA/util/Timer.hpp"
+#include "RAJA/util/reduce.hpp"
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
 #include <mpi.h>
 #endif
@@ -123,6 +124,8 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
+  void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
+  void setChecksumScaleFactor(Checksum_type csf) { checksum_scale_factor = csf; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -210,6 +213,7 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
+  Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
@@ -279,8 +283,39 @@ public:
   double getTotTime(VariantID vid, size_t tune_idx) const
   { return tot_time[vid].at(tune_idx); }
 
-  Checksum_type getChecksum(VariantID vid, size_t tune_idx) const
-  { return checksum[vid].at(tune_idx); }
+  // Get reference checksum (first variant tuning run)
+  Checksum_type getReferenceChecksum() const
+  {
+    if (checksum_reference_variant == NumVariants) {
+      throw std::runtime_error("Can't get reference checksum average if kernel was not run");
+    }
+    return checksum_reference;
+  }
+  Checksum_type getLastChecksum() const
+  {
+    return checksum.get() * checksum_scale_factor;
+  }
+  Checksum_type getChecksumAverage(VariantID vid, size_t tune_idx) const
+  {
+    if (num_exec[vid].at(tune_idx) <= 0) {
+      throw std::runtime_error("Can't get checksum average if variant tuning was not run");
+    }
+    return checksum_sum[vid].at(tune_idx).get() / num_exec[vid].at(tune_idx);
+  }
+  Checksum_type getChecksumMaxDifference(VariantID vid, size_t tune_idx) const
+  {
+    if (num_exec[vid].at(tune_idx) <= 0) {
+      throw std::runtime_error("Can't get checksum max diff if variant tuning was not run");
+    }
+
+    Checksum_type reference_checksum = getReferenceChecksum();
+
+    Checksum_type cksum_max_diff = std::abs(reference_checksum - checksum_min[vid].at(tune_idx));
+    cksum_max_diff = std::max(cksum_max_diff,
+                              std::abs(reference_checksum - checksum_max[vid].at(tune_idx)));
+
+    return cksum_max_diff;
+  }
 
   void execute(VariantID vid, size_t tune_idx);
 
@@ -521,23 +556,21 @@ public:
   }
 
   template <typename T>
-  long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len,
-                           Real_type scale_factor = 1.0)
+  void addToChecksum(T val)
   {
-    return rajaperf::calcChecksum(dataSpace,
-      ptr, len, getDataAlignment(), scale_factor);
+    checksum += static_cast<Checksum_type>(val);
   }
 
   template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, VariantID vid)
+  void addToChecksum(T* ptr, Size_type len, VariantID vid)
   {
-    return calcChecksum(getDataSpace(vid), ptr, len);
+    addToChecksum(getDataSpace(vid), ptr, len);
   }
 
   template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, Real_type scale_factor, VariantID vid)
+  void addToChecksum(DataSpace dataSpace, T* ptr, Size_type len)
   {
-    return calcChecksum(getDataSpace(vid), ptr, len, scale_factor);
+    checksum += rajaperf::calcChecksum(dataSpace, ptr, len, getDataAlignment());
   }
 
   void startTimer()
@@ -613,8 +646,13 @@ public:
 protected:
   const RunParams& run_params;
 
-  std::vector<Checksum_type> checksum[NumVariants];
-  Checksum_type checksum_scale_factor;
+  struct ChecksumTolerance
+  {
+    static constexpr inline Checksum_type zero = 0.0;
+    static constexpr inline Checksum_type tight = 1e-12;
+    static constexpr inline Checksum_type normal = 1e-7;
+    static constexpr inline Checksum_type loose = 5e-6;
+  };
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
@@ -662,6 +700,14 @@ private:
   bool uses_feature[NumFeatures];
 
   ChecksumConsistency checksum_consistency;
+  Checksum_type checksum_tolerance;
+  Checksum_type checksum_scale_factor;
+
+  RAJA::KahanSum<Checksum_type> checksum;
+
+  std::vector<Checksum_type> checksum_min[NumVariants];
+  std::vector<Checksum_type> checksum_max[NumVariants];
+  std::vector<RAJA::KahanSum<Checksum_type>> checksum_sum[NumVariants];
 
   Complexity complexity;
 
@@ -682,6 +728,10 @@ private:
 
   VariantID running_variant;
   size_t running_tuning;
+
+  Checksum_type checksum_reference;
+  VariantID checksum_reference_variant;
+  size_t checksum_reference_tuning;
 
   std::vector<int> num_exec[NumVariants];
 

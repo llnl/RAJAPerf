@@ -35,6 +35,7 @@ INDEXLIST::INDEXLIST(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -59,15 +60,14 @@ void INDEXLIST::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_len = -1;
 }
 
-void INDEXLIST::updateChecksum(VariantID vid, size_t tune_idx)
+void INDEXLIST::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_list, getActualProblemSize(), vid);
-  checksum[vid][tune_idx] += Checksum_type(m_len);
+  addToChecksum(m_list, getActualProblemSize(), vid);
+  addToChecksum(m_len);
 }
 
 void INDEXLIST::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_list, vid);
 }
