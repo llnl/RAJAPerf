@@ -40,11 +40,11 @@ class RunParams;
  * IMPORTANT: This is only modified when a group is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE GroupNames ARRAY IN IMPLEMENTATION FILE!!!
+ *            ITEMS IN THE KernelGroupNames ARRAY IN IMPLEMENTATION FILE!!!
  *
  *******************************************************************************
  */
-enum GroupID {
+enum struct KernelGroupID : int {
 
   Basic = 0,
   Lcals,
@@ -54,7 +54,7 @@ enum GroupID {
   Algorithm,
   Comm,
 
-  NumGroups // Keep this one last and DO NOT remove (!!)
+  NumKernelGroups // Keep this one last and DO NOT remove (!!)
 
 };
 
@@ -377,11 +377,11 @@ enum struct DataSpace {
 /*!
  *******************************************************************************
  *
- * \brief Return group name associated with GroupID enum value.
+ * \brief Return group name associated with KernelGroupID enum value.
  *
  *******************************************************************************
  */
-const std::string& getGroupName(GroupID gid);
+const std::string& getKernelGroupName(KernelGroupID kgid);
 
 /*!
  *******************************************************************************

@@ -1794,12 +1794,12 @@ void RunParams::printDataSpaceNames(std::ostream& str) const
 }
 
 
-void RunParams::printGroupNames(std::ostream& str) const
+void RunParams::printKernelGroupNames(std::ostream& str) const
 {
-  str << "\nAvailable groups:";
-  str << "\n-----------------\n";
-  for (int gid = 0; gid < NumGroups; ++gid) {
-    str << getGroupName(static_cast<GroupID>(gid)) << std::endl;
+  str << "\nAvailable kernel groups:";
+  str << "\n------------------------\n";
+  for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+    str << getKernelGroupName(static_cast<KernelGroupID>(kgid)) << std::endl;
   }
   str.flush();
 }
@@ -2017,11 +2017,10 @@ void RunParams::processKernelInput()
     // groups2exclude will contain names of valid groups to exclude.
     //
     Svector groups2exclude;
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+    for (auto const& kern_name : exclude_kern_names) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2exclude.push_back(group_name);
         }
       }
@@ -2032,17 +2031,16 @@ void RunParams::processKernelInput()
     // those group(s) to exclude from run. Also remove the group names from
     // the exclude_kern_names list.
     //
-    for (size_t ig = 0; ig < groups2exclude.size(); ++ig) {
-      const std::string& gname(groups2exclude[ig]);
+    for (auto const& group_name : groups2exclude) {
 
       for (size_t ik = 0; ik < NumKernels; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getFullKernelName(kid).find(gname) != std::string::npos ) {
+        if ( getFullKernelName(kid).find(group_name) != std::string::npos ) {
           exclude_kernels.insert(kid);
         }
       }
 
-      exclude_kern_names.remove(gname);
+      exclude_kern_names.remove(group_name);
 
     }  // iterate over groups to exclude
 
@@ -2050,13 +2048,13 @@ void RunParams::processKernelInput()
     // Search for valid names of individual kernels in remaining items in
     // exclude_kern_names list.
     //
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
+    for (auto const& kern_name : exclude_kern_names) {
       bool found_it = false;
 
       for (size_t ik = 0; ik < NumKernels && !found_it; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getKernelName(kid) == *it || getFullKernelName(kid) == *it ) {
+        if ( getKernelName(kid) == kern_name ||
+             getFullKernelName(kid) == kern_name ) {
           exclude_kernels.insert(kid);
           found_it = true;
         }
@@ -2064,7 +2062,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_kernel_input.push_back(*it);
+        invalid_exclude_kernel_input.push_back(kern_name);
       }
 
     }  // iterate over names of kernels to exclude
@@ -2166,8 +2164,8 @@ void RunParams::processKernelInput()
     Svector warmup_groups2run;
     for (Slist::iterator it = warmup_kern_names.begin(); it != warmup_kern_names.end(); ++it)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
         if ( group_name == *it ) {
           warmup_groups2run.push_back(group_name);
         }
@@ -2178,8 +2176,8 @@ void RunParams::processKernelInput()
     // If group name(s) found in warmup_kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from warmup_kern_names list.
     //
-    for (size_t ig = 0; ig < warmup_groups2run.size(); ++ig) {
-      const std::string& gname(warmup_groups2run[ig]);
+    for (size_t ikg = 0; ikg < warmup_groups2run.size(); ++ikg) {
+      const std::string& gname(warmup_groups2run[ikg]);
 
       for (size_t kid = 0; kid < NumKernels; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
@@ -2309,11 +2307,11 @@ void RunParams::processKernelInput()
     // groups2run will contain names of groups to run.
     //
     Svector groups2run;
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2run.push_back(group_name);
         }
       }
@@ -2323,30 +2321,31 @@ void RunParams::processKernelInput()
     // If group name(s) found in kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from kern_names list.
     //
-    for (size_t ig = 0; ig < groups2run.size(); ++ig) {
-      const std::string& gname(groups2run[ig]);
-
-      for (size_t kid = 0; kid < NumKernels; ++kid) {
+    for (auto const& group_name : groups2run)
+    {
+      for (size_t kid = 0; kid < NumKernels; ++kid)
+      {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
+        if ( getFullKernelName(tkid).find(group_name) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
           run_kernels.insert(tkid);
         }
       }
 
-      kern_names.remove(gname);
+      kern_names.remove(group_name);
     }
 
     //
     // Look for matching names of individual kernels in remaining kern_names.
     //
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
       bool found_it = false;
 
       for (size_t kid = 0; kid < NumKernels && !found_it; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
+        if ( getKernelName(tkid) == kern_name ||
+             getFullKernelName(tkid) == kern_name ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
             run_kernels.insert(tkid);
           }
@@ -2356,7 +2355,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input for output message.
       if ( !found_it ) {
-        invalid_kernel_input.push_back(*it);
+        invalid_kernel_input.push_back(kern_name);
       }
 
     } // iterate over kernel name input

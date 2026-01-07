@@ -43,7 +43,7 @@
 #define CALI_START \
     if (doCaliperTiming) { \
       std::string kstr = getName(); \
-      std::string gstr = getGroupName(kstr); \
+      std::string gstr = getKernelGroupName(kstr); \
       std::string vstr = "RAJAPerf"; \
       doOnceCaliMetaBegin(running_variant, running_tuning); \
       CALI_MARK_BEGIN(vstr.c_str()); \
@@ -54,7 +54,7 @@
 #define CALI_STOP \
     if (doCaliperTiming) { \
       std::string kstr = getName(); \
-      std::string gstr = getGroupName(kstr); \
+      std::string gstr = getKernelGroupName(kstr); \
       std::string vstr = "RAJAPerf"; \
       CALI_MARK_END(kstr.c_str()); \
       CALI_MARK_END(gstr.c_str()); \
@@ -602,7 +602,7 @@ public:
     }
   }
 
-  std::string getGroupName(const std::string &kname )
+  std::string getKernelGroupName(const std::string &kname )
   {
     std::size_t found = kname.find("_");
     return kname.substr(0,found);
