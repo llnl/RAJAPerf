@@ -1232,14 +1232,14 @@ void Executor::outputRunData()
   getFOMGroups(fom_groups);
 
   {
-    unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernels.csv");
+    unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernel-details.csv");
     if ( *file ) {
       constexpr bool to_file = true;
       constexpr bool include_data = true;
       writeKernelInfoSummary(*file, kernels, to_file, !include_data);
     }
 
-    file = openOutputFile(out_fprefix + "-kernel-data.csv");
+    file = openOutputFile(out_fprefix + "-kernel-run-data.csv");
     if ( *file ) {
       constexpr bool to_file = true;
       constexpr bool include_data = true;
