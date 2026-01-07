@@ -211,11 +211,12 @@ Adding a variant group
 ----------------------------
 
 If a variant is added as part of a new group or new groups of variants in the
-Suite, new value(s) must be added to the ``KernelGroupID`` enum in the
-``RAJAPerfSuite.hpp`` header file and an associated variant group string(s) name
-must be added to the ``KernelGroupNames`` string array in the ``RAJAPerfSuite.cpp``
-source file. The process is similar to adding a new variant group ID and name
-described above.
+Suite, new value(s) must be added to the ``VariantGroupID`` enum in the
+``RAJAPerfSuite.hpp`` header file and an associated variant group string name(s)
+must be added to the ``VariantGroupNames`` string array in the ``RAJAPerfSuite.cpp``
+source file. Adding a new variant group ID and name is essentially the same as
+adding a kernel group ID and name, which is described in
+:ref:`structure_addkernel_group-label`.
 
 .. note:: Enumeration values and string array entries for variant groups must be
           kept consistent, in the same order and matching one-to-one.
