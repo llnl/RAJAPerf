@@ -1417,18 +1417,20 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ek INIT3 Apps (exclude INIT3 kernel and all kernels in Apps group)\n\n";
 
   str << "\t --variants, -v <space-separated strings> [Default is run all]\n"
-      << "\t      (names of variants to run)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+      << "\t      (names of variants and/or groups of variants to run)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and group names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --variants RAJA_CUDA (run all RAJA_CUDA kernel variants)\n"
-      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --variants RAJA (run all RAJA kernel variants)\n"
+      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -v Base_Seq RAJA (run Base_Seq and RAJA variants)\n\n";
 
   str << "\t --exclude-variants, -ev <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of variants to exclude)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+      << "\t      (names of variants and/or groups of variants to exclude)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and group names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --exclude-variants RAJA_CUDA (exclude all RAJA_CUDA kernel variants)\n"
-      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --exclude-variants RAJA (exclude all RAJA kernel variants)\n"
+      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -ev Base_Seq RAJA (exclude Base_Seq and RAJA variants)\n\n";
 
   str << "\t --features, -f <space-separated strings> [Default is run all]\n"
       << "\t      (names of features to run)\n"
@@ -1757,8 +1759,8 @@ void RunParams::printFullKernelNames(std::ostream& str) const
 
 void RunParams::printVariantNames(std::ostream& str) const
 {
-  str << "\nAvailable variants:";
-  str << "\n-------------------\n";
+  str << "\nAvailable variants (<group name>_<group name>):";
+  str << "\n-----------------------------------------------\n";
   for (int vid = 0; vid < NumVariants; ++vid) {
     str << getVariantName(static_cast<VariantID>(vid)) << std::endl;
   }
