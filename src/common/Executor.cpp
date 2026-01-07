@@ -1089,6 +1089,18 @@ void Executor::outputRunData()
     }
   }
 
+  //
+  // Generate output file prefix (including directory path).
+  //
+  outdir = recursiveMkdir(run_params.getOutputFilePrefix()+"-kernels");
+  if ( !outdir.empty() ) {
+#if defined(_WIN32)
+    _chdir(outdir.c_str());
+#else
+    chdir(outdir.c_str());
+#endif
+  }
+  out_fprefix = "./" + run_params.getOutputFilePrefix();
 
   for (size_t i = 0; i < kernels.size(); ++i) {
 
