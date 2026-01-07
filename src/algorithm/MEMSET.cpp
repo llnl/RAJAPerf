@@ -35,6 +35,7 @@ MEMSET::MEMSET(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -53,14 +54,13 @@ void MEMSET::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_val = 0.0;
 }
 
-void MEMSET::updateChecksum(VariantID vid, size_t tune_idx)
+void MEMSET::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_x, getActualProblemSize(), vid);
+  addToChecksum(m_x, getActualProblemSize(), vid);
 }
 
 void MEMSET::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
 }
 

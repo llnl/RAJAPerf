@@ -49,11 +49,11 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   setFLOPsPerRep( (13 + 2) * (m_n-2)*(m_n-2) +
                   (13 + 2) * (m_n-2)*(m_n-2) );
 
-  checksum_scale_factor = 0.0000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.0000001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
@@ -74,14 +74,13 @@ void POLYBENCH_ADI::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_Q, m_n * m_n, vid);
 }
 
-void POLYBENCH_ADI::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_ADI::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_U, m_n * m_n, checksum_scale_factor , vid);
+  addToChecksum(m_U, m_n * m_n, vid);
 }
 
 void POLYBENCH_ADI::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_U, vid);
   deallocData(m_V, vid);
   deallocData(m_P, vid);
