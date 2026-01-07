@@ -36,11 +36,11 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setFLOPsPerRep(4 * getActualProblemSize() +
                  7 * getActualProblemSize() / 2);
 
-  checksum_scale_factor = 0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.0001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
@@ -62,15 +62,14 @@ void IF_QUAD::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_x2, getActualProblemSize(), 0.0, vid);
 }
 
-void IF_QUAD::updateChecksum(VariantID vid, size_t tune_idx)
+void IF_QUAD::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_x1, getActualProblemSize(), checksum_scale_factor , vid);
-  checksum[vid][tune_idx] += calcChecksum(m_x2, getActualProblemSize(), checksum_scale_factor , vid);
+  addToChecksum(m_x1, getActualProblemSize(), vid);
+  addToChecksum(m_x2, getActualProblemSize(), vid);
 }
 
 void IF_QUAD::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
   deallocData(m_b, vid);
   deallocData(m_c, vid);

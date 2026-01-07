@@ -74,6 +74,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -137,7 +138,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
 
   // output volumes and moments on the host
-  allocData ( m_vv, nvals_per_pair * n_subz_intsc, Base_Seq ) ;
+  allocData ( DataSpace::Host, m_vv, nvals_per_pair * n_subz_intsc ) ;
 }
 
 
@@ -246,7 +247,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid,
-                                  size_t tune_idx)
+                                  size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;
@@ -257,8 +258,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum
-      (m_vv_out, nvals_per_pair*n_subz_intsc, vid  );
+  addToChecksum(m_vv_out, nvals_per_pair*n_subz_intsc, vid);
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid,
@@ -268,7 +268,7 @@ void INTSC_HEXHEX::tearDown(VariantID vid,
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
   deallocData ( m_vv_out, vid ) ;
-  deallocData ( m_vv, Base_Seq ) ;
+  deallocData ( DataSpace::Host, m_vv ) ;
 }
 
 } // end namespace apps

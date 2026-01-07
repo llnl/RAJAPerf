@@ -46,11 +46,11 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * m_domain->n_real_nodes ); // x (3d nodal stencil pattern: 8 touches per iterate)
   setFLOPsPerRep(9 * getItsPerRep());
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
@@ -76,15 +76,13 @@ void NODAL_ACCUMULATION_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   setRealZones_3d(m_real_zones, *m_domain);
 }
 
-void NODAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t tune_idx)
+void NODAL_ACCUMULATION_3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_x, m_nodal_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_x, m_nodal_array_length, vid);
 }
 
 void NODAL_ACCUMULATION_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_x, vid);
   deallocData(m_vol, vid);
   deallocData(m_real_zones, vid);

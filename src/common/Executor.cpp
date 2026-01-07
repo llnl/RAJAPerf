@@ -762,23 +762,27 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
         kernel->execute(vid, tune_idx); // Execute kernel
 
         if ( run_params.showProgress() ) {
-          getCout() << " -- " << kernel->getLastTime() / kernel->getRunReps() << " sec. x " << kernel->getRunReps() << " rep.";
-
-          size_t prec = 20;
-          const auto default_precision = getCout().precision();
-          Checksum_type checksum = kernel->getChecksum(vid, tune_idx);
+          Checksum_type cksum_tol = kernel->getChecksumTolerance();
+          Checksum_type cksum_ref = kernel->getReferenceChecksum();
+          Checksum_type cksum = kernel->getLastChecksum();
+          Checksum_type cksum_diff = std::abs(cksum_ref - cksum);
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
           {
-            Checksum_type checksum_sum = 0;
-            Allreduce(&checksum, &checksum_sum, 1, MPI_SUM, MPI_COMM_WORLD);
-            checksum = checksum_sum / num_ranks;
+            Checksum_type cksum_diff_max = 1e80;
+            Allreduce(&cksum_diff, &cksum_diff_max, 1, MPI_MAX, MPI_COMM_WORLD);
+            cksum_diff = cksum_diff_max;
           }
-          getCout() << " checksum_avg ";
-#else
-          getCout() << " checksum ";
 #endif
-          getCout() << setprecision(prec) << checksum
-                    << setprecision(default_precision) << endl;
+          const char* cksum_result = "FAILED";
+          if (cksum_diff <= cksum_tol) {
+            cksum_result = "PASSED";
+          }
+
+          getCout() << " -- "
+                    << kernel->getLastTime() / kernel->getRunReps() << " sec."
+                    << " x " << kernel->getRunReps() << " rep."
+                    << " " << cksum_result << " checksum"
+                    << endl;
         }
 
       } else {
@@ -1403,6 +1407,7 @@ void Executor::writeChecksumReport(ostream& file)
     }
     namecol_width++;
 
+    size_t resultcol_width = 6+2;
 
     //
     // Print title.
@@ -1416,11 +1421,15 @@ void Executor::writeChecksumReport(ostream& file)
     file << equal_line << endl;
 
     //
-    // Print column title line.
+    // Print column title lines.
     //
     file <<left<< setw(namecol_width) << "Kernel  " << endl;
+
     file << dot_line << endl;
+
     file <<left<< setw(namecol_width) << "Variants  "
+         <<left<< setw(resultcol_width) << "Result  "
+         <<left<< setw(checksum_width) << "Tolerance  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << "Average Checksum  "
          <<left<< setw(checksum_width) << "Max Checksum Diff  "
@@ -1430,13 +1439,17 @@ void Executor::writeChecksumReport(ostream& file)
          <<left<< setw(checksum_width) << "Checksum Diff  "
 #endif
          << endl;
+
     file <<left<< setw(namecol_width) << "  "
+         <<left<< setw(resultcol_width) << "  "
+         <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "(vs. first variant listed)  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << ""
 #endif
          << endl;
+
     file << dash_line << endl;
 
     //
@@ -1446,37 +1459,24 @@ void Executor::writeChecksumReport(ostream& file)
       KernelBase* kern = kernels[ik];
 
       file <<left<< setw(namecol_width) << kern->getName() << endl;
+
       file << dot_line << endl;
 
-      Checksum_type cksum_ref = 0.0;
-      size_t ivck = 0;
-      bool found_ref = false;
-      while ( ivck < variant_ids.size() && !found_ref ) {
-        VariantID vid = variant_ids[ivck];
-        size_t num_tunings = kern->getNumVariantTunings(vid);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            cksum_ref = kern->getChecksum(vid, tune_idx);
-            found_ref = true;
-            break;
-          }
-        }
-        ++ivck;
-      }
+      Checksum_type cksum_tol = kern->getChecksumTolerance();
 
       // get vector of checksums and diffs
       std::vector<std::vector<Checksum_type>> checksums(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_diff(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_abs_diff(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         VariantID vid = variant_ids[iv];
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
 
         checksums[iv].resize(num_tunings, 0.0);
-        checksums_diff[iv].resize(num_tunings, 0.0);
+        checksums_abs_diff[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
           if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            checksums[iv][tune_idx] = kern->getChecksum(vid, tune_idx);
-            checksums_diff[iv][tune_idx] = cksum_ref - kern->getChecksum(vid, tune_idx);
+            checksums[iv][tune_idx] = kern->getChecksumAverage(vid, tune_idx);
+            checksums_abs_diff[iv][tune_idx] = kern->getChecksumMaxDifference(vid, tune_idx);
           }
         }
       }
@@ -1498,16 +1498,6 @@ void Executor::writeChecksumReport(ostream& file)
         checksums_avg[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
           checksums_avg[iv][tune_idx] = checksums_sum[iv][tune_idx] / num_ranks;
-        }
-      }
-
-      // get stats for checksums_abs_diff
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff[iv][tune_idx] = std::abs(checksums_diff[iv][tune_idx]);
         }
       }
 
@@ -1569,18 +1559,32 @@ void Executor::writeChecksumReport(ostream& file)
           const string& tuning_name = kern->getVariantTuningName(vid, tune_idx);
 
           if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
+            const char* result = "FAILED";
+            if (
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+              checksums_abs_diff_max[iv][tune_idx]
+#else
+              checksums_abs_diff[iv][tune_idx]
+#endif
+               <= cksum_tol ) {
+              result = "PASSED";
+            }
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
+                 <<left<< setw(resultcol_width) << result
                  << showpoint << setprecision(prec)
+                 <<left<< setw(checksum_width) << cksum_tol
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << checksums_avg[iv][tune_idx]
                  <<left<< setw(checksum_width) << checksums_abs_diff_max[iv][tune_idx]
                  <<left<< setw(checksum_width) << checksums_abs_diff_stddev[iv][tune_idx] << endl;
 #else
                  <<left<< setw(checksum_width) << checksums[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_diff[iv][tune_idx] << endl;
+                 <<left<< setw(checksum_width) << checksums_abs_diff[iv][tune_idx] << endl;
 #endif
           } else {
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
+                 <<left<< setw(resultcol_width) << "Not Run"
+                 <<left<< setw(checksum_width) << "Not Run"
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << "Not Run"
                  <<left<< setw(checksum_width) << "Not Run"
@@ -1595,6 +1599,7 @@ void Executor::writeChecksumReport(ostream& file)
       }
 
       file << endl;
+
       file << dash_line_short << endl;
     }
 

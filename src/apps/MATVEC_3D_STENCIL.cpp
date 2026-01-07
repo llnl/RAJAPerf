@@ -80,11 +80,11 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   const size_t adds = 26;
   setFLOPsPerRep((multiplies + adds) * getItsPerRep());
 
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(1.0 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
@@ -137,15 +137,13 @@ void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   setRealZones_3d(m_real_zones, *m_domain);
 }
 
-void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t tune_idx)
+void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_b, m_zonal_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_b, m_zonal_array_length, vid);
 }
 
 void MATVEC_3D_STENCIL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_b, vid);
   deallocData(m_x, vid);
 

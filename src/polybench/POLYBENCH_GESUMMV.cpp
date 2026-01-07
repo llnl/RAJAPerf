@@ -45,6 +45,7 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
                   3 ) * m_N  );
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -59,21 +60,19 @@ POLYBENCH_GESUMMV::~POLYBENCH_GESUMMV()
 
 void POLYBENCH_GESUMMV::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_x, m_N, vid);
   allocAndInitDataConst(m_y, m_N, 0.0, vid);
   allocAndInitData(m_A, m_N * m_N, vid);
   allocAndInitData(m_B, m_N * m_N, vid);
 }
 
-void POLYBENCH_GESUMMV::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_GESUMMV::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_y, m_N, vid);
+  addToChecksum(m_y, m_N, vid);
 }
 
 void POLYBENCH_GESUMMV::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
   deallocData(m_A, vid);
