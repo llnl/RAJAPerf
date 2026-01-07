@@ -610,8 +610,7 @@ void Executor::reportRunSummary(ostream& str) const
     str << endl;
 
     constexpr bool to_file = true;
-    constexpr bool include_data = true;
-    writeKernelInfoSummary(str, kernels, !to_file, !include_data);
+    writeKernelInfoSummary(str, kernels, !to_file);
 
   }
 
@@ -621,8 +620,7 @@ void Executor::reportRunSummary(ostream& str) const
 
 void Executor::writeKernelInfoSummary(ostream& str,
                                       vector<KernelBase*> const& kernels,
-                                      bool to_file,
-                                      bool include_data) const
+                                      bool to_file) const
 {
   if ( to_file ) {
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -634,15 +632,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
 #endif
   }
 
-  size_t timing_prec = 6;
-  size_t checksum_prec = 20;
-
 //
 // Set up column headers and column widths for kernel summary output.
 //
   size_t     kernel_width = 0;
-  size_t     variant_width = 0;
-  size_t     tuning_width = 0;
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
@@ -655,32 +648,11 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type bytesAtomicModifyWrittenrep_width = 0;
   size_t     checksumConsistency_width = 0;
   size_t     operationalComplexity_width = 0;
-  size_t     meanTime_width = include_data ? timing_prec + 2 : 0;
-  size_t     minTime_width = include_data ? timing_prec + 2 : 0;
-  size_t     maxTime_width = include_data ? timing_prec + 2 : 0;
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-  size_t     avgChecksum_width = include_data ? checksum_prec + 8 : 0 ;
-  size_t     maxChecksumDiff_width = include_data ? checksum_prec + 8 : 0 ;
-  size_t     checksumDiffStdDev_width = include_data ? checksum_prec + 8 : 0 ;
-#else
-  size_t     checksum_width = include_data ? checksum_prec + 8 : 0 ;
-  size_t     checksumDiff_width = include_data ? checksum_prec + 8 : 0 ;
-#endif
 
   size_t     dash_width = 0;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     kernel_width = max(kernel_width, kernels[ik]->getName().size());
-    if (include_data) {
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t iv_width = getVariantName(variant_ids[iv]).size();
-        for (std::string const& tuning_name :
-             kernels[ik]->getVariantTuningNames(variant_ids[iv])) {
-          variant_width = max(variant_width, iv_width);
-          tuning_width = max(tuning_width, tuning_name.size());
-        }
-      }
-    }
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
@@ -701,20 +673,6 @@ void Executor::writeKernelInfoSummary(ostream& str,
   kernel_width = max( kernel_head.size(),
                       kernel_width ) + 2;
   dash_width += kernel_width;
-
-  string variant_head("Variant");
-  if (include_data) {
-    variant_width = max( variant_head.size(),
-                        variant_width ) + 2;
-    dash_width += variant_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string tuning_head("Tuning");
-  if (include_data) {
-    tuning_width = max( tuning_head.size(),
-                        tuning_width ) + 2;
-    dash_width += tuning_width + static_cast<Index_type>(sepchr.size());
-  }
 
   double psize = log10( static_cast<double>(psize_width) );
   string psize_head("Problem size");
@@ -792,74 +750,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
                                      operationalComplexity_width ) + 2;
   dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
 
-  string meanTime_head("Mean time (sec.)");
-  if (include_data) {
-    meanTime_width = max( meanTime_head.size(),
-                          meanTime_width ) + 3;
-    dash_width += meanTime_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string minTime_head("Min time (sec.)");
-  if (include_data) {
-    minTime_width = max( minTime_head.size(),
-                         minTime_width ) + 3;
-    dash_width += minTime_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string maxTime_head("Max time (sec.)");
-  if (include_data) {
-    maxTime_width = max( maxTime_head.size(),
-                         maxTime_width ) + 3;
-    dash_width += maxTime_width + static_cast<Index_type>(sepchr.size());
-  }
-
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-
-  string avgChecksum_head("Average Checksum");
-  if (include_data) {
-    avgChecksum_width = max( avgChecksum_head.size(),
-                             avgChecksum_width ) + 3;
-    dash_width += avgChecksum_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string maxChecksumDiff_head("Max Checksum Diff");
-  if (include_data) {
-    maxChecksumDiff_width = max( maxChecksumDiff_head.size(),
-                             maxChecksumDiff_width ) + 3;
-    dash_width += maxChecksumDiff_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string checksumDiffStdDev_head("Checksum Diff StdDev");
-  if (include_data) {
-    checksumDiffStdDev_width = max( checksumDiffStdDev_head.size(),
-                             checksumDiffStdDev_width ) + 3;
-    dash_width += checksumDiffStdDev_width + static_cast<Index_type>(sepchr.size());
-  }
-
-#else
-
-  string checksum_head("Checksum");
-  if (include_data) {
-    checksum_width = max( checksum_head.size(),
-                             checksum_width ) + 3;
-    dash_width += checksum_width + static_cast<Index_type>(sepchr.size());
-  }
-
-  string checksumDiff_head("Checksum Diff");
-  if (include_data) {
-    checksumDiff_width = max( checksumDiff_head.size(),
-                             checksumDiff_width ) + 3;
-    dash_width += checksumDiff_width + static_cast<Index_type>(sepchr.size());
-  }
-
-#endif
-
-  str           <<left << setw(kernel_width) << kernel_head;
-  if (include_data) {
-    str << sepchr <<left<< setw(variant_width) << variant_head
-        << sepchr <<left<< setw(tuning_width) << tuning_head;
-  }
-  str << sepchr <<right<< setw(psize_width) << psize_head
+  str           <<left << setw(kernel_width) << kernel_head
+      << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
@@ -871,22 +763,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
       << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
-      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head;
-  if (include_data) {
-    str << sepchr <<right<< setw(meanTime_width) << meanTime_head
-        << sepchr <<right<< setw(minTime_width) << minTime_head
-        << sepchr <<right<< setw(maxTime_width) << maxTime_head;
-
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-    str << sepchr <<left<< setw(avgChecksum_width) << avgChecksum_head
-        << sepchr <<left<< setw(maxChecksumDiff_width) << maxChecksumDiff_head
-        << sepchr <<left<< setw(checksumDiffStdDev_width) << checksumDiffStdDev_head;
-#else
-    str << sepchr <<left<< setw(checksum_width) << checksum_head
-        << sepchr <<left<< setw(checksumDiff_width) << checksumDiff_head;
-#endif
-  }
-  str << endl;
+      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
+      << endl;
 
   if ( !to_file ) {
     for (size_t i = 0; i < dash_width; ++i) {
@@ -895,15 +773,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
     str << endl;
   }
 
-  auto output_for_kvt = [&](KernelBase* kern, VariantID vid, size_t tune_idx, ChecksumData const& data) {
-    str           <<left << setw(kernel_width) << kern->getName();
-    if (include_data) {
-        string const& variant_name = getVariantName(vid);
-        string const& tuning_name = kern->getVariantTuningName(vid, tune_idx);
-      str << sepchr <<left<< setw(variant_width) << variant_name
-          << sepchr <<left<< setw(tuning_width) << tuning_name;
-    }
-    str << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
+  for (size_t ik = 0; ik < kernels.size(); ++ik) {
+    KernelBase* kern = kernels[ik];
+    str           <<left << setw(kernel_width) << kern->getName()
+        << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
@@ -915,43 +788,141 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
         << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
-        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")");
-    if (include_data) {
-      str << sepchr <<right<< setw(meanTime_width) << setprecision(timing_prec) << std::fixed
-          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Average, kern, vid, tune_idx)
-          << sepchr <<right<< setw(minTime_width) << setprecision(timing_prec) << std::fixed
-          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Minimum, kern, vid, tune_idx)
-          << sepchr <<right<< setw(maxTime_width) << setprecision(timing_prec) << std::fixed
-          << getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Maximum, kern, vid, tune_idx);
+        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
+        << endl;
+  }
 
-      str << showpoint << setprecision(checksum_prec) << std::defaultfloat
+  str.flush();
+}
+
+
+void Executor::writeKernelRunDataSummary(ostream& str,
+                                         vector<KernelBase*> const& kernels) const
+{
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
-          << sepchr <<left<< setw(avgChecksum_width) << data.checksums_avg[tune_idx]
-          << sepchr <<left<< setw(maxChecksumDiff_width) << data.checksums_abs_diff_max[tune_idx]
-          << sepchr <<left<< setw(checksumDiffStdDev_width) << data.checksums_abs_diff_stddev[tune_idx];
+  int num_ranks;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+  str << "Kernels run on " << num_ranks << " MPI ranks" << endl;
 #else
-          << sepchr <<left<< setw(checksum_width) << data.checksums[tune_idx]
-          << sepchr <<left<< setw(checksumDiff_width) << data.checksums_abs_diff[tune_idx];
+  str << "Kernels run without MPI" << endl;
 #endif
+
+  size_t prec = 6;
+
+//
+// Set up column headers and column widths for kernel summary output.
+//
+  size_t     kernel_width = 0;
+  size_t     variant_width = 0;
+  size_t     tuning_width = 0;
+  Index_type psize_width = 0;
+  size_t     checksum_width = 0;
+  size_t     timePerRep_width = prec + 2;
+  size_t     bandwidth_width = prec + 2;
+  size_t     flops_width = prec + 2;
+
+  for (size_t ik = 0; ik < kernels.size(); ++ik) {
+    kernel_width = max(kernel_width, kernels[ik]->getName().size());
+    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+      size_t iv_width = getVariantName(variant_ids[iv]).size();
+      for (std::string const& tuning_name :
+           kernels[ik]->getVariantTuningNames(variant_ids[iv])) {
+        variant_width = max(variant_width, iv_width);
+        tuning_width = max(tuning_width, tuning_name.size());
+      }
     }
-    str << endl;
-  };
+    psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
+  }
+
+  const string sepchr(" , ");
+
+  string kernel_head("Kernel");
+  kernel_width = max( kernel_head.size(),
+                      kernel_width ) + 2;
+
+  string variant_head("Variant");
+  variant_width = max( variant_head.size(),
+                      variant_width ) + 2;
+
+  string tuning_head("Tuning");
+  tuning_width = max( tuning_head.size(),
+                      tuning_width ) + 2;
+
+  double psize = log10( static_cast<double>(psize_width) );
+  string psize_head("Problem size");
+  psize_width = max( static_cast<Index_type>(psize_head.size()),
+                     static_cast<Index_type>(psize) ) + 3;
+
+  string checksum_head("Checksum");
+  checksum_width = max( checksum_head.size(),
+                        checksum_width ) + 2;
+
+  string timePerRep_head("Mean time per rep (sec.)");
+  timePerRep_width = max( timePerRep_head.size(),
+                              timePerRep_width ) + 3;
+
+  string bandwidth_head("Mean Bandwidth (GiB per sec.)");
+  bandwidth_width = max( bandwidth_head.size(),
+                         bandwidth_width ) + 3;
+
+  string flops_head("Mean flops (gigaFLOP per sec.)");
+  flops_width = max( flops_head.size(),
+                     flops_width ) + 3;
+
+  str           <<left << setw(kernel_width) << kernel_head
+      << sepchr <<left << setw(variant_width) << variant_head
+      << sepchr <<left << setw(tuning_width) << tuning_head
+      << sepchr <<right<< setw(psize_width) << psize_head
+      << sepchr <<left << setw(checksum_width) << checksum_head
+      << sepchr <<right<< setw(timePerRep_width) << timePerRep_head
+      << sepchr <<right<< setw(bandwidth_width) << bandwidth_head
+      << sepchr <<right<< setw(flops_width) << flops_head
+     << endl;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     KernelBase* kern = kernels[ik];
-    if (include_data) {
 
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        VariantID vid = variant_ids[iv];
+    Checksum_type cksum_tol = kern->getChecksumTolerance();
+    Index_type problem_size = kern->getActualProblemSize();
+    Index_type reps = kern->getRunReps();
+    Index_type bytes_per_rep = kern->getBytesPerRep();
+    Index_type flops_per_rep = kern->getFLOPsPerRep();
 
-        ChecksumData data = getChecksumData(kern, vid);
+    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+      VariantID vid = variant_ids[iv];
+      string const& variant_name = getVariantName(vid);
 
-        for (size_t tune_idx = 0; tune_idx < kern->getNumVariantTunings(vid); ++tune_idx) {
-          output_for_kvt(kern, vid, tune_idx, data);
+      ChecksumData data = getChecksumData(kern, vid);
+
+      for (size_t tune_idx = 0; tune_idx < kern->getNumVariantTunings(vid); ++tune_idx) {
+        string const& tuning_name = kern->getVariantTuningName(vid, tune_idx);
+
+        const char* checksum_result = "FAILED";
+        if (
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+             data.checksums_abs_diff_max[tune_idx]
+#else
+             data.checksums_abs_diff[tune_idx]
+#endif
+             <= cksum_tol ) {
+          checksum_result = "PASSED";
         }
+
+        auto time_per_rep = getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Average, kern, vid, tune_idx) / reps;
+        auto bandwidth = bytes_per_rep / time_per_rep / (1024.0 * 1024.0 * 1024.0);
+        auto flops = flops_per_rep / time_per_rep / (1000.0 * 1000.0 * 1000.0);
+
+        str           <<left << setw(kernel_width) << kern->getName()
+            << sepchr <<left << setw(variant_width) << variant_name
+            << sepchr <<left << setw(tuning_width) << tuning_name
+            << sepchr <<right<< setw(psize_width) << problem_size
+            << sepchr <<left << setw(checksum_width) << checksum_result
+            << setprecision(prec) << std::defaultfloat
+            << sepchr <<right<< setw(timePerRep_width) << time_per_rep
+            << sepchr <<right<< setw(bandwidth_width) << bandwidth
+            << sepchr <<right<< setw(flops_width) << flops
+            << endl;
       }
-    } else {
-      output_for_kvt(kern, NumVariants, 0, ChecksumData{});
     }
   }
 
@@ -1217,15 +1188,12 @@ void Executor::outputRunData()
     unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernel-details.csv");
     if ( *file ) {
       constexpr bool to_file = true;
-      constexpr bool include_data = true;
-      writeKernelInfoSummary(*file, kernels, to_file, !include_data);
+      writeKernelInfoSummary(*file, kernels, to_file);
     }
 
     file = openOutputFile(out_fprefix + "-kernel-run-data.csv");
     if ( *file ) {
-      constexpr bool to_file = true;
-      constexpr bool include_data = true;
-      writeKernelInfoSummary(*file, kernels, to_file, include_data);
+      writeKernelRunDataSummary(*file, kernels);
     }
 
     file = openOutputFile(out_fprefix + "-checksum.txt");
@@ -1273,14 +1241,11 @@ void Executor::outputRunData()
 
     if ( *file ) {
       constexpr bool to_file = true;
-      constexpr bool include_data = true;
-      writeKernelInfoSummary(*file, mykernel, to_file, !include_data);
+      writeKernelInfoSummary(*file, mykernel, to_file);
     }
 
     if ( *file ) {
-      constexpr bool to_file = true;
-      constexpr bool include_data = true;
-      writeKernelInfoSummary(*file, mykernel, to_file, include_data);
+      writeKernelRunDataSummary(*file, mykernel);
     }
 
     writeSeparator(*file);

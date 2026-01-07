@@ -73,10 +73,13 @@ private:
   std::unique_ptr<std::ostream> openOutputFile(const std::string& filename) const;
 
   void writeSeparator(std::ostream& file);
+
   void writeKernelInfoSummary(std::ostream& str,
                               std::vector<KernelBase*> const& kernels,
-                              bool to_file,
-                              bool include_data) const;
+                              bool to_file) const;
+
+  void writeKernelRunDataSummary(std::ostream& str,
+                                 std::vector<KernelBase*> const& kernels) const;
 
   void writeCSVReport(std::ostream& file,
                       std::vector<KernelBase*> const& kernels,
