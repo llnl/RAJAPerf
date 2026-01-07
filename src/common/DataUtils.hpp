@@ -151,17 +151,13 @@ void initData(Real_type& d);
  *
  * Checksumn is multiplied by given scale factor.
  */
-long double calcChecksum(Int_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Int_ptr d, Size_type len);
 ///
-long double calcChecksum(unsigned long long* d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(unsigned long long* d, Size_type len);
 ///
-long double calcChecksum(Real_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Real_ptr d, Size_type len);
 ///
-long double calcChecksum(Complex_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Complex_ptr d, Size_type len);
 
 }  // closing brace for detail namespace
 
@@ -385,8 +381,7 @@ inline void allocAndInitDataRandValue(DataSpace dataSpace, T*& ptr, Size_type le
  * Calculate and return checksum for arrays.
  */
 template <typename T>
-inline long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size_type align,
-                                Real_type scale_factor)
+inline Checksum_type calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size_type align)
 {
   T* check_ptr = ptr;
   T* copied_ptr = nullptr;
@@ -400,7 +395,7 @@ inline long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size
     check_ptr = copied_ptr;
   }
 
-  auto val = detail::calcChecksum(check_ptr, len, scale_factor);
+  Checksum_type val = detail::calcChecksum(check_ptr, len);
 
   if (check_dataSpace != dataSpace) {
     deallocData(check_dataSpace, copied_ptr);

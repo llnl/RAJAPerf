@@ -57,11 +57,11 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   setFLOPsPerRep(3 * m_ni*m_nj*m_nk +
                  2 * m_ni*m_nj*m_nl );
 
-  checksum_scale_factor = 0.000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(0.000001 *
+              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 
@@ -76,7 +76,6 @@ POLYBENCH_2MM::~POLYBENCH_2MM()
 
 void POLYBENCH_2MM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_tmp, m_ni * m_nj, vid);
   allocAndInitData(m_A, m_ni * m_nk, vid);
   allocAndInitData(m_B, m_nk * m_nj, vid);
@@ -84,14 +83,13 @@ void POLYBENCH_2MM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_D, m_ni * m_nl, 0.0, vid);
 }
 
-void POLYBENCH_2MM::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_2MM::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_D, m_ni * m_nl, checksum_scale_factor , vid);
+  addToChecksum(m_D, m_ni * m_nl, vid);
 }
 
 void POLYBENCH_2MM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_tmp, vid);
   deallocData(m_A, vid);
   deallocData(m_B, vid);

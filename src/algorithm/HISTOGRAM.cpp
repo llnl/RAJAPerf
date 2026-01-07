@@ -41,6 +41,7 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
   setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 
   setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -119,14 +120,13 @@ void HISTOGRAM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(DataSpace::Host, m_counts_final, m_num_bins, static_cast<Data_type>(0));
 }
 
-void HISTOGRAM::updateChecksum(VariantID vid, size_t tune_idx)
+void HISTOGRAM::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_counts_final, m_num_bins);
+  addToChecksum(DataSpace::Host, m_counts_final, m_num_bins);
 }
 
 void HISTOGRAM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_bins, vid);
   deallocData(DataSpace::Host, m_counts_init);
   deallocData(DataSpace::Host, m_counts_final);

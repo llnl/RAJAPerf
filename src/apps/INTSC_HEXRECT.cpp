@@ -82,6 +82,7 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   setFLOPsPerRep(n_intsc * flops_per_intsc);
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -159,7 +160,7 @@ void INTSC_HEXRECT::setupTargetPlanes
   Int_type nty = ndy + 1 ;
   Int_type ntz = ndz + 1 ;
 
-  allocData  ( planes[0], (nx+ny+nz), Base_Seq ) ;
+  allocData  ( DataSpace::Host, planes[0], (nx+ny+nz) ) ;
   planes[1] = planes[0] + nz ;
   planes[2] = planes[1] + ny ;
 
@@ -338,9 +339,9 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
   //  Output records copied to the host.
-  allocData             ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
+  allocData             ( DataSpace::Host, m_records_h, 4L*m_nrecords ) ;
 
-  deallocData ( planes[0], Base_Seq ) ;
+  deallocData ( DataSpace::Host, planes[0] ) ;
 }
 
 
@@ -380,12 +381,12 @@ void INTSC_HEXRECT::checkMoments
     }
 
     Real_ptr zca, zcb, yca, ycb, xca, xcb ;
-    allocData  ( zca, ndz, Base_Seq ) ;
-    allocData  ( zcb, ndz, Base_Seq ) ;
-    allocData  ( yca, ndy, Base_Seq ) ;
-    allocData  ( ycb, ndy, Base_Seq ) ;
-    allocData  ( xca, ndx, Base_Seq ) ;
-    allocData  ( xcb, ndx, Base_Seq ) ;
+    allocData  ( DataSpace::Host, zca, ndz ) ;
+    allocData  ( DataSpace::Host, zcb, ndz ) ;
+    allocData  ( DataSpace::Host, yca, ndy ) ;
+    allocData  ( DataSpace::Host, ycb, ndy ) ;
+    allocData  ( DataSpace::Host, xca, ndx ) ;
+    allocData  ( DataSpace::Host, xcb, ndx ) ;
 
     for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
       Real_type za = zd0 + jz * sep1z ;
@@ -495,12 +496,12 @@ void INTSC_HEXRECT::checkMoments
       }
     }
 
-    deallocData ( xca, Base_Seq ) ;
-    deallocData ( xcb, Base_Seq ) ;
-    deallocData ( yca, Base_Seq ) ;
-    deallocData ( ycb, Base_Seq ) ;
-    deallocData ( zca, Base_Seq ) ;
-    deallocData ( zcb, Base_Seq ) ;
+    deallocData ( DataSpace::Host, xca ) ;
+    deallocData ( DataSpace::Host, xcb ) ;
+    deallocData ( DataSpace::Host, yca ) ;
+    deallocData ( DataSpace::Host, ycb ) ;
+    deallocData ( DataSpace::Host, zca ) ;
+    deallocData ( DataSpace::Host, zcb ) ;
   }
 }
 
@@ -617,7 +618,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 
 
-void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
+void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;
@@ -631,7 +632,7 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
       ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
+  addToChecksum(m_records, 4L*m_nrecords, vid);
 }
 
 void INTSC_HEXRECT::tearDown(VariantID vid,
@@ -644,7 +645,7 @@ void INTSC_HEXRECT::tearDown(VariantID vid,
   deallocData ( m_xdnode, vid ) ;
   deallocData ( m_ydnode, vid ) ;
   deallocData ( m_zdnode, vid ) ;
-  deallocData ( m_records_h, Base_Seq ) ;
+  deallocData ( DataSpace::Host, m_records_h ) ;
 }
 
 } // end namespace apps

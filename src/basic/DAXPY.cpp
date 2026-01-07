@@ -35,6 +35,7 @@ DAXPY::DAXPY(const RunParams& params)
   setFLOPsPerRep(2 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -54,14 +55,13 @@ void DAXPY::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_a, vid);
 }
 
-void DAXPY::updateChecksum(VariantID vid, size_t tune_idx)
+void DAXPY::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_y, getActualProblemSize(), vid);
+  addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void DAXPY::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }
