@@ -309,6 +309,7 @@ private:
   void printVariantNames(std::ostream& str) const;
   void printDataSpaceNames(std::ostream& str) const;
   void printKernelGroupNames(std::ostream& str) const;
+  void printVariantGroupNames(std::ostream& str) const;
   void printFeatureNames(std::ostream& str) const;
   void printFeatureKernels(std::ostream& str) const;
   void printKernelFeatures(std::ostream& str) const;

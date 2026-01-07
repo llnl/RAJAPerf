@@ -193,6 +193,37 @@ enum KernelID {
 /*!
  *******************************************************************************
  *
+ * \brief Enumeration defining unique id for each group of variants in suite.
+ *
+ * IMPORTANT: This is only modified when a group is added or removed.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE VariantGroupNames ARRAY IN IMPLEMENTATION FILE!!!
+ *
+ *******************************************************************************
+ */
+enum struct VariantGroupID : int {
+
+  Base = 0,
+  Lambda,
+  RAJA,
+  Kokkos,
+
+  Seq,
+  OpenMP,
+  OpenMPTarget,
+  CUDA,
+  HIP,
+  SYCL,
+
+  NumVariantGroups // Keep this one last and DO NOT remove (!!)
+
+};
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Enumeration defining unique id for each VARIANT in suite.
  *
  * IMPORTANT: This is only modified when a new variant is added to the suite.
@@ -382,6 +413,16 @@ enum struct DataSpace {
  *******************************************************************************
  */
 const std::string& getKernelGroupName(KernelGroupID kgid);
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Return group name associated with VariantGroupID enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getVariantGroupName(VariantGroupID vgid);
 
 /*!
  *******************************************************************************

@@ -1804,6 +1804,16 @@ void RunParams::printKernelGroupNames(std::ostream& str) const
   str.flush();
 }
 
+void RunParams::printVariantGroupNames(std::ostream& str) const
+{
+  str << "\nAvailable variant groups:";
+  str << "\n-------------------------\n";
+  for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
+    str << getVariantGroupName(static_cast<VariantGroupID>(vgid)) << std::endl;
+  }
+  str.flush();
+}
+
 void RunParams::printFeatureNames(std::ostream& str) const
 {
   str << "\nAvailable features:";
@@ -2391,6 +2401,8 @@ void RunParams::processKernelInput()
  */
 void RunParams::processVariantInput()
 {
+  using Slist = std::list<std::string>;
+  using Svector = std::vector<std::string>;
   using VIDset = std::set<VariantID>;
 
   //
@@ -2419,19 +2431,56 @@ void RunParams::processVariantInput()
 
   if ( !exclude_variant_input.empty() ) {
 
+    // Make list copy of exclude variant name input to manipulate for
+    // processing potential group names and/or variant names, next
+    Slist exclude_variant_names( exclude_variant_input.begin(),
+                                 exclude_variant_input.end() );
+
+    //
+    // Search exclude_variant_names for valid group names.
+    // groups2exclude will contain names of valid groups to exclude.
+    //
+    Svector groups2exclude;
+    for (auto const& variant_name : exclude_variant_names) {
+      for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
+        const std::string& group_name = getVariantGroupName(static_cast<VariantGroupID>(vgid));
+        if ( group_name == variant_name ) {
+          groups2exclude.push_back(group_name);
+        }
+      }
+    }
+
+    //
+    // If group name(s) found in exclude_variant_names, assemble kernels in
+    // those group(s) to exclude from run. Also remove the group names from
+    // the exclude_variant_names list.
+    //
+    for (auto const& group_name : groups2exclude) {
+
+      for (size_t iv = 0; iv < NumVariants; ++iv) {
+        VariantID vid = static_cast<VariantID>(iv);
+        if ( getVariantName(vid).find(group_name) != std::string::npos ) {
+          exclude_variants.insert(vid);
+        }
+      }
+
+      exclude_variant_names.remove(group_name);
+
+    }  // iterate over groups to exclude
+
     //
     // Parse input to determine which variants to exclude.
     //
     // Assemble invalid input for warning message.
     //
 
-    for (size_t it = 0; it < exclude_variant_input.size(); ++it) {
+    for (auto const& variant_name : exclude_variant_names) {
       bool found_it = false;
 
       for (VIDset::iterator vid_it = available_variants.begin();
            vid_it != available_variants.end(); ++vid_it) {
         VariantID vid = *vid_it;
-        if ( getVariantName(vid) == exclude_variant_input[it] ) {
+        if ( getVariantName(vid) == variant_name ) {
           exclude_variants.insert(vid);
           found_it = true;
         }
@@ -2439,7 +2488,7 @@ void RunParams::processVariantInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_variant_input.push_back(exclude_variant_input[it]);
+        invalid_exclude_variant_input.push_back(variant_name);
       }
 
     }
@@ -2463,9 +2512,7 @@ void RunParams::processVariantInput()
     // No variants specified in input options, run all available.
     // Also, set reference variant if specified.
     //
-    for (VIDset::iterator vid_it = available_variants.begin();
-         vid_it != available_variants.end(); ++vid_it) {
-      VariantID vid = *vid_it;
+    for (VariantID vid : available_variants) {
 
       if (exclude_variants.find(vid) == exclude_variants.end()) {
         run_variants.insert( vid );
@@ -2478,6 +2525,42 @@ void RunParams::processVariantInput()
 
   } else {  // variant input given
 
+    // Make list copy of variant name input to manipulate for
+    // processing potential group names and/or variant names, next
+    Slist variant_names(variant_input.begin(), variant_input.end());
+
+    //
+    // Search variant_names for matching group names.
+    // groups2run will contain names of groups to run.
+    //
+    Svector groups2run;
+    for (auto const& variant_name : variant_names)
+    {
+      for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
+        const std::string& group_name = getVariantGroupName(static_cast<VariantGroupID>(vgid));
+        if ( group_name == variant_name ) {
+          groups2run.push_back(group_name);
+        }
+      }
+    }
+
+    //
+    // If group name(s) found in variant_names, assemble variants in group(s)
+    // to run and remove those group name(s) from variant_names list.
+    //
+    for (auto const& group_name : groups2run)
+    {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid).find(group_name) != std::string::npos &&
+             exclude_variants.find(vid) == exclude_variants.end()) {
+          run_variants.insert(vid);
+        }
+      }
+
+      variant_names.remove(group_name);
+    }
+
     //
     // Parse input to determine which variants to run:
     //   - variants to run will be the intersection of available variants
@@ -2486,14 +2569,13 @@ void RunParams::processVariantInput()
     //     and variant will be run; else first variant that will be run.
     //
 
-    for (size_t it = 0; it < variant_input.size(); ++it) {
+    for (auto const& variant_name : variant_names)
+    {
       bool found_it = false;
 
-      for (VIDset::iterator vid_it = available_variants.begin();
-           vid_it != available_variants.end(); ++vid_it) {
-        VariantID vid = *vid_it;
-
-        if ( getVariantName(vid) == variant_input[it] ) {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid) == variant_name ) {
           if (exclude_variants.find(vid) == exclude_variants.end()) {
             run_variants.insert(vid);
             if ( getVariantName(vid) == reference_variant ) {
@@ -2502,12 +2584,11 @@ void RunParams::processVariantInput()
           }
           found_it = true;
         }
-
       }
   
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_variant_input.push_back(variant_input[it]);
+        invalid_variant_input.push_back(variant_name);
       } 
 
     }
