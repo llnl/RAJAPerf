@@ -103,7 +103,7 @@ __global__ void Diffusion3DPA(const Real_ptr Basis,
       }
     }
   }
-  
+
 }
 
 template < size_t block_size >
@@ -321,7 +321,7 @@ void DIFFUSION3DPA::runHipVariantImpl(VariantID vid) {
                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
-                         DIFFUSION3DPA_9;                       
+                         DIFFUSION3DPA_9;
 
                        } // lambda (dx)
                      ); // RAJA::loop<inner_x>

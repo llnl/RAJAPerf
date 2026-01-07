@@ -153,7 +153,7 @@ void MASSVEC3DPA::runSyclVariantImpl(VariantID vid)
       constexpr int MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 
       constexpr int no_mats = 2;
-      shmem += MQ1 * MD1 * no_mats * MDQ * MDQ * MDQ * sizeof(double);
+      shmem += MQ1 * MD1 * no_mats * MDQ * MDQ * MDQ * sizeof(Real_type);
     }
 
     startTimer();

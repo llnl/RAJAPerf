@@ -142,24 +142,24 @@ namespace mvpa {
 constexpr RAJA::Index_type D1D = 3;
 constexpr RAJA::Index_type Q1D = 4;
 constexpr RAJA::Index_type DIM = 3;
-}
+} // namespace mvpa
 #define MVPA_B(x, y) B[x + mvpa::Q1D * y]
 #define MVPA_X(dx, dy, dz, c, e)                                               \
-  X[dx + mvpa::D1D * dy + mvpa::D1D * mvpa::D1D * dz +                            \
-    mvpa::D1D * mvpa::D1D * mvpa::D1D * c +                                       \
+  X[dx + mvpa::D1D * dy + mvpa::D1D * mvpa::D1D * dz +                         \
+    mvpa::D1D * mvpa::D1D * mvpa::D1D * c +                                    \
     mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * e]
 #define MVPA_Y(dx, dy, dz, c, e)                                               \
-  Y[dx + mvpa::D1D * dy + mvpa::D1D * mvpa::D1D * dz +                            \
-    mvpa::D1D * mvpa::D1D * mvpa::D1D * c +                                       \
+  Y[dx + mvpa::D1D * dy + mvpa::D1D * mvpa::D1D * dz +                         \
+    mvpa::D1D * mvpa::D1D * mvpa::D1D * c +                                    \
     mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * e]
 #define MVPA_D(qx, qy, qz, e)                                                  \
-  D[qx + mvpa::Q1D * qy + mvpa::Q1D * mvpa::Q1D * qz +                            \
+  D[qx + mvpa::Q1D * qy + mvpa::Q1D * mvpa::Q1D * qz +                         \
     mvpa::Q1D * mvpa::Q1D * mvpa::Q1D * e]
 
 #define MASSVEC3DPA_0_CPU                                                      \
-  constexpr Index_type MQ1 = mvpa::Q1D;                                                \
-  constexpr Index_type MD1 = mvpa::D1D;                                                \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
+  constexpr Index_type MQ1 = mvpa::Q1D;                                        \
+  constexpr Index_type MD1 = mvpa::D1D;                                        \
+  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   /*RAJA_TEAM_SHARED*/ Real_type smB[MQ1][MD1];                                \
   /*RAJA_TEAM_SHARED*/ Real_type smBt[MD1][MQ1];                               \
   /*RAJA_TEAM_SHARED*/ Real_type sm0[MDQ * MDQ * MDQ];                         \
@@ -172,9 +172,9 @@ constexpr RAJA::Index_type DIM = 3;
   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
 #define MASSVEC3DPA_0_GPU                                                      \
-  constexpr Index_type MQ1 = mvpa::Q1D;                                                \
-  constexpr Index_type MD1 = mvpa::D1D;                                                \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                 \
+  constexpr Index_type MQ1 = mvpa::Q1D;                                        \
+  constexpr Index_type MD1 = mvpa::D1D;                                        \
+  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   RAJA_TEAM_SHARED Real_type smB[MQ1][MD1];                                    \
   RAJA_TEAM_SHARED Real_type smBt[MD1][MQ1];                                   \
   RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                             \
@@ -196,7 +196,7 @@ constexpr RAJA::Index_type DIM = 3;
 // 2 * mvpa::D1D * mvpa::Q1D * mvpa::D1D * mvpa::D1D
 #define MASSVEC3DPA_3                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type dx = 0; dx < mvpa::D1D; ++dx) {                               \
+  for (Index_type dx = 0; dx < mvpa::D1D; ++dx) {                              \
     u += smX[dz][dy][dx] * smB[qx][dx];                                        \
   }                                                                            \
   DDQ[dz][dy][qx] = u;
@@ -204,7 +204,7 @@ constexpr RAJA::Index_type DIM = 3;
 // 2 * mvpa::D1D * mvpa::Q1D * mvpa::Q1D * mvpa::D1D
 #define MASSVEC3DPA_4                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type dy = 0; dy < mvpa::D1D; ++dy) {                               \
+  for (Index_type dy = 0; dy < mvpa::D1D; ++dy) {                              \
     u += DDQ[dz][dy][qx] * smB[qy][dy];                                        \
   }                                                                            \
   DQQ[dz][qy][qx] = u;
@@ -213,7 +213,7 @@ constexpr RAJA::Index_type DIM = 3;
 // mvpa::Q1D
 #define MASSVEC3DPA_5                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type dz = 0; dz < mvpa::D1D; ++dz) {                               \
+  for (Index_type dz = 0; dz < mvpa::D1D; ++dz) {                              \
     u += DQQ[dz][qy][qx] * smB[qz][dz];                                        \
   }                                                                            \
   QQQ[qz][qy][qx] = u * MVPA_D(qx, qy, qz, e);
@@ -221,7 +221,7 @@ constexpr RAJA::Index_type DIM = 3;
 // 2 * mvpa::Q1D * mvpa::D1D * mvpa::Q1D * mvpa::Q1D
 #define MASSVEC3DPA_6                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type qx = 0; qx < mvpa::Q1D; ++qx) {                               \
+  for (Index_type qx = 0; qx < mvpa::Q1D; ++qx) {                              \
     u += QQQ[qz][qy][qx] * smBt[dx][qx];                                       \
   }                                                                            \
   QQD[qz][qy][dx] = u;
@@ -229,7 +229,7 @@ constexpr RAJA::Index_type DIM = 3;
 // 2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::Q1D
 #define MASSVEC3DPA_7                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type qy = 0; qy < mvpa::Q1D; ++qy) {                               \
+  for (Index_type qy = 0; qy < mvpa::Q1D; ++qy) {                              \
     u += QQD[qz][qy][dx] * smBt[dy][qy];                                       \
   }                                                                            \
   QDD[qz][dy][dx] = u;
@@ -237,7 +237,7 @@ constexpr RAJA::Index_type DIM = 3;
 // 2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::D1D
 #define MASSVEC3DPA_8                                                          \
   Real_type u = 0.0;                                                           \
-  for (Index_type qz = 0; qz < mvpa::Q1D; ++qz) {                               \
+  for (Index_type qz = 0; qz < mvpa::Q1D; ++qz) {                              \
     u += QDD[qz][dy][dx] * smBt[dz][qz];                                       \
   }                                                                            \
   MVPA_Y(dx, dy, dz, c, e) = u;
@@ -270,14 +270,15 @@ public:
   void runCudaVariantImpl(VariantID vid);
   template <size_t block_size, size_t tune_idx>
   void runHipVariantImpl(VariantID vid);
-  template <size_t work_group_size>
-  void runSyclVariantImpl(VariantID vid);
+  template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
-  template<typename inner_x, typename inner_y, typename inner_z, typename RESOURCE>
+  template <typename inner_x, typename inner_y, typename inner_z,
+            typename RESOURCE>
   void runRAJAImpl(RESOURCE &res);
 
 private:
-  static const size_t default_gpu_block_size = mvpa::Q1D * mvpa::Q1D * mvpa::Q1D;
+  static const size_t default_gpu_block_size =
+      mvpa::Q1D * mvpa::Q1D * mvpa::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;

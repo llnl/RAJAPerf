@@ -73,12 +73,12 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
              auto sm0 = sm0_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
              auto sm1 = sm1_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
-              double (*sm_X)[MD1][MD1] = (double (*)[MD1][MD1])sm0;
-              double (*DDQ)[MD1][MQ1] = (double (*)[MD1][MQ1])sm1;
-              double (*DQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm0;
-              double (*QQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm1;
-              double (*QQD)[MQ1][MD1] = (double (*)[MQ1][MD1])sm0;
-              double (*QDD)[MD1][MD1] = (double (*)[MD1][MD1])sm1;
+              Real_type (*sm_X)[MD1][MD1] = (Real_type (*)[MD1][MD1])sm0;
+              Real_type (*DDQ)[MD1][MQ1] = (Real_type (*)[MD1][MQ1])sm1;
+              Real_type (*DQQ)[MQ1][MQ1] = (Real_type (*)[MQ1][MQ1])sm0;
+              Real_type (*QQQ)[MQ1][MQ1] = (Real_type (*)[MQ1][MQ1])sm1;
+              Real_type (*QQD)[MQ1][MD1] = (Real_type (*)[MQ1][MD1])sm0;
+              Real_type (*QDD)[MD1][MD1] = (Real_type (*)[MD1][MD1])sm1;
 
              auto thread_dofs = thread_dofs_vec.get_multi_ptr<::sycl::access::decorated::yes>().get();
 
@@ -208,12 +208,12 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
               Real_ptr sm0 = ctx.getSharedMemory<Real_type>(MDQ * MDQ * MDQ);
               Real_ptr sm1 = ctx.getSharedMemory<Real_type>(MDQ * MDQ * MDQ);
 
-              double (*sm_X)[MD1][MD1] = (double (*)[MD1][MD1])sm0;
-              double (*DDQ)[MD1][MQ1] = (double (*)[MD1][MQ1])sm1;
-              double (*DQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm0;
-              double (*QQQ)[MQ1][MQ1] = (double (*)[MQ1][MQ1])sm1;
-              double (*QQD)[MQ1][MD1] = (double (*)[MQ1][MD1])sm0;
-              double (*QDD)[MD1][MD1] = (double (*)[MD1][MD1])sm1;
+              Real_type (*sm_X)[MD1][MD1] = (Real_type (*)[MD1][MD1])sm0;
+              Real_type (*DDQ)[MD1][MQ1] = (Real_type (*)[MD1][MQ1])sm1;
+              Real_type (*DQQ)[MQ1][MQ1] = (Real_type (*)[MQ1][MQ1])sm0;
+              Real_type (*QQQ)[MQ1][MQ1] = (Real_type (*)[MQ1][MQ1])sm1;
+              Real_type (*QQD)[MQ1][MD1] = (Real_type (*)[MQ1][MD1])sm0;
+              Real_type (*QDD)[MD1][MD1] = (Real_type (*)[MD1][MD1])sm1;
 
               Index_ptr thread_dofs = ctx.getSharedMemory<Index_type>(MD1 * MD1 * MD1);
 
