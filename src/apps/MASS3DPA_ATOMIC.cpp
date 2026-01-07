@@ -102,7 +102,7 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
 }
 
 void MASS3DPA_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx) {
-  checksum[vid][tune_idx] += calcChecksum(m_Y, m_Tot_Dofs, vid);
+   addToChecksum(m_Y, m_Tot_Dofs, vid);
 }
 
 void MASS3DPA_ATOMIC::tearDown(VariantID vid,

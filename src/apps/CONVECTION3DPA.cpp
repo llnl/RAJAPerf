@@ -54,6 +54,7 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
                          ));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -77,15 +78,13 @@ void CONVECTION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_Y, Index_type(conv::D1D*conv::D1D*conv::D1D*m_NE), Real_type(0.0), vid);
 }
 
-void CONVECTION3DPA::updateChecksum(VariantID vid, size_t tune_idx)
+void CONVECTION3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_Y, conv::D1D*conv::D1D*conv::D1D*m_NE, vid);
+  addToChecksum(m_Y, conv::D1D*conv::D1D*conv::D1D*m_NE, vid);
 }
 
 void CONVECTION3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_B, vid);
   deallocData(m_Bt, vid);
   deallocData(m_G, vid);

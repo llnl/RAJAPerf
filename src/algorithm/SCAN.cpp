@@ -34,12 +34,12 @@ SCAN::SCAN(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  checksum_scale_factor = 1e-2 *
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
+  setChecksumTolerance(ChecksumTolerance::normal);
+  setChecksumScaleFactor(1e-2 *
                  ( static_cast<Checksum_type>(getDefaultProblemSize()) /
                                               getActualProblemSize() ) /
-                 getActualProblemSize();
-
-  setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
+                 getActualProblemSize());
 
   setComplexity(Complexity::N);
 
@@ -58,14 +58,13 @@ void SCAN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_y, getActualProblemSize(), 0.0, vid);
 }
 
-void SCAN::updateChecksum(VariantID vid, size_t tune_idx)
+void SCAN::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_y, getActualProblemSize(), checksum_scale_factor, vid);
+  addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void SCAN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

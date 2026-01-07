@@ -57,6 +57,7 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                   2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -79,17 +80,14 @@ void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 }
 
-void MASSVEC3DPA::updateChecksum(VariantID vid, size_t tune_idx)
+void MASSVEC3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] +=
-      calcChecksum(m_Y, mvpa::DIM * mvpa::D1D * mvpa::D1D * mvpa::D1D * m_NE, vid);
+   addToChecksum(m_Y, mvpa::DIM * mvpa::D1D * mvpa::D1D * mvpa::D1D * m_NE, vid);
 }
 
 void MASSVEC3DPA::tearDown(VariantID vid,
                            size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void)vid;
-
   deallocData(m_B, vid);
   deallocData(m_D, vid);
   deallocData(m_X, vid);

@@ -40,6 +40,7 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -65,16 +66,15 @@ void REDUCE3_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_vmax_init = std::numeric_limits<Int_type>::min();
 }
 
-void REDUCE3_INT::updateChecksum(VariantID vid, size_t tune_idx)
+void REDUCE3_INT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += m_vsum;
-  checksum[vid][tune_idx] += m_vmin;
-  checksum[vid][tune_idx] += m_vmax;
+  addToChecksum(m_vsum);
+  addToChecksum(m_vmin);
+  addToChecksum(m_vmax);
 }
 
 void REDUCE3_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_vec, vid);
 }
 

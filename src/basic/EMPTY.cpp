@@ -35,6 +35,7 @@ EMPTY::EMPTY(const RunParams& params)
   setFLOPsPerRep( 0 );
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 

@@ -39,6 +39,7 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
@@ -59,16 +60,16 @@ void HALO_SENDRECV::setUp(VariantID vid, size_t tune_idx)
   setUp_base(m_my_mpi_rank, m_mpi_dims.data(), m_num_vars, vid, tune_idx);
 }
 
-void HALO_SENDRECV::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_SENDRECV::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
 
   for (Index_type l = 0; l < s_num_neighbors; ++l) {
     Index_type buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
     if (separate_buffers) {
-      checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len);
+      addToChecksum(DataSpace::Host, m_recv_buffers[l], buffer_len);
     } else {
-      checksum[vid][tune_idx] += calcChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len);
+      addToChecksum(getMPIDataSpace(vid), m_recv_buffers[l], buffer_len);
     }
   }
 }

@@ -35,6 +35,7 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -56,14 +57,13 @@ void PLANCKIAN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_w, getActualProblemSize(), 0.0, vid);
 }
 
-void PLANCKIAN::updateChecksum(VariantID vid, size_t tune_idx)
+void PLANCKIAN::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_w, getActualProblemSize(), vid);
+  addToChecksum(m_w, getActualProblemSize(), vid);
 }
 
 void PLANCKIAN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
   deallocData(m_u, vid);

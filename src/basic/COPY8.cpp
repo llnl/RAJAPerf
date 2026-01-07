@@ -35,6 +35,7 @@ COPY8::COPY8(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -67,21 +68,20 @@ void COPY8::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_x7, getActualProblemSize(), vid);
 }
 
-void COPY8::updateChecksum(VariantID vid, size_t tune_idx)
+void COPY8::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_y0, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y1, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y2, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y3, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y4, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y5, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y6, getActualProblemSize(), vid);
-  checksum[vid].at(tune_idx) += calcChecksum(m_y7, getActualProblemSize(), vid);
+  addToChecksum(m_y0, getActualProblemSize(), vid);
+  addToChecksum(m_y1, getActualProblemSize(), vid);
+  addToChecksum(m_y2, getActualProblemSize(), vid);
+  addToChecksum(m_y3, getActualProblemSize(), vid);
+  addToChecksum(m_y4, getActualProblemSize(), vid);
+  addToChecksum(m_y5, getActualProblemSize(), vid);
+  addToChecksum(m_y6, getActualProblemSize(), vid);
+  addToChecksum(m_y7, getActualProblemSize(), vid);
 }
 
 void COPY8::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x0, vid);
   deallocData(m_x1, vid);
   deallocData(m_x2, vid);

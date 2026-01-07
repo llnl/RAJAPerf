@@ -46,6 +46,7 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setFLOPsPerRep(m_NE * 7 * ea_mat_entries);
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -67,16 +68,13 @@ void MASS3DEA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
                                  mea::D1D*mea::D1D*mea::D1D*m_NE), Real_type(0.0), vid);
 }
 
-void MASS3DEA::updateChecksum(VariantID vid, size_t tune_idx)
+void MASS3DEA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_M, mea::D1D*mea::D1D*mea::D1D*
-                                          mea::D1D*mea::D1D*mea::D1D*m_NE, vid);
+  addToChecksum(m_M, mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*m_NE, vid);
 }
 
 void MASS3DEA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_B, vid);
   deallocData(m_D, vid);
   deallocData(m_M, vid);
