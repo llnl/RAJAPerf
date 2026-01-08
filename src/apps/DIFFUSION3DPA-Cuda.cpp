@@ -128,9 +128,9 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel( (Diffusion3DPA<block_size>),
-                         NE, nthreads_per_block,
-                         shmem, res.get_stream(),
-                         Basis, dBasis, D, X, Y, symmetric );
+                          NE, nthreads_per_block,
+                          shmem, res.get_stream(),
+                          Basis, dBasis, D, X, Y, symmetric );
     }
     stopTimer();
 
