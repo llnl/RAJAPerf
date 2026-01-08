@@ -143,7 +143,8 @@ TEST(ShortSuiteTest, Basic)
 
           double rtime = kernel->getTotTime(vid, tune_idx);
 
-          rajaperf::Checksum_type cksum_diff = kernel->getChecksumMaxDifference(vid, tune_idx);
+          rajaperf::Checksum_type cksum_rel_diff =
+              kernel->getChecksumMaxRelativeAbsoluteDifference(vid, tune_idx);
 
           // Print kernel information when running test manually
           std::cout << "Check kernel, variant, tuning : "
@@ -152,7 +153,7 @@ TEST(ShortSuiteTest, Basic)
                     << kernel->getVariantTuningName(vid, tune_idx) 
                     << std::endl;
           EXPECT_GT(rtime, 0.0);
-          EXPECT_LE(cksum_diff, cksum_tol);
+          EXPECT_LE(cksum_rel_diff, cksum_tol);
           
         }
       } 

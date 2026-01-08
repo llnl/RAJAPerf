@@ -765,16 +765,16 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
           Checksum_type cksum_tol = kernel->getChecksumTolerance();
           Checksum_type cksum_ref = kernel->getReferenceChecksum();
           Checksum_type cksum = kernel->getLastChecksum();
-          Checksum_type cksum_diff = std::abs(cksum_ref - cksum);
+          Checksum_type cksum_rel_diff = KernelBase::calculateChecksumRelativeAbsoluteDifference(cksum, cksum_ref);
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
           {
-            Checksum_type cksum_diff_max = 1e80;
-            Allreduce(&cksum_diff, &cksum_diff_max, 1, MPI_MAX, MPI_COMM_WORLD);
-            cksum_diff = cksum_diff_max;
+            Checksum_type cksum_rel_diff_max = cksum_tol + static_cast<Checksum_type>(1e80);
+            Allreduce(&cksum_rel_diff, &cksum_rel_diff_max, 1, MPI_MAX, MPI_COMM_WORLD);
+            cksum_rel_diff = cksum_rel_diff_max;
           }
 #endif
           const char* cksum_result = "FAILED";
-          if (cksum_diff <= cksum_tol) {
+          if (cksum_rel_diff <= cksum_tol) {
             cksum_result = "PASSED";
           }
 
@@ -1432,11 +1432,11 @@ void Executor::writeChecksumReport(ostream& file)
          <<left<< setw(checksum_width) << "Tolerance  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << "Average Checksum  "
-         <<left<< setw(checksum_width) << "Max Checksum Diff  "
-         <<left<< setw(checksum_width) << "Checksum Diff StdDev"
+         <<left<< setw(checksum_width) << "Max Checksum Rel Diff  "
+         <<left<< setw(checksum_width) << "Checksum Rel Diff StdDev"
 #else
          <<left<< setw(checksum_width) << "Checksum  "
-         <<left<< setw(checksum_width) << "Checksum Diff  "
+         <<left<< setw(checksum_width) << "Checksum Rel Diff  "
 #endif
          << endl;
 
@@ -1466,17 +1466,17 @@ void Executor::writeChecksumReport(ostream& file)
 
       // get vector of checksums and diffs
       std::vector<std::vector<Checksum_type>> checksums(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         VariantID vid = variant_ids[iv];
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
 
         checksums[iv].resize(num_tunings, 0.0);
-        checksums_abs_diff[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
           if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
             checksums[iv][tune_idx] = kern->getChecksumAverage(vid, tune_idx);
-            checksums_abs_diff[iv][tune_idx] = kern->getChecksumMaxDifference(vid, tune_idx);
+            checksums_rel_diff[iv][tune_idx] = kern->getChecksumMaxRelativeAbsoluteDifference(vid, tune_idx);
           }
         }
       }
@@ -1501,50 +1501,50 @@ void Executor::writeChecksumReport(ostream& file)
         }
       }
 
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_min(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_max(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_sum(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_min(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_max(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_sum(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_min[iv].resize(num_tunings, 0.0);
-        checksums_abs_diff_max[iv].resize(num_tunings, 0.0);
-        checksums_abs_diff_sum[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff_min[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff_max[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff_sum[iv].resize(num_tunings, 0.0);
 
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_min[iv].data(), num_tunings,
+        Allreduce(checksums_rel_diff[iv].data(), checksums_rel_diff_min[iv].data(), num_tunings,
                   MPI_MIN, MPI_COMM_WORLD);
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_max[iv].data(), num_tunings,
+        Allreduce(checksums_rel_diff[iv].data(), checksums_rel_diff_max[iv].data(), num_tunings,
                   MPI_MAX, MPI_COMM_WORLD);
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_sum[iv].data(), num_tunings,
+        Allreduce(checksums_rel_diff[iv].data(), checksums_rel_diff_sum[iv].data(), num_tunings,
                   MPI_SUM, MPI_COMM_WORLD);
       }
 
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_avg(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_avg(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_avg[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff_avg[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_avg[iv][tune_idx] = checksums_abs_diff_sum[iv][tune_idx] / num_ranks;
+          checksums_rel_diff_avg[iv][tune_idx] = checksums_rel_diff_sum[iv][tune_idx] / num_ranks;
         }
       }
 
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_diff2avg2(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_diff2avg2(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_diff2avg2[iv].resize(num_tunings, 0.0);
+        checksums_rel_diff_diff2avg2[iv].resize(num_tunings, 0.0);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_diff2avg2[iv][tune_idx] = (checksums_abs_diff[iv][tune_idx] - checksums_abs_diff_avg[iv][tune_idx]) *
-                                                  (checksums_abs_diff[iv][tune_idx] - checksums_abs_diff_avg[iv][tune_idx]) ;
+          checksums_rel_diff_diff2avg2[iv][tune_idx] = (checksums_rel_diff[iv][tune_idx] - checksums_rel_diff_avg[iv][tune_idx]) *
+                                                       (checksums_rel_diff[iv][tune_idx] - checksums_rel_diff_avg[iv][tune_idx]) ;
         }
       }
 
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_stddev(variant_ids.size());
+      std::vector<std::vector<Checksum_type>> checksums_rel_diff_stddev(variant_ids.size());
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_stddev[iv].resize(num_tunings, 0.0);
-        Allreduce(checksums_abs_diff_diff2avg2[iv].data(), checksums_abs_diff_stddev[iv].data(), num_tunings,
+        checksums_rel_diff_stddev[iv].resize(num_tunings, 0.0);
+        Allreduce(checksums_rel_diff_diff2avg2[iv].data(), checksums_rel_diff_stddev[iv].data(), num_tunings,
                   MPI_SUM, MPI_COMM_WORLD);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_stddev[iv][tune_idx] = std::sqrt(checksums_abs_diff_stddev[iv][tune_idx] / num_ranks);
+          checksums_rel_diff_stddev[iv][tune_idx] = std::sqrt(checksums_rel_diff_stddev[iv][tune_idx] / num_ranks);
         }
       }
 
@@ -1562,9 +1562,9 @@ void Executor::writeChecksumReport(ostream& file)
             const char* result = "FAILED";
             if (
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
-              checksums_abs_diff_max[iv][tune_idx]
+              checksums_rel_diff_max[iv][tune_idx]
 #else
-              checksums_abs_diff[iv][tune_idx]
+              checksums_rel_diff[iv][tune_idx]
 #endif
                <= cksum_tol ) {
               result = "PASSED";
@@ -1575,11 +1575,11 @@ void Executor::writeChecksumReport(ostream& file)
                  <<left<< setw(checksum_width) << cksum_tol
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << checksums_avg[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_abs_diff_max[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_abs_diff_stddev[iv][tune_idx] << endl;
+                 <<left<< setw(checksum_width) << checksums_rel_diff_max[iv][tune_idx]
+                 <<left<< setw(checksum_width) << checksums_rel_diff_stddev[iv][tune_idx] << endl;
 #else
                  <<left<< setw(checksum_width) << checksums[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_abs_diff[iv][tune_idx] << endl;
+                 <<left<< setw(checksum_width) << checksums_rel_diff[iv][tune_idx] << endl;
 #endif
           } else {
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
