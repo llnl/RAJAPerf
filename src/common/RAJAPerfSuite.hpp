@@ -193,16 +193,16 @@ enum KernelID {
 /*!
  *******************************************************************************
  *
- * \brief Enumeration defining unique id for each group of variants in suite.
+ * \brief Enumeration defining unique id for each set of variants in suite.
  *
- * IMPORTANT: This is only modified when a group is added or removed.
+ * IMPORTANT: This is only modified when a set is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE VariantGroupNames ARRAY IN IMPLEMENTATION FILE!!!
+ *            ITEMS IN THE VariantSetNames ARRAY IN IMPLEMENTATION FILE!!!
  *
  *******************************************************************************
  */
-enum struct VariantGroupID : int {
+enum struct VariantSetID : int {
 
   Base = 0,
   Lambda,
@@ -216,7 +216,7 @@ enum struct VariantGroupID : int {
   HIP,
   SYCL,
 
-  NumVariantGroups // Keep this one last and DO NOT remove (!!)
+  NumVariantSets // Keep this one last and DO NOT remove (!!)
 
 };
 
@@ -418,11 +418,11 @@ const std::string& getKernelGroupName(KernelGroupID kgid);
 /*!
  *******************************************************************************
  *
- * \brief Return group name associated with VariantGroupID enum value.
+ * \brief Return set name associated with VariantSetID enum value.
  *
  *******************************************************************************
  */
-const std::string& getVariantGroupName(VariantGroupID vgid);
+const std::string& getVariantSetName(VariantSetID vgid);
 
 /*!
  *******************************************************************************

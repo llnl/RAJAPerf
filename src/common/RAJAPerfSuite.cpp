@@ -294,14 +294,14 @@ static const std::string KernelNames [] =
  *
  * \brief Array of names for each Variant GROUP in suite.
  *
- * IMPORTANT: This is only modified when a variant group is added or removed.
+ * IMPORTANT: This is only modified when a variant set is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE VariantGroupID enum IN HEADER FILE!!!
+ *            ITEMS IN THE VariantSetID enum IN HEADER FILE!!!
  *
  *******************************************************************************
  */
-static const std::string VariantGroupNames [] =
+static const std::string VariantSetNames [] =
 {
   std::string("Base"),
   std::string("Lambda"),
@@ -315,9 +315,9 @@ static const std::string VariantGroupNames [] =
   std::string("HIP"),
   std::string("SYCL"),
 
-  std::string("Unknown Variant Group")  // Keep this at the end and DO NOT remove....
+  std::string("Unknown Variant Set")  // Keep this at the end and DO NOT remove....
 
-}; // END VariantGroupNames
+}; // END VariantSetNames
 
 
 /*!
@@ -549,13 +549,13 @@ const std::string& getFullKernelName(KernelID kid)
 /*
  *******************************************************************************
  *
- * Return group name associated with VariantGroupID enum value.
+ * Return set name associated with VariantSetID enum value.
  *
  *******************************************************************************
  */
-const std::string& getVariantGroupName(VariantGroupID vgid)
+const std::string& getVariantSetName(VariantSetID vgid)
 {
-  return VariantGroupNames[static_cast<int>(vgid)];
+  return VariantSetNames[static_cast<int>(vgid)];
 }
 
 

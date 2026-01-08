@@ -1417,16 +1417,16 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ek INIT3 Apps (exclude INIT3 kernel and all kernels in Apps group)\n\n";
 
   str << "\t --variants, -v <space-separated strings> [Default is run all]\n"
-      << "\t      (names of variants and/or groups of variants to run)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant and group names.\n";
+      << "\t      (names of variants and/or sets of variants to run)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
       << "\t\t --variants RAJA (run all RAJA kernel variants)\n"
       << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and RAJA_CUDA variants)\n"
       << "\t\t -v Base_Seq RAJA (run Base_Seq and RAJA variants)\n\n";
 
   str << "\t --exclude-variants, -ev <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of variants and/or groups of variants to exclude)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant and group names.\n";
+      << "\t      (names of variants and/or sets of variants to exclude)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
       << "\t\t --exclude-variants RAJA (exclude all RAJA kernel variants)\n"
       << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and RAJA_CUDA variants)\n"
@@ -1759,7 +1759,7 @@ void RunParams::printFullKernelNames(std::ostream& str) const
 
 void RunParams::printVariantNames(std::ostream& str) const
 {
-  str << "\nAvailable variants (<group name>_<group name>):";
+  str << "\nAvailable variants (<set name>_<set name>):";
   str << "\n-----------------------------------------------\n";
   for (int vid = 0; vid < NumVariants; ++vid) {
     str << getVariantName(static_cast<VariantID>(vid)) << std::endl;
@@ -1806,12 +1806,12 @@ void RunParams::printKernelGroupNames(std::ostream& str) const
   str.flush();
 }
 
-void RunParams::printVariantGroupNames(std::ostream& str) const
+void RunParams::printVariantSetNames(std::ostream& str) const
 {
-  str << "\nAvailable variant groups:";
+  str << "\nAvailable variant sets:";
   str << "\n-------------------------\n";
-  for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
-    str << getVariantGroupName(static_cast<VariantGroupID>(vgid)) << std::endl;
+  for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+    str << getVariantSetName(static_cast<VariantSetID>(vgid)) << std::endl;
   }
   str.flush();
 }
@@ -2434,41 +2434,41 @@ void RunParams::processVariantInput()
   if ( !exclude_variant_input.empty() ) {
 
     // Make list copy of exclude variant name input to manipulate for
-    // processing potential group names and/or variant names, next
+    // processing potential set names and/or variant names, next
     Slist exclude_variant_names( exclude_variant_input.begin(),
                                  exclude_variant_input.end() );
 
     //
-    // Search exclude_variant_names for valid group names.
-    // groups2exclude will contain names of valid groups to exclude.
+    // Search exclude_variant_names for valid set names.
+    // sets2exclude will contain names of valid sets to exclude.
     //
-    Svector groups2exclude;
+    Svector sets2exclude;
     for (auto const& variant_name : exclude_variant_names) {
-      for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
-        const std::string& group_name = getVariantGroupName(static_cast<VariantGroupID>(vgid));
-        if ( group_name == variant_name ) {
-          groups2exclude.push_back(group_name);
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2exclude.push_back(set_name);
         }
       }
     }
 
     //
-    // If group name(s) found in exclude_variant_names, assemble kernels in
-    // those group(s) to exclude from run. Also remove the group names from
+    // If set name(s) found in exclude_variant_names, assemble kernels in
+    // those set(s) to exclude from run. Also remove the set names from
     // the exclude_variant_names list.
     //
-    for (auto const& group_name : groups2exclude) {
+    for (auto const& set_name : sets2exclude) {
 
       for (size_t iv = 0; iv < NumVariants; ++iv) {
         VariantID vid = static_cast<VariantID>(iv);
-        if ( getVariantName(vid).find(group_name) != std::string::npos ) {
+        if ( getVariantName(vid).find(set_name) != std::string::npos ) {
           exclude_variants.insert(vid);
         }
       }
 
-      exclude_variant_names.remove(group_name);
+      exclude_variant_names.remove(set_name);
 
-    }  // iterate over groups to exclude
+    }  // iterate over sets to exclude
 
     //
     // Parse input to determine which variants to exclude.
@@ -2528,39 +2528,39 @@ void RunParams::processVariantInput()
   } else {  // variant input given
 
     // Make list copy of variant name input to manipulate for
-    // processing potential group names and/or variant names, next
+    // processing potential set names and/or variant names, next
     Slist variant_names(variant_input.begin(), variant_input.end());
 
     //
-    // Search variant_names for matching group names.
-    // groups2run will contain names of groups to run.
+    // Search variant_names for matching set names.
+    // sets2run will contain names of sets to run.
     //
-    Svector groups2run;
+    Svector sets2run;
     for (auto const& variant_name : variant_names)
     {
-      for (int vgid = 0; vgid < static_cast<int>(VariantGroupID::NumVariantGroups); ++vgid) {
-        const std::string& group_name = getVariantGroupName(static_cast<VariantGroupID>(vgid));
-        if ( group_name == variant_name ) {
-          groups2run.push_back(group_name);
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2run.push_back(set_name);
         }
       }
     }
 
     //
-    // If group name(s) found in variant_names, assemble variants in group(s)
-    // to run and remove those group name(s) from variant_names list.
+    // If set name(s) found in variant_names, assemble variants in set(s)
+    // to run and remove those set name(s) from variant_names list.
     //
-    for (auto const& group_name : groups2run)
+    for (auto const& set_name : sets2run)
     {
       for (VariantID vid : available_variants)
       {
-        if ( getVariantName(vid).find(group_name) != std::string::npos &&
+        if ( getVariantName(vid).find(set_name) != std::string::npos &&
              exclude_variants.find(vid) == exclude_variants.end()) {
           run_variants.insert(vid);
         }
       }
 
-      variant_names.remove(group_name);
+      variant_names.remove(set_name);
     }
 
     //

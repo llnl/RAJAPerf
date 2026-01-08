@@ -13,7 +13,7 @@ RAJA Performance Suite Structure: Adding Kernels, Variants, and Tunings
 ************************************************************************
 
 This section describes how to add kernels, kernel groups, variants, variant
-groups, and tunings to the Suite. The discussion aims to make clear the
+sets, and tunings to the Suite. The discussion aims to make clear the
 organization of the code and how it works, which is useful to understand when
 making a contribution.
 
@@ -173,8 +173,8 @@ described above.
 Adding a variant to the Suite involves four main steps:
 
 #. Add a unique variant ID and a unique variant name to the Suite.
-#. If the variant is part of any new variant groups, add unique variant group
-   ID(s) and variant group name(s).
+#. If the variant is part of any new variant sets, add unique variant set
+   ID(s) and variant set name(s).
 #. Add the virtual method to define the variant tunings to the ``KernelBase``
    class header file. For example::
 
@@ -205,20 +205,20 @@ adding a kernel ID and name, which is described in
           strings in the VariantNames array must be kept consistent 
           (i.e., same order and matching one-to-one).
 
-.. _structure_addvariant_group-label:
+.. _structure_addvariant_set-label:
 
-Adding a variant group
+Adding a variant set
 ----------------------------
 
-If a variant is added as part of a new group or new groups of variants in the
-Suite, new value(s) must be added to the ``VariantGroupID`` enum in the
-``RAJAPerfSuite.hpp`` header file and an associated variant group string name(s)
-must be added to the ``VariantGroupNames`` string array in the ``RAJAPerfSuite.cpp``
-source file. Adding a new variant group ID and name is essentially the same as
-adding a kernel group ID and name, which is described in
-:ref:`structure_addkernel_group-label`.
+If a variant is added as part of a new set or new sets of variants in the
+Suite, new value(s) must be added to the ``VariantSetID`` enum in the
+``RAJAPerfSuite.hpp`` header file and an associated variant set string name(s)
+must be added to the ``VariantSetNames`` string array in the ``RAJAPerfSuite.cpp``
+source file. Adding a new variant set ID and name is essentially the same as
+adding a kernel set ID and name, which is described in
+:ref:`structure_addkernel_set-label`.
 
-.. note:: Enumeration values and string array entries for variant groups must be
+.. note:: Enumeration values and string array entries for variant sets must be
           kept consistent, in the same order and matching one-to-one.
 
 .. _structure_addvariant_impl-label:
