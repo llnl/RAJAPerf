@@ -141,7 +141,15 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
              SYCL_FOREACH_THREAD_DIRECT(dz, 0, mpa_at::D1D) {
                SYCL_FOREACH_THREAD_DIRECT(dy, 2, mpa_at::D1D) {
                  SYCL_FOREACH_THREAD_DIRECT(dx, 1, mpa_at::D1D) {
-                   MASS3DPA_ATOMIC_8;
+                  MASS3DPA_ATOMIC_8;
+
+                  //SYCL ATOMIC OPERATION
+                   sycl::atomic_ref<Real_type,
+                   sycl::memory_order::relaxed,
+                   sycl::memory_scope::device,
+                   sycl::access::address_space::global_space
+                   > atomic_y(Y[idx]);
+                   atomic_y.fetch_add(u);
                  }
                }
              }
@@ -324,6 +332,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_8;
+                      MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_RAJA_SYCL);
                       } // lambda (dx)
                     ); // RAJA::loop<inner_x>
                   } // lambda (dy)

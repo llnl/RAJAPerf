@@ -215,6 +215,9 @@ using Complex_ptr = Complex_type*;
 #define RAJAPERF_ATOMIC_MAX_RAJA_HIP(lhs, rhs) \
       RAJA::atomicMax<RAJA::hip_atomic>(&(lhs), (rhs))
 
+#define RAJAPERF_ATOMIC_ADD_RAJA_SYCL(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::sycl_atomic>(&(lhs), (rhs))
+
 }  // closing brace for rajaperf namespace
 
 #endif  // closing endif for header file include guard

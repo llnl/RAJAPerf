@@ -229,9 +229,9 @@
 
 // Number of Dofs/Qpts in 1D
 namespace diff {
-constexpr Index_type D1D = 3;
-constexpr Index_type Q1D = 4;
-constexpr Index_type DPA_SYM = 6;
+constexpr RAJA::Index_type D1D = 3;
+constexpr RAJA::Index_type Q1D = 4;
+constexpr RAJA::Index_type DPA_SYM = 6;
 } // namespace diff
 #define DPA_b(x, y) Basis[x + diff::Q1D * y]
 #define DPA_g(x, y) dBasis[x + diff::Q1D * y]

@@ -52,7 +52,7 @@ void MASS3DPA_ATOMIC::runSeqVariant(VariantID vid) {
         SHARED_LOOP_3D(qx, qy, dz, mpa_at::Q1D, mpa_at::Q1D, mpa_at::D1D) {
           MASS3DPA_ATOMIC_4;
         }
-        
+
         SHARED_LOOP_3D(qx, qy, qz, mpa_at::Q1D, mpa_at::Q1D, mpa_at::Q1D) {
           MASS3DPA_ATOMIC_5;
         }
@@ -67,6 +67,7 @@ void MASS3DPA_ATOMIC::runSeqVariant(VariantID vid) {
 
         SHARED_LOOP_3D(dx, dy, dz, mpa_at::D1D, mpa_at::D1D, mpa_at::D1D) {
           MASS3DPA_ATOMIC_8;
+          MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_SEQ);
         }
 
       } // element loop
@@ -215,6 +216,7 @@ void MASS3DPA_ATOMIC::runSeqVariant(VariantID vid) {
                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_8;
+                      MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_RAJA_SEQ);
                       } // lambda (dx)
                     ); // RAJA::loop<inner_x>
                   } // lambda (dy)

@@ -151,8 +151,8 @@
 
 // Number of Dofs/Qpts in 1D
 namespace mpa_at {
-constexpr Index_type D1D = 3;
-constexpr Index_type Q1D = 4;
+constexpr RAJA::Index_type D1D = 3;
+constexpr RAJA::Index_type Q1D = 4;
 } // namespace mpa_at
 
 #define MPAT_B(x, y) B[x + mpa_at::Q1D * y]
@@ -249,8 +249,10 @@ constexpr Index_type Q1D = 4;
   for (Index_type qz = 0; qz < mpa_at::Q1D; ++qz) {                            \
     u += QDD[qz][dy][dx] * sm_Bt[dz][qz];                                      \
   }                                                                            \
-  const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);             \
-  RAJA::atomicAdd<RAJA::auto_atomic>(&Y[thread_dofs[j]], u); // atomic add
+  const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
+
+#define MASS3DPA_ATOMIC_9(atomicAdd)                    \
+  atomicAdd(Y[thread_dofs[j]], u); // atomic add
 
 namespace rajaperf {
 class RunParams;
