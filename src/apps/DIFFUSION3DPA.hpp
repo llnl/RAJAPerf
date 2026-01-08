@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-// clang-format off
+//clang-format off
 ///
 /// Action of 3D diffusion matrix via partial assembly
 ///
@@ -208,7 +208,7 @@
 ///
 /// } // element loop
 ///
-// clang-format on
+//clang-format on
 
 #ifndef RAJAPerf_Apps_DIFFUSION3DPA_HPP
 #define RAJAPerf_Apps_DIFFUSION3DPA_HPP

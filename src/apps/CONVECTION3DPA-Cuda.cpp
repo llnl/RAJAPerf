@@ -20,7 +20,7 @@ namespace rajaperf {
 namespace apps {
 
 template < size_t block_size >
-  __launch_bounds__(block_size)
+__launch_bounds__(block_size)
 __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
                                const Real_ptr dBasis, const Real_ptr D,
                                const Real_ptr X, Real_ptr Y) {
@@ -180,6 +180,7 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+      //clang-format off
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),
                            RAJA::Threads(conv::Q1D, conv::Q1D, conv::Q1D)),
@@ -337,6 +338,7 @@ void CONVECTION3DPA::runCudaVariantImpl(VariantID vid) {
 
         }  // outer lambda (ctx)
       );  // RAJA::launch
+      //clang-format on
 
     } // loop over kernel reps
     stopTimer();

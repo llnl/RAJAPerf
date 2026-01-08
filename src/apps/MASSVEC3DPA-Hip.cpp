@@ -263,6 +263,7 @@ void MASSVEC3DPA::runRAJAImpl(RESOURCE &res)
 
   using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
+  //clang-format off
   RAJA::launch<launch_policy>(
     res,
     RAJA::LaunchParams(RAJA::Teams(NE),
@@ -408,6 +409,7 @@ void MASSVEC3DPA::runRAJAImpl(RESOURCE &res)
       );      // RAJA::loop<outer_x>
     }         // outer lambda (ctx)
   );            // RAJA::launch
+  //clang-format on
 
 }
 

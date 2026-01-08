@@ -147,6 +147,7 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid) {
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Grid is empty as the host does not need a compute grid to be specified
+      //clang-format off
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
@@ -303,6 +304,7 @@ void CONVECTION3DPA::runSeqVariant(VariantID vid) {
 
         }  // outer lambda (ctx)
       );  // RAJA::launch
+      //clang-format off
     }  // loop over kernel reps
     stopTimer();
 

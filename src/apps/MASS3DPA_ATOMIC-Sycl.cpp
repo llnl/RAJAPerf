@@ -195,6 +195,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+      //clang-format off
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),
                            RAJA::Threads(mpa_at::Q1D, mpa_at::Q1D, mpa_at::Q1D), shmem),
@@ -346,6 +347,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
 
         }  // outer lambda (ctx)
       );  // RAJA::launch
+      //clang-format on
 
     }  // loop over kernel reps
     stopTimer();
