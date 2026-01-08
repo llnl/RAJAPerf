@@ -56,7 +56,7 @@ FIR::~FIR()
 
 void FIR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_in, getActualProblemSize() + m_coefflen-1, vid);
+  allocAndInitDataRandValue(m_in, getActualProblemSize() + m_coefflen-1, vid);
   allocAndInitDataConst(m_out, getActualProblemSize(), 0.0, vid);
 }
 
