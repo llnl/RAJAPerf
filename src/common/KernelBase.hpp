@@ -571,7 +571,7 @@ public:
   template <typename T>
   void addToChecksum(T val)
   {
-    checksum += static_cast<Checksum_type>(val);
+    checksum += static_cast<Checksum_type>(std::abs(val));
   }
 
   template <typename T>
