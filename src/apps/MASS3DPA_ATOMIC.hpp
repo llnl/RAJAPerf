@@ -251,7 +251,7 @@ constexpr RAJA::Index_type Q1D = 4;
   }                                                                            \
   const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 
-#define MASS3DPA_ATOMIC_9(atomicAdd)                    \
+#define MASS3DPA_ATOMIC_9(atomicAdd)                                           \
   atomicAdd(Y[thread_dofs[j]], u); // atomic add
 
 namespace rajaperf {
