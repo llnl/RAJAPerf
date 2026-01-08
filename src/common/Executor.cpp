@@ -799,6 +799,10 @@ void Executor::writeKernelInfoSummary(ostream& str,
 void Executor::writeKernelRunDataSummary(ostream& str,
                                          vector<KernelBase*> const& kernels) const
 {
+  if (!str) {
+    return;
+  }
+
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
   int num_ranks;
   MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
@@ -1192,9 +1196,7 @@ void Executor::outputRunData()
     }
 
     file = openOutputFile(out_fprefix + "-kernel-run-data.csv");
-    if ( *file ) {
-      writeKernelRunDataSummary(*file, kernels);
-    }
+    writeKernelRunDataSummary(*file, kernels);
 
     file = openOutputFile(out_fprefix + "-checksum.txt");
     writeChecksumReport(*file, kernels);
@@ -1244,9 +1246,8 @@ void Executor::outputRunData()
       writeKernelInfoSummary(*file, mykernel, to_file);
     }
 
-    if ( *file ) {
-      writeKernelRunDataSummary(*file, mykernel);
-    }
+    writeSeparator(*file);
+    writeKernelRunDataSummary(*file, mykernel);
 
     writeSeparator(*file);
     writeChecksumReport(*file, mykernel);
