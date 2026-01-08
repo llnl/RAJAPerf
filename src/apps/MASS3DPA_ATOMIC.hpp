@@ -259,13 +259,6 @@ class RunParams;
 
 namespace apps {
 
-// Helper function to get global node ID for structured 3D grid
-inline Index_type nodeID(Index_type ix, Index_type iy, Index_type iz,
-                         Index_type num_nodes_x, Index_type num_nodes_y,
-                         Index_type num_nodes_z) {
-  return ix + num_nodes_x * (iy + num_nodes_y * iz);
-}
-
 /**
  * Build element-to-DOF connectivity for a structured 3D hex mesh
  * with arbitrary polynomial order p and 1 DOF per node.
