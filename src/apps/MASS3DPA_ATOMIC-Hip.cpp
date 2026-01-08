@@ -31,6 +31,7 @@ __global__ void Mass3DPA_Atomic(const Real_ptr B,
 
   MASS3DPA_ATOMIC_0_GPU;
 
+
   GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
     GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
       GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
@@ -93,6 +94,7 @@ __global__ void Mass3DPA_Atomic(const Real_ptr B,
     GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
       GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
       MASS3DPA_ATOMIC_8;
+      MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_HIP);
       }
     }
   }
@@ -268,6 +270,7 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_8;
+                      MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_RAJA_HIP);
                       } // lambda (dx)
                     ); // RAJA::loop<inner_x>
                   } // lambda (dy)
