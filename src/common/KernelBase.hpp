@@ -662,8 +662,8 @@ protected:
   struct ChecksumTolerance
   {
     static constexpr inline Checksum_type zero = 0.0;
-    static constexpr inline Checksum_type tight = 1e-12;
-    static constexpr inline Checksum_type normal = 1e-7;
+    static constexpr inline Checksum_type tight = 1e-14;
+    static constexpr inline Checksum_type normal = 1e-10;
     static constexpr inline Checksum_type loose = 5e-6;
   };
 
