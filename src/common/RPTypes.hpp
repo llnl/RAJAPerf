@@ -194,6 +194,13 @@ using Complex_ptr = Complex_type*;
 #define RAJAPERF_ATOMIC_MAX_HIP(lhs, rhs) \
       ::atomicMax(&(lhs), (rhs))
 
+#define RAJAPERF_ATOMIC_ADD_SYCL(lhs, rhs)      \
+      sycl::atomic_ref<decltype(rhs),           \
+      sycl::memory_order::relaxed,              \
+      sycl::memory_scope::device,               \
+      sycl::access::address_space::global_space \
+      > atomic_y(lhs);                          \
+      atomic_y.fetch_add(rhs);
 
 #define RAJAPERF_ATOMIC_ADD_RAJA_SEQ(lhs, rhs) \
       RAJA::atomicAdd<RAJA::seq_atomic>(&(lhs), (rhs))

@@ -54,9 +54,9 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
                          mpa_at::Q1D * m_NE); // D
 
   setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // Y
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE ); // Y
 
-  setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // Y
+  setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE ); // Y
 
   setFLOPsPerRep(
       m_NE *
