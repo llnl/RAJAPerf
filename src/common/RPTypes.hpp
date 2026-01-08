@@ -195,7 +195,7 @@ using Complex_ptr = Complex_type*;
       ::atomicMax(&(lhs), (rhs))
 
 #define RAJAPERF_ATOMIC_ADD_SYCL(lhs, rhs)      \
-      sycl::atomic_ref<decltype(rhs),           \
+      sycl::atomic_ref<std::remove_reference_t<decltype(lhs)>,           \
       sycl::memory_order::relaxed,              \
       sycl::memory_scope::device,               \
       sycl::access::address_space::global_space \
