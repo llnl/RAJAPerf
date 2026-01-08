@@ -34,7 +34,7 @@ terminology used in the Suite implementation and discussion includes:
   * **Set** is a subset of variants in the Suite that exercise the same
     implementation approach, such as Base with
     Base_Seq, Base_OpenMP, and more using the *baseline* implementation
-    approach, and Seq with Base_Seq, Lambda_Seq, and RAJA_Seq using the
+    approach, or the same programming model, such as Seq with Base_Seq, Lambda_Seq, and RAJA_Seq using the
     *Sequential* programming model.
   * **Tuning** refers to execution of kernels with a particular execution
     parameterization, such as GPU thread-block size 128, 256, etc.
