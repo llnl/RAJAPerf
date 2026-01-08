@@ -36,9 +36,6 @@ TRIAD::TRIAD(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::tight);
-  setChecksumScaleFactor(0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

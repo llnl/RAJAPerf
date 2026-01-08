@@ -46,9 +46,6 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

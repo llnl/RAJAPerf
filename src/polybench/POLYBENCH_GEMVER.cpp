@@ -70,9 +70,6 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 
