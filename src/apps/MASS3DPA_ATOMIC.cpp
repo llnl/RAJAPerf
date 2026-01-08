@@ -22,6 +22,7 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
 
   m_DOF_default = 1000000;
   setDefaultProblemSize(m_DOF_default);
+  setDefaultReps(50);
 
   // polynomial order
   m_P = mpa_at::D1D - 1;
@@ -39,9 +40,6 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   // compute true number of dofs
   m_Tot_Dofs = (m_Nx * m_P + 1) * (m_Ny * m_P + 1) * (m_Nz * m_P + 1);
 
-  setDefaultProblemSize(m_Tot_Dofs);
-  setDefaultReps(50);
-
   setActualProblemSize(m_Tot_Dofs);
 
   setItsPerRep(m_NE * mpa_at::D1D * mpa_at::D1D);
@@ -55,10 +53,10 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
                      1 * sizeof(Real_type) * mpa_at::Q1D * mpa_at::Q1D *
                          mpa_at::Q1D * m_NE); // D
 
-  setBytesWrittenPerRep(1 * sizeof(Real_type) * mpa_at::D1D * mpa_at::D1D *
-                        mpa_at::D1D * m_NE); // Y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // Y
 
-  setBytesAtomicModifyWrittenPerRep(m_Tot_Dofs);
+  setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // Y
 
   setFLOPsPerRep(
       m_NE *
@@ -72,6 +70,7 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
        mpa_at::D1D * mpa_at::D1D * mpa_at::D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
