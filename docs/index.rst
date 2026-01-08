@@ -32,7 +32,7 @@ terminology used in the Suite implementation and discussion includes:
     implementation approach and programming model, such as *baseline OpenMP*, 
     *RAJA OpenMP*, etc.
   * **Set** is a subset of variants in the Suite that exercise the same
-    implementation approach or programming model, such as Base with the
+    implementation approach, such as Base with
     Base_Seq, Base_OpenMP, and more using the *baseline* implementation
     approach, and Seq with Base_Seq, Lambda_Seq, and RAJA_Seq using the
     *Sequential* programming model.
