@@ -125,7 +125,6 @@ public:
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
-  void setChecksumScaleFactor(Checksum_type csf) { checksum_scale_factor = csf; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -297,7 +296,7 @@ public:
   }
   Checksum_type getLastChecksum() const
   {
-    return checksum.get() * checksum_scale_factor;
+    return checksum.get();
   }
   Checksum_type getChecksumAverage(VariantID vid, size_t tune_idx) const
   {
@@ -306,19 +305,33 @@ public:
     }
     return checksum_sum[vid].at(tune_idx).get() / num_exec[vid].at(tune_idx);
   }
-  Checksum_type getChecksumMaxAbsDifference(VariantID vid, size_t tune_idx) const
+  static Checksum_type calculateChecksumRelativeAbsoluteDifference(
+      Checksum_type checksum, Checksum_type reference_checksum)
+  {
+    Checksum_type checksum_abs_diff = std::abs(reference_checksum - checksum);
+
+    Checksum_type checksum_rel_abs_diff =
+        (reference_checksum == static_cast<Checksum_type>(0))
+        ? checksum_abs_diff // handle case where checksum is 0 (Basic_EMPTY)
+        : std::abs(checksum_abs_diff / reference_checksum) ;
+
+    return checksum_rel_abs_diff;
+  }
+  Checksum_type getChecksumMaxRelativeAbsoluteDifference(VariantID vid, size_t tune_idx) const
   {
     if (num_exec[vid].at(tune_idx) <= 0) {
-      throw std::runtime_error("Can't get checksum max diff if variant tuning was not run");
+      throw std::runtime_error("Can't get checksum max rel abs diff if variant tuning was not run");
     }
 
     Checksum_type reference_checksum = getReferenceChecksum();
 
-    Checksum_type cksum_max_diff = std::abs(reference_checksum - checksum_min[vid].at(tune_idx));
-    cksum_max_diff = std::max(cksum_max_diff,
-                              std::abs(reference_checksum - checksum_max[vid].at(tune_idx)));
+    Checksum_type cksum_max_rel_abs_diff =
+        std::max( calculateChecksumRelativeAbsoluteDifference(
+                      checksum_min[vid].at(tune_idx), reference_checksum),
+                  calculateChecksumRelativeAbsoluteDifference(
+                      checksum_max[vid].at(tune_idx), reference_checksum) );
 
-    return cksum_max_diff;
+    return cksum_max_rel_abs_diff;
   }
 
   void execute(VariantID vid, size_t tune_idx);
@@ -562,7 +575,7 @@ public:
   template <typename T>
   void addToChecksum(T val)
   {
-    checksum += static_cast<Checksum_type>(val);
+    checksum += static_cast<Checksum_type>(std::abs(val));
   }
 
   template <typename T>
@@ -653,8 +666,8 @@ protected:
   struct ChecksumTolerance
   {
     static constexpr inline Checksum_type zero = 0.0;
-    static constexpr inline Checksum_type tight = 1e-12;
-    static constexpr inline Checksum_type normal = 1e-7;
+    static constexpr inline Checksum_type tight = 1e-14;
+    static constexpr inline Checksum_type normal = 1e-10;
     static constexpr inline Checksum_type loose = 5e-6;
   };
 
@@ -705,8 +718,6 @@ private:
 
   ChecksumConsistency checksum_consistency;
   Checksum_type checksum_tolerance;
-  Checksum_type checksum_scale_factor;
-
   RAJA::KahanSum<Checksum_type> checksum;
 
   std::vector<Checksum_type> checksum_min[NumVariants];

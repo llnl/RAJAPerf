@@ -581,7 +581,7 @@ Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
   RAJA::KahanSum<Checksum_type> chk(0.0);
 
   for (Size_type j = 0; j < len; ++j) {
-    chk += (std::abs(std::sin(j+1.0))+0.5) * data(j);
+    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(data(j));
   }
   return chk.get();
 }
@@ -609,9 +609,13 @@ Checksum_type calcChecksum(Real_ptr ptr, Size_type len)
 
 Checksum_type calcChecksum(Complex_ptr ptr, Size_type len)
 {
-  return calcChecksumImpl([=](Size_type j) {
-    return static_cast<Checksum_type>(real(ptr[j])+imag(ptr[j]));
-  }, len);
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
+  for (Size_type j = 0; j < len; ++j) {
+    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(real(ptr[j]));
+    chk += (1.0 + 0.5 * std::sin(j+1.5)) * std::abs(imag(ptr[j]));
+  }
+  return chk.get();
 }
 
 }  // closing brace for detail namespace

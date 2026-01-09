@@ -67,8 +67,6 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   checksum_reference_variant = NumVariants;
   checksum_reference_tuning = getUnknownTuningIdx();
 
-  checksum_scale_factor = 1.0;
-
   checksum_tolerance = ChecksumTolerance::normal;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)

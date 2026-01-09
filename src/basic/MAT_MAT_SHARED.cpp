@@ -41,9 +41,6 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(1e-6 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 

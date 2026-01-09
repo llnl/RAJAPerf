@@ -36,10 +36,6 @@ SCAN::SCAN(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(1e-2 *
-                 ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                              getActualProblemSize() ) /
-                 getActualProblemSize());
 
   setComplexity(Complexity::N);
 
