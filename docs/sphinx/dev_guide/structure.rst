@@ -12,9 +12,10 @@
 RAJA Performance Suite Structure: Adding Kernels, Variants, and Tunings 
 ************************************************************************
 
-This section describes how to add kernels, variants, groups, and tunings to the
-Suite. The discussion aims to make clear the organization of the code and 
-how it works, which is useful to understand when making a contribution.
+This section describes how to add kernels, kernel groups, variants, variant
+sets, and tunings to the Suite. The discussion aims to make clear the
+organization of the code and how it works, which is useful to understand when
+making a contribution.
 
 All files containing RAJA Performance Suite infrastructure and kernels reside 
 in the ``src`` directory of the project. If you list the contents of that 
@@ -52,8 +53,8 @@ Adding a Kernel
 Adding a kernel to the Suite involves five main steps:
 
 #. Add a unique kernel ID and a unique kernel name to the Suite.
-#. If the kernel is part of a new kernel group, add a unique group ID and
-   group name. 
+#. If the kernel is part of a new kernel group, add a unique kernel group ID and
+   kernel group name.
 #. If the kernel exercises a RAJA feature that is not currently used in the 
    Suite, add a unique feature ID and feature name.
 #. Implement a kernel class that defines all operations needed to integrate
@@ -114,34 +115,34 @@ Several conventions are important to note for a kernel ID and name. Following
 them will ensure that the kernel integrates properly into the RAJA Performance 
 Suite machinery.
 
-.. note:: * The enumeration value label for a kernel is the **group name followed by the kernel name separated by an underscore**.
-          * Kernel ID enumeration values for kernels in the same group must
-            appear consecutively in the enumeration.
+.. note:: * The enumeration value label for a kernel is the **kernel group name followed by the kernel name separated by an underscore**.
+          * Kernel ID enumeration values for kernels in the same kernel group
+            must appear consecutively in the enumeration.
           * Kernel ID enumeration labels must in alphabetical order, with 
-            respect to the base kernel name in each group.
+            respect to the base kernel name in each kernel group.
           * The kernel string name is just a string version of the kernel ID.
           * The values in the ``KernelID`` enum must match the strings in the
             ``KernelNames`` array one-to-one and in the same order.
 
-Typically, adding a new group or Feature is not needed when adding a kernel.
-One or both of these needs to be added only if the kernel is not part of an
-existing group of kernels, or exercises a RAJA Feature that is not used in an
-existing kernel. For completeness, we describe the addition of a new group and
-feature in case either is needed.
+Typically, adding a new kernel group or Feature is not needed when adding a
+kernel. One or both of these needs to be added only if the kernel is not part of
+an existing group of kernels, or exercises a RAJA Feature that is not used in an
+existing kernel. For completeness, we describe the addition of a new kernel
+group and feature in case either is needed.
 
 .. _structure_addkernel_group-label:
 
-Adding a group 
+Adding a kernel group
 ----------------------------
 
 If a kernel is added as part of a new group of kernels in the Suite, a new 
-value must be added to the ``GroupID`` enum in the ``RAJAPerfSuite.hpp`` 
-header file and an associated group string name must be added to the 
-``GroupNames`` string array in the ``RAJAPerfSuite.cpp`` source file. The
+value must be added to the ``KernelGroupID`` enum in the ``RAJAPerfSuite.hpp``
+header file and an associated kernel group string name must be added to the
+``KernelGroupNames`` string array in the ``RAJAPerfSuite.cpp`` source file. The
 process is similar to adding a new kernel ID and name described above.
 
-.. note:: Enumeration values and string array entries for groups must be kept 
-          consistent, in the same order and matching one-to-one.
+.. note:: Enumeration values and string array entries for kernel groups must be
+          kept consistent, in the same order and matching one-to-one.
 
 .. _structure_addkernel_feature-label:
 
@@ -172,6 +173,8 @@ described above.
 Adding a variant to the Suite involves four main steps:
 
 #. Add a unique variant ID and a unique variant name to the Suite.
+#. If the variant is part of any new variant sets, add unique variant set
+   ID(s) and variant set name(s).
 #. Add the virtual method to define the variant tunings to the ``KernelBase``
    class header file. For example::
 
@@ -201,6 +204,22 @@ adding a kernel ID and name, which is described in
           machinery. Also, the values in the VariantID enum and the 
           strings in the VariantNames array must be kept consistent 
           (i.e., same order and matching one-to-one).
+
+.. _structure_addvariant_set-label:
+
+Adding a variant set
+----------------------------
+
+If a variant is added as part of a new set or new sets of variants in the
+Suite, new value(s) must be added to the ``VariantSetID`` enum in the
+``RAJAPerfSuite.hpp`` header file and an associated variant set string name(s)
+must be added to the ``VariantSetNames`` string array in the ``RAJAPerfSuite.cpp``
+source file. Adding a new variant set ID and name is essentially the same as
+adding a kernel set ID and name, which is described in
+:ref:`structure_addkernel_set-label`.
+
+.. note:: Enumeration values and string array entries for variant sets must be
+          kept consistent, in the same order and matching one-to-one.
 
 .. _structure_addvariant_impl-label:
 
