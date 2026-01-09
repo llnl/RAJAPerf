@@ -1234,8 +1234,6 @@ void Executor::outputRunData()
 
   for (size_t i = 0; i < kernels.size(); ++i) {
 
-    const bool separate_files = false;
-
     string kernel_out_fprefix = out_fprefix + "-" + kernels[i]->getName();
     vector<KernelBase*> mykernel({kernels[i]});
 
