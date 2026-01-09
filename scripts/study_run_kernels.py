@@ -5,7 +5,7 @@ import pandas as pd
 
 # ============= Configuration =============
 
-ROOT_DIR = "/usr/WS1/vargas45/RAJAPERF_DEV/RAJAPerf-stage/build_lc_toss4-amdclang-7.1.0-gfx942"  # change if needed
+ROOT_DIR = "."  # change if needed
 
 # Use "factor" instead of "mref" in file patterns
 GLOB_PATTERNS = [
