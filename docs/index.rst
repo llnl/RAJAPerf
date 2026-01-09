@@ -31,6 +31,11 @@ terminology used in the Suite implementation and discussion includes:
   * **Variant** refers to implementations of Suite kernels that share the same 
     implementation approach and programming model, such as *baseline OpenMP*, 
     *RAJA OpenMP*, etc.
+  * **Set** is a subset of variants in the Suite that exercise the same
+    implementation approach, such as Base with Base_Seq, Base_OpenMP, and more
+    using the *baseline* implementation approach, or the same programming model,
+    such as Seq with Base_Seq, Lambda_Seq, and RAJA_Seq using the *Sequential*
+    programming model.
   * **Tuning** refers to execution of kernels with a particular execution
     parameterization, such as GPU thread-block size 128, 256, etc.
 
@@ -44,7 +49,7 @@ tunings of a variant to explore the performance implications of options that
 a programming model supports.
 
 .. note:: A kernel does not need to provide all possible variants in the 
-          Suite. Tyoically, each kernel provides only the subset of variants
+          Suite. Typically, each kernel provides only the subset of variants
           that makes sense for the kernel.
 
 The Suite can be run as a single process or with multiple processes when
