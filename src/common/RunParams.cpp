@@ -1417,18 +1417,20 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ek INIT3 Apps (exclude INIT3 kernel and all kernels in Apps group)\n\n";
 
   str << "\t --variants, -v <space-separated strings> [Default is run all]\n"
-      << "\t      (names of variants to run)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+      << "\t      (names of variants and/or sets of variants to run)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --variants RAJA_CUDA (run all RAJA_CUDA kernel variants)\n"
-      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --variants RAJA (run all RAJA kernel variants)\n"
+      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -v Base_Seq RAJA (run Base_Seq and RAJA variants)\n\n";
 
   str << "\t --exclude-variants, -ev <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of variants to exclude)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+      << "\t      (names of variants and/or sets of variants to exclude)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --exclude-variants RAJA_CUDA (exclude all RAJA_CUDA kernel variants)\n"
-      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --exclude-variants RAJA (exclude all RAJA kernel variants)\n"
+      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -ev Base_Seq RAJA (exclude Base_Seq and RAJA variants)\n\n";
 
   str << "\t --features, -f <space-separated strings> [Default is run all]\n"
       << "\t      (names of features to run)\n"
@@ -1757,8 +1759,8 @@ void RunParams::printFullKernelNames(std::ostream& str) const
 
 void RunParams::printVariantNames(std::ostream& str) const
 {
-  str << "\nAvailable variants:";
-  str << "\n-------------------\n";
+  str << "\nAvailable variants (<set name>_<set name>):";
+  str << "\n-----------------------------------------------\n";
   for (int vid = 0; vid < NumVariants; ++vid) {
     str << getVariantName(static_cast<VariantID>(vid)) << std::endl;
   }
@@ -1794,12 +1796,22 @@ void RunParams::printDataSpaceNames(std::ostream& str) const
 }
 
 
-void RunParams::printGroupNames(std::ostream& str) const
+void RunParams::printKernelGroupNames(std::ostream& str) const
 {
-  str << "\nAvailable groups:";
-  str << "\n-----------------\n";
-  for (int gid = 0; gid < NumGroups; ++gid) {
-    str << getGroupName(static_cast<GroupID>(gid)) << std::endl;
+  str << "\nAvailable kernel groups:";
+  str << "\n------------------------\n";
+  for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+    str << getKernelGroupName(static_cast<KernelGroupID>(kgid)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printVariantSetNames(std::ostream& str) const
+{
+  str << "\nAvailable variant sets:";
+  str << "\n-------------------------\n";
+  for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+    str << getVariantSetName(static_cast<VariantSetID>(vgid)) << std::endl;
   }
   str.flush();
 }
@@ -2017,11 +2029,10 @@ void RunParams::processKernelInput()
     // groups2exclude will contain names of valid groups to exclude.
     //
     Svector groups2exclude;
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+    for (auto const& kern_name : exclude_kern_names) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2exclude.push_back(group_name);
         }
       }
@@ -2032,17 +2043,16 @@ void RunParams::processKernelInput()
     // those group(s) to exclude from run. Also remove the group names from
     // the exclude_kern_names list.
     //
-    for (size_t ig = 0; ig < groups2exclude.size(); ++ig) {
-      const std::string& gname(groups2exclude[ig]);
+    for (auto const& group_name : groups2exclude) {
 
       for (size_t ik = 0; ik < NumKernels; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getFullKernelName(kid).find(gname) != std::string::npos ) {
+        if ( getFullKernelName(kid).find(group_name) != std::string::npos ) {
           exclude_kernels.insert(kid);
         }
       }
 
-      exclude_kern_names.remove(gname);
+      exclude_kern_names.remove(group_name);
 
     }  // iterate over groups to exclude
 
@@ -2050,13 +2060,13 @@ void RunParams::processKernelInput()
     // Search for valid names of individual kernels in remaining items in
     // exclude_kern_names list.
     //
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
+    for (auto const& kern_name : exclude_kern_names) {
       bool found_it = false;
 
       for (size_t ik = 0; ik < NumKernels && !found_it; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getKernelName(kid) == *it || getFullKernelName(kid) == *it ) {
+        if ( getKernelName(kid) == kern_name ||
+             getFullKernelName(kid) == kern_name ) {
           exclude_kernels.insert(kid);
           found_it = true;
         }
@@ -2064,7 +2074,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_kernel_input.push_back(*it);
+        invalid_exclude_kernel_input.push_back(kern_name);
       }
 
     }  // iterate over names of kernels to exclude
@@ -2166,8 +2176,8 @@ void RunParams::processKernelInput()
     Svector warmup_groups2run;
     for (Slist::iterator it = warmup_kern_names.begin(); it != warmup_kern_names.end(); ++it)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
         if ( group_name == *it ) {
           warmup_groups2run.push_back(group_name);
         }
@@ -2178,8 +2188,8 @@ void RunParams::processKernelInput()
     // If group name(s) found in warmup_kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from warmup_kern_names list.
     //
-    for (size_t ig = 0; ig < warmup_groups2run.size(); ++ig) {
-      const std::string& gname(warmup_groups2run[ig]);
+    for (size_t ikg = 0; ikg < warmup_groups2run.size(); ++ikg) {
+      const std::string& gname(warmup_groups2run[ikg]);
 
       for (size_t kid = 0; kid < NumKernels; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
@@ -2309,11 +2319,11 @@ void RunParams::processKernelInput()
     // groups2run will contain names of groups to run.
     //
     Svector groups2run;
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2run.push_back(group_name);
         }
       }
@@ -2323,30 +2333,31 @@ void RunParams::processKernelInput()
     // If group name(s) found in kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from kern_names list.
     //
-    for (size_t ig = 0; ig < groups2run.size(); ++ig) {
-      const std::string& gname(groups2run[ig]);
-
-      for (size_t kid = 0; kid < NumKernels; ++kid) {
+    for (auto const& group_name : groups2run)
+    {
+      for (size_t kid = 0; kid < NumKernels; ++kid)
+      {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
+        if ( getFullKernelName(tkid).find(group_name) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
           run_kernels.insert(tkid);
         }
       }
 
-      kern_names.remove(gname);
+      kern_names.remove(group_name);
     }
 
     //
     // Look for matching names of individual kernels in remaining kern_names.
     //
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
       bool found_it = false;
 
       for (size_t kid = 0; kid < NumKernels && !found_it; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
+        if ( getKernelName(tkid) == kern_name ||
+             getFullKernelName(tkid) == kern_name ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
             run_kernels.insert(tkid);
           }
@@ -2356,7 +2367,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input for output message.
       if ( !found_it ) {
-        invalid_kernel_input.push_back(*it);
+        invalid_kernel_input.push_back(kern_name);
       }
 
     } // iterate over kernel name input
@@ -2392,6 +2403,8 @@ void RunParams::processKernelInput()
  */
 void RunParams::processVariantInput()
 {
+  using Slist = std::list<std::string>;
+  using Svector = std::vector<std::string>;
   using VIDset = std::set<VariantID>;
 
   //
@@ -2420,19 +2433,56 @@ void RunParams::processVariantInput()
 
   if ( !exclude_variant_input.empty() ) {
 
+    // Make list copy of exclude variant name input to manipulate for
+    // processing potential set names and/or variant names, next
+    Slist exclude_variant_names( exclude_variant_input.begin(),
+                                 exclude_variant_input.end() );
+
+    //
+    // Search exclude_variant_names for valid set names.
+    // sets2exclude will contain names of valid sets to exclude.
+    //
+    Svector sets2exclude;
+    for (auto const& variant_name : exclude_variant_names) {
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2exclude.push_back(set_name);
+        }
+      }
+    }
+
+    //
+    // If set name(s) found in exclude_variant_names, assemble kernels in
+    // those set(s) to exclude from run. Also remove the set names from
+    // the exclude_variant_names list.
+    //
+    for (auto const& set_name : sets2exclude) {
+
+      for (size_t iv = 0; iv < NumVariants; ++iv) {
+        VariantID vid = static_cast<VariantID>(iv);
+        if ( getVariantName(vid).find(set_name) != std::string::npos ) {
+          exclude_variants.insert(vid);
+        }
+      }
+
+      exclude_variant_names.remove(set_name);
+
+    }  // iterate over sets to exclude
+
     //
     // Parse input to determine which variants to exclude.
     //
     // Assemble invalid input for warning message.
     //
 
-    for (size_t it = 0; it < exclude_variant_input.size(); ++it) {
+    for (auto const& variant_name : exclude_variant_names) {
       bool found_it = false;
 
       for (VIDset::iterator vid_it = available_variants.begin();
            vid_it != available_variants.end(); ++vid_it) {
         VariantID vid = *vid_it;
-        if ( getVariantName(vid) == exclude_variant_input[it] ) {
+        if ( getVariantName(vid) == variant_name ) {
           exclude_variants.insert(vid);
           found_it = true;
         }
@@ -2440,7 +2490,7 @@ void RunParams::processVariantInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_variant_input.push_back(exclude_variant_input[it]);
+        invalid_exclude_variant_input.push_back(variant_name);
       }
 
     }
@@ -2464,9 +2514,7 @@ void RunParams::processVariantInput()
     // No variants specified in input options, run all available.
     // Also, set reference variant if specified.
     //
-    for (VIDset::iterator vid_it = available_variants.begin();
-         vid_it != available_variants.end(); ++vid_it) {
-      VariantID vid = *vid_it;
+    for (VariantID vid : available_variants) {
 
       if (exclude_variants.find(vid) == exclude_variants.end()) {
         run_variants.insert( vid );
@@ -2479,6 +2527,42 @@ void RunParams::processVariantInput()
 
   } else {  // variant input given
 
+    // Make list copy of variant name input to manipulate for
+    // processing potential set names and/or variant names, next
+    Slist variant_names(variant_input.begin(), variant_input.end());
+
+    //
+    // Search variant_names for matching set names.
+    // sets2run will contain names of sets to run.
+    //
+    Svector sets2run;
+    for (auto const& variant_name : variant_names)
+    {
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2run.push_back(set_name);
+        }
+      }
+    }
+
+    //
+    // If set name(s) found in variant_names, assemble variants in set(s)
+    // to run and remove those set name(s) from variant_names list.
+    //
+    for (auto const& set_name : sets2run)
+    {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid).find(set_name) != std::string::npos &&
+             exclude_variants.find(vid) == exclude_variants.end()) {
+          run_variants.insert(vid);
+        }
+      }
+
+      variant_names.remove(set_name);
+    }
+
     //
     // Parse input to determine which variants to run:
     //   - variants to run will be the intersection of available variants
@@ -2487,14 +2571,13 @@ void RunParams::processVariantInput()
     //     and variant will be run; else first variant that will be run.
     //
 
-    for (size_t it = 0; it < variant_input.size(); ++it) {
+    for (auto const& variant_name : variant_names)
+    {
       bool found_it = false;
 
-      for (VIDset::iterator vid_it = available_variants.begin();
-           vid_it != available_variants.end(); ++vid_it) {
-        VariantID vid = *vid_it;
-
-        if ( getVariantName(vid) == variant_input[it] ) {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid) == variant_name ) {
           if (exclude_variants.find(vid) == exclude_variants.end()) {
             run_variants.insert(vid);
             if ( getVariantName(vid) == reference_variant ) {
@@ -2503,12 +2586,11 @@ void RunParams::processVariantInput()
           }
           found_it = true;
         }
-
       }
   
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_variant_input.push_back(variant_input[it]);
+        invalid_variant_input.push_back(variant_name);
       } 
 
     }
