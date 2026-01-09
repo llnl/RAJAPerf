@@ -64,10 +64,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
 
-  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.0000000001);
+  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
+  setChecksumTolerance(ChecksumTolerance::loose);
 
   setComplexity(Complexity::N);
 

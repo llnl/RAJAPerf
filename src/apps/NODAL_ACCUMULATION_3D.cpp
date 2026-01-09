@@ -48,9 +48,6 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

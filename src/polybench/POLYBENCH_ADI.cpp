@@ -51,9 +51,6 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.0000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

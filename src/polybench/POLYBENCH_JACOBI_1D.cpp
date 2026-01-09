@@ -51,9 +51,6 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
 #else
   setChecksumTolerance(ChecksumTolerance::normal);
 #endif
-  setChecksumScaleFactor(0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N);
 

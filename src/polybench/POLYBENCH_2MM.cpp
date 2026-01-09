@@ -59,9 +59,6 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
-  setChecksumScaleFactor(0.000001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() ));
 
   setComplexity(Complexity::N_to_the_three_halves);
 
