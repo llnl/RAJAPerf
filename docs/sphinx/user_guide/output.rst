@@ -113,9 +113,10 @@ Information reported in the file for each kernel is:
   * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
     nested loop. This should only count parallelized dimensions, do not count loop
     levels that are not parallelized.
-  * **ProblemDimensionality** -- Dimensionality of the problem the kernel is solving,
-    regardless of implementation dimensionality. For example, a 3D kernel may layout
-    data in 1D, but its problem dimensionality will still be 3.
+  * **ProblemDimensionality** -- The dimensionality of the problem domain, 
+    regardless of physical data layout. For example, the LTIMES kernel will have
+    a problem dimensionality value of 3, because of phi (g, m, and z) and psi 
+    (g, d, and z) being indexed over 3 dimensions.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
            like DRAM or HBM under idealized conditions. They assume caching is
