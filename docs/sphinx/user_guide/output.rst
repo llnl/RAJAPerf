@@ -111,7 +111,8 @@ Information reported in the file for each kernel is:
   * **OperationalComplexity** -- The operational complexity of the kernel, where
     N is the *problem size* of the kernel.
   * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
-    nested loop. This should only count parallelized dimensions.
+    nested loop. This should only count parallelized dimensions, do not count loop
+    levels that are not parallelized.
   * **ProblemDimensionality** -- Dimensionality of the problem the kernel is solving,
     regardless of implementation dimensionality. For example, a 3D kernel may layout
     data in 1D, but its problem dimensionality will still be 3.
