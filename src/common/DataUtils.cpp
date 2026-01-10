@@ -14,6 +14,7 @@
 
 #include "KernelBase.hpp"
 
+#include "RAJA/util/reduce.hpp"
 #include "RAJA/internal/MemUtils_CPU.hpp"
 
 #include <cstdlib>
@@ -575,58 +576,46 @@ void initData(Real_type& d)
  * Calculate and return checksum for data arrays.
  */
 template < typename Data_getter >
-long double calcChecksumImpl(Data_getter data, Size_type len,
-                             Real_type scale_factor)
+Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 {
-  long double tchk = 0.0;
-  long double ckahan = 0.0;
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
   for (Size_type j = 0; j < len; ++j) {
-    long double x = (std::abs(std::sin(j+1.0))+0.5) * data(j);
-    long double y = x - ckahan;
-    volatile long double t = tchk + y;
-    volatile long double z = t - tchk;
-    ckahan = z - y;
-    tchk = t;
-#if 0 // RDH DEBUG
-    if ( (j % 10000000) == 0 ) {
-      getCout() << "j : tchk = " << std::setprecision(std::numeric_limits<double>::max_digits10) << j << " : " << tchk << std::endl;
-    }
-#endif
+    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(data(j));
   }
-  tchk *= scale_factor;
-  return tchk;
+  return chk.get();
 }
 
-long double calcChecksum(Int_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(unsigned long long* ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(unsigned long long* ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Real_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Real_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Complex_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Complex_ptr ptr, Size_type len)
 {
-  return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(real(ptr[j])+imag(ptr[j]));
-  }, len, scale_factor);
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
+  for (Size_type j = 0; j < len; ++j) {
+    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(real(ptr[j]));
+    chk += (1.0 + 0.5 * std::sin(j+1.5)) * std::abs(imag(ptr[j]));
+  }
+  return chk.get();
 }
 
 }  // closing brace for detail namespace

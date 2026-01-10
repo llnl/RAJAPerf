@@ -34,7 +34,8 @@ MUL::MUL(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 
@@ -57,14 +58,13 @@ void MUL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_alpha, vid);
 }
 
-void MUL::updateChecksum(VariantID vid, size_t tune_idx)
+void MUL::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_b, getActualProblemSize(), vid);
+  addToChecksum(m_b, getActualProblemSize(), vid);
 }
 
 void MUL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_b, vid);
   deallocData(m_c, vid);
 }

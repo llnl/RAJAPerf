@@ -39,7 +39,8 @@ FIRST_MIN::FIRST_MIN(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
 
-  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes that the loc returned is always from the first of equivalent mins
+  setChecksumConsistency(ChecksumConsistency::Consistent); // The loc returned is always the first of equivalent mins
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -67,14 +68,13 @@ void FIRST_MIN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_minloc = -1;
 }
 
-void FIRST_MIN::updateChecksum(VariantID vid, size_t tune_idx)
+void FIRST_MIN::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += static_cast<long double>(m_minloc);
+  addToChecksum(m_minloc);
 }
 
 void FIRST_MIN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
 }
 

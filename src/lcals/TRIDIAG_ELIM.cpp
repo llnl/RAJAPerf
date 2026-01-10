@@ -37,6 +37,7 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setFLOPsPerRep(2 * (m_N-1));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -60,14 +61,13 @@ void TRIDIAG_ELIM::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_z, m_N, vid);
 }
 
-void TRIDIAG_ELIM::updateChecksum(VariantID vid, size_t tune_idx)
+void TRIDIAG_ELIM::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_xout, m_N, vid);
+  addToChecksum(m_xout, m_N, vid);
 }
 
 void TRIDIAG_ELIM::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_xout, vid);
   deallocData(m_xin, vid);
   deallocData(m_y, vid);

@@ -35,6 +35,7 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setFLOPsPerRep(9 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -59,14 +60,13 @@ void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_cx, m_array_length, vid);
 }
 
-void DIFF_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
+void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_px, m_array_length, vid);
+  addToChecksum(m_px, m_array_length, vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_px, vid);
   deallocData(m_cx, vid);
 }

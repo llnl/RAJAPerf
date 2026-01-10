@@ -44,11 +44,8 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   setFLOPsPerRep( 5 * (m_N-2)*(m_N-2) +
                   5 * (m_N-2)*(m_N-2) );
 
-  checksum_scale_factor = 0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -66,22 +63,20 @@ POLYBENCH_JACOBI_2D::~POLYBENCH_JACOBI_2D()
 
 void POLYBENCH_JACOBI_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_Ainit, m_N*m_N, vid);
   allocAndInitData(m_Binit, m_N*m_N, vid);
   allocData(m_A, m_N*m_N, vid);
   allocData(m_B, m_N*m_N, vid);
 }
 
-void POLYBENCH_JACOBI_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_JACOBI_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_A, m_N*m_N, checksum_scale_factor , vid);
-  checksum[vid][tune_idx] += calcChecksum(m_B, m_N*m_N, checksum_scale_factor , vid);
+  addToChecksum(m_A, m_N*m_N, vid);
+  addToChecksum(m_B, m_N*m_N, vid);
 }
 
 void POLYBENCH_JACOBI_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_Ainit, vid);

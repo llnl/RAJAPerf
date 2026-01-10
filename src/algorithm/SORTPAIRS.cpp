@@ -36,6 +36,7 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // sort is not stable and could depend on scheduling
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N_logN);
 
@@ -57,15 +58,14 @@ void SORTPAIRS::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue(m_i, getActualProblemSize()*getRunReps(), vid);
 }
 
-void SORTPAIRS::updateChecksum(VariantID vid, size_t tune_idx)
+void SORTPAIRS::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_x, getActualProblemSize()*getRunReps(), vid);
-  checksum[vid][tune_idx] += calcChecksum(m_i, getActualProblemSize()*getRunReps(), vid);
+  addToChecksum(m_x, getActualProblemSize()*getRunReps(), vid);
+  addToChecksum(m_i, getActualProblemSize()*getRunReps(), vid);
 }
 
 void SORTPAIRS::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_i, vid);
 }

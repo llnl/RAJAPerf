@@ -49,6 +49,7 @@ HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
@@ -83,10 +84,10 @@ void HALO_EXCHANGE::setUp(VariantID vid, size_t tune_idx)
   }
 }
 
-void HALO_EXCHANGE::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_EXCHANGE::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   for (Index_type v = 0; v < m_num_vars; ++v) {
-    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
+    addToChecksum(m_vars[v], m_var_size, vid);
   }
 }
 

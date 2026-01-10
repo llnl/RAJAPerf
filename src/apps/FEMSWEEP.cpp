@@ -64,10 +64,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
 
-  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
-  checksum_scale_factor = 0.0000000001;
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
+  setChecksumTolerance(ChecksumTolerance::loose);
 
   setComplexity(Complexity::N);
 
@@ -107,15 +106,13 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndCopyHostData(m_idx2              , g_idx2              , 37800             , vid);
 }
 
-void FEMSWEEP::updateChecksum(VariantID vid, size_t tune_idx)
+void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_Xdat, m_Xlen, checksum_scale_factor , vid);
+  addToChecksum(m_Xdat, m_Xlen, vid);
 }
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_Bdat, vid);
   deallocData(m_Adat, vid);
   deallocData(m_Fdat, vid);

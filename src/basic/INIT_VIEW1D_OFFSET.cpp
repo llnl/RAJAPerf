@@ -34,7 +34,8 @@ INIT_VIEW1D_OFFSET::INIT_VIEW1D_OFFSET(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());
 
-  setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 
@@ -57,14 +58,13 @@ void INIT_VIEW1D_OFFSET::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_id
   m_val = 0.00000123;
 }
 
-void INIT_VIEW1D_OFFSET::updateChecksum(VariantID vid, size_t tune_idx)
+void INIT_VIEW1D_OFFSET::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_a, getActualProblemSize(), vid);
+  addToChecksum(m_a, getActualProblemSize(), vid);
 }
 
 void INIT_VIEW1D_OFFSET::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
 }
 

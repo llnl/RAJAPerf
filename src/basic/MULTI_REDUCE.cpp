@@ -42,6 +42,7 @@ MULTI_REDUCE::MULTI_REDUCE(const RunParams& params)
   setFLOPsPerRep(1 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -75,15 +76,15 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   if (init_even_sizes || init_random_sizes || init_all_one) {
     Real_ptr data = nullptr;
     if (init_even_sizes) {
-      allocData(data, m_num_bins, Base_Seq);
+      allocData(DataSpace::Host, data, m_num_bins);
       for (Index_type b = 0; b < m_num_bins; ++b) {
         data[b] = static_cast<Real_type>(b+1) / m_num_bins;
       }
     } else if (init_random_sizes) {
-      allocAndInitDataRandValue(data, m_num_bins, Base_Seq);
+      allocAndInitDataRandValue(DataSpace::Host, data, m_num_bins);
       std::sort(data, data+m_num_bins);
     } else if (init_all_one) {
-      allocData(data, m_num_bins, Base_Seq);
+      allocData(DataSpace::Host, data, m_num_bins);
       for (Index_type b = 0; b < m_num_bins; ++b) {
         data[b] = static_cast<Real_type>(0);
       }
@@ -99,11 +100,11 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       m_bins[i] = bin;
     }
 
-    deallocData(data, Base_Seq);
+    deallocData(DataSpace::Host, data);
 
   } else if (init_random_per_iterate) {
     Real_ptr data;
-    allocAndInitDataRandValue(data, getActualProblemSize(), Base_Seq);
+    allocAndInitDataRandValue(DataSpace::Host, data, getActualProblemSize());
 
     for (Index_type i = 0; i < getActualProblemSize(); ++i) {
       m_bins[i] = static_cast<Index_type>(data[i] * m_num_bins);
@@ -115,7 +116,7 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       }
     }
 
-    deallocData(data, Base_Seq);
+    deallocData(DataSpace::Host, data);
   } else {
     throw 1;
   }
@@ -124,14 +125,13 @@ void MULTI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(DataSpace::Host, m_values_final, m_num_bins, 0.0);
 }
 
-void MULTI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
+void MULTI_REDUCE::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(DataSpace::Host, m_values_final, m_num_bins);
+  addToChecksum(DataSpace::Host, m_values_final, m_num_bins);
 }
 
 void MULTI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_bins, vid);
   deallocData(m_data, vid);
   deallocData(DataSpace::Host, m_values_init);

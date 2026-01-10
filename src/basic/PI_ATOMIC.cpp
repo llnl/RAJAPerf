@@ -35,6 +35,7 @@ PI_ATOMIC::PI_ATOMIC(const RunParams& params)
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -58,14 +59,14 @@ void PI_ATOMIC::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_pi_final = -static_cast<int>(vid);
 }
 
-void PI_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx)
+void PI_ATOMIC::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += static_cast<Checksum_type>(m_pi_final);
+  addToChecksum(m_pi_final);
 }
 
-void PI_ATOMIC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PI_ATOMIC::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
+
 }
 
 } // end namespace basic

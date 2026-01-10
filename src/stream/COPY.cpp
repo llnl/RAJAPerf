@@ -35,6 +35,7 @@ COPY::COPY(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -56,14 +57,13 @@ void COPY::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_c, getActualProblemSize(), 0.0, vid);
 }
 
-void COPY::updateChecksum(VariantID vid, size_t tune_idx)
+void COPY::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_c, getActualProblemSize(), vid);
+  addToChecksum(m_c, getActualProblemSize(), vid);
 }
 
 void COPY::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
   deallocData(m_c, vid);
 }

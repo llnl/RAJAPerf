@@ -35,6 +35,7 @@ PI_REDUCE::PI_REDUCE(const RunParams& params)
   setFLOPsPerRep(6 * getActualProblemSize() + 1);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -51,22 +52,21 @@ PI_REDUCE::~PI_REDUCE()
 {
 }
 
-void PI_REDUCE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PI_REDUCE::setUp(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   m_dx = 1.0 / double(getActualProblemSize());
   m_pi_init = 0.0;
   m_pi = 0.0;
 }
 
-void PI_REDUCE::updateChecksum(VariantID vid, size_t tune_idx)
+void PI_REDUCE::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += Checksum_type(m_pi);
+  addToChecksum(m_pi);
 }
 
-void PI_REDUCE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PI_REDUCE::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
+
 }
 
 } // end namespace basic

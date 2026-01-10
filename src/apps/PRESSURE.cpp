@@ -39,6 +39,7 @@ PRESSURE::PRESSURE(const RunParams& params)
                   ) * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -68,15 +69,13 @@ void PRESSURE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_eosvmax, vid);
 }
 
-void PRESSURE::updateChecksum(VariantID vid, size_t tune_idx)
+void PRESSURE::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_p_new, getActualProblemSize(), vid);
+  addToChecksum(m_p_new, getActualProblemSize(), vid);
 }
 
 void PRESSURE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_compression, vid);
   deallocData(m_bvc, vid);
   deallocData(m_p_new, vid);

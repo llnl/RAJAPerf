@@ -46,11 +46,8 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
   setFLOPsPerRep(2 * m_N*m_N +
                  2 * m_N*m_N );
 
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -68,7 +65,6 @@ POLYBENCH_MVT::~POLYBENCH_MVT()
 
 void POLYBENCH_MVT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_y1, m_N, vid);
   allocAndInitData(m_y2, m_N, vid);
   allocAndInitData(m_A, m_N * m_N, vid);
@@ -76,15 +72,14 @@ void POLYBENCH_MVT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_x2, m_N, 0.0, vid);
 }
 
-void POLYBENCH_MVT::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_MVT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_x1, m_N, checksum_scale_factor , vid);
-  checksum[vid][tune_idx] += calcChecksum(m_x2, m_N, checksum_scale_factor , vid);
+  addToChecksum(m_x1, m_N, vid);
+  addToChecksum(m_x2, m_N, vid);
 }
 
 void POLYBENCH_MVT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x1, vid);
   deallocData(m_x2, vid);
   deallocData(m_y1, vid);
