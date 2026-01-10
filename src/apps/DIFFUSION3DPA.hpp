@@ -59,7 +59,6 @@
 ///       G[k][l] = DPA_g(qx,dy) * DPA_sign(qx,dy);
 ///     }
 ///   }
-///   MFEM_SYNC_THREAD;
 ///   for(int dz=0;dz<D1D;dz++){
 ///     for(int dy=0;dy<D1D;++dy){
 ///       for(int qx=0; qx<Q1D; qx++){
@@ -79,7 +78,6 @@
 ///       }
 ///     }
 ///   }
-///   MFEM_SYNC_THREAD;
 ///    for(int dz=0;dz<D1D;dz++){
 ///      for(int qy=0;qy<Q1D;++qy){
 ///         for(int qx=0; qx<Q1D;++qx){
@@ -100,7 +98,6 @@
 ///         }
 ///      }
 ///   }
-///   MFEM_SYNC_THREAD;
 ///   for(int qz=0;qz<Q1D;qz++){
 ///     for(int qy=0;qy<Q1D;++qy){
 ///       for(int qx=0; qx<Q1D;++qx){
@@ -134,7 +131,6 @@
 ///        }
 ///      }
 ///    }
-///    MFEM_SYNC_THREAD;
 ///    for(int d=0; d<D1D; ++d){
 ///       for(int q=0,q<Q1D; ++q){
 ///         const int i = DPA_qi(q,d,Q1D);
@@ -145,7 +141,6 @@
 ///         Gt[l][k] = DPA_g(q,d) * DPA_sign(q,d);
 ///      }
 ///     }
-///     MFEM_SYNC_THREAD;
 ///     for(int qz=0;qz<Q1D;qz++){
 ///       for(int qy=0;qy<Q1D;++qy){
 ///          for(int dx=0; dx<D1D;++dx){
@@ -166,7 +161,6 @@
 ///          }
 ///       }
 ///     }
-///     MFEM_SYNC_THREAD;
 ///     for(int qz=0;qz<Q1D;qz++){
 ///       for(int dy=0;dy<D1D;++dy){
 ///          for(int dx=0; dx<D1D;++dx){
@@ -187,7 +181,6 @@
 ///        }
 ///      }
 ///    }
-///    MFEM_SYNC_THREAD;
 ///    for(int dz=0;dz<D1D;dz++){
 ///      for(int dy=0;dy<D1D;++dy){
 ///        for(int dx=0; dx<D1D;++dx){
