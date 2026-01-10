@@ -74,7 +74,7 @@ POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_three_halves);
 
-  setMaxPerfectLoopDimensions(1);
+  setMaxPerfectLoopDimensions(2);
   setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
