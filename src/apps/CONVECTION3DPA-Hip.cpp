@@ -29,11 +29,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
 
   CONVECTION3DPA_0_GPU;
 
-  GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+  GPU_FOREACH_THREAD(dz,z,conv::D1D)
   {
-    GPU_FOREACH_THREAD(dy,y,CPA_D1D)
+    GPU_FOREACH_THREAD(dy,y,conv::D1D)
     {
-      GPU_FOREACH_THREAD(dx,x,CPA_D1D)
+      GPU_FOREACH_THREAD(dx,x,conv::D1D)
       {
         CONVECTION3DPA_1;
       }
@@ -41,11 +41,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+  GPU_FOREACH_THREAD(dz,z,conv::D1D)
   {
-    GPU_FOREACH_THREAD(dy,y,CPA_D1D)
+    GPU_FOREACH_THREAD(dy,y,conv::D1D)
     {
-      GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+      GPU_FOREACH_THREAD(qx,x,conv::Q1D)
       {
         CONVECTION3DPA_2;
       }
@@ -53,11 +53,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+  GPU_FOREACH_THREAD(dz,z,conv::D1D)
   {
-    GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+    GPU_FOREACH_THREAD(qx,x,conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qy,y,CPA_Q1D)
+      GPU_FOREACH_THREAD(qy,y,conv::Q1D)
       {
         CONVECTION3DPA_3;
       }
@@ -65,11 +65,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+  GPU_FOREACH_THREAD(qx,x,conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,CPA_Q1D)
+    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qz,z,CPA_Q1D)
+      GPU_FOREACH_THREAD(qz,z,conv::Q1D)
       {
         CONVECTION3DPA_4;
       }
@@ -77,11 +77,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qz,z,CPA_Q1D)
+  GPU_FOREACH_THREAD(qz,z,conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,CPA_Q1D)
+    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+      GPU_FOREACH_THREAD(qx,x,conv::Q1D)
       {
         CONVECTION3DPA_5;
       }
@@ -89,11 +89,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+  GPU_FOREACH_THREAD(qx,x,conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,CPA_Q1D)
+    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+      GPU_FOREACH_THREAD(dz,z,conv::D1D)
       {
         CONVECTION3DPA_6;
       }
@@ -101,11 +101,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+  GPU_FOREACH_THREAD(dz,z,conv::D1D)
   {
-    GPU_FOREACH_THREAD(qx,x,CPA_Q1D)
+    GPU_FOREACH_THREAD(qx,x,conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dy,y,CPA_D1D)
+      GPU_FOREACH_THREAD(dy,y,conv::D1D)
       {
         CONVECTION3DPA_7;
       }
@@ -113,11 +113,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,CPA_D1D)
+  GPU_FOREACH_THREAD(dz,z,conv::D1D)
   {
-    GPU_FOREACH_THREAD(dy,y,CPA_D1D)
+    GPU_FOREACH_THREAD(dy,y,conv::D1D)
     {
-      GPU_FOREACH_THREAD(dx,x,CPA_D1D)
+      GPU_FOREACH_THREAD(dx,x,conv::D1D)
       {
         CONVECTION3DPA_8;
       }
@@ -144,7 +144,7 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      dim3 nthreads_per_block(CPA_Q1D, CPA_Q1D, CPA_Q1D);
+      dim3 nthreads_per_block(conv::Q1D, conv::Q1D, conv::Q1D);
       constexpr size_t shmem = 0;
       
       RPlaunchHipKernel( (Convection3DPA<block_size>),
@@ -162,27 +162,28 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
     constexpr bool async = true;
 
     using launch_policy =
-        RAJA::LaunchPolicy<RAJA::hip_launch_t<async, CPA_Q1D*CPA_Q1D*CPA_Q1D>>;
+        RAJA::LaunchPolicy<RAJA::hip_launch_t<async, conv::Q1D*conv::Q1D*conv::Q1D>>;
 
     using outer_x =
         RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
     using inner_x =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<CPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<conv::Q1D>>;
 
     using inner_y =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<CPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<conv::Q1D>>;
 
     using inner_z =
-        RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<CPA_Q1D>>;
+        RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<conv::Q1D>>;
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+      //clang-format off
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(RAJA::Teams(NE),
-                           RAJA::Threads(CPA_Q1D, CPA_Q1D, CPA_Q1D)),
+                           RAJA::Threads(conv::Q1D, conv::Q1D, conv::Q1D)),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
@@ -190,11 +191,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
              CONVECTION3DPA_0_GPU;
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::D1D),
                         [&](Index_type dx) {
 
                           CONVECTION3DPA_1;
@@ -208,11 +209,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                         [&](Index_type qx) {
 
                           CONVECTION3DPA_2;
@@ -226,11 +227,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                     [&](Index_type qx) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                         [&](Index_type qy) {
 
                           CONVECTION3DPA_3;
@@ -244,11 +245,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                 [&](Index_type qx) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                     [&](Index_type qy) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                         [&](Index_type qz) {
 
                           CONVECTION3DPA_4;
@@ -262,11 +263,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                 [&](Index_type qz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                     [&](Index_type qy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                         [&](Index_type qx) {
 
                           CONVECTION3DPA_5;
@@ -280,11 +281,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                 [&](Index_type qx) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                     [&](Index_type qy) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                         [&](Index_type dz) {
 
                           CONVECTION3DPA_6;
@@ -298,11 +299,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_Q1D),
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::Q1D),
                     [&](Index_type qx) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::D1D),
                         [&](Index_type dy) {
 
                           CONVECTION3DPA_7;
@@ -316,11 +317,11 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
             ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, conv::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, conv::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, CPA_D1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, conv::D1D),
                         [&](Index_type dx) {
 
                           CONVECTION3DPA_8;
@@ -337,6 +338,7 @@ void CONVECTION3DPA::runHipVariantImpl(VariantID vid) {
 
         }  // outer lambda (ctx)
       );  // RAJA::launch
+      //clang-format on
 
     } // loop over kernel reps
     stopTimer();
