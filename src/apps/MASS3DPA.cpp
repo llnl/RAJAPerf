@@ -25,29 +25,29 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 {
   m_NE_default = 8000;
 
-  setDefaultProblemSize(m_NE_default*MPA_Q1D*MPA_Q1D*MPA_Q1D);
+  setDefaultProblemSize(m_NE_default*mpa::D1D*mpa::D1D*mpa::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (MPA_Q1D*MPA_Q1D*MPA_Q1D)/2) / (MPA_Q1D*MPA_Q1D*MPA_Q1D), Index_type(1));
+  m_NE = std::max((getTargetProblemSize() + (mpa::D1D*mpa::D1D*mpa::D1D)/2) / (mpa::D1D*mpa::D1D*mpa::D1D), Index_type(1));
 
-  setActualProblemSize( m_NE*MPA_Q1D*MPA_Q1D*MPA_Q1D );
+  setActualProblemSize( m_NE*mpa::D1D*mpa::D1D*mpa::D1D );
 
-  setItsPerRep( m_NE*MPA_Q1D*MPA_Q1D );
+  setItsPerRep( m_NE*mpa::D1D*mpa::D1D );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 2*sizeof(Real_type) * MPA_Q1D*MPA_D1D + // B, Bt
-                      1*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE + // X
-                      1*sizeof(Real_type) * MPA_Q1D*MPA_Q1D*MPA_Q1D*m_NE ); // D
+  setBytesReadPerRep( 2*sizeof(Real_type) * mpa::Q1D*mpa::D1D + // B, Bt
+                      1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE + // X
+                      1*sizeof(Real_type) * mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE ); // D
   setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * MPA_D1D*MPA_D1D*MPA_D1D*m_NE ); // Y
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // Y
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  setFLOPsPerRep(m_NE * (2 * MPA_D1D * MPA_D1D * MPA_D1D * MPA_Q1D +
-                         2 * MPA_D1D * MPA_D1D * MPA_Q1D * MPA_Q1D +
-                         2 * MPA_D1D * MPA_Q1D * MPA_Q1D * MPA_Q1D + MPA_Q1D * MPA_Q1D * MPA_Q1D +
-                         2 * MPA_Q1D * MPA_Q1D * MPA_Q1D * MPA_D1D +
-                         2 * MPA_Q1D * MPA_Q1D * MPA_D1D * MPA_D1D +
-                         2 * MPA_Q1D * MPA_D1D * MPA_D1D * MPA_D1D + MPA_D1D * MPA_D1D * MPA_D1D));
+  setFLOPsPerRep(m_NE * (2 * mpa::D1D * mpa::D1D * mpa::D1D * mpa::Q1D +
+                         2 * mpa::D1D * mpa::D1D * mpa::Q1D * mpa::Q1D +
+                         2 * mpa::D1D * mpa::Q1D * mpa::Q1D * mpa::Q1D + mpa::Q1D * mpa::Q1D * mpa::Q1D +
+                         2 * mpa::Q1D * mpa::Q1D * mpa::Q1D * mpa::D1D +
+                         2 * mpa::Q1D * mpa::Q1D * mpa::D1D * mpa::D1D +
+                         2 * mpa::Q1D * mpa::D1D * mpa::D1D * mpa::D1D + mpa::D1D * mpa::D1D * mpa::D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -66,16 +66,16 @@ MASS3DPA::~MASS3DPA()
 void MASS3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, Index_type(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt,Index_type(MPA_Q1D*MPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(MPA_Q1D*MPA_Q1D*MPA_Q1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(MPA_D1D*MPA_D1D*MPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, Index_type(mpa::Q1D*mpa::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt,Index_type(mpa::Q1D*mpa::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, Index_type(mpa::D1D*mpa::D1D*mpa::D1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, Index_type(mpa::D1D*mpa::D1D*mpa::D1D*m_NE), Real_type(0.0), vid);
 }
 
 void MASS3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_Y, MPA_D1D*MPA_D1D*MPA_D1D*m_NE, vid);
+  addToChecksum(m_Y, mpa::D1D*mpa::D1D*mpa::D1D*m_NE, vid);
 }
 
 void MASS3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

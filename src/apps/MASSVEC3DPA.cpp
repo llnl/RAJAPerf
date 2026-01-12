@@ -21,40 +21,40 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASSVEC3DPA, params)
 {
 
-  const Index_type NE_initial = 15625;
+  const Index_type NE_initial = 5208;
 
-  setDefaultProblemSize(NE_initial * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D);
+  setDefaultProblemSize(NE_initial * mvpa::DIM * mvpa::D1D * mvpa::D1D * mvpa::D1D);
   setDefaultReps(50);
 
   m_NE =
-      std::max((getTargetProblemSize() + (MVPA_Q1D * MVPA_Q1D * MVPA_Q1D) / 2) /
-                   (MVPA_Q1D * MVPA_Q1D * MVPA_Q1D),
+      std::max((getTargetProblemSize() + (mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D) / 2) /
+                   (mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D),
                Index_type(1));
 
-  setActualProblemSize(m_NE * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D);
+  setActualProblemSize(m_NE * mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D);
 
   setItsPerRep(getActualProblemSize());
   setKernelsPerRep(1);
 
-  setBytesReadPerRep(2 * sizeof(Real_type) * MVPA_Q1D * MVPA_D1D + // B, Bt
-                     3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
-                         MVPA_DIM * m_NE + // X (3 components)
-                     1 * sizeof(Real_type) * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D *
+  setBytesReadPerRep(2 * sizeof(Real_type) * mvpa::Q1D * mvpa::D1D + // B, Bt
+                     3 * sizeof(Real_type) * mvpa::D1D * mvpa::D1D * mvpa::D1D *
+                         mvpa::DIM * m_NE + // X (3 components)
+                     1 * sizeof(Real_type) * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D *
                          m_NE); // D
-  setBytesWrittenPerRep(3 * sizeof(Real_type) * MVPA_D1D * MVPA_D1D * MVPA_D1D *
-                        MVPA_DIM * m_NE); // Y (3 components)
+  setBytesWrittenPerRep(3 * sizeof(Real_type) * mvpa::D1D * mvpa::D1D * mvpa::D1D *
+                        mvpa::DIM * m_NE); // Y (3 components)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(0);
 
   //3 for the dimension loop
-  setFLOPsPerRep(m_NE * MVPA_DIM *
-                 (2 * MVPA_D1D * MVPA_Q1D * MVPA_D1D * MVPA_D1D +
-                  2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_D1D +
-                  2 * MVPA_D1D * MVPA_Q1D * MVPA_Q1D * MVPA_Q1D +
-                  MVPA_Q1D * MVPA_Q1D * MVPA_Q1D +
-                  2 * MVPA_Q1D * MVPA_D1D * MVPA_Q1D * MVPA_Q1D +
-                  2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_Q1D +
-                  2 * MVPA_Q1D * MVPA_D1D * MVPA_D1D * MVPA_D1D));
+  setFLOPsPerRep(m_NE * mvpa::DIM *
+                 (2 * mvpa::D1D * mvpa::Q1D * mvpa::D1D * mvpa::D1D +
+                  2 * mvpa::D1D * mvpa::Q1D * mvpa::Q1D * mvpa::D1D +
+                  2 * mvpa::D1D * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D +
+                  mvpa::Q1D * mvpa::Q1D * mvpa::Q1D +
+                  2 * mvpa::Q1D * mvpa::D1D * mvpa::Q1D * mvpa::Q1D +
+                  2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::Q1D +
+                  2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::D1D));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -71,26 +71,24 @@ MASSVEC3DPA::~MASSVEC3DPA() {}
 void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, MVPA_Q1D * MVPA_D1D, 1.0, vid);
-  allocAndInitDataConst(m_Bt, MVPA_Q1D * MVPA_D1D, 1.0, vid);
-  allocAndInitDataConst(m_D, MVPA_Q1D * MVPA_Q1D * MVPA_Q1D * m_NE, 1.0, vid);
+  allocAndInitDataConst(m_B, mvpa::Q1D * mvpa::D1D, 1.0, vid);
+  allocAndInitDataConst(m_D, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D * m_NE, 1.0, vid);
 
-  allocAndInitDataConst(m_X, MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * m_NE, 1.0, vid);
+  allocAndInitDataConst(m_X, mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * m_NE, 1.0, vid);
 
-  allocAndInitDataConst(m_Y, MVPA_D1D * MVPA_D1D * MVPA_D1D * MVPA_DIM * m_NE, 0.0, vid);
+  allocAndInitDataConst(m_Y, mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * m_NE, 0.0, vid);
 
 }
 
 void MASSVEC3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_Y, MVPA_DIM * MVPA_D1D * MVPA_D1D * MVPA_D1D * m_NE, vid);
+   addToChecksum(m_Y, mvpa::DIM * mvpa::D1D * mvpa::D1D * mvpa::D1D * m_NE, vid);
 }
 
 void MASSVEC3DPA::tearDown(VariantID vid,
                            size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   deallocData(m_B, vid);
-  deallocData(m_Bt, vid);
   deallocData(m_D, vid);
   deallocData(m_X, vid);
   deallocData(m_Y, vid);

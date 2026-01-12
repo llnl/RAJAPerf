@@ -25,33 +25,29 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
 {
   m_NE_default = 15625;
 
-  setDefaultProblemSize(m_NE_default*DPA_Q1D*DPA_Q1D*DPA_Q1D);
+  setDefaultProblemSize(m_NE_default*diff::D1D*diff::D1D*diff::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (DPA_Q1D*DPA_Q1D*DPA_Q1D)/2) / (DPA_Q1D*DPA_Q1D*DPA_Q1D), Index_type(1));
+  m_NE = std::max((getTargetProblemSize() + (diff::D1D*diff::D1D*diff::D1D)/2) / (diff::D1D*diff::D1D*diff::D1D), Index_type(1));
 
-  setActualProblemSize( m_NE*DPA_Q1D*DPA_Q1D*DPA_Q1D );
+  setActualProblemSize( m_NE*diff::D1D*diff::D1D*diff::D1D );
 
-  setItsPerRep( m_NE*DPA_Q1D*DPA_Q1D*DPA_Q1D );
+  setItsPerRep( m_NE*diff::D1D*diff::D1D*diff::D1D );
   setKernelsPerRep(1);
 
-  setBytesReadPerRep( 2*sizeof(Real_type) * DPA_Q1D*DPA_D1D + // b, g
-                      1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE + // x
-                DPA_SYM*sizeof(Real_type) * DPA_Q1D*DPA_Q1D*DPA_Q1D*m_NE ); // d
+  setBytesReadPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
+                      1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE + // x
+                diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE ); // d
   setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE ); // y
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE ); // y
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  setFLOPsPerRep(m_NE * (DPA_Q1D * DPA_D1D +
-                         5 * DPA_D1D * DPA_D1D * DPA_Q1D * DPA_D1D +
-                         7 * DPA_D1D * DPA_D1D * DPA_Q1D * DPA_Q1D +
-                         7 * DPA_Q1D * DPA_D1D * DPA_Q1D * DPA_Q1D +
-                         15 * DPA_Q1D * DPA_Q1D * DPA_Q1D +
-                         DPA_Q1D * DPA_D1D +
-                         7 * DPA_Q1D * DPA_Q1D * DPA_D1D * DPA_Q1D +
-                         7 * DPA_Q1D * DPA_Q1D * DPA_D1D * DPA_D1D +
-                         7 * DPA_D1D * DPA_Q1D * DPA_D1D * DPA_D1D +
-                         3 * DPA_D1D * DPA_D1D * DPA_D1D));
+  setFLOPsPerRep(m_NE * (4 * diff::D1D * diff::D1D * diff::D1D + //DIFFUSION3DPA_3
+                         6 * diff::D1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_4
+                         (6 * diff::D1D  + 15) * diff::Q1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_5
+                         (6 * diff::Q1D) * diff::D1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_7
+                         (6 * diff::Q1D) * diff::D1D * diff::D1D * diff::Q1D + //DIFFUSION3DPA_8
+                         (6 * diff::Q1D + 1)*diff::D1D*diff::D1D*diff::D1D)); //DIFFUSION3DPA_9
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -70,16 +66,16 @@ DIFFUSION3DPA::~DIFFUSION3DPA()
 void DIFFUSION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, Index_type(DPA_Q1D*DPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_G, Index_type(DPA_Q1D*DPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(DPA_Q1D*DPA_Q1D*DPA_Q1D*DPA_SYM*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(DPA_D1D*DPA_D1D*DPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(DPA_D1D*DPA_D1D*DPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, Index_type(diff::Q1D*diff::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_G, Index_type(diff::Q1D*diff::D1D), Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, Index_type(diff::Q1D*diff::Q1D*diff::Q1D*diff::DPA_SYM*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, Index_type(diff::D1D*diff::D1D*diff::D1D*m_NE), Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, Index_type(diff::D1D*diff::D1D*diff::D1D*m_NE), Real_type(0.0), vid);
 }
 
 void DIFFUSION3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_Y, DPA_D1D*DPA_D1D*DPA_D1D*m_NE, vid);
+  addToChecksum(m_Y, diff::D1D*diff::D1D*diff::D1D*m_NE, vid);
 }
 
 void DIFFUSION3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

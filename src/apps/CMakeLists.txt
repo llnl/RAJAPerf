@@ -90,6 +90,12 @@ blt_add_library(
           MASS3DPA-Seq.cpp
           MASS3DPA-OMP.cpp
           MASS3DPA-Sycl.cpp
+          MASS3DPA_ATOMIC.cpp
+          MASS3DPA_ATOMIC-Cuda.cpp
+          MASS3DPA_ATOMIC-Hip.cpp
+          MASS3DPA_ATOMIC-Seq.cpp
+          MASS3DPA_ATOMIC-OMP.cpp
+          MASS3DPA_ATOMIC-Sycl.cpp          
           MASSVEC3DPA.cpp
           MASSVEC3DPA-Cuda.cpp
           MASSVEC3DPA-Hip.cpp
