@@ -1,7 +1,8 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2017-25, Lawrence Livermore National Security, LLC)
-[comment]: # (and RAJA Performance Suite project contributors.)
-[comment]: # (See the RAJAPerf/LICENSE file for details.)
+[comment]: # (Copyright Lawrence Livermore National Security, LLC and other)
+[comment]: # (RAJA Project Developers. See top-level LICENSE and COPYRIGHT)
+[comment]: # (files for dates and other details. No copyright assignment is)
+[comment]: # (required to contribute to RAJA Performance Suite.)
 [comment]: #
 [comment]: # (# SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
