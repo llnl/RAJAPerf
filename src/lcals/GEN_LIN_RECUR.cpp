@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -40,11 +41,8 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
   setFLOPsPerRep((3 +
                   3 ) * m_N);
 
-  checksum_scale_factor = 0.01 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -67,14 +65,13 @@ void GEN_LIN_RECUR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_sb, m_N, vid);
 }
 
-void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t tune_idx)
+void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_b5, getActualProblemSize(), checksum_scale_factor , vid);
+  addToChecksum(m_b5, getActualProblemSize(), vid);
 }
 
 void GEN_LIN_RECUR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_b5, vid);
   deallocData(m_stb5, vid);
   deallocData(m_sa, vid);

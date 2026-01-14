@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -62,11 +63,8 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
                   26 +
                   4  ) * (m_jn-2)*(m_kn-2));
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -94,15 +92,14 @@ void HYDRO_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_zz, m_array_length, vid);
 }
 
-void HYDRO_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void HYDRO_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_zzout, m_array_length, checksum_scale_factor , vid);
-  checksum[vid][tune_idx] += calcChecksum(m_zrout, m_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_zzout, m_array_length, vid);
+  addToChecksum(m_zrout, m_array_length, vid);
 }
 
 void HYDRO_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_zrout, vid);
   deallocData(m_zzout, vid);
   deallocData(m_za, vid);

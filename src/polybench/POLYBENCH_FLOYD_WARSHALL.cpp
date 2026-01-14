@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -39,11 +40,8 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
 
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
-  setChecksumConsistency(ChecksumConsistency::Consistent); // assumes FP ops get the same answer across platforms
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N_to_the_three_halves);
 
@@ -58,19 +56,17 @@ POLYBENCH_FLOYD_WARSHALL::~POLYBENCH_FLOYD_WARSHALL()
 
 void POLYBENCH_FLOYD_WARSHALL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitDataRandSign(m_pin, m_N*m_N, vid);
   allocAndInitDataConst(m_pout, m_N*m_N, 0.0, vid);
 }
 
-void POLYBENCH_FLOYD_WARSHALL::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_FLOYD_WARSHALL::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_pout, m_N*m_N, checksum_scale_factor , vid);
+  addToChecksum(m_pout, m_N*m_N, vid);
 }
 
 void POLYBENCH_FLOYD_WARSHALL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_pin, vid);
   deallocData(m_pout, vid);
 }

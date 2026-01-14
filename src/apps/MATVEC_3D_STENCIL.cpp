@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -80,11 +81,8 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   const size_t adds = 26;
   setFLOPsPerRep((multiplies + adds) * getItsPerRep());
 
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -137,15 +135,13 @@ void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   setRealZones_3d(m_real_zones, *m_domain);
 }
 
-void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t tune_idx)
+void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_b, m_zonal_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_b, m_zonal_array_length, vid);
 }
 
 void MATVEC_3D_STENCIL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_b, vid);
   deallocData(m_x, vid);
 

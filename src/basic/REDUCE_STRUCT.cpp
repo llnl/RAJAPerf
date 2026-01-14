@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -40,6 +41,7 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
   setFLOPsPerRep(2 * getActualProblemSize() + 2);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -70,21 +72,20 @@ void REDUCE_STRUCT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 }
 
-void REDUCE_STRUCT::updateChecksum(VariantID vid, size_t tune_idx)
+void REDUCE_STRUCT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += m_points.GetCenter()[0];
-  checksum[vid][tune_idx] += m_points.GetXMin();
-  checksum[vid][tune_idx] += m_points.GetXMax();
-  checksum[vid][tune_idx] += m_points.GetCenter()[1];
-  checksum[vid][tune_idx] += m_points.GetYMin();
-  checksum[vid][tune_idx] += m_points.GetYMax();
+  addToChecksum(m_points.GetCenter()[0]);
+  addToChecksum(m_points.GetXMin());
+  addToChecksum(m_points.GetXMax());
+  addToChecksum(m_points.GetCenter()[1]);
+  addToChecksum(m_points.GetYMin());
+  addToChecksum(m_points.GetYMax());
 
   return;
 }
 
 void REDUCE_STRUCT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

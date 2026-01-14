@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -37,11 +38,8 @@ FIR::FIR(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((2 * m_coefflen) * getActualProblemSize());
 
-  checksum_scale_factor = 0.0001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -56,19 +54,17 @@ FIR::~FIR()
 
 void FIR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_in, getActualProblemSize() + m_coefflen-1, vid);
+  allocAndInitDataRandValue(m_in, getActualProblemSize() + m_coefflen-1, vid);
   allocAndInitDataConst(m_out, getActualProblemSize(), 0.0, vid);
 }
 
-void FIR::updateChecksum(VariantID vid, size_t tune_idx)
+void FIR::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_out, getActualProblemSize(), checksum_scale_factor , vid);
+  addToChecksum(m_out, getActualProblemSize(), vid);
 }
 
 void FIR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_in, vid);
   deallocData(m_out, vid);
 }

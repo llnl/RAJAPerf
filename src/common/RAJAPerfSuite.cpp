@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -95,6 +96,7 @@
 #include "apps/LTIMES_NOVIEW.hpp"
 #include "apps/MASS3DEA.hpp"
 #include "apps/MASS3DPA.hpp"
+#include "apps/MASS3DPA_ATOMIC.hpp"
 #include "apps/MASSVEC3DPA.hpp"
 #include "apps/MATVEC_3D_STENCIL.hpp"
 #include "apps/NODAL_ACCUMULATION_3D.hpp"
@@ -134,16 +136,16 @@ namespace rajaperf
 /*!
  *******************************************************************************
  *
- * \brief Array of names for each GROUP in suite.
+ * \brief Array of names for each kernel GROUP in suite.
  *
- * IMPORTANT: This is only modified when a group is added or removed.
+ * IMPORTANT: This is only modified when a kernel group is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE GroupID enum IN HEADER FILE!!!
+ *            ITEMS IN THE KernelGroupID enum IN HEADER FILE!!!
  *
  *******************************************************************************
  */
-static const std::string GroupNames [] =
+static const std::string KernelGroupNames [] =
 {
   std::string("Basic"),
   std::string("Lcals"),
@@ -153,9 +155,9 @@ static const std::string GroupNames [] =
   std::string("Algorithm"),
   std::string("Comm"),
 
-  std::string("Unknown Group")  // Keep this at the end and DO NOT remove....
+  std::string("Unknown Kernel Group")  // Keep this at the end and DO NOT remove....
 
-}; // END GroupNames
+}; // END KernelGroupNames
 
 
 /*!
@@ -254,6 +256,7 @@ static const std::string KernelNames [] =
   std::string("Apps_LTIMES_NOVIEW"),
   std::string("Apps_MASS3DEA"),
   std::string("Apps_MASS3DPA"),
+  std::string("Apps_MASS3DPA_ATOMIC"),
   std::string("Apps_MASSVEC3DPA"),
   std::string("Apps_MATVEC_3D_STENCIL"),
   std::string("Apps_NODAL_ACCUMULATION_3D"),
@@ -287,6 +290,37 @@ static const std::string KernelNames [] =
   std::string("Unknown Kernel")  // Keep this at the end and DO NOT remove....
 
 }; // END KernelNames
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Array of names for each Variant GROUP in suite.
+ *
+ * IMPORTANT: This is only modified when a variant set is added or removed.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE VariantSetID enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string VariantSetNames [] =
+{
+  std::string("Base"),
+  std::string("Lambda"),
+  std::string("RAJA"),
+  std::string("Kokkos"),
+
+  std::string("Seq"),
+  std::string("OpenMP"),
+  std::string("OpenMPTarget"),
+  std::string("CUDA"),
+  std::string("HIP"),
+  std::string("SYCL"),
+
+  std::string("Unknown Variant Set")  // Keep this at the end and DO NOT remove....
+
+}; // END VariantSetNames
 
 
 /*!
@@ -477,13 +511,13 @@ static const std::string DataSpaceNames [] =
 /*
  *******************************************************************************
  *
- * Return group name associated with GroupID enum value.
+ * Return group name associated with KernelGroupID enum value.
  *
  *******************************************************************************
  */
-const std::string& getGroupName(GroupID gid)
+const std::string& getKernelGroupName(KernelGroupID kgid)
 {
-  return GroupNames[gid];
+  return KernelGroupNames[static_cast<int>(kgid)];
 }
 
 
@@ -512,6 +546,19 @@ std::string getKernelName(KernelID kid)
 const std::string& getFullKernelName(KernelID kid)
 {
   return KernelNames[kid];
+}
+
+
+/*
+ *******************************************************************************
+ *
+ * Return set name associated with VariantSetID enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getVariantSetName(VariantSetID vgid)
+{
+  return VariantSetNames[static_cast<int>(vgid)];
 }
 
 
@@ -1108,6 +1155,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new apps::MASS3DPA(run_params);
        break;
     }
+    case Apps_MASS3DPA_ATOMIC : {
+       kernel = new apps::MASS3DPA_ATOMIC(run_params);
+       break;
+    }    
     case Apps_MASSVEC3DPA : {
        kernel = new apps::MASSVEC3DPA(run_params);
        break;

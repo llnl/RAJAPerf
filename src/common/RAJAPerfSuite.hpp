@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -40,11 +41,11 @@ class RunParams;
  * IMPORTANT: This is only modified when a group is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE GroupNames ARRAY IN IMPLEMENTATION FILE!!!
+ *            ITEMS IN THE KernelGroupNames ARRAY IN IMPLEMENTATION FILE!!!
  *
  *******************************************************************************
  */
-enum GroupID {
+enum struct KernelGroupID : int {
 
   Basic = 0,
   Lcals,
@@ -54,7 +55,7 @@ enum GroupID {
   Algorithm,
   Comm,
 
-  NumGroups // Keep this one last and DO NOT remove (!!)
+  NumKernelGroups // Keep this one last and DO NOT remove (!!)
 
 };
 
@@ -155,6 +156,7 @@ enum KernelID {
   Apps_LTIMES_NOVIEW,
   Apps_MASS3DEA,
   Apps_MASS3DPA,
+  Apps_MASS3DPA_ATOMIC,  
   Apps_MASSVEC3DPA,
   Apps_MATVEC_3D_STENCIL,
   Apps_NODAL_ACCUMULATION_3D,
@@ -186,6 +188,37 @@ enum KernelID {
 #endif
 
   NumKernels // Keep this one last and NEVER comment out (!!)
+
+};
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Enumeration defining unique id for each set of variants in suite.
+ *
+ * IMPORTANT: This is only modified when a set is added or removed.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE VariantSetNames ARRAY IN IMPLEMENTATION FILE!!!
+ *
+ *******************************************************************************
+ */
+enum struct VariantSetID : int {
+
+  Base = 0,
+  Lambda,
+  RAJA,
+  Kokkos,
+
+  Seq,
+  OpenMP,
+  OpenMPTarget,
+  CUDA,
+  HIP,
+  SYCL,
+
+  NumVariantSets // Keep this one last and DO NOT remove (!!)
 
 };
 
@@ -377,11 +410,21 @@ enum struct DataSpace {
 /*!
  *******************************************************************************
  *
- * \brief Return group name associated with GroupID enum value.
+ * \brief Return group name associated with KernelGroupID enum value.
  *
  *******************************************************************************
  */
-const std::string& getGroupName(GroupID gid);
+const std::string& getKernelGroupName(KernelGroupID kgid);
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Return set name associated with VariantSetID enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getVariantSetName(VariantSetID vgid);
 
 /*!
  *******************************************************************************

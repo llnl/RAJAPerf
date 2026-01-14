@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -16,6 +17,7 @@
 #include "common/GPUUtils.hpp"
 
 #include "RAJA/util/Timer.hpp"
+#include "RAJA/util/reduce.hpp"
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
 #include <mpi.h>
 #endif
@@ -43,7 +45,7 @@
 #define CALI_START \
     if (doCaliperTiming) { \
       std::string kstr = getName(); \
-      std::string gstr = getGroupName(kstr); \
+      std::string gstr = getKernelGroupName(kstr); \
       std::string vstr = "RAJAPerf"; \
       doOnceCaliMetaBegin(running_variant, running_tuning); \
       CALI_MARK_BEGIN(vstr.c_str()); \
@@ -54,7 +56,7 @@
 #define CALI_STOP \
     if (doCaliperTiming) { \
       std::string kstr = getName(); \
-      std::string gstr = getGroupName(kstr); \
+      std::string gstr = getKernelGroupName(kstr); \
       std::string vstr = "RAJAPerf"; \
       CALI_MARK_END(kstr.c_str()); \
       CALI_MARK_END(gstr.c_str()); \
@@ -123,6 +125,7 @@ public:
   void setFLOPsPerRep(Index_type FLOPs) { FLOPs_per_rep = FLOPs; }
   void setBlockSize(Index_type size) { kernel_block_size = size; }
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
+  void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
   void setComplexity(Complexity ac) { complexity = ac; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
@@ -210,6 +213,7 @@ public:
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
   double getBlockSize() const { return kernel_block_size; }
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
+  Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
 
   Index_type getTargetProblemSize() const;
@@ -230,21 +234,19 @@ public:
   bool hasVariantTuningDefined(VariantID vid,
                                std::string const& tuning_name) const
   {
-    if (hasVariantDefined(vid)) {
-      for (std::string const& a_tuning_name : getVariantTuningNames(vid)) {
-        if (tuning_name == a_tuning_name) { return true; }
-      }
-    }
-    return false;
+    return getVariantTuningIndex(vid, tuning_name) != getUnknownTuningIdx();
   }
 
   size_t getVariantTuningIndex(VariantID vid,
                                std::string const& tuning_name) const
   {
-    std::vector<std::string> const& tuning_names = getVariantTuningNames(vid);
-    for (size_t t = 0; t < tuning_names.size(); ++t) {
-      std::string const& a_tuning_name = tuning_names[t];
-      if (tuning_name == a_tuning_name) { return t; }
+    if (hasVariantDefined(vid)) {
+      std::vector<std::string> const& tuning_names = getVariantTuningNames(vid);
+      for (size_t t = 0; t < tuning_names.size(); ++t) {
+        if (tuning_name == tuning_names[t]) {
+          return t;
+        }
+      }
     }
     return getUnknownTuningIdx();
   }
@@ -267,6 +269,12 @@ public:
     }
     return false;
   }
+  ///
+  bool wasVariantTuningRun(VariantID vid, std::string const& tuning_name) const
+  {
+    size_t tune_idx = getVariantTuningIndex(vid, tuning_name);
+    return wasVariantTuningRun(vid, tune_idx) ;
+  }
 
   // get runtime of executed variant/tuning
   double getLastTime() const { return timer.elapsed(); }
@@ -279,8 +287,53 @@ public:
   double getTotTime(VariantID vid, size_t tune_idx) const
   { return tot_time[vid].at(tune_idx); }
 
-  Checksum_type getChecksum(VariantID vid, size_t tune_idx) const
-  { return checksum[vid].at(tune_idx); }
+  // Get reference checksum (first variant tuning run)
+  Checksum_type getReferenceChecksum() const
+  {
+    if (checksum_reference_variant == NumVariants) {
+      throw std::runtime_error("Can't get reference checksum average if kernel was not run");
+    }
+    return checksum_reference;
+  }
+  Checksum_type getLastChecksum() const
+  {
+    return checksum.get();
+  }
+  Checksum_type getChecksumAverage(VariantID vid, size_t tune_idx) const
+  {
+    if (num_exec[vid].at(tune_idx) <= 0) {
+      throw std::runtime_error("Can't get checksum average if variant tuning was not run");
+    }
+    return checksum_sum[vid].at(tune_idx).get() / num_exec[vid].at(tune_idx);
+  }
+  static Checksum_type calculateChecksumRelativeAbsoluteDifference(
+      Checksum_type checksum, Checksum_type reference_checksum)
+  {
+    Checksum_type checksum_abs_diff = std::abs(reference_checksum - checksum);
+
+    Checksum_type checksum_rel_abs_diff =
+        (reference_checksum == static_cast<Checksum_type>(0))
+        ? checksum_abs_diff // handle case where checksum is 0 (Basic_EMPTY)
+        : std::abs(checksum_abs_diff / reference_checksum) ;
+
+    return checksum_rel_abs_diff;
+  }
+  Checksum_type getChecksumMaxRelativeAbsoluteDifference(VariantID vid, size_t tune_idx) const
+  {
+    if (num_exec[vid].at(tune_idx) <= 0) {
+      throw std::runtime_error("Can't get checksum max rel abs diff if variant tuning was not run");
+    }
+
+    Checksum_type reference_checksum = getReferenceChecksum();
+
+    Checksum_type cksum_max_rel_abs_diff =
+        std::max( calculateChecksumRelativeAbsoluteDifference(
+                      checksum_min[vid].at(tune_idx), reference_checksum),
+                  calculateChecksumRelativeAbsoluteDifference(
+                      checksum_max[vid].at(tune_idx), reference_checksum) );
+
+    return cksum_max_rel_abs_diff;
+  }
 
   void execute(VariantID vid, size_t tune_idx);
 
@@ -521,23 +574,21 @@ public:
   }
 
   template <typename T>
-  long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len,
-                           Real_type scale_factor = 1.0)
+  void addToChecksum(T val)
   {
-    return rajaperf::calcChecksum(dataSpace,
-      ptr, len, getDataAlignment(), scale_factor);
+    checksum += static_cast<Checksum_type>(std::abs(val));
   }
 
   template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, VariantID vid)
+  void addToChecksum(T* ptr, Size_type len, VariantID vid)
   {
-    return calcChecksum(getDataSpace(vid), ptr, len);
+    addToChecksum(getDataSpace(vid), ptr, len);
   }
 
   template <typename T>
-  long double calcChecksum(T* ptr, Size_type len, Real_type scale_factor, VariantID vid)
+  void addToChecksum(DataSpace dataSpace, T* ptr, Size_type len)
   {
-    return calcChecksum(getDataSpace(vid), ptr, len, scale_factor);
+    checksum += rajaperf::calcChecksum(dataSpace, ptr, len, getDataAlignment());
   }
 
   void startTimer()
@@ -602,7 +653,7 @@ public:
     }
   }
 
-  std::string getGroupName(const std::string &kname )
+  std::string getKernelGroupName(const std::string &kname )
   {
     std::size_t found = kname.find("_");
     return kname.substr(0,found);
@@ -613,8 +664,13 @@ public:
 protected:
   const RunParams& run_params;
 
-  std::vector<Checksum_type> checksum[NumVariants];
-  Checksum_type checksum_scale_factor;
+  struct ChecksumTolerance
+  {
+    static constexpr inline Checksum_type zero = 0.0;
+    static constexpr inline Checksum_type tight = 1e-14;
+    static constexpr inline Checksum_type normal = 1e-10;
+    static constexpr inline Checksum_type loose = 5e-6;
+  };
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   int did;
@@ -662,6 +718,12 @@ private:
   bool uses_feature[NumFeatures];
 
   ChecksumConsistency checksum_consistency;
+  Checksum_type checksum_tolerance;
+  RAJA::KahanSum<Checksum_type> checksum;
+
+  std::vector<Checksum_type> checksum_min[NumVariants];
+  std::vector<Checksum_type> checksum_max[NumVariants];
+  std::vector<RAJA::KahanSum<Checksum_type>> checksum_sum[NumVariants];
 
   Complexity complexity;
 
@@ -682,6 +744,10 @@ private:
 
   VariantID running_variant;
   size_t running_tuning;
+
+  Checksum_type checksum_reference;
+  VariantID checksum_reference_variant;
+  size_t checksum_reference_tuning;
 
   std::vector<int> num_exec[NumVariants];
 

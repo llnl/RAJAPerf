@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -35,6 +36,7 @@ MEMCPY::MEMCPY(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
@@ -53,14 +55,13 @@ void MEMCPY::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_y, getActualProblemSize(), -1.234567e89, vid);
 }
 
-void MEMCPY::updateChecksum(VariantID vid, size_t tune_idx)
+void MEMCPY::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_y, getActualProblemSize(), vid);
+  addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void MEMCPY::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

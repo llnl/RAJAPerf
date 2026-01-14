@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -49,6 +50,7 @@ HALO_EXCHANGE_FUSED::HALO_EXCHANGE_FUSED(const RunParams& params)
   setFLOPsPerRep(0);
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
@@ -80,10 +82,10 @@ void HALO_EXCHANGE_FUSED::setUp(VariantID vid, size_t tune_idx)
   }
 }
 
-void HALO_EXCHANGE_FUSED::updateChecksum(VariantID vid, size_t tune_idx)
+void HALO_EXCHANGE_FUSED::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   for (Index_type v = 0; v < m_num_vars; ++v) {
-    checksum[vid][tune_idx] += calcChecksum(m_vars[v], m_var_size, vid);
+    addToChecksum(m_vars[v], m_var_size, vid);
   }
 }
 

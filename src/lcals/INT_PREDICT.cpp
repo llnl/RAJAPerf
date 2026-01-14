@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -35,6 +36,7 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
   setFLOPsPerRep(17 * getActualProblemSize());
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -65,7 +67,7 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   initData(m_c0, vid);
 }
 
-void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
+void INT_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   Real_ptr px_host = m_px;
 
@@ -80,7 +82,7 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
     px_host[i] -= m_px_initval;
   }
 
-  checksum[vid][tune_idx] += calcChecksum(px_host, getActualProblemSize(), vid);
+  addToChecksum(px_host, getActualProblemSize(), vid);
 
   if (ds != hds) {
     copyData(ds, m_px, hds, px_host, m_array_length);
@@ -90,7 +92,6 @@ void INT_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
 
 void INT_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_px, vid);
 }
 

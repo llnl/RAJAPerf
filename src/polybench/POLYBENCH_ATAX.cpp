@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -48,11 +49,8 @@ POLYBENCH_ATAX::POLYBENCH_ATAX(const RunParams& params)
   setFLOPsPerRep(2 * m_N*m_N +
                  2 * m_N*m_N );
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -67,21 +65,19 @@ POLYBENCH_ATAX::~POLYBENCH_ATAX()
 
 void POLYBENCH_ATAX::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   allocAndInitData(m_tmp, m_N, vid);
   allocAndInitData(m_x, m_N, vid);
   allocAndInitData(m_A, m_N * m_N, vid);
   allocAndInitDataConst(m_y, m_N, 0.0, vid);
 }
 
-void POLYBENCH_ATAX::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_ATAX::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_y, m_N, checksum_scale_factor , vid);
+  addToChecksum(m_y, m_N, vid);
 }
 
 void POLYBENCH_ATAX::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_tmp, vid);
   deallocData(m_x, vid);
   deallocData(m_y, vid);

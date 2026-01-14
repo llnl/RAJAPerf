@@ -39,11 +39,8 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
 
   setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);
 
-  checksum_scale_factor = 1e-6 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N_to_the_three_halves);
 
@@ -62,12 +59,11 @@ void MAT_MAT_SHARED::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) 
   allocAndInitDataConst(m_C, NN, 0.0, vid);
 }
 
-void MAT_MAT_SHARED::updateChecksum(VariantID vid, size_t tune_idx) {
-  checksum[vid][tune_idx] += calcChecksum(m_C, m_N*m_N, checksum_scale_factor , vid);
+void MAT_MAT_SHARED::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+  addToChecksum(m_C, m_N*m_N, vid);
 }
 
 void MAT_MAT_SHARED::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
-  (void)vid;
   deallocData(m_A, vid);
   deallocData(m_B, vid);
   deallocData(m_C, vid);

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -68,11 +69,8 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
                  1 * m_n +
                  3 * m_n*m_n );
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
@@ -88,8 +86,6 @@ POLYBENCH_GEMVER::~POLYBENCH_GEMVER()
 
 void POLYBENCH_GEMVER::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   allocAndInitData(m_A, m_n * m_n, vid);
   allocAndInitData(m_u1, m_n, vid);
   allocAndInitData(m_v1, m_n, vid);
@@ -101,14 +97,13 @@ void POLYBENCH_GEMVER::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   allocAndInitData(m_z, m_n, vid);
 }
 
-void POLYBENCH_GEMVER::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_GEMVER::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_w, m_n, checksum_scale_factor , vid);
+  addToChecksum(m_w, m_n, vid);
 }
 
 void POLYBENCH_GEMVER::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_A, vid);
   deallocData(m_u1, vid);
   deallocData(m_v1, vid);
