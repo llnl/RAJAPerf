@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -38,70 +39,71 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
         DIFFUSION3DPA_0_CPU;
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_1;
+        CPU_FOREACH(dz,z,diff::D1D) {
+          CPU_FOREACH(dy,y,diff::D1D) {
+            CPU_FOREACH(dx,x,diff::D1D) {
+              DIFFUSION3DPA_1
             }
           }
         }
 
-        CPU_FOREACH(dy, y, DPA_D1D) {
-          CPU_FOREACH(qx, x, DPA_Q1D) {
-            DIFFUSION3DPA_2;
+        CPU_FOREACH(dy,y,diff::D1D) {
+          CPU_FOREACH(qx,x,diff::Q1D) {
+            DIFFUSION3DPA_2
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_3;
+        CPU_FOREACH(dz,z,diff::D1D) {
+          CPU_FOREACH(dy,y,diff::D1D) {
+            CPU_FOREACH(qx,x,diff::Q1D) {
+
+              DIFFUSION3DPA_3
             }
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_4;
+        CPU_FOREACH(dz,z,diff::D1D) {
+          CPU_FOREACH(qy,y,diff::Q1D) {
+            CPU_FOREACH(qx,x,diff::Q1D) {
+              DIFFUSION3DPA_4
             }
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(qx, x, DPA_Q1D) {
-              DIFFUSION3DPA_5;
+        CPU_FOREACH(qz,z,diff::Q1D) {
+          CPU_FOREACH(qy,y,diff::Q1D) {
+            CPU_FOREACH(qx,x,diff::Q1D) {
+              DIFFUSION3DPA_5
             }
           }
         }
 
-        CPU_FOREACH(d, y, DPA_D1D) {
-          CPU_FOREACH(q, x, DPA_Q1D) {
-            DIFFUSION3DPA_6;
+        CPU_FOREACH(dy,y,diff::D1D) {
+          CPU_FOREACH(qx,x,diff::Q1D) {
+            DIFFUSION3DPA_6
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(qy, y, DPA_Q1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_7;
+        CPU_FOREACH(qz,z,diff::Q1D) {
+          CPU_FOREACH(qy,y,diff::Q1D) {
+            CPU_FOREACH(dx,x,diff::D1D) {
+              DIFFUSION3DPA_7
             }
           }
         }
 
-        CPU_FOREACH(qz, z, DPA_Q1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_8;
+        CPU_FOREACH(qz,z,diff::Q1D) {
+          CPU_FOREACH(dy,y,diff::D1D) {
+            CPU_FOREACH(dx,x,diff::D1D) {
+              DIFFUSION3DPA_8
             }
           }
         }
 
-        CPU_FOREACH(dz, z, DPA_D1D) {
-          CPU_FOREACH(dy, y, DPA_D1D) {
-            CPU_FOREACH(dx, x, DPA_D1D) {
-              DIFFUSION3DPA_9;
+        CPU_FOREACH(dz,z,diff::D1D) {
+          CPU_FOREACH(dy,y,diff::D1D) {
+            CPU_FOREACH(dx,x,diff::D1D) {
+              DIFFUSION3DPA_9
             }
           }
         }
@@ -133,6 +135,7 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Grid is empty as the host does not need a compute grid to be specified
+      //clang-format off
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
@@ -142,11 +145,11 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
               DIFFUSION3DPA_0_CPU;
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                         [&](Index_type dx) {
 
                           DIFFUSION3DPA_1;
@@ -162,9 +165,9 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
               RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                 [&](Index_type RAJA_UNUSED_ARG(dz)) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_2;
@@ -178,11 +181,11 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                     [&](Index_type dy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_3;
@@ -196,11 +199,11 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
               ctx.teamSync();
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                 [&](Index_type dz) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                     [&](Index_type qy) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                         [&](Index_type qx) {
 
                           DIFFUSION3DPA_4;
@@ -214,14 +217,14 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                    [&](Index_type qy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                        [&](Index_type qx) {
 
-                         DIFFUSION3DPA_5;
+                        DIFFUSION3DPA_5;
 
                        } // lambda (qx)
                      ); // RAJA::loop<inner_x>
@@ -234,12 +237,12 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
                [&](Index_type RAJA_UNUSED_ARG(dz)) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
-                   [&](Index_type d) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
-                       [&](Index_type q) {
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
+                   [&](Index_type dy) {
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::Q1D),
+                       [&](Index_type qx) {
 
-                         DIFFUSION3DPA_6;
+                        DIFFUSION3DPA_6;
 
                        } // lambda (q)
                      ); // RAJA::loop<inner_x>
@@ -250,14 +253,14 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                    [&](Index_type qy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
-                         DIFFUSION3DPA_7;
+                        DIFFUSION3DPA_7;
 
                        } // lambda (dx)
                      ); // RAJA::loop<inner_x>
@@ -268,11 +271,11 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_Q1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::Q1D),
                [&](Index_type qz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                    [&](Index_type dy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
                          DIFFUSION3DPA_8;
@@ -286,11 +289,11 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
              ctx.teamSync();
 
-             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, diff::D1D),
                [&](Index_type dz) {
-                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                 RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, diff::D1D),
                    [&](Index_type dy) {
-                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, DPA_D1D),
+                     RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, diff::D1D),
                        [&](Index_type dx) {
 
                          DIFFUSION3DPA_9;
@@ -307,6 +310,8 @@ void DIFFUSION3DPA::runOpenMPVariant(VariantID vid) {
 
         }  // outer lambda (ctx)
       );  // RAJA::launch
+      //clang-format on
+
     }  // loop over kernel reps
     stopTimer();
 
