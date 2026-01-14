@@ -81,6 +81,7 @@ RunParams::RunParams(int argc, char** argv)
    invalid_npasses_combiner_input(),
    outdir(),
    outfile_prefix("RAJAPerf"),
+   femsweep_mesh_file("../src/apps/FEMSWEEP_DATA.txt"),
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
@@ -169,6 +170,8 @@ void RunParams::print(std::ostream& str) const
   str << "\n reference_variant = " << reference_variant;
   str << "\n outdir = " << outdir;
   str << "\n outfile_prefix = " << outfile_prefix;
+
+  str << "\n femsweep_mesh_file = " << femsweep_mesh_file;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   if (add_to_spot_config.length() > 0) {
@@ -712,7 +715,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
     } else if ( opt == std::string("--gpu_block_size") ) {
 
-      bool got_someting = false;
+      bool got_something = false;
       bool done = false;
       i++;
       while ( i < argc && !done ) {
@@ -721,7 +724,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           i--;
           done = true;
         } else {
-          got_someting = true;
+          got_something = true;
           int gpu_block_size = ::atoi( opt.c_str() );
           if ( gpu_block_size <= 0 ) {
             getCout() << "\nBad input:"
@@ -734,7 +737,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           ++i;
         }
       }
-      if (!got_someting) {
+      if (!got_something) {
         getCout() << "\nBad input:"
                   << " must give --gpu_block_size one or more values (int)"
                   << std::endl;
@@ -743,7 +746,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
     } else if ( opt == std::string("--atomic_replication") ) {
 
-      bool got_someting = false;
+      bool got_something = false;
       bool done = false;
       i++;
       while ( i < argc && !done ) {
@@ -752,7 +755,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           i--;
           done = true;
         } else {
-          got_someting = true;
+          got_something = true;
           int atomic_replication = ::atoi( opt.c_str() );
           if ( atomic_replication <= 0 ) {
             getCout() << "\nBad input:"
@@ -765,7 +768,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           ++i;
         }
       }
-      if (!got_someting) {
+      if (!got_something) {
         getCout() << "\nBad input:"
                   << " must give --atomic_replication one or more values (int)"
                   << std::endl;
@@ -774,7 +777,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
     } else if ( opt == std::string("--items_per_thread") ) {
 
-      bool got_someting = false;
+      bool got_something = false;
       bool done = false;
       i++;
       while ( i < argc && !done ) {
@@ -783,7 +786,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           i--;
           done = true;
         } else {
-          got_someting = true;
+          got_something = true;
           int items_per_thread = ::atoi( opt.c_str() );
           if ( items_per_thread <= 0 ) {
             getCout() << "\nBad input:"
@@ -796,7 +799,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           ++i;
         }
       }
-      if (!got_someting) {
+      if (!got_something) {
         getCout() << "\nBad input:"
                   << " must give --items_per_thread one or more values (int)"
                   << std::endl;
@@ -929,6 +932,19 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         }
       }
 
+    } else if ( std::string(argv[i]) == std::string("--femsweep-mesh-file") ||
+                std::string(argv[i]) == std::string("-fmf") ) {
+
+      i++;
+      if ( i < argc ) {
+        opt = std::string(argv[i]);
+        if ( opt.at(0) == '-' ) {
+          i--;
+        } else {
+          femsweep_mesh_file = std::string( argv[i] );
+        }
+      }
+
     } else if ( opt == std::string("--seq-data-space") ||
                 opt == std::string("-sds") ||
                 opt == std::string("--omp-data-space") ||
@@ -958,7 +974,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 opt == std::string("--sycl-mpi-data-space") ||
                 opt == std::string("--kokkos-mpi-data-space") ) {
 
-      bool got_someting = false;
+      bool got_something = false;
       bool got_something_available = false;
       bool got_something_pseudo = false;
       i++;
@@ -971,7 +987,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           for (int ids = 0; ids < static_cast<int>(DataSpace::EndPseudoSpaces); ++ids) {
             DataSpace ds = static_cast<DataSpace>(ids);
             if (getDataSpaceName(ds) == opt) {
-              got_someting = true;
+              got_something = true;
               got_something_available = isDataSpaceAvailable(ds);
               got_something_pseudo = isPseudoDataSpace(ds);
               if (        opt_name == std::string("--seq-data-space") ||
@@ -1031,13 +1047,13 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 kokkosMPIDataSpace = ds;
                 got_something_available = got_something_available || got_something_pseudo;
               } else {
-                got_someting = false;
+                got_something = false;
               }
 
               break;
             }
           }
-          if (!got_someting) {
+          if (!got_something) {
             getCout() << "\nBad input:"
                       << " must give " << opt_name << " a valid data space"
                       << std::endl;
@@ -1572,6 +1588,12 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t      Must be greater than 0.\n";
   str << "\t\t Example...\n"
       << "\t\t --ltimes_num_m 100\n\n";
+
+  str << "\t --femsweep-mesh-file, -fmf <string> [Default is ../src/apps/FEMSWEEP_DATA.txt]\n"
+      << "\t      (path to file name of femsweep mesh)\n";
+  str << "\t\t Examples...\n"
+      << "\t\t --femsweep-mesh-file /tmp/var/FEMSWEEP_MESH1.txt\n"
+      << "\t\t -fmf /tmp/var/FEMSWEEP_MESH1.txt\n\n";
 
   str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
       << "\t      (array size used in ARRAY_OF_PTRS kernel)\n"

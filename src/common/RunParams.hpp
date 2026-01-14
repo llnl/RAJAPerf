@@ -276,6 +276,8 @@ public:
   const std::string& getOutputDirName() const { return outdir; }
   const std::string& getOutputFilePrefix() const { return outfile_prefix; }
 
+  const std::string& getFemsweepMeshFile() const { return femsweep_mesh_file; }
+
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   const std::string& getAddToSpotConfig() const { return add_to_spot_config; }
   const std::string& getAddToCaliperConfig() const { return add_to_cali_config; }
@@ -427,6 +429,8 @@ private:
 
   std::string outdir;          /*!< Output directory name. */
   std::string outfile_prefix;  /*!< Prefix for output data file names. */
+
+  std::string femsweep_mesh_file;  /*!< Path to file name of femsweep mesh. */
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   std::string add_to_spot_config;

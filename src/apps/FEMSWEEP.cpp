@@ -26,12 +26,14 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
+  mesh_file = params.getFemsweepMeshFile();
+
   // Read problem size from file.
-  std::ifstream dataFile("../src/apps/FEMSWEEP_DATA.txt");
+  std::ifstream dataFile(mesh_file);
 
   if ( !dataFile.is_open() )
   {
-    std::cout << "Could not open FEMSWEEP_DATA.txt in constructor." << std::endl;
+    std::cout << "Could not open " << mesh_file << " in constructor." << std::endl;
   }
 
   std::string line;
@@ -48,7 +50,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_nx properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
+        std::cout << "Unable to initialize m_nx properly in constructor. Please check the " << mesh_file << " file." << std::endl;
       }
     }
 
@@ -62,7 +64,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_ny properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
+        std::cout << "Unable to initialize m_ny properly in constructor. Please check the " << mesh_file << " file." << std::endl;
       }
     }
 
@@ -76,7 +78,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_nz properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
+        std::cout << "Unable to initialize m_nz properly in constructor. Please check the " << mesh_file << " file." << std::endl;
       }
     }
 
@@ -90,7 +92,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_na properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
+        std::cout << "Unable to initialize m_na properly in constructor. Please check the " << mesh_file << " file." << std::endl;
       }
     }
 
@@ -104,7 +106,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_ng properly in constructor. Please check the FEMSWEEP_DATA.txt file." << std::endl;
+        std::cout << "Unable to initialize m_ng properly in constructor. Please check the " << mesh_file << " file." << std::endl;
       }
     }
 
@@ -180,11 +182,11 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
   // Read mesh connectivity data from file.
-  std::ifstream dataFile("../src/apps/FEMSWEEP_DATA.txt");
+  std::ifstream dataFile(mesh_file);
 
   if ( !dataFile.is_open() )
   {
-    std::cout << "Could not open FEMSWEEP_DATA.txt in setUp." << std::endl;
+    std::cout << "Could not open " << mesh_file << " in setUp." << std::endl;
   }
 
   int lcount = 0;
@@ -202,7 +204,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
-          std::cout << "Size of m_nhpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_nhpaa_r in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_nhpaa_r = allocDataForInit(m_nhpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
@@ -215,14 +217,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_nhpaa_r." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_nhpaa_r." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_nhpaa_r." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_nhpaa_r." << std::endl;
       }
     }
 
@@ -235,7 +237,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
-          std::cout << "Size of m_ohpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_ohpaa_r in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_ohpaa_r = allocDataForInit(m_ohpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
@@ -248,14 +250,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_ohpaa_r." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_ohpaa_r." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_ohpaa_r." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_ohpaa_r." << std::endl;
       }
     }
 
@@ -268,7 +270,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_na * m_hplanes )
         {
-          std::cout << "Size of m_phpaa_r in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_phpaa_r in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_phpaa_r = allocDataForInit(m_phpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
@@ -281,14 +283,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_phpaa_r." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_phpaa_r." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_phpaa_r." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_phpaa_r." << std::endl;
       }
     }
 
@@ -301,7 +303,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_na * m_ne )
         {
-          std::cout << "Size of m_order_r in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_order_r in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_order_r, sizetemp, vid); 
         // Read rest of entries for array.
@@ -314,14 +316,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_order_r." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_order_r." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_order_r." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_order_r." << std::endl;
       }
     }
 
@@ -334,7 +336,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne * m_na )
         {
-          std::cout << "Size of m_AngleElem2FaceType in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_AngleElem2FaceType in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
         // Read rest of entries for array.
@@ -347,14 +349,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_AngleElem2FaceType." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_AngleElem2FaceType." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
       }
     }
 
@@ -367,7 +369,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne )
         {
-          std::cout << "Size of m_elem_to_faces in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_elem_to_faces in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_elem_to_faces, sizetemp, vid); 
         // Read rest of entries for array.
@@ -380,14 +382,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_elem_to_faces." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_elem_to_faces." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_elem_to_faces." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_elem_to_faces." << std::endl;
       }
     }
 
@@ -400,7 +402,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != (m_sharedinteriorfaces + m_boundaryfaces) )
         {
-          std::cout << "Size of m_F_g2l in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_F_g2l in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_F_g2l, sizetemp, vid); 
         // Read rest of entries for array.
@@ -413,14 +415,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_F_g2l." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_F_g2l." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_F_g2l." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_F_g2l." << std::endl;
       }
     }
 
@@ -433,7 +435,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
-          std::cout << "Size of m_idx1 in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_idx1 in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_idx1, sizetemp, vid); 
         // Read rest of entries for array.
@@ -446,14 +448,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_idx1." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_idx1." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_idx1." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_idx1." << std::endl;
       }
     }
 
@@ -466,7 +468,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
-          std::cout << "Size of m_idx2 in FEMSWEEP_DATA.txt does not match." << std::endl;
+          std::cout << "Size of m_idx2 in " << mesh_file << " does not match." << std::endl;
         }
         auto temp_order_r = allocDataForInit(m_idx2, sizetemp, vid); 
         // Read rest of entries for array.
@@ -479,14 +481,14 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           }
           else
           {
-            std::cout << "Invalid entry in FEMSWEEP_DATA.txt for m_idx2." << std::endl;
+            std::cout << "Invalid entry in " << mesh_file << " for m_idx2." << std::endl;
           }
           lcount++;
         }
       }
       else
       {
-        std::cout << "Invalid size entry in FEMSWEEP_DATA.txt for m_idx2." << std::endl;
+        std::cout << "Invalid size entry in " << mesh_file << " for m_idx2." << std::endl;
       }
     }
 
