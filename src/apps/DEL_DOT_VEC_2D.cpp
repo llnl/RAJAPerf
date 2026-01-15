@@ -29,21 +29,8 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
   setDefaultProblemSize(1000*1000);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
-  Index_type rzmax = std::sqrt(getTargetProblemSize()) + 1 + std::sqrt(2)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 2);
-
-  m_array_length = m_domain->nnalls;
-
-  setActualProblemSize(m_domain->n_real_zones);
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
-                      4*sizeof(Real_type) * m_domain->n_real_nodes ); // x, y, fx, fy (2d nodal stencil pattern: 4 touches per iterate)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // div
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(54 * m_domain->n_real_zones);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -58,9 +45,30 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
   addVariantTunings();
 }
 
+void DEL_DOT_VEC_2D::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::sqrt(target_size) + 1 + std::sqrt(2)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 2));
+
+  m_array_length = m_domain->nnalls;
+
+  setActualProblemSize(m_domain->n_real_zones);
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      4*sizeof(Real_type) * m_domain->n_real_nodes ); // x, y, fx, fy (2d nodal stencil pattern: 4 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // div
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(54 * m_domain->n_real_zones);
+
+
+}
+
 DEL_DOT_VEC_2D::~DEL_DOT_VEC_2D()
 {
-  delete m_domain;
 }
 
 void DEL_DOT_VEC_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

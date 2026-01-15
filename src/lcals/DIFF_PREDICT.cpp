@@ -24,16 +24,8 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(200);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
-  setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(9 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -46,6 +38,21 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void DIFF_PREDICT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
+  setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(9 * getActualProblemSize());
 }
 
 DIFF_PREDICT::~DIFF_PREDICT()

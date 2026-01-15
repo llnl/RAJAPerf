@@ -25,17 +25,10 @@ ARRAY_OF_PTRS::ARRAY_OF_PTRS(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
   m_array_size = params.getArrayOfPtrsArraySize();
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( m_array_size*sizeof(Real_type) * getActualProblemSize() ); // x
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(m_array_size * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -48,6 +41,20 @@ ARRAY_OF_PTRS::ARRAY_OF_PTRS(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void ARRAY_OF_PTRS::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( m_array_size*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(m_array_size * getActualProblemSize());
 }
 
 ARRAY_OF_PTRS::~ARRAY_OF_PTRS()

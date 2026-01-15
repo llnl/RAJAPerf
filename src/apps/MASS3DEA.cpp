@@ -24,27 +24,12 @@ namespace apps
 MASS3DEA::MASS3DEA(const RunParams& params)
   : KernelBase(rajaperf::Apps_MASS3DEA, params)
 {
-  m_NE_default = 8000;
-
-  setDefaultProblemSize(m_NE_default*mea::D1D*mea::D1D*mea::D1D);
+  Index_type NE_default = 8000;
+  setDefaultProblemSize(NE_default*mea::D1D*mea::D1D*mea::D1D);
   setDefaultReps(1);
 
-  const Index_type ea_mat_entries = mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D;
-
-  m_NE = std::max((getTargetProblemSize() + (ea_mat_entries)/2) / (ea_mat_entries), Index_type(1));
-
-  setActualProblemSize( m_NE*ea_mat_entries );
-
-  setItsPerRep( m_NE*mea::D1D*mea::D1D*mea::D1D );
-  setKernelsPerRep(1);
-
-  setBytesReadPerRep( 1*sizeof(Real_type) * mea::Q1D*mea::D1D + // B
-                      1*sizeof(Real_type) * mea::Q1D*mea::Q1D*mea::Q1D*m_NE ); // D
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-
-  setFLOPsPerRep(m_NE * 7 * ea_mat_entries);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -57,6 +42,27 @@ MASS3DEA::MASS3DEA(const RunParams& params)
   setUsesFeature(Launch);
 
   addVariantTunings();
+}
+
+void MASS3DEA::setSize(Index_type target_size, Index_type target_reps)
+{
+  const Index_type ea_mat_entries = mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D;
+
+  m_NE = std::max((target_size + (ea_mat_entries)/2) / (ea_mat_entries), Index_type(1));
+
+  setActualProblemSize( m_NE*ea_mat_entries );
+  setRunReps( target_reps );
+
+  setItsPerRep( m_NE*mea::D1D*mea::D1D*mea::D1D );
+  setKernelsPerRep(1);
+
+  setBytesReadPerRep( 1*sizeof(Real_type) * mea::Q1D*mea::D1D + // B
+                      1*sizeof(Real_type) * mea::Q1D*mea::Q1D*mea::Q1D*m_NE ); // D
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+
+  setFLOPsPerRep(m_NE * 7 * ea_mat_entries);
 }
 
 MASS3DEA::~MASS3DEA()

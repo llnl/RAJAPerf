@@ -25,16 +25,8 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(20);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  // not useful in this case due to O(n*log(n)) algorithm
-  setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, i
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // sort is not stable and could depend on scheduling
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -47,6 +39,21 @@ SORTPAIRS::SORTPAIRS(const RunParams& params)
   setUsesFeature(Sort);
 
   addVariantTunings( );
+}
+
+void SORTPAIRS::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  // not useful in this case due to O(n*log(n)) algorithm
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, i
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 SORTPAIRS::~SORTPAIRS()

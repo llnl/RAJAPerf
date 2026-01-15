@@ -25,19 +25,8 @@ PRESSURE::PRESSURE(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(700);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( 2 * getActualProblemSize() );
-  setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // bvc
-                      3*sizeof(Real_type) * getActualProblemSize() ); // bvc, e_old, vnewc
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // compression
-                         1*sizeof(Real_type) * getActualProblemSize() ); // p_new
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep((2 +
-                  1
-                  ) * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -50,6 +39,24 @@ PRESSURE::PRESSURE(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void PRESSURE::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( 2 * getActualProblemSize() );
+  setKernelsPerRep(2);
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // bvc
+                      3*sizeof(Real_type) * getActualProblemSize() ); // bvc, e_old, vnewc
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // compression
+                         1*sizeof(Real_type) * getActualProblemSize() ); // p_new
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep((2 +
+                  1
+                  ) * getActualProblemSize());
 }
 
 PRESSURE::~PRESSURE()

@@ -25,17 +25,8 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(180);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // b, a, c
-  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x2, x1
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  // estimate conditional true half of the time, 1 sqrt
-  setFLOPsPerRep(4 * getActualProblemSize() +
-                 7 * getActualProblemSize() / 2);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -48,6 +39,22 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void IF_QUAD::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // b, a, c
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x2, x1
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  // estimate conditional true half of the time, 1 sqrt
+  setFLOPsPerRep(4 * getActualProblemSize() +
+                 7 * getActualProblemSize() / 2);
 }
 
 IF_QUAD::~IF_QUAD()

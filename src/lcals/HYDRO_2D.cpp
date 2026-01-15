@@ -34,10 +34,29 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   setDefaultProblemSize(m_kn * m_jn);
   setDefaultReps(100);
 
-  m_jn = m_kn = std::sqrt(getTargetProblemSize()) + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void HYDRO_2D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_jn = m_kn = std::sqrt(target_size) + std::sqrt(2)-1;
   m_array_length = m_kn * m_jn;
 
   setActualProblemSize( m_array_length );
+  setRunReps( target_reps );
 
   setItsPerRep( 3 * (m_kn-2) * (m_jn-2) );
   setKernelsPerRep(3);
@@ -62,18 +81,6 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   setFLOPsPerRep((14 +
                   26 +
                   4  ) * (m_jn-2)*(m_kn-2));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(2);
-  setProblemDimensionality(2);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 HYDRO_2D::~HYDRO_2D()

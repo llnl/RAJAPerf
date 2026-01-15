@@ -27,10 +27,28 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   setDefaultProblemSize( (N_default-2)*(N_default-2) );
   setDefaultReps(2000);
 
-  m_N = std::sqrt( getTargetProblemSize() ) + 2 + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_JACOBI_2D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::sqrt( target_size ) + 2 + std::sqrt(2)-1;
 
   setActualProblemSize( (m_N-2) * (m_N-2) );
+  setRunReps( target_reps );
 
   setItsPerRep( 2 * (m_N-2) * (m_N-2) );
   setKernelsPerRep(2);
@@ -44,18 +62,6 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 5 * (m_N-2)*(m_N-2) +
                   5 * (m_N-2)*(m_N-2) );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(2);
-  setProblemDimensionality(2);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_JACOBI_2D::~POLYBENCH_JACOBI_2D()

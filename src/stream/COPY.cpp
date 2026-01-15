@@ -25,15 +25,8 @@ COPY::COPY(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1800);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // c
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
   setChecksumTolerance(ChecksumTolerance::zero);
@@ -46,6 +39,20 @@ COPY::COPY(const RunParams& params)
   setUsesFeature( Forall );
 
   addVariantTunings();
+}
+
+void COPY::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // c
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 COPY::~COPY()

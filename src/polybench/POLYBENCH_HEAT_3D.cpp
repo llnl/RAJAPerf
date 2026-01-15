@@ -24,14 +24,31 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   : KernelBase(rajaperf::Polybench_HEAT_3D, params)
 {
   Index_type N_default = 102;
-
   setDefaultProblemSize( (N_default-2)*(N_default-2)*(N_default-2) );
   setDefaultReps(400);
 
-  m_N = std::cbrt( getTargetProblemSize() ) + 2 + std::cbrt(3)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_HEAT_3D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::cbrt( target_size ) + 2 + std::cbrt(3)-1;
 
   setActualProblemSize( (m_N-2) * (m_N-2) * (m_N-2) );
+  setRunReps( target_reps );
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep( 2 );
@@ -45,18 +62,6 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 15 * (m_N-2) * (m_N-2) * (m_N-2) +
                   15 * (m_N-2) * (m_N-2) * (m_N-2) );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(3);
-  setProblemDimensionality(3);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_HEAT_3D::~POLYBENCH_HEAT_3D()

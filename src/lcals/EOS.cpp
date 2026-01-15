@@ -25,19 +25,8 @@ EOS::EOS(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(500);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  m_array_length = getActualProblemSize() + 6;
-
-  setItsPerRep( getActualProblemSize() );
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() + // z, y
-                      1*sizeof(Real_type) * m_array_length ); // u (each iterate accesses the range [i, i+6])
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(16 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -50,6 +39,24 @@ EOS::EOS(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void EOS::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  m_array_length = getActualProblemSize() + 6;
+
+  setItsPerRep( getActualProblemSize() );
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() + // z, y
+                      1*sizeof(Real_type) * m_array_length ); // u (each iterate accesses the range [i, i+6])
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(16 * getActualProblemSize());
 }
 
 EOS::~EOS()

@@ -25,15 +25,8 @@ MULADDSUB::MULADDSUB(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(350);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // in1, in2
-  setBytesWrittenPerRep( 3*sizeof(Real_type) * getActualProblemSize()  ); // out1, out2, out3
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(3 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::tight);
@@ -46,6 +39,20 @@ MULADDSUB::MULADDSUB(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void MULADDSUB::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // in1, in2
+  setBytesWrittenPerRep( 3*sizeof(Real_type) * getActualProblemSize()  ); // out1, out2, out3
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(3 * getActualProblemSize());
 }
 
 MULADDSUB::~MULADDSUB()

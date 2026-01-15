@@ -25,17 +25,8 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1000);
 
-  setActualProblemSize( std::max(getTargetProblemSize(), Index_type(2)) );
-
-  m_N = getActualProblemSize();
-
-  setItsPerRep( m_N-1 );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) ); // z, y, xin
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // xout
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * (m_N-1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -48,6 +39,22 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void TRIDIAG_ELIM::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( std::max(target_size, Index_type(2)) );
+  setRunReps( target_reps );
+
+  m_N = getActualProblemSize();
+
+  setItsPerRep( m_N-1 );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) ); // z, y, xin
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // xout
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * (m_N-1));
 }
 
 TRIDIAG_ELIM::~TRIDIAG_ELIM()

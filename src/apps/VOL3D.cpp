@@ -29,21 +29,8 @@ VOL3D::VOL3D(const RunParams& params)
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
-
-  m_array_length = m_domain->nnalls;
-
-  setActualProblemSize( m_domain->n_real_zones );
-
-  setItsPerRep( m_domain->lpz+1 - m_domain->fpz );
-  setKernelsPerRep(1);
-  // touched data size, not actual number of stores and loads
-  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // vol
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(72 * (m_domain->lpz+1 - m_domain->fpz));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -58,9 +45,28 @@ VOL3D::VOL3D(const RunParams& params)
   addVariantTunings();
 }
 
+void VOL3D::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
+
+  m_array_length = m_domain->nnalls;
+
+  setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
+
+  setItsPerRep( m_domain->lpz+1 - m_domain->fpz );
+  setKernelsPerRep(1);
+  // touched data size, not actual number of stores and loads
+  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // vol
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(72 * (m_domain->lpz+1 - m_domain->fpz));
+}
+
 VOL3D::~VOL3D()
 {
-  delete m_domain;
 }
 
 void VOL3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

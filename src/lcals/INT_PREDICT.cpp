@@ -25,15 +25,8 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(400);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // px(0)
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(17 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -46,6 +39,20 @@ INT_PREDICT::INT_PREDICT(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void INT_PREDICT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // px(0)
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(17 * getActualProblemSize());
 }
 
 INT_PREDICT::~INT_PREDICT()

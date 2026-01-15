@@ -25,7 +25,26 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(500);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void GEN_LIN_RECUR::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   m_N = getActualProblemSize();
 
@@ -40,18 +59,6 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((3 +
                   3 ) * m_N);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(1);
-  setProblemDimensionality(1);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 GEN_LIN_RECUR::~GEN_LIN_RECUR()

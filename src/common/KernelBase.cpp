@@ -150,31 +150,6 @@ KernelBase::~KernelBase()
 }
 
 
-Index_type KernelBase::getTargetProblemSize() const
-{
-  Index_type target_size = static_cast<Index_type>(0);
-  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-    target_size =
-      static_cast<Index_type>(default_prob_size*run_params.getSizeFactor());
-  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
-    target_size = static_cast<Index_type>(run_params.getSize());
-  }
-  return target_size;
-}
-
-Index_type KernelBase::getRunReps() const
-{
-  Index_type run_reps = static_cast<Index_type>(0);
-  if (s_warmup_run) {
-    run_reps = static_cast<Index_type>(1);
-  } else if (run_params.getInputState() == RunParams::CheckRun) {
-    run_reps = static_cast<Index_type>(run_params.getCheckRunReps());
-  } else {
-    run_reps = static_cast<Index_type>(default_reps*run_params.getRepFactor());
-  }
-  return run_reps;
-}
-
 void KernelBase::addVariantTuning(VariantID vid, std::string name,
                                   variant_tuning_method_pointer method)
 {

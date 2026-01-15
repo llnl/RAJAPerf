@@ -25,18 +25,8 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1000);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  m_array_length = getActualProblemSize() + 12;
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() + // y
-                      1*sizeof(Real_type ) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // x
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(5 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -49,6 +39,23 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void HYDRO_1D::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  m_array_length = getActualProblemSize() + 12;
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() + // y
+                      1*sizeof(Real_type ) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // x
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(5 * getActualProblemSize());
 }
 
 HYDRO_1D::~HYDRO_1D()

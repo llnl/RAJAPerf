@@ -23,17 +23,33 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   , m_tsteps(4)
 {
   Index_type n_default = 1002;
-
   setDefaultProblemSize( (n_default-2) * (n_default-2) );
   setDefaultReps(4 * m_tsteps);
 
-  m_n = std::sqrt( getTargetProblemSize() ) + 2 + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( 2 * (m_n-2) + (m_n-2) );
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(2);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_ADI::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_n = std::sqrt( target_size ) + 2 + std::sqrt(2)-1;
 
   setActualProblemSize( (m_n-2) * (m_n-2) );
+  setRunReps( target_reps );
 
+  setItsPerRep( 2 * (m_n-2) + (m_n-2) );
   setKernelsPerRep( 2 );
   setBytesReadPerRep( 1*sizeof(Real_type ) * (m_n-2) * (m_n  ) + // u
 
@@ -49,18 +65,6 @@ POLYBENCH_ADI::POLYBENCH_ADI(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( (13 + 2) * (m_n-2)*(m_n-2) +
                   (13 + 2) * (m_n-2)*(m_n-2) );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(1);
-  setProblemDimensionality(2);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_ADI::~POLYBENCH_ADI()

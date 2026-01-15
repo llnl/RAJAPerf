@@ -25,15 +25,8 @@ DAXPY::DAXPY(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(500);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -46,6 +39,20 @@ DAXPY::DAXPY(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void DAXPY::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * getActualProblemSize());
 }
 
 DAXPY::~DAXPY()

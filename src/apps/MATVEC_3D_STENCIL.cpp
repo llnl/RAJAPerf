@@ -29,12 +29,31 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void MATVEC_3D_STENCIL::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
 
   m_zonal_array_length = m_domain->lpz+1;
 
   setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
@@ -80,23 +99,10 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   const size_t multiplies = 27;
   const size_t adds = 26;
   setFLOPsPerRep((multiplies + adds) * getItsPerRep());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(1);
-  setProblemDimensionality(3);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 MATVEC_3D_STENCIL::~MATVEC_3D_STENCIL()
 {
-  delete m_domain;
 }
 
 void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

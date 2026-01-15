@@ -22,6 +22,27 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
   setDefaultReps(200);
 
   m_num_vars = params.getHaloNumVars();
+
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
+
+  setComplexity(Complexity::N_to_the_two_thirds);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Workgroup);
+
+  addVariantTunings();
+}
+
+void HALO_PACKING_FUSED::setSize(Index_type target_size, Index_type target_reps)
+{
+  setSize_base(target_size, target_reps);
+
   m_var_size = m_grid_plus_halo_size ;
   const Size_type halo_size = m_var_size - getActualProblemSize();
 
@@ -38,18 +59,6 @@ HALO_PACKING_FUSED::HALO_PACKING_FUSED(const RunParams& params)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
-
-  setChecksumConsistency(ChecksumConsistency::Consistent);
-  setChecksumTolerance(ChecksumTolerance::zero);
-
-  setComplexity(Complexity::N_to_the_two_thirds);
-
-  setMaxPerfectLoopDimensions(1);
-  setProblemDimensionality(3);
-
-  setUsesFeature(Workgroup);
-
-  addVariantTunings();
 }
 
 HALO_PACKING_FUSED::~HALO_PACKING_FUSED()

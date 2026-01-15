@@ -25,7 +25,29 @@ ENERGY::ENERGY(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(130);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void ENERGY::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+
+  setActualProblemSize( target_size );
 
   setItsPerRep( 6 * getActualProblemSize() );
   setKernelsPerRep(6);
@@ -60,18 +82,6 @@ ENERGY::ENERGY(const RunParams& params)
                   19 + // 1 sqrt
                   9    // 1 sqrt
                   ) * getActualProblemSize());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setMaxPerfectLoopDimensions(1);
-  setProblemDimensionality(1);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 ENERGY::~ENERGY()

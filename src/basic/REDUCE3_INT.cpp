@@ -30,15 +30,8 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
 // reduction performance issues
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -52,6 +45,20 @@ REDUCE3_INT::REDUCE3_INT(const RunParams& params)
   setUsesFeature(Reduction);
 
   addVariantTunings();
+}
+
+void REDUCE3_INT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 REDUCE3_INT::~REDUCE3_INT()

@@ -27,23 +27,8 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
   setDefaultProblemSize( N_default-2 );
   setDefaultReps(1600);
 
-  m_N = getTargetProblemSize() + 2;
-
-
-  setActualProblemSize( m_N-2 );
-
-  setItsPerRep( 2 * getActualProblemSize() );
-  setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // A (3 point stencil)
-
-                      1*sizeof(Real_type ) * m_N ); // B (3 point stencil)
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) + // B
-
-                         1*sizeof(Real_type ) * (m_N-2) ); // A
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( 3 * (m_N-2) +
-                  3 * (m_N-2) );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
@@ -61,6 +46,27 @@ POLYBENCH_JACOBI_1D::POLYBENCH_JACOBI_1D(const RunParams& params)
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void POLYBENCH_JACOBI_1D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = target_size + 2;
+
+  setActualProblemSize( m_N-2 );
+  setRunReps( target_reps );
+
+  setItsPerRep( 2 * getActualProblemSize() );
+  setKernelsPerRep(2);
+  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // A (3 point stencil)
+
+                      1*sizeof(Real_type ) * m_N ); // B (3 point stencil)
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-2) + // B
+
+                         1*sizeof(Real_type ) * (m_N-2) ); // A
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep( 3 * (m_N-2) +
+                  3 * (m_N-2) );
 }
 
 POLYBENCH_JACOBI_1D::~POLYBENCH_JACOBI_1D()
