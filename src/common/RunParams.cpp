@@ -1534,8 +1534,8 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
 
   str << "\t --memory <int> [no default]\n"
-      << "\t      (memory touched size to run for all kernels)\n"
-      << "\t      (kernel size for kernels with no memory usage)\n"
+      << "\t      (bytes of memory touched to run with for all kernels)\n"
+      << "\t      (used as kernel size for kernels with fixed or no memory usage)\n"
       << "\t      May not be set if --sizefact or --size is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --memory 1000000 (runs each kernel with memory touched ~1,000,000 bytes)\n\n";
