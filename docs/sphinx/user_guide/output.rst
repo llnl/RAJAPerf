@@ -116,9 +116,9 @@ Information reported in the file for each kernel is:
     outer sequential loops. For example the GEMM kernel has 2 perfectly nested
     loop levels as the inner loop is implemented sequentially to perform a reduction.
   * **ProblemDimensionality** -- The dimensionality of the problem domain, 
-    regardless of physical data layout. For example, the LTIMES kernel will have
-    a problem dimensionality value of 3, because of phi (g, m, and z) and psi 
-    (g, d, and z) being indexed over 3 dimensions.
+    regardless of physical data layout. For example, the LTIMES kernel has
+    a problem dimensionality of 3, because phi (g, m, and z) and psi 
+    (g, d, and z) are indexed over 3 dimensions.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
            like DRAM or HBM under idealized conditions. They assume caching is
