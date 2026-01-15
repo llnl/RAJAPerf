@@ -21,18 +21,32 @@ namespace apps {
 MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASSVEC3DPA, params)
 {
-
   const Index_type NE_initial = 5208;
-
   setDefaultProblemSize(NE_initial * mvpa::DIM * mvpa::D1D * mvpa::D1D * mvpa::D1D);
   setDefaultReps(50);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void MASSVEC3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
   m_NE =
-      std::max((getTargetProblemSize() + (mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D) / 2) /
+      std::max((target_size + (mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D) / 2) /
                    (mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D),
                Index_type(1));
 
   setActualProblemSize(m_NE * mvpa::DIM * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D);
+  setRunReps( target_reps );
 
   setItsPerRep(getActualProblemSize());
   setKernelsPerRep(1);
@@ -56,15 +70,6 @@ MASSVEC3DPA::MASSVEC3DPA(const RunParams &params)
                   2 * mvpa::Q1D * mvpa::D1D * mvpa::Q1D * mvpa::Q1D +
                   2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::Q1D +
                   2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::D1D));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 MASSVEC3DPA::~MASSVEC3DPA() {}

@@ -25,7 +25,23 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(180);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void IF_QUAD::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
@@ -36,15 +52,6 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   // estimate conditional true half of the time, 1 sqrt
   setFLOPsPerRep(4 * getActualProblemSize() +
                  7 * getActualProblemSize() / 2);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 IF_QUAD::~IF_QUAD()

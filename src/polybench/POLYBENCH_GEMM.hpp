@@ -96,6 +96,7 @@ public:
 
   ~POLYBENCH_GEMM();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -122,6 +123,10 @@ private:
   static const size_t default_gpu_block_size = 256;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
+
+  Index_type m_ni_default;
+  Index_type m_nj_default;
+  Index_type m_nk_default;
 
   Index_type m_ni;
   Index_type m_nj;

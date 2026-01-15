@@ -28,9 +28,25 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
   setDefaultProblemSize(NE_default*diff::D1D*diff::D1D*diff::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (diff::D1D*diff::D1D*diff::D1D)/2) / (diff::D1D*diff::D1D*diff::D1D), Index_type(1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void DIFFUSION3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_NE = std::max((target_size + (diff::D1D*diff::D1D*diff::D1D)/2) / (diff::D1D*diff::D1D*diff::D1D), Index_type(1));
 
   setActualProblemSize( m_NE*diff::D1D*diff::D1D*diff::D1D );
+  setRunReps( target_reps );
 
   setItsPerRep( m_NE*diff::D1D*diff::D1D*diff::D1D );
   setKernelsPerRep(1);
@@ -48,15 +64,6 @@ DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
                          (6 * diff::Q1D) * diff::D1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_7
                          (6 * diff::Q1D) * diff::D1D * diff::D1D * diff::Q1D + //DIFFUSION3DPA_8
                          (6 * diff::Q1D + 1)*diff::D1D*diff::D1D*diff::D1D)); //DIFFUSION3DPA_9
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 DIFFUSION3DPA::~DIFFUSION3DPA()

@@ -24,7 +24,24 @@ INDEXLIST_3LOOP::INDEXLIST_3LOOP(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(100);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+  setUsesFeature(Scan);
+
+  addVariantTunings();
+}
+
+void INDEXLIST_3LOOP::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   setItsPerRep( 3 * getActualProblemSize() + 1 );
   setKernelsPerRep(3);
@@ -39,16 +56,6 @@ INDEXLIST_3LOOP::INDEXLIST_3LOOP(const RunParams& params)
                                0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
-
-  setChecksumConsistency(ChecksumConsistency::Consistent);
-  setChecksumTolerance(ChecksumTolerance::zero);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-  setUsesFeature(Scan);
-
-  addVariantTunings();
 }
 
 INDEXLIST_3LOOP::~INDEXLIST_3LOOP()

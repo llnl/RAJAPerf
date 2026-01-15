@@ -25,15 +25,8 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) ); // x
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // Reduction may use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -44,6 +37,20 @@ REDUCE_SUM::REDUCE_SUM(const RunParams& params)
   setUsesFeature(Reduction);
 
   addVariantTunings( );
+}
+
+void REDUCE_SUM::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type) * (1+getActualProblemSize()) ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(getActualProblemSize());
 }
 
 REDUCE_SUM::~REDUCE_SUM()

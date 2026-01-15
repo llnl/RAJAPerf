@@ -28,10 +28,26 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
   setDefaultProblemSize(NE_default*conv::D1D*conv::D1D*conv::D1D);
   setDefaultReps(50);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void CONVECTION3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
   //Define problem size in terms of DOFS
-  m_NE = std::max((getTargetProblemSize() + (conv::D1D*conv::D1D*conv::D1D)/2) / (conv::D1D*conv::D1D*conv::D1D), Index_type(1));
+  m_NE = std::max((target_size + (conv::D1D*conv::D1D*conv::D1D)/2) / (conv::D1D*conv::D1D*conv::D1D), Index_type(1));
 
   setActualProblemSize( m_NE*conv::D1D*conv::D1D*conv::D1D );
+  setRunReps( target_reps );
 
   setItsPerRep( m_NE*conv::D1D*conv::D1D*conv::D1D );
   setKernelsPerRep(1);
@@ -52,15 +68,6 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
                          2 * conv::Q1D * conv::D1D * conv::Q1D * conv::D1D + // 7
                          (1 + 2*conv::Q1D) * conv::D1D * conv::D1D * conv::D1D // 8
                          ));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 CONVECTION3DPA::~CONVECTION3DPA()

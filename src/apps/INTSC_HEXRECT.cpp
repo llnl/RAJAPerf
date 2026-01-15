@@ -40,13 +40,29 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   constexpr Size_type a3_def = 50 ;
   Size_type n_intsc_def = intsc_per_zone * a3_def * a3_def * a3_def ;
   setDefaultProblemSize(n_intsc_def);
+  setDefaultReps(1);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void INTSC_HEXRECT::setSize(Index_type target_size, Index_type target_reps)
+{
   //  Command line --size specifies requested number of intersections.
   //  Requested number of intersections will be converted to an even cube
   //  number of intersections.
   //
   Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
 
   // number of donor zones on a side of the cube
   Size_type side = a3 / 2 ;
@@ -56,9 +72,9 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   m_ndzones = side * side * side ;   // number of "donor zones" on a side
   Size_type n_intsc = intsc_per_zone*m_ndzones ;   // number of intersections
   m_ntzones = n_intsc ;          // one "target zone" per intersection
-  setDefaultReps(1);
 
   setActualProblemSize( n_intsc );
+  setRunReps( target_reps );
 
   setItsPerRep( n_intsc );
   setKernelsPerRep(1);
@@ -81,15 +97,6 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_hex ;
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 INTSC_HEXRECT::~INTSC_HEXRECT()

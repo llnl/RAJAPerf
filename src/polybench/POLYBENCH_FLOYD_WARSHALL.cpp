@@ -23,22 +23,11 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
   : KernelBase(rajaperf::Polybench_FLOYD_WARSHALL, params)
 {
   Index_type N_default = 1000;
-
   setDefaultProblemSize( N_default * N_default );
   setDefaultReps(8);
 
-  m_N = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
-
-
-  setActualProblemSize( m_N * m_N );
-
-  setItsPerRep( m_N * m_N*m_N );
-  setKernelsPerRep(m_N);
-  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pin
-  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pout
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::tight);
@@ -48,6 +37,22 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
   setUsesFeature(Kernel);
 
   addVariantTunings();
+}
+
+void POLYBENCH_FLOYD_WARSHALL::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::sqrt( target_size ) + std::sqrt(2)-1;
+
+  setActualProblemSize( m_N * m_N );
+  setRunReps( target_reps );
+
+  setItsPerRep( m_N * m_N*m_N );
+  setKernelsPerRep(m_N);
+  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pin
+  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pout
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time
 }
 
 POLYBENCH_FLOYD_WARSHALL::~POLYBENCH_FLOYD_WARSHALL()

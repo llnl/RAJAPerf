@@ -24,27 +24,42 @@ namespace polybench
 POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
   : KernelBase(rajaperf::Polybench_3MM, params)
 {
-  Index_type ni_default = 1000;
-  Index_type nj_default = 1000;
-  Index_type nk_default = 1010;
-  Index_type nl_default = 1000;
-  Index_type nm_default = 1200;
+  m_ni_default = 1000;
+  m_nj_default = 1000;
+  m_nk_default = 1010;
+  m_nl_default = 1000;
+  m_nm_default = 1200;
 
-  setDefaultProblemSize( std::max( std::max( ni_default*nj_default,
-                                             nj_default*nl_default ),
-                                  ni_default*nl_default ) );
-  setDefaultProblemSize( ni_default * nj_default );
+  setDefaultProblemSize( std::max( std::max( m_ni_default*m_nj_default,
+                                             m_nj_default*m_nl_default ),
+                                  m_ni_default*m_nl_default ) );
+  setDefaultProblemSize( m_ni_default * m_nj_default );
   setDefaultReps(2);
 
-  m_ni = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
-  m_nj = m_ni;
-  m_nk = Index_type(double(nk_default)/ni_default*m_ni);
-  m_nl = m_ni;
-  m_nm = Index_type(double(nm_default)/ni_default*m_ni);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N_to_the_three_halves);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_3MM::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_ni = std::sqrt( target_size ) + std::sqrt(2)-1;
+  m_nj = m_ni;
+  m_nk = Index_type(double(m_nk_default)/m_ni_default*m_ni);
+  m_nl = m_ni;
+  m_nm = Index_type(double(m_nm_default)/m_ni_default*m_ni);
 
   setActualProblemSize( std::max( std::max( m_ni*m_nj, m_nj*m_nl ),
                                   m_ni*m_nl ) );
+  setRunReps( target_reps );
 
   setItsPerRep( m_ni*m_nj + m_nj*m_nl + m_ni*m_nl );
   setKernelsPerRep(3);
@@ -66,15 +81,6 @@ POLYBENCH_3MM::POLYBENCH_3MM(const RunParams& params)
   setFLOPsPerRep(2 * m_ni*m_nj*m_nk +
                  2 * m_nj*m_nl*m_nm +
                  2 * m_ni*m_nj*m_nl );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N_to_the_three_halves);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_3MM::~POLYBENCH_3MM()

@@ -25,7 +25,23 @@ PRESSURE::PRESSURE(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(700);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void PRESSURE::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep(2);
@@ -38,15 +54,6 @@ PRESSURE::PRESSURE(const RunParams& params)
   setFLOPsPerRep((2 +
                   1
                   ) * getActualProblemSize());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 PRESSURE::~PRESSURE()

@@ -39,18 +39,35 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setDefaultProblemSize(n_std_intsc_def);
 
   setDefaultReps  (1);
-  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void INTSC_HEXHEX::setSize(Index_type target_size, Index_type target_reps)
+{
   // Number of standard intersections, by convention a cube number.
   Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
 
   if ( a3 < 1UL ) { a3 = 1UL ; }
 
   Size_type n_std_intsc = a3*a3*a3 ;
 
   setActualProblemSize( n_std_intsc ) ;
-  setItsPerRep        ( n_std_intsc );
+  setRunReps( target_reps );
+
+  setItsPerRep( n_std_intsc );
+  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
@@ -73,15 +90,6 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_std_intsc ;
 
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 INTSC_HEXHEX::~INTSC_HEXHEX()

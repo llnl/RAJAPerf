@@ -77,6 +77,7 @@ public:
 
   ~NODAL_ACCUMULATION_3D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -105,7 +106,7 @@ private:
   Real_ptr m_x;
   Real_ptr m_vol;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_nodal_array_length;
   Index_type m_zonal_array_length;

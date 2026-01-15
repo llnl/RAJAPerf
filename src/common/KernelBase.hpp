@@ -116,6 +116,7 @@ public:
   void setDefaultProblemSize(Index_type size) { default_prob_size = size; }
   void setActualProblemSize(Index_type size) { actual_prob_size = size; }
   void setDefaultReps(Index_type reps) { default_reps = reps; }
+  void setRunReps(Index_type reps) { actual_reps = reps; }
   void setItsPerRep(Index_type its) { its_per_rep = its; };
   void setKernelsPerRep(Index_type nkerns) { kernels_per_rep = nkerns; };
   void setBytesReadPerRep(Index_type bytes) { bytes_read_per_rep = bytes;}
@@ -202,6 +203,7 @@ public:
   Index_type getDefaultProblemSize() const { return default_prob_size; }
   Index_type getActualProblemSize() const { return actual_prob_size; }
   Index_type getDefaultReps() const { return default_reps; }
+  Index_type getRunReps() const { return s_warmup_run ? 1 : actual_reps; }
   Index_type getItsPerRep() const { return its_per_rep; };
   Index_type getKernelsPerRep() const { return kernels_per_rep; };
   Index_type getBytesPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count modify_write operations twice to get the memory traffic
@@ -216,8 +218,6 @@ public:
   Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
 
-  Index_type getTargetProblemSize() const;
-  Index_type getRunReps() const;
 
   bool usesFeature(FeatureID fid) const { return uses_feature[fid]; };
 
@@ -621,6 +621,7 @@ public:
   // by concrete kernel subclass.
   //
 
+  virtual void setSize(Index_type target_size, Index_type target_reps) = 0;
   virtual void setUp(VariantID vid, size_t tune_idx) = 0;
   virtual void updateChecksum(VariantID vid, size_t tune_idx) = 0;
   virtual void tearDown(VariantID vid, size_t tune_idx) = 0;
@@ -714,6 +715,7 @@ private:
   Index_type default_reps;
 
   Index_type actual_prob_size;
+  Index_type actual_reps;
 
   bool uses_feature[NumFeatures];
 
