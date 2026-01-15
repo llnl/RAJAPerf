@@ -1512,21 +1512,23 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t --repfact 0.5 (run each kernels 1/2 as many times as its default reps)\n\n";
 
   str << "\t --size <int> [no default]\n"
-      << "\t      (kernel size to run for all kernels)\n"
-      << "\t      May not be set if --sizefact or --memory is set.\n";
+      << "\t      (problem size to run for all kernels)\n"
+      << "\t      May not be set if --memory is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
 
   str << "\t --memory <int> [no default]\n"
-      << "\t      (bytes of memory touched to run with for all kernels)\n"
-      << "\t      (used as kernel size for kernels with fixed or no memory usage)\n"
-      << "\t      May not be set if --sizefact or --size is set.\n";
+      << "\t      (each kernel calculates its problem size so that it touches\n"
+      << "\t       this many bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size is set.\n";
   str << "\t\t Example...\n"
-      << "\t\t --memory 1000000 (runs each kernel with memory touched ~1,000,000 bytes)\n\n";
+      << "\t\t --memory 1000000 (runs each kernel such that it touches ~1,000,000 bytes per rep)\n\n";
 
   str << "\t --min-size <int> [default is 0]\n"
-      << "\t      (minimum kernel size to run for all kernels)\n"
-      << "\t      (intended for use with --memory, but usable with any size option)\n"
+      << "\t      (minimum problem size to run for all kernels)\n"
+      << "\t      (intended for use with --memory to avoid small problem sizes)\n"
+      << "\t      Applied before the --sizefact multiplier.\n"
       << "\t      Approximate for kernels where size is approximate.\n";
   str << "\t\t Example...\n"
       << "\t\t --min-size 1000000 (runs each kernel with at least size ~1,000,000)\n\n";
