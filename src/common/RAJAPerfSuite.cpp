@@ -1252,6 +1252,78 @@ KernelBase* getKernelObject(KernelID kid,
 
   } // end switch on kernel id
 
+  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+
+    // find the first problem size that uses memory >= target_memory
+    // or if the kernel uses no memory use target_memory as the problem size
+
+    const Index_type target_memory = run_params.getMemory();
+    const Index_type target_reps = run_params.getReps(kernel->getDefaultReps());
+
+    Index_type target_upper_bound = target_memory;
+    Index_type target_lower_bound = target_upper_bound;
+
+    if (kernel->getBytesTouchedPerRep() != 0) {
+
+      // find initial bounds
+      // search down (assume memory usage is greater than problem size)
+      while (kernel->getBytesTouchedPerRep() > target_memory &&
+             target_lower_bound > 1) {
+
+        target_upper_bound = target_lower_bound;
+        target_lower_bound /= 2;
+
+        kernel->setSize(target_lower_bound, target_reps);
+
+      }
+
+    }
+
+    // find the first problem size that uses memory >= target_memory
+    // bisect the upper and lower bounds
+    while (target_upper_bound != target_lower_bound) {
+
+      // note this will be target_lower_bound when (target_lower_bound == target_upper_bound-1)
+      const Index_type target_next_bound = (target_upper_bound + target_lower_bound) / 2;
+
+      kernel->setSize(target_next_bound, target_reps);
+
+      if (kernel->getBytesTouchedPerRep() > target_memory) {
+
+        target_upper_bound = target_next_bound;
+
+      } else {
+
+        if (target_lower_bound != target_next_bound) {
+
+          target_lower_bound = target_next_bound;
+
+        } else {
+
+          // end of loop
+          // pick a final problem size that produces memory usage greater than
+          // or equal to target_memory
+          if (kernel->getBytesTouchedPerRep() == target_memory) {
+
+            target_upper_bound = target_lower_bound;
+
+          } else {
+
+            target_lower_bound = target_upper_bound;
+
+          }
+
+        }
+
+      }
+
+    }
+
+    // set final size
+    kernel->setSize(target_upper_bound, target_reps);
+
+  }
+
   return kernel;
 }
 

@@ -83,6 +83,7 @@ public:
     Unset,    /*!< indicates value is unset */
     Factor,   /*!< multiplier on default kernel iteration space */
     Direct,   /*!< directly use as kernel iteration space */
+    Memory,   /*!< directly use as kernel memory touched size */
   };
 
   /*!
@@ -97,6 +98,8 @@ public:
         return "Factor";
       case SizeMeaning::Direct:
         return "Direct";
+      case SizeMeaning::Memory:
+        return "Memory";
       default:
         return "Unknown";
     }
@@ -144,7 +147,7 @@ public:
   };
 
   /*!
-   * \brief Translate SizeMeaning enum value to string
+   * \brief Translate WarmupMode enum value to string
    */
   static std::string WarmupModeToStr(WarmupMode wm)
   {
@@ -186,6 +189,8 @@ public:
 
   double getSizeFactor() const { return size_factor; }
 
+  double getMemory() const { return memory; }
+
   Index_type getTargetSize(Index_type default_prob_size) const
   {
     Index_type target_size = static_cast<Index_type>(0);
@@ -193,6 +198,9 @@ public:
       target_size = static_cast<Index_type>(default_prob_size*size_factor);
     } else if (size_meaning == RunParams::SizeMeaning::Direct) {
       target_size = static_cast<Index_type>(size);
+    } else if (size_meaning == RunParams::SizeMeaning::Memory) {
+      // This will be fixed up on a per kernel basis later
+      target_size = static_cast<Index_type>(memory);
     }
     return target_size;
   }
@@ -361,8 +369,9 @@ private:
   double rep_fact;       /*!< pct of default kernel reps to run */
 
   SizeMeaning size_meaning; /*!< meaning of size value */
-  double size;           /*!< kernel size to run (input option) */
   double size_factor;    /*!< default kernel size multipier (input option) */
+  double size;           /*!< kernel size to run (input option) */
+  double memory;           /*!< memory size to run (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */

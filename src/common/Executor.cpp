@@ -319,6 +319,8 @@ Executor::Executor(int argc, char** argv)
     adiak::value("ProblemSizeRunParam",(uint)run_params.getSizeFactor());
   } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
     adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
+  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+    adiak::value("ProblemSizeRunParam",(uint)run_params.getMemory());
   }
 
   // Openmp section
@@ -523,6 +525,8 @@ void Executor::reportRunSummary(ostream& str) const
       str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
       str << "\t Kernel size = " << run_params.getSize() << endl;
+    } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+      str << "\t Kernel memory touched = " << run_params.getMemory() << endl;
     }
     str << "\t Kernel rep factor = " << run_params.getRepFactor() << endl;
     str << "\t Output files will be named " << ofiles << endl;

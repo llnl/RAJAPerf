@@ -36,8 +36,9 @@ RunParams::RunParams(int argc, char** argv)
    npasses_combiners(),
    rep_fact(1.0),
    size_meaning(SizeMeaning::Unset),
-   size(0.0),
    size_factor(0.0),
+   size(0.0),
+   memory(0.0),
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
@@ -129,8 +130,9 @@ void RunParams::print(std::ostream& str) const
   }
   str << "\n rep_fact = " << rep_fact;
   str << "\n size_meaning = " << SizeMeaningToStr(getSizeMeaning());
-  str << "\n size = " << size;
   str << "\n size_factor = " << size_factor;
+  str << "\n size = " << size;
+  str << "\n memory = " << memory;
   str << "\n data_alignment = " << data_alignment;
 
   str << "\n multi_reduce_num_bins = " << multi_reduce_num_bins;
@@ -436,9 +438,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Direct) {
+        if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
+                    << " may only set one of --size, --sizefact, or --memory once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -463,9 +465,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Factor) {
+        if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
+                    << " may only set one of --size, --sizefact, or --memory once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -482,6 +484,33 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       } else {
         getCout() << "\nBad input:"
                   << " must give --size a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--memory") ) {
+
+      i++;
+      if ( i < argc ) {
+        if (size_meaning != SizeMeaning::Unset) {
+          getCout() << "\nBad input:"
+                    << " may only set one of --size, --sizefact, or --memory once"
+                    << std::endl;
+          input_state = BadInput;
+        } else {
+          memory = ::atof( argv[i] );
+          if ( memory >= 0.0 ) {
+            size_meaning = SizeMeaning::Memory;
+          } else {
+            getCout() << "\nBad input:"
+                  << " must give --memory a POSITIVE value (double)"
+                  << std::endl;
+            input_state = BadInput;
+          }
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give --memory a value (int)"
                   << std::endl;
         input_state = BadInput;
       }
@@ -1474,15 +1503,22 @@ void RunParams::printHelpMessage(std::ostream& str) const
 
   str << "\t --sizefact <double> [default is 1.0]\n"
       << "\t      (fraction of default kernel sizes to run)\n"
-      << "\t      May not be set if '--size' is set.\n";
+      << "\t      May not be set if '--size' or --memory is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --sizefact 2.0 (run each kernel with size twice its default size)\n\n";
 
   str << "\t --size <int> [no default]\n"
       << "\t      (kernel size to run for all kernels)\n"
-      << "\t      May not be set if --sizefact is set.\n";
+      << "\t      May not be set if --sizefact or --memory is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
+
+  str << "\t --memory <int> [no default]\n"
+      << "\t      (memory touched size to run for all kernels)\n"
+      << "\t      (kernel size for kernels with no memory usage)\n"
+      << "\t      May not be set if --sizefact or --size is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory 1000000 (runs each kernel with memory touched ~1,000,000 bytes)\n\n";
 
   str << "\t Options for selecting GPU execution details....\n"
       << "\t ===============================================\n\n";;
