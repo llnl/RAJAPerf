@@ -24,9 +24,8 @@ namespace apps
 CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_CONVECTION3DPA, params)
 {
-  m_NE_default = 15625;
-
-  setDefaultProblemSize(m_NE_default*conv::D1D*conv::D1D*conv::D1D);
+  Index_type NE_default = 15625;
+  setDefaultProblemSize(NE_default*conv::D1D*conv::D1D*conv::D1D);
   setDefaultReps(50);
 
   //Define problem size in terms of DOFS

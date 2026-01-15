@@ -24,9 +24,8 @@ namespace apps
 MASS3DEA::MASS3DEA(const RunParams& params)
   : KernelBase(rajaperf::Apps_MASS3DEA, params)
 {
-  m_NE_default = 8000;
-
-  setDefaultProblemSize(m_NE_default*mea::D1D*mea::D1D*mea::D1D);
+  Index_type NE_default = 8000;
+  setDefaultProblemSize(NE_default*mea::D1D*mea::D1D*mea::D1D);
   setDefaultReps(1);
 
   const Index_type ea_mat_entries = mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D*mea::D1D;

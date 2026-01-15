@@ -21,8 +21,8 @@ namespace apps {
 MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASS3DPA_ATOMIC, params) {
 
-  m_DOF_default = 1000000;
-  setDefaultProblemSize(m_DOF_default);
+  Index_type DOF_default = 1000000;
+  setDefaultProblemSize(DOF_default);
   setDefaultReps(50);
 
   // polynomial order

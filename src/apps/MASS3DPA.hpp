@@ -383,7 +383,6 @@ private:
   Real_ptr m_Y;
 
   Index_type m_NE;
-  Index_type m_NE_default;
 };
 
 } // end namespace apps

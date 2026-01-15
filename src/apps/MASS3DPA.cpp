@@ -24,9 +24,8 @@ namespace apps
 MASS3DPA::MASS3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_MASS3DPA, params)
 {
-  m_NE_default = 8000;
-
-  setDefaultProblemSize(m_NE_default*mpa::D1D*mpa::D1D*mpa::D1D);
+  Index_type NE_default = 8000;
+  setDefaultProblemSize(NE_default*mpa::D1D*mpa::D1D*mpa::D1D);
   setDefaultReps(50);
 
   m_NE = std::max((getTargetProblemSize() + (mpa::D1D*mpa::D1D*mpa::D1D)/2) / (mpa::D1D*mpa::D1D*mpa::D1D), Index_type(1));

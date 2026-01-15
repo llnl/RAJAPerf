@@ -24,9 +24,8 @@ namespace apps
 DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_DIFFUSION3DPA, params)
 {
-  m_NE_default = 15625;
-
-  setDefaultProblemSize(m_NE_default*diff::D1D*diff::D1D*diff::D1D);
+  Index_type NE_default = 15625;
+  setDefaultProblemSize(NE_default*diff::D1D*diff::D1D*diff::D1D);
   setDefaultReps(50);
 
   m_NE = std::max((getTargetProblemSize() + (diff::D1D*diff::D1D*diff::D1D)/2) / (diff::D1D*diff::D1D*diff::D1D), Index_type(1));

@@ -362,7 +362,6 @@ private:
   Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
-  Index_type m_DOF_default;
 };
 
 } // end namespace apps
