@@ -1327,6 +1327,8 @@ KernelBase* getKernelObject(KernelID kid,
 
     }
 
+    target_size = static_cast<Index_type>(target_size*run_params.getSizeFactor());
+
     // set final size
     kernel->setSize(target_size, target_reps);
 

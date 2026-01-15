@@ -79,9 +79,9 @@ public:
   /*!
    * \brief Enumeration indicating how to interpret size input
    */
-  enum SizeMeaning {
+  enum struct SizeMeaning {
     Unset,    /*!< indicates value is unset */
-    Factor,   /*!< multiplier on default kernel iteration space */
+    Default,  /*!< Use default kernel iteration space */
     Direct,   /*!< directly use as kernel iteration space */
     Memory,   /*!< directly use as kernel memory touched size */
   };
@@ -94,8 +94,8 @@ public:
     switch (sm) {
       case SizeMeaning::Unset:
         return "Unset";
-      case SizeMeaning::Factor:
-        return "Factor";
+      case SizeMeaning::Default:
+        return "Default";
       case SizeMeaning::Direct:
         return "Direct";
       case SizeMeaning::Memory:
@@ -196,8 +196,8 @@ public:
   Index_type getTargetSize(Index_type default_prob_size) const
   {
     Index_type target_size = static_cast<Index_type>(0);
-    if (size_meaning == RunParams::SizeMeaning::Factor) {
-      target_size = static_cast<Index_type>(default_prob_size*size_factor);
+    if (size_meaning == RunParams::SizeMeaning::Default) {
+      target_size = default_prob_size;
     } else if (size_meaning == RunParams::SizeMeaning::Direct) {
       target_size = static_cast<Index_type>(size);
     } else if (size_meaning == RunParams::SizeMeaning::Memory) {
@@ -207,6 +207,7 @@ public:
     if (target_size < min_size) {
       target_size = static_cast<Index_type>(min_size);
     }
+    target_size = static_cast<Index_type>(target_size*size_factor);
     return target_size;
   }
 

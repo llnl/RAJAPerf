@@ -36,7 +36,7 @@ RunParams::RunParams(int argc, char** argv)
    npasses_combiners(),
    rep_fact(1.0),
    size_meaning(SizeMeaning::Unset),
-   size_factor(0.0),
+   size_factor(1.0),
    size(0.0),
    memory(0.0),
    min_size(0.0),
@@ -131,10 +131,10 @@ void RunParams::print(std::ostream& str) const
   }
   str << "\n rep_fact = " << rep_fact;
   str << "\n size_meaning = " << SizeMeaningToStr(getSizeMeaning());
-  str << "\n size_factor = " << size_factor;
   str << "\n size = " << size;
   str << "\n memory = " << memory;
   str << "\n min_size = " << min_size;
+  str << "\n size_factor = " << size_factor;
   str << "\n data_alignment = " << data_alignment;
 
   str << "\n multi_reduce_num_bins = " << multi_reduce_num_bins;
@@ -440,21 +440,12 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning != SizeMeaning::Unset) {
+        size_factor = ::atof( argv[i] );
+        if ( size_factor < 0.0 ) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size, --sizefact, or --memory once"
-                    << std::endl;
+                << " must give --sizefact a POSITIVE value (double)"
+                << std::endl;
           input_state = BadInput;
-        } else {
-          size_factor = ::atof( argv[i] );
-          if ( size_factor >= 0.0 ) {
-            size_meaning = SizeMeaning::Factor;
-          } else {
-            getCout() << "\nBad input:"
-                  << " must give --sizefact a POSITIVE value (double)"
-                  << std::endl;
-            input_state = BadInput;
-          }
         }
       } else {
         getCout() << "\nBad input:"
@@ -469,7 +460,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       if ( i < argc ) {
         if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size, --sizefact, or --memory once"
+                    << " may only set one of --size or --memory once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -496,7 +487,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       if ( i < argc ) {
         if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size, --sizefact, or --memory once"
+                    << " may only set one of --size or --memory once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -1283,8 +1274,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
   // Default size and size_meaning if unset
   if (size_meaning == SizeMeaning::Unset) {
-    size_meaning = SizeMeaning::Factor;
-    size_factor = 1.0;
+    size_meaning = SizeMeaning::Default;
   }
 
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -1521,12 +1511,6 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --repfact 0.5 (run each kernels 1/2 as many times as its default reps)\n\n";
 
-  str << "\t --sizefact <double> [default is 1.0]\n"
-      << "\t      (fraction of default kernel sizes to run)\n"
-      << "\t      May not be set if '--size' or --memory is set.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --sizefact 2.0 (run each kernel with size twice its default size)\n\n";
-
   str << "\t --size <int> [no default]\n"
       << "\t      (kernel size to run for all kernels)\n"
       << "\t      May not be set if --sizefact or --memory is set.\n";
@@ -1546,6 +1530,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t      Approximate for kernels where size is approximate.\n";
   str << "\t\t Example...\n"
       << "\t\t --min-size 1000000 (runs each kernel with at least size ~1,000,000)\n\n";
+
+  str << "\t --sizefact <double> [default is 1.0]\n"
+      << "\t      (multiplier to apply to the problem size of each kernel)\n"
+      << "\t      (intended to simplify input for scaling studies)\n"
+      << "\t      Applied after the --min-size limiter.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --sizefact 0.5 (run each kernel with size half its calculated size)\n"
+      << "\t\t --sizefact 2.0 (run each kernel with size twice its calculated size)\n\n";
 
   str << "\t Options for selecting GPU execution details....\n"
       << "\t ===============================================\n\n";;
