@@ -112,8 +112,9 @@ Information reported in the file for each kernel is:
   * **OperationalComplexity** -- The operational complexity of the kernel, where
     N is the *problem size* of the kernel.
   * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
-    nested loop. This should only count parallelized dimensions, do not count loop
-    levels that are not parallelized.
+    nested loop. This only counts parallelized dimensions and ignores inner or
+    outer sequential loops. For example the GEMM kernel has 2 perfectly nested
+    loop levels as the inner loop is implemented sequentially to perform a reduction.
   * **ProblemDimensionality** -- The dimensionality of the problem domain, 
     regardless of physical data layout. For example, the LTIMES kernel will have
     a problem dimensionality value of 3, because of phi (g, m, and z) and psi 
