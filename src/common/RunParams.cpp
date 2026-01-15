@@ -39,6 +39,7 @@ RunParams::RunParams(int argc, char** argv)
    size_factor(0.0),
    size(0.0),
    memory(0.0),
+   min_size(0.0),
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
@@ -133,6 +134,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n size_factor = " << size_factor;
   str << "\n size = " << size;
   str << "\n memory = " << memory;
+  str << "\n min_size = " << min_size;
   str << "\n data_alignment = " << data_alignment;
 
   str << "\n multi_reduce_num_bins = " << multi_reduce_num_bins;
@@ -511,6 +513,24 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       } else {
         getCout() << "\nBad input:"
                   << " must give --memory a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--min-size") ) {
+
+      i++;
+      if ( i < argc ) {
+        min_size = ::atof( argv[i] );
+        if ( min_size < 0.0 ) {
+          getCout() << "\nBad input:"
+                << " must give --min-size a POSITIVE value (double)"
+                << std::endl;
+          input_state = BadInput;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give --min-size a value (int)"
                   << std::endl;
         input_state = BadInput;
       }
@@ -1519,6 +1539,13 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t      May not be set if --sizefact or --size is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --memory 1000000 (runs each kernel with memory touched ~1,000,000 bytes)\n\n";
+
+  str << "\t --min-size <int> [default is 0]\n"
+      << "\t      (minimum kernel size to run for all kernels)\n"
+      << "\t      (intended for use with --memory, but usable with any size option)\n"
+      << "\t      Approximate for kernels where size is approximate.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --min-size 1000000 (runs each kernel with at least size ~1,000,000)\n\n";
 
   str << "\t Options for selecting GPU execution details....\n"
       << "\t ===============================================\n\n";;

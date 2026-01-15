@@ -185,11 +185,13 @@ public:
 
   SizeMeaning getSizeMeaning() const { return size_meaning; }
 
-  double getSize() const { return size; }
-
   double getSizeFactor() const { return size_factor; }
 
+  double getSize() const { return size; }
+
   double getMemory() const { return memory; }
+
+  double getMinSize() const { return min_size; }
 
   Index_type getTargetSize(Index_type default_prob_size) const
   {
@@ -201,6 +203,9 @@ public:
     } else if (size_meaning == RunParams::SizeMeaning::Memory) {
       // This will be fixed up on a per kernel basis later
       target_size = static_cast<Index_type>(memory);
+    }
+    if (target_size < min_size) {
+      target_size = static_cast<Index_type>(min_size);
     }
     return target_size;
   }
@@ -372,6 +377,7 @@ private:
   double size_factor;    /*!< default kernel size multipier (input option) */
   double size;           /*!< kernel size to run (input option) */
   double memory;           /*!< memory size to run (input option) */
+  double min_size;           /*!< minimum kernel size to run (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */

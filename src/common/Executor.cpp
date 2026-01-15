@@ -322,6 +322,7 @@ Executor::Executor(int argc, char** argv)
   } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
     adiak::value("ProblemSizeRunParam",(uint)run_params.getMemory());
   }
+  adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
   // Openmp section
 #if defined(_OPENMP)
@@ -528,6 +529,7 @@ void Executor::reportRunSummary(ostream& str) const
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
       str << "\t Kernel memory touched = " << run_params.getMemory() << endl;
     }
+    str << "\t Kernel min size = " << run_params.getMinSize() << endl;
     str << "\t Kernel rep factor = " << run_params.getRepFactor() << endl;
     str << "\t Output files will be named " << ofiles << endl;
 

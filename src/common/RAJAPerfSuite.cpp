@@ -1319,8 +1319,16 @@ KernelBase* getKernelObject(KernelID kid,
 
     }
 
+    Index_type target_size = target_upper_bound;
+
+    if (target_size < run_params.getMinSize()) {
+
+      target_size = run_params.getMinSize();
+
+    }
+
     // set final size
-    kernel->setSize(target_upper_bound, target_reps);
+    kernel->setSize(target_size, target_reps);
 
   }
 
