@@ -1519,7 +1519,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
 
   str << "\t --memory <int> [no default]\n"
       << "\t      (each kernel calculates its problem size so that it touches\n"
-      << "\t       this many bytes of memory per rep)\n"
+      << "\t       the specified # of bytes of memory per rep)\n"
       << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
       << "\t      May not be set if --size is set.\n";
   str << "\t\t Example...\n"
