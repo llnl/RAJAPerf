@@ -32,23 +32,8 @@ LTIMES::LTIMES(const RunParams& params)
   setDefaultProblemSize(m_num_d * m_num_g * num_z_default);
   setDefaultReps(50);
 
-  m_num_z = std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
-
-  m_philen = m_num_m * m_num_g * m_num_z;
-  m_elllen = m_num_d * m_num_m;
-  m_psilen = m_num_d * m_num_g * m_num_z;
-
-  setActualProblemSize( m_psilen );
-
-  setItsPerRep( m_philen );
-  setKernelsPerRep(1);
-  // using total data size instead of writes and reads
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
-                      1*sizeof(Real_type) * m_psilen ); // psi
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_philen ); // phi
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -60,6 +45,28 @@ LTIMES::LTIMES(const RunParams& params)
   setUsesFeature(View);
 
   addVariantTunings();
+}
+
+void LTIMES::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+
+  m_philen = m_num_m * m_num_g * m_num_z;
+  m_elllen = m_num_d * m_num_m;
+  m_psilen = m_num_d * m_num_g * m_num_z;
+
+  setActualProblemSize( m_psilen );
+  setRunReps( target_reps );
+
+  setItsPerRep( m_philen );
+  setKernelsPerRep(1);
+  // using total data size instead of writes and reads
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                      1*sizeof(Real_type) * m_psilen ); // psi
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_philen ); // phi
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
 }
 
 LTIMES::~LTIMES()

@@ -25,7 +25,23 @@ EOS::EOS(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(500);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void EOS::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   m_array_length = getActualProblemSize() + 6;
 
@@ -38,15 +54,6 @@ EOS::EOS(const RunParams& params)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(16 * getActualProblemSize());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 EOS::~EOS()

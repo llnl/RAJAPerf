@@ -325,6 +325,7 @@ public:
 
   ~MASS3DPA_ATOMIC();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -362,7 +363,6 @@ private:
   Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
-  Index_type m_DOF_default;
 };
 
 } // end namespace apps

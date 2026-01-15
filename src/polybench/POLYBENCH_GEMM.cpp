@@ -22,22 +22,36 @@ namespace polybench
 POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   : KernelBase(rajaperf::Polybench_GEMM, params)
 {
-  Index_type ni_default = 1000;
-  Index_type nj_default = 1000;
-  Index_type nk_default = 1200;
-
-  setDefaultProblemSize( ni_default * nj_default );
+  m_ni_default = 1000;
+  m_nj_default = 1000;
+  m_nk_default = 1200;
+  setDefaultProblemSize( m_ni_default * m_nj_default );
   setDefaultReps(4);
-
-  m_ni = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
-  m_nj = m_ni;
-  m_nk = Index_type(double(nk_default)/ni_default*m_ni);
 
   m_alpha = 0.62;
   m_beta = 1.002;
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N_to_the_three_halves);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_GEMM::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_ni = std::sqrt( target_size ) + std::sqrt(2)-1;
+  m_nj = m_ni;
+  m_nk = Index_type(double(m_nk_default)/m_ni_default*m_ni);
 
   setActualProblemSize( m_ni * m_nj );
+  setRunReps( target_reps );
 
   setItsPerRep( m_ni * m_nj );
   setKernelsPerRep(1);
@@ -48,15 +62,6 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((1 +
                   3 * m_nk) * m_ni*m_nj);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N_to_the_three_halves);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_GEMM::~POLYBENCH_GEMM()

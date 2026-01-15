@@ -162,6 +162,7 @@ public:
 
   ~COUPLE();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -197,7 +198,7 @@ private:
   Index_type m_kmin;
   Index_type m_kmax;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
 };
 
 } // end namespace apps

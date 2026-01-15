@@ -23,17 +23,32 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
   : KernelBase(rajaperf::Polybench_GEMVER, params)
 {
   Index_type n_default = 1000;
-
   setDefaultProblemSize( n_default * n_default );
   setDefaultReps(20);
-
-  m_n =  std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
 
   m_alpha = 1.5;
   m_beta = 1.2;
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_GEMVER::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_n =  std::sqrt( target_size ) + std::sqrt(2)-1;
 
   setActualProblemSize( m_n * m_n );
+  setRunReps( target_reps );
 
   setItsPerRep( m_n*m_n +
                 m_n +
@@ -68,16 +83,6 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
                  3 * m_n*m_n +
                  1 * m_n +
                  3 * m_n*m_n );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_GEMVER::~POLYBENCH_GEMVER()

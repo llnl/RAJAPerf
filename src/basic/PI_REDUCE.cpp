@@ -25,15 +25,8 @@ PI_REDUCE::PI_REDUCE(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(6 * getActualProblemSize() + 1);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -44,6 +37,20 @@ PI_REDUCE::PI_REDUCE(const RunParams& params)
   setUsesFeature(Reduction);
 
   addVariantTunings();
+}
+
+void PI_REDUCE::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(6 * getActualProblemSize() + 1);
 }
 
 PI_REDUCE::~PI_REDUCE()

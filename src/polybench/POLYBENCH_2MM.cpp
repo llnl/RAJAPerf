@@ -23,25 +23,40 @@ namespace polybench
 POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   : KernelBase(rajaperf::Polybench_2MM, params)
 {
-  Index_type ni_default = 1000;
-  Index_type nj_default = 1000;
-  Index_type nk_default = 1120;
-  Index_type nl_default = 1000;
+  m_ni_default = 1000;
+  m_nj_default = 1000;
+  m_nk_default = 1120;
+  m_nl_default = 1000;
 
-  setDefaultProblemSize( std::max( ni_default*nj_default,
-                                   ni_default*nl_default ) );
+  setDefaultProblemSize( std::max( m_ni_default*m_nj_default,
+                                   m_ni_default*m_nl_default ) );
   setDefaultReps(2);
 
-  m_ni = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N_to_the_three_halves);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_2MM::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_ni = std::sqrt( target_size ) + std::sqrt(2)-1;
   m_nj = m_ni;
-  m_nk = Index_type(double(nk_default)/ni_default*m_ni);
+  m_nk = Index_type(double(m_nk_default)/m_ni_default*m_ni);
   m_nl = m_ni;
 
   m_alpha = 1.5;
   m_beta = 1.2;
 
-
   setActualProblemSize( std::max( m_ni*m_nj, m_ni*m_nl ) );
+  setRunReps( target_reps );
 
   setItsPerRep( m_ni*m_nj + m_ni*m_nl );
   setKernelsPerRep(2);
@@ -57,15 +72,6 @@ POLYBENCH_2MM::POLYBENCH_2MM(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(3 * m_ni*m_nj*m_nk +
                  2 * m_ni*m_nj*m_nl );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N_to_the_three_halves);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_2MM::~POLYBENCH_2MM()

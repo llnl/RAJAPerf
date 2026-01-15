@@ -27,10 +27,25 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
   setDefaultProblemSize( N_default * N_default );
   setDefaultReps(100);
 
-  m_N = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_MVT::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::sqrt( target_size ) + std::sqrt(2)-1;
 
   setActualProblemSize( m_N * m_N );
+  setRunReps( target_reps );
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
@@ -46,15 +61,6 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_N*m_N +
                  2 * m_N*m_N );
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_MVT::~POLYBENCH_MVT()
