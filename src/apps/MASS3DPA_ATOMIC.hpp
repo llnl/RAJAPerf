@@ -8,8 +8,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D mass matrix via partial assembly
-///
+/// Action of a 3D finite element mass matrix on elements with shared DOFs
+/// via partial assembly and sum factorization
 ///
 /// for (Index_type e = 0; e < NE; ++e) {
 ///
