@@ -46,7 +46,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       // Read next line for value.
       if ( std::getline(dataFile, line) )
       {
-        m_nx = std::stoi(line);
+        m_nx = std::stol(line);
       }
       else
       {
@@ -59,7 +59,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       // Read next line for value.
       if ( std::getline(dataFile, line) )
       {
-        m_ny = std::stoi(line);
+        m_ny = std::stol(line);
       }
       else
       {
@@ -72,7 +72,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       // Read next line for value.
       if ( std::getline(dataFile, line) )
       {
-        m_nz = std::stoi(line);
+        m_nz = std::stol(line);
       }
       else
       {
@@ -85,7 +85,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       // Read next line for value.
       if ( std::getline(dataFile, line) )
       {
-        m_na = std::stoi(line);
+        m_na = std::stol(line);
       }
       else
       {
@@ -98,7 +98,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       // Read next line for value.
       if ( std::getline(dataFile, line) )
       {
-        m_ng = std::stoi(line);
+        m_ng = std::stol(line);
       }
       else
       {
@@ -171,7 +171,7 @@ void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Inde
   // Read next line for array size.
   if ( std::getline(file, line) )
   {
-    int sizetemp = std::stoi(line);
+    long sizetemp = std::stol(line);
     // Check size for sanity.
     if ( sizetemp != expectedsize )
     {
@@ -183,7 +183,7 @@ void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Inde
     {
       if ( std::getline(file, line) )
       {
-        arr[lcount] = std::stoi(line);
+        arr[lcount] = std::stol(line);
       }
       else
       {
@@ -241,33 +241,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     else if ( line == std::string("m_AngleElem2FaceType") )
     {
       readIndexArray(vid, dataFile, m_AngleElem2FaceType, NLF * m_na * m_ne, "m_AngleElem2FaceType");
-      // Read next line for array size.
-      //if ( std::getline(dataFile, line) )
-      //{
-      //  int sizetemp = std::stoi(line);
-      //  // Check size for sanity.
-      //  if ( sizetemp != NLF * m_ne * m_na )
-      //  {
-      //    std::cout << "Size of m_AngleElem2FaceType in " << mesh_file << " does not match." << std::endl;
-      //  }
-      //  auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
-      //  // Read rest of entries for array.
-      //  for ( int lcount = 0; lcount < sizetemp; ++lcount )
-      //  {
-      //    if ( std::getline(dataFile, line) )
-      //    {
-      //      m_AngleElem2FaceType[lcount] = std::stoi(line);
-      //    }
-      //    else
-      //    {
-      //      std::cout << "Invalid entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
-      //    }
-      //  }
-      //}
-      //else
-      //{
-      //  std::cout << "Invalid size entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
-      //}
     }
 
     else if ( line == std::string("m_elem_to_faces") )
