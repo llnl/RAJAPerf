@@ -184,7 +184,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   while ( std::getline(dataFile, line) )
   {
 
-    if ( line == std::string("m_nhpaa_r") )
+    if ( line == "m_nhpaa_r" )
     {
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
