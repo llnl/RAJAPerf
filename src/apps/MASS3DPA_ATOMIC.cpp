@@ -108,7 +108,8 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
   buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_ElemToDoF);
 }
 
-void MASS3DPA_ATOMIC::updateChecksum(VariantID vid, size_t tune_idx) {
+void MASS3DPA_ATOMIC::updateChecksum(VariantID vid,
+                                     size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
    addToChecksum(m_Y, m_Tot_Dofs, vid);
 }
 

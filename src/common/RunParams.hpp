@@ -79,10 +79,11 @@ public:
   /*!
    * \brief Enumeration indicating how to interpret size input
    */
-  enum SizeMeaning {
+  enum struct SizeMeaning {
     Unset,    /*!< indicates value is unset */
-    Factor,   /*!< multiplier on default kernel iteration space */
+    Default,  /*!< Use default kernel iteration space */
     Direct,   /*!< directly use as kernel iteration space */
+    Memory,   /*!< directly use as kernel memory touched size */
   };
 
   /*!
@@ -93,10 +94,12 @@ public:
     switch (sm) {
       case SizeMeaning::Unset:
         return "Unset";
-      case SizeMeaning::Factor:
-        return "Factor";
+      case SizeMeaning::Default:
+        return "Default";
       case SizeMeaning::Direct:
         return "Direct";
+      case SizeMeaning::Memory:
+        return "Memory";
       default:
         return "Unknown";
     }
@@ -144,7 +147,7 @@ public:
   };
 
   /*!
-   * \brief Translate SizeMeaning enum value to string
+   * \brief Translate WarmupMode enum value to string
    */
   static std::string WarmupModeToStr(WarmupMode wm)
   {
@@ -182,18 +185,29 @@ public:
 
   SizeMeaning getSizeMeaning() const { return size_meaning; }
 
+  double getSizeFactor() const { return size_factor; }
+
   double getSize() const { return size; }
 
-  double getSizeFactor() const { return size_factor; }
+  double getMemory() const { return memory; }
+
+  double getMinSize() const { return min_size; }
 
   Index_type getTargetSize(Index_type default_prob_size) const
   {
     Index_type target_size = static_cast<Index_type>(0);
-    if (size_meaning == RunParams::SizeMeaning::Factor) {
-      target_size = static_cast<Index_type>(default_prob_size*size_factor);
+    if (size_meaning == RunParams::SizeMeaning::Default) {
+      target_size = default_prob_size;
     } else if (size_meaning == RunParams::SizeMeaning::Direct) {
       target_size = static_cast<Index_type>(size);
+    } else if (size_meaning == RunParams::SizeMeaning::Memory) {
+      // This will be fixed up on a per kernel basis later
+      target_size = static_cast<Index_type>(memory);
     }
+    if (target_size < min_size) {
+      target_size = static_cast<Index_type>(min_size);
+    }
+    target_size = static_cast<Index_type>(target_size*size_factor);
     return target_size;
   }
 
@@ -361,8 +375,10 @@ private:
   double rep_fact;       /*!< pct of default kernel reps to run */
 
   SizeMeaning size_meaning; /*!< meaning of size value */
-  double size;           /*!< kernel size to run (input option) */
   double size_factor;    /*!< default kernel size multipier (input option) */
+  double size;           /*!< kernel size to run (input option) */
+  double memory;           /*!< memory size to run (input option) */
+  double min_size;           /*!< minimum kernel size to run (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */
