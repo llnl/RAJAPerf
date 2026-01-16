@@ -47,7 +47,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       if ( std::getline(dataFile, line) )
       {
         m_nx = std::stoi(line);
-        //std::cout << "RCC CHECK m_nx " << m_nx << std::endl;
       }
       else
       {
@@ -61,7 +60,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       if ( std::getline(dataFile, line) )
       {
         m_ny = std::stoi(line);
-        //std::cout << "RCC CHECK m_ny " << m_ny << std::endl;
       }
       else
       {
@@ -75,7 +73,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       if ( std::getline(dataFile, line) )
       {
         m_nz = std::stoi(line);
-        //std::cout << "RCC CHECK m_nz " << m_nz << std::endl;
       }
       else
       {
@@ -89,7 +86,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       if ( std::getline(dataFile, line) )
       {
         m_na = std::stoi(line);
-        //std::cout << "RCC CHECK m_na " << m_na << std::endl;
       }
       else
       {
@@ -103,7 +99,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       if ( std::getline(dataFile, line) )
       {
         m_ng = std::stoi(line);
-        //std::cout << "RCC CHECK m_ng " << m_ng << std::endl;
       }
       else
       {
@@ -114,7 +109,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   }
 
   m_ne = m_nx * m_ny * m_nz;
-  //std::cout << "RCC CHECK m_ne " << m_ne << std::endl;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
@@ -122,11 +116,8 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
                           m_nx * m_ny * (m_nz - 1);
-  //std::cout << "RCC CHECK m_sharedinteriorfaces " << m_sharedinteriorfaces << std::endl;
   m_boundaryfaces = 2 * m_nx * m_ny + 2 * m_ny * m_nz + 2 * m_nx * m_nz;
-  //std::cout << "RCC CHECK m_boundaryfaces " << m_boundaryfaces << std::endl;
   m_hplanes = m_nx + m_ny + m_nz - 2;
-  //std::cout << "RCC CHECK m_hplanes " << m_hplanes << std::endl;
 
   m_Blen = ND * m_ne * m_na;
   m_Alen = ND * ND * m_ne * m_na;
