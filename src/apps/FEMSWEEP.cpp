@@ -163,6 +163,40 @@ FEMSWEEP::~FEMSWEEP()
 {
 }
 
+template < typename T >
+void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname)
+{
+  std::string line;
+
+  // Read next line for array size.
+  if ( std::getline(file, line) )
+  {
+    int sizetemp = std::stoi(line);
+    // Check size for sanity.
+    if ( sizetemp != expectedsize )
+    {
+      std::cout << "Size of " << arrname << " in " << mesh_file << " does not match." << std::endl;
+    }
+    auto temp_arr = allocDataForInit(arr, sizetemp, vid); 
+    // Read rest of entries for array.
+    for ( int lcount = 0; lcount < sizetemp; ++lcount )
+    {
+      if ( std::getline(file, line) )
+      {
+        arr[lcount] = std::stoi(line);
+      }
+      else
+      {
+        std::cout << "Invalid entry in " << mesh_file << " for " << arrname << "." << std::endl;
+      }
+    }
+  }
+  else
+  {
+    std::cout << "Invalid size entry in " << mesh_file << " for " << arrname << "." << std::endl;
+  }
+}
+
 void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
@@ -186,281 +220,74 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
     if ( line == "m_nhpaa_r" )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_na )
-        {
-          std::cout << "Size of m_nhpaa_r in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_nhpaa_r = allocDataForInit(m_nhpaa_r, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_nhpaa_r[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_nhpaa_r." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_nhpaa_r." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_nhpaa_r, m_na, "m_nhpaa_r");
     }
 
     else if ( line == std::string("m_ohpaa_r") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_na )
-        {
-          std::cout << "Size of m_ohpaa_r in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_ohpaa_r = allocDataForInit(m_ohpaa_r, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_ohpaa_r[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_ohpaa_r." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_ohpaa_r." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_ohpaa_r, m_na, "m_ohpaa_r");
     }
 
     else if ( line == std::string("m_phpaa_r") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_na * m_hplanes )
-        {
-          std::cout << "Size of m_phpaa_r in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_phpaa_r = allocDataForInit(m_phpaa_r, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_phpaa_r[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_phpaa_r." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_phpaa_r." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_phpaa_r, m_na * m_hplanes, "m_phpaa_r");
     }
 
     else if ( line == std::string("m_order_r") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_na * m_ne )
-        {
-          std::cout << "Size of m_order_r in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_order_r, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_order_r[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_order_r." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_order_r." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_order_r, m_na * m_ne, "m_order_r");
     }
 
     else if ( line == std::string("m_AngleElem2FaceType") )
     {
+      readIndexArray(vid, dataFile, m_AngleElem2FaceType, NLF * m_na * m_ne, "m_AngleElem2FaceType");
       // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != NLF * m_ne * m_na )
-        {
-          std::cout << "Size of m_AngleElem2FaceType in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_AngleElem2FaceType[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
-      }
+      //if ( std::getline(dataFile, line) )
+      //{
+      //  int sizetemp = std::stoi(line);
+      //  // Check size for sanity.
+      //  if ( sizetemp != NLF * m_ne * m_na )
+      //  {
+      //    std::cout << "Size of m_AngleElem2FaceType in " << mesh_file << " does not match." << std::endl;
+      //  }
+      //  auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
+      //  // Read rest of entries for array.
+      //  for ( int lcount = 0; lcount < sizetemp; ++lcount )
+      //  {
+      //    if ( std::getline(dataFile, line) )
+      //    {
+      //      m_AngleElem2FaceType[lcount] = std::stoi(line);
+      //    }
+      //    else
+      //    {
+      //      std::cout << "Invalid entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
+      //    }
+      //  }
+      //}
+      //else
+      //{
+      //  std::cout << "Invalid size entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
+      //}
     }
 
     else if ( line == std::string("m_elem_to_faces") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != NLF * m_ne )
-        {
-          std::cout << "Size of m_elem_to_faces in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_elem_to_faces, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_elem_to_faces[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_elem_to_faces." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_elem_to_faces." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_elem_to_faces, NLF * m_ne, "m_elem_to_faces");
     }
 
     else if ( line == std::string("m_F_g2l") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != (m_sharedinteriorfaces + m_boundaryfaces) )
-        {
-          std::cout << "Size of m_F_g2l in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_F_g2l, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_F_g2l[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_F_g2l." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_F_g2l." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_F_g2l, m_sharedinteriorfaces + m_boundaryfaces, "m_F_g2l");
     }
 
     else if ( line == std::string("m_idx1") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_sharedinteriorfaces * 4 )
-        {
-          std::cout << "Size of m_idx1 in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_idx1, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_idx1[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_idx1." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_idx1." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_idx1, m_sharedinteriorfaces * 4, "m_idx1");
     }
 
     else if ( line == std::string("m_idx2") )
     {
-      // Read next line for array size.
-      if ( std::getline(dataFile, line) )
-      {
-        int sizetemp = std::stoi(line);
-        // Check size for sanity.
-        if ( sizetemp != m_sharedinteriorfaces * 4 )
-        {
-          std::cout << "Size of m_idx2 in " << mesh_file << " does not match." << std::endl;
-        }
-        auto temp_order_r = allocDataForInit(m_idx2, sizetemp, vid); 
-        // Read rest of entries for array.
-        for ( int lcount = 0; lcount < sizetemp; ++lcount )
-        {
-          if ( std::getline(dataFile, line) )
-          {
-            m_idx2[lcount] = std::stoi(line);
-          }
-          else
-          {
-            std::cout << "Invalid entry in " << mesh_file << " for m_idx2." << std::endl;
-          }
-        }
-      }
-      else
-      {
-        std::cout << "Invalid size entry in " << mesh_file << " for m_idx2." << std::endl;
-      }
+      readIndexArray(vid, dataFile, m_idx2, m_sharedinteriorfaces * 4, "m_idx2");
     }
 
   }

@@ -298,6 +298,9 @@ public:
   template < size_t block_size >
   void runHipVariantImpl(VariantID vid);
 
+  template < typename T >
+  void readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname);
+
 private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
