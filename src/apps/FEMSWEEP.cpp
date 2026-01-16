@@ -27,14 +27,14 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  mesh_file = params.getFemsweepMeshFile();
+  m_mesh_file = params.getFemsweepMeshFile();
 
   // Read problem size from file.
-  std::ifstream dataFile(mesh_file);
+  std::ifstream dataFile(m_mesh_file);
 
   if ( !dataFile.is_open() )
   {
-    std::cout << "Could not open " << mesh_file << " in constructor." << std::endl;
+    std::cout << "Could not open " << m_mesh_file << " in constructor." << std::endl;
   }
 
   std::string line;
@@ -50,7 +50,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_nx properly in constructor. Please check the " << mesh_file << " file." << std::endl;
+        std::cout << "Unable to initialize m_nx properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
       }
     }
 
@@ -63,7 +63,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_ny properly in constructor. Please check the " << mesh_file << " file." << std::endl;
+        std::cout << "Unable to initialize m_ny properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
       }
     }
 
@@ -76,7 +76,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_nz properly in constructor. Please check the " << mesh_file << " file." << std::endl;
+        std::cout << "Unable to initialize m_nz properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
       }
     }
 
@@ -89,7 +89,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_na properly in constructor. Please check the " << mesh_file << " file." << std::endl;
+        std::cout << "Unable to initialize m_na properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
       }
     }
 
@@ -102,7 +102,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
       }
       else
       {
-        std::cout << "Unable to initialize m_ng properly in constructor. Please check the " << mesh_file << " file." << std::endl;
+        std::cout << "Unable to initialize m_ng properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
       }
     }
 
@@ -182,7 +182,7 @@ void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Inde
     // Check size for sanity.
     if ( sizetemp != expectedsize )
     {
-      std::cout << "Size of " << arrname << " in " << mesh_file << " does not match." << std::endl;
+      std::cout << "Size of " << arrname << " in " << m_mesh_file << " does not match." << std::endl;
     }
     auto temp_arr = allocDataForInit(arr, sizetemp, vid); 
     // Read rest of entries for array.
@@ -194,13 +194,13 @@ void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Inde
       }
       else
       {
-        std::cout << "Invalid entry in " << mesh_file << " for " << arrname << "." << std::endl;
+        std::cout << "Invalid entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
       }
     }
   }
   else
   {
-    std::cout << "Invalid size entry in " << mesh_file << " for " << arrname << "." << std::endl;
+    std::cout << "Invalid size entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
   }
 }
 
@@ -214,11 +214,11 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
   // Read mesh connectivity data from file.
-  std::ifstream dataFile(mesh_file);
+  std::ifstream dataFile(m_mesh_file);
 
   if ( !dataFile.is_open() )
   {
-    std::cout << "Could not open " << mesh_file << " in setUp." << std::endl;
+    std::cout << "Could not open " << m_mesh_file << " in setUp." << std::endl;
   }
 
   std::string line;

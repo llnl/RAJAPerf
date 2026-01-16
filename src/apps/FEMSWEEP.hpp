@@ -311,7 +311,7 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
-  std::string mesh_file;  // Path to file name of femsweep mesh.
+  std::string m_mesh_file;  // Path to file name of femsweep mesh.
 
   Index_type m_nx;
   Index_type m_ny;
