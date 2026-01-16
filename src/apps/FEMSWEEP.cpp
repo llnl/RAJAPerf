@@ -180,8 +180,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     std::cout << "Could not open " << mesh_file << " in setUp." << std::endl;
   }
 
-  int lcount = 0;
-  int sizetemp = 0;
   std::string line;
   while ( std::getline(dataFile, line) )
   {
@@ -191,7 +189,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
@@ -199,8 +197,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_nhpaa_r = allocDataForInit(m_nhpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -210,7 +207,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_nhpaa_r." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -224,7 +220,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na )
         {
@@ -232,8 +228,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_ohpaa_r = allocDataForInit(m_ohpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -243,7 +238,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_ohpaa_r." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -257,7 +251,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na * m_hplanes )
         {
@@ -265,8 +259,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_phpaa_r = allocDataForInit(m_phpaa_r, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -276,7 +269,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_phpaa_r." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -290,7 +282,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_na * m_ne )
         {
@@ -298,8 +290,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_order_r, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -309,7 +300,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_order_r." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -323,7 +313,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne * m_na )
         {
@@ -331,8 +321,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_AngleElem2FaceType, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -342,7 +331,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_AngleElem2FaceType." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -356,7 +344,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != NLF * m_ne )
         {
@@ -364,8 +352,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_elem_to_faces, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -375,7 +362,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_elem_to_faces." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -389,7 +375,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != (m_sharedinteriorfaces + m_boundaryfaces) )
         {
@@ -397,8 +383,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_F_g2l, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -408,7 +393,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_F_g2l." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -422,7 +406,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
@@ -430,8 +414,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_idx1, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -441,7 +424,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_idx1." << std::endl;
           }
-          lcount++;
         }
       }
       else
@@ -455,7 +437,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
       // Read next line for array size.
       if ( std::getline(dataFile, line) )
       {
-        sizetemp = std::stoi(line);
+        int sizetemp = std::stoi(line);
         // Check size for sanity.
         if ( sizetemp != m_sharedinteriorfaces * 4 )
         {
@@ -463,8 +445,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
         }
         auto temp_order_r = allocDataForInit(m_idx2, sizetemp, vid); 
         // Read rest of entries for array.
-        lcount = 0;
-        while ( lcount < sizetemp )
+        for ( int lcount = 0; lcount < sizetemp; ++lcount )
         {
           if ( std::getline(dataFile, line) )
           {
@@ -474,7 +455,6 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
           {
             std::cout << "Invalid entry in " << mesh_file << " for m_idx2." << std::endl;
           }
-          lcount++;
         }
       }
       else
