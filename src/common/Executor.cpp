@@ -315,11 +315,15 @@ Executor::Executor(int argc, char** argv)
   }
 
   adiak::value("SizeMeaning",(adiak::catstring)run_params.SizeMeaningToStr(run_params.getSizeMeaning()));
-  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-    adiak::value("ProblemSizeRunParam",(uint)run_params.getSizeFactor());
+  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Default) {
+    adiak::value("ProblemSizeRunParam",(uint)0);
   } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
     adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
+  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+    adiak::value("ProblemSizeRunParam",(uint)run_params.getMemory());
   }
+  adiak::value("ProblemSizeFactorRunParam",(uint)run_params.getSizeFactor());
+  adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
   // Openmp section
 #if defined(_OPENMP)
@@ -519,11 +523,15 @@ void Executor::reportRunSummary(ostream& str) const
 
     str << "\nHow suite will be run:" << endl;
     str << "\t # passes = " << run_params.getNumPasses() << endl;
-    if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-      str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
+    if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Default) {
+      str << "\t Kernel size = Default" << endl;
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
       str << "\t Kernel size = " << run_params.getSize() << endl;
+    } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+      str << "\t Kernel memory touched = " << run_params.getMemory() << endl;
     }
+    str << "\t Kernel min size = " << run_params.getMinSize() << endl;
+    str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
     str << "\t Kernel rep factor = " << run_params.getRepFactor() << endl;
     str << "\t Output files will be named " << ofiles << endl;
 
