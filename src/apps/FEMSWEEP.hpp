@@ -64,7 +64,7 @@
 ///                  // data can result in exponential growth instead. A specific trick of 
 ///                  // multiplying by zero, without the compiler optimizing it away, is 
 ///                  // necessary to prevent unbounded growth and avoid computing NaNs.
-///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
+///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
 ///               } // i
 ///               b[djs % ND] -= F;
 ///            } // j
@@ -104,6 +104,7 @@ constexpr int FDS = 4;  // number of DOFs per face
   Index_type ne = m_ne; \
   Index_type na = m_na; \
   Index_type ng = m_ng; \
+  Index_type sharedinteriorfaces = m_sharedinteriorfaces; \
 \
   Index_ptr nhpaa_r = m_nhpaa_r;  \
   Index_ptr ohpaa_r = m_ohpaa_r;  \
@@ -157,7 +158,7 @@ constexpr int FDS = 4;  // number of DOFs per face
               { \
                  const int ffi = f * FDS + i; \
                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
-                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
+                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
               b[djs % ND] -= F; \
            } \
