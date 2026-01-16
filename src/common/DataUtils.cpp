@@ -573,6 +573,7 @@ void initData(Real_type& d)
   incDataInitCount();
 }
 
+// _calc_checksum_impl_start
 /*
  * Calculate a different multiplier for each index.
  * The multiplier is in the range [0.5, 1.5]
@@ -609,6 +610,7 @@ Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 
   return chk.get();
 }
+// _calc_checksum_impl_end
 
 Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
 {
