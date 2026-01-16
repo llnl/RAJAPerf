@@ -9,7 +9,8 @@
 
 //clang-format off
 ///
-/// Action of 3D diffusion matrix via partial assembly
+/// Element-wise action of the 3D finite element volume diffusion operator
+/// via partial assembly and sum factorization
 ///
 /// Based on MFEM's/CEED algorithms.
 /// Reference implementation - MFEM-v4.9
