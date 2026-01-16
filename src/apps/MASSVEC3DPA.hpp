@@ -8,7 +8,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D mass matrix via partial assembly on a block vector (3 blocks)
+/// Element-wise action of a 3D finite element mass matrix via partial
+/// assembly and sum factorization on a block vector
 ///
 /// for (Index_type e = 0; e < NE; ++e) {
 ///
