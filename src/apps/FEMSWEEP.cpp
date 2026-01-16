@@ -113,6 +113,23 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
+  setChecksumTolerance(ChecksumTolerance::loose);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+  //setUsesFeature(View);
+
+  addVariantTunings();
+}
+
+void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type target_reps)
+{
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
                           m_nx * m_ny * (m_nz - 1);
@@ -127,6 +144,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_Xlen = ND * m_ne * m_ng * m_na;
 
   setActualProblemSize( m_Xlen );
+  setRunReps( target_reps );
 
   setItsPerRep(1);
   setKernelsPerRep(1);
@@ -146,17 +164,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   ND * (ND-1) * 3 +               // backward substitution
                   NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
-  setChecksumTolerance(ChecksumTolerance::loose);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-  //setUsesFeature(View);
-
-  addVariantTunings();
 }
 
 FEMSWEEP::~FEMSWEEP()

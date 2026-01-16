@@ -19,17 +19,32 @@ namespace rajaperf {
 namespace apps {
 
 MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
-    : KernelBase(rajaperf::Apps_MASS3DPA_ATOMIC, params) {
-
-  m_DOF_default = 1000000;
-  setDefaultProblemSize(m_DOF_default);
+    : KernelBase(rajaperf::Apps_MASS3DPA_ATOMIC, params)
+{
+  Index_type DOF_default = 1000000;
+  setDefaultProblemSize(DOF_default);
   setDefaultReps(50);
 
   // polynomial order
   m_P = mpa_at::D1D - 1;
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
+{
   // approximate how many elements we need
-  m_NE = std::max(static_cast<Index_type>(getTargetProblemSize() / pow(m_P, 3)),
+  m_NE = std::max(static_cast<Index_type>(target_size / pow(m_P, 3)),
                   Index_type(1));
 
   // Construct the mesh
@@ -42,6 +57,7 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   m_Tot_Dofs = (m_Nx * m_P + 1) * (m_Ny * m_P + 1) * (m_Nz * m_P + 1);
 
   setActualProblemSize(m_Tot_Dofs);
+  setRunReps( target_reps );
 
   setItsPerRep(m_NE * mpa_at::D1D * mpa_at::D1D);
   setKernelsPerRep(1);
@@ -69,15 +85,6 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
        2 * mpa_at::Q1D * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D +
        2 * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D * mpa_at::D1D +
        mpa_at::D1D * mpa_at::D1D * mpa_at::D1D));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() {}

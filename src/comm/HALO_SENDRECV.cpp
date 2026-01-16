@@ -21,23 +21,15 @@ namespace comm
 HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
   : HALO_base(rajaperf::Comm_HALO_SENDRECV, params)
 {
+  setDefaultReps(200);
+
   m_mpi_size = params.getMPISize();
   m_my_mpi_rank = params.getMPIRank();
   m_mpi_dims = params.getMPI3DDivision();
-
-  setDefaultReps(200);
-
   m_num_vars = params.getHaloNumVars();
-  m_var_size = m_grid_plus_halo_size ;
-  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( 0 );
-  setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send_buffers (MPI)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv_buffers (MPI)
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
   setChecksumTolerance(ChecksumTolerance::zero);
@@ -49,7 +41,23 @@ HALO_SENDRECV::HALO_SENDRECV(const RunParams& params)
 
   if (params.validMPI3DDivision()) {
     addVariantTunings();
+  }
 }
+
+void HALO_SENDRECV::setSize(Index_type target_size, Index_type target_reps)
+{
+  setSize_base(target_size, target_reps);
+
+  m_var_size = m_grid_plus_halo_size ;
+  const Size_type halo_size = m_var_size - getActualProblemSize();
+
+  setItsPerRep( 0 );
+  setKernelsPerRep( 0 );
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send_buffers (MPI)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv_buffers (MPI)
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 HALO_SENDRECV::~HALO_SENDRECV()

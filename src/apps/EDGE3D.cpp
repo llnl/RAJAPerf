@@ -28,13 +28,30 @@ EDGE3D::EDGE3D(const RunParams& params)
 {
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(10);
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
+
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
 
   m_array_length = m_domain->nnalls;
   size_t number_of_elements = m_domain->lpz+1 - m_domain->fpz;
 
   setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
 
   setItsPerRep( number_of_elements );
   setKernelsPerRep(1);
@@ -59,20 +76,10 @@ EDGE3D::EDGE3D(const RunParams& params)
   constexpr size_t flops_per_element = flops_i_loop*NQ_1D + 9*flops_Jxx() + flops_compute_detj();
 
   setFLOPsPerRep(number_of_elements * flops_per_element);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 EDGE3D::~EDGE3D()
 {
-  delete m_domain;
 }
 
 void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

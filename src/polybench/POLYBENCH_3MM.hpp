@@ -145,6 +145,7 @@ public:
 
   ~POLYBENCH_3MM();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -172,12 +173,18 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
+  Index_type m_ni_default;
+  Index_type m_nj_default;
+  Index_type m_nk_default;
+  Index_type m_nl_default;
+  Index_type m_nm_default;
+
   Index_type m_ni;
   Index_type m_nj;
   Index_type m_nk;
   Index_type m_nl;
   Index_type m_nm;
-  Index_type m_run_reps;
+
   Real_ptr m_A;
   Real_ptr m_B;
   Real_ptr m_C;

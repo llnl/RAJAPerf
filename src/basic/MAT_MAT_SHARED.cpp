@@ -24,10 +24,26 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setDefaultProblemSize(m_N_default*m_N_default);
   setDefaultReps(5);
 
-  m_N = std::sqrt(getTargetProblemSize()) + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N_to_the_three_halves);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void MAT_MAT_SHARED::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::sqrt(target_size) + std::sqrt(2)-1;
   const Index_type num_tiles = RAJA_DIVIDE_CEILING_INT(m_N, TL_SZ);
 
   setActualProblemSize(m_N * m_N);
+  setRunReps( target_reps );
 
   setItsPerRep( num_tiles*num_tiles * TL_SZ*TL_SZ );
   setKernelsPerRep(1);
@@ -38,15 +54,6 @@ MAT_MAT_SHARED::MAT_MAT_SHARED(const RunParams &params)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   setFLOPsPerRep(2 * TL_SZ * TL_SZ * TL_SZ * num_tiles * num_tiles * num_tiles);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N_to_the_three_halves);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 MAT_MAT_SHARED::~MAT_MAT_SHARED() {}

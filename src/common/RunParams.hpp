@@ -186,6 +186,28 @@ public:
 
   double getSizeFactor() const { return size_factor; }
 
+  Index_type getTargetSize(Index_type default_prob_size) const
+  {
+    Index_type target_size = static_cast<Index_type>(0);
+    if (size_meaning == RunParams::SizeMeaning::Factor) {
+      target_size = static_cast<Index_type>(default_prob_size*size_factor);
+    } else if (size_meaning == RunParams::SizeMeaning::Direct) {
+      target_size = static_cast<Index_type>(size);
+    }
+    return target_size;
+  }
+
+  Index_type getReps(Index_type default_reps) const
+  {
+    Index_type run_reps = static_cast<Index_type>(0);
+    if (input_state == RunParams::CheckRun) {
+      run_reps = static_cast<Index_type>(checkrun_reps);
+    } else {
+      run_reps = static_cast<Index_type>(default_reps*rep_fact);
+    }
+    return run_reps;
+  }
+
   Size_type getDataAlignment() const { return data_alignment; }
 
   Index_type getMultiReduceNumBins() const { return multi_reduce_num_bins; }

@@ -25,7 +25,23 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1000);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void HYDRO_1D::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   m_array_length = getActualProblemSize() + 12;
 
@@ -37,15 +53,6 @@ HYDRO_1D::HYDRO_1D(const RunParams& params)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(5 * getActualProblemSize());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 HYDRO_1D::~HYDRO_1D()

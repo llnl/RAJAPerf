@@ -29,23 +29,8 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
-
-  m_nodal_array_length = m_domain->nnalls;
-  m_zonal_array_length = m_domain->lpz+1;
-
-  setActualProblemSize( m_domain->n_real_zones );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  // touched data size, not actual number of stores and loads
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
-                      1*sizeof(Real_type) * getItsPerRep() ); // vol
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * m_domain->n_real_nodes ); // x (3d nodal stencil pattern: 8 touches per iterate)
-  setFLOPsPerRep(9 * getItsPerRep());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -58,9 +43,30 @@ NODAL_ACCUMULATION_3D::NODAL_ACCUMULATION_3D(const RunParams& params)
   addVariantTunings();
 }
 
+void NODAL_ACCUMULATION_3D::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
+
+  m_nodal_array_length = m_domain->nnalls;
+  m_zonal_array_length = m_domain->lpz+1;
+
+  setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  // touched data size, not actual number of stores and loads
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      1*sizeof(Real_type) * getItsPerRep() ); // vol
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * m_domain->n_real_nodes ); // x (3d nodal stencil pattern: 8 touches per iterate)
+  setFLOPsPerRep(9 * getItsPerRep());
+}
+
 NODAL_ACCUMULATION_3D::~NODAL_ACCUMULATION_3D()
 {
-  delete m_domain;
 }
 
 void NODAL_ACCUMULATION_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

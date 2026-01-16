@@ -24,14 +24,29 @@ namespace apps
 MASS3DPA::MASS3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_MASS3DPA, params)
 {
-  m_NE_default = 8000;
-
-  setDefaultProblemSize(m_NE_default*mpa::D1D*mpa::D1D*mpa::D1D);
+  Index_type NE_default = 8000;
+  setDefaultProblemSize(NE_default*mpa::D1D*mpa::D1D*mpa::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (mpa::D1D*mpa::D1D*mpa::D1D)/2) / (mpa::D1D*mpa::D1D*mpa::D1D), Index_type(1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void MASS3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_NE = std::max((target_size + (mpa::D1D*mpa::D1D*mpa::D1D)/2) / (mpa::D1D*mpa::D1D*mpa::D1D), Index_type(1));
 
   setActualProblemSize( m_NE*mpa::D1D*mpa::D1D*mpa::D1D );
+  setRunReps( target_reps );
 
   setItsPerRep( m_NE*mpa::D1D*mpa::D1D );
   setKernelsPerRep(1);
@@ -49,15 +64,6 @@ MASS3DPA::MASS3DPA(const RunParams& params)
                          2 * mpa::Q1D * mpa::Q1D * mpa::Q1D * mpa::D1D +
                          2 * mpa::Q1D * mpa::Q1D * mpa::D1D * mpa::D1D +
                          2 * mpa::Q1D * mpa::D1D * mpa::D1D * mpa::D1D + mpa::D1D * mpa::D1D * mpa::D1D));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 MASS3DPA::~MASS3DPA()

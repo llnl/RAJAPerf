@@ -409,6 +409,7 @@ public:
 
   ~EDGE3D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -440,7 +441,7 @@ private:
   Real_ptr m_z;
   Real_ptr m_sum;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
   Index_type m_array_length;
 };
 

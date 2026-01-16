@@ -25,15 +25,8 @@ ATOMIC::ATOMIC(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // atomic (assumes replication == problem size)
-  setFLOPsPerRep(getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // atomics
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -44,6 +37,20 @@ ATOMIC::ATOMIC(const RunParams& params)
   setUsesFeature(Atomic);
 
   addVariantTunings();
+}
+
+void ATOMIC::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // atomic (assumes replication == problem size)
+  setFLOPsPerRep(getActualProblemSize());
 }
 
 ATOMIC::~ATOMIC()

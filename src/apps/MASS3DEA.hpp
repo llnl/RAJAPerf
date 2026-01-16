@@ -149,6 +149,7 @@ public:
 
   ~MASS3DEA();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -176,7 +177,6 @@ private:
   Real_ptr m_M;
 
   Index_type m_NE;
-  Index_type m_NE_default;
 };
 
 } // end namespace apps
