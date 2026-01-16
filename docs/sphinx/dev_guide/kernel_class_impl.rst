@@ -153,10 +153,10 @@ checksums defined in the various *data utils* files in the ``common``
 directory.
 
 When calculating checksums use the ``addToChecksum`` methods. Individual numbers
-are added directly to the overall checksum. Arrays of numbers are checksumed to
+are added directly to the overall checksum. Arrays of numbers are checksummed to
 an intermediate checksum value via a function in the *data utils* file discussed
 below and then the intermediate checksum value is added into the overall
-checksum. Checksums are calculated via a kahan sum to improve accuracy.
+checksum. Checksums are calculated via a Kahan sum to improve accuracy.
 
 This function transforms each number in the array before adding the number to
 its checksum. The function converts the number into the checksum type, takes the
