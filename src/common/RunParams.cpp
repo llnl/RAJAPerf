@@ -82,7 +82,7 @@ RunParams::RunParams(int argc, char** argv)
    invalid_npasses_combiner_input(),
    outdir(),
    outfile_prefix("RAJAPerf"),
-   femsweep_mesh_file("../src/apps/FEMSWEEP_DATA.txt"),
+   femsweep_mesh_file(""),
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
@@ -2028,6 +2028,19 @@ void RunParams::processKernelInput()
   using Slist = std::list<std::string>;
   using Svector = std::vector<std::string>;
   using KIDset = std::set<KernelID>;
+
+  // ================================================================
+  //
+  // Add FEMSWEEP to the exclusion list if the --femsweep-mesh-file
+  // was not provided. This supersedes the case where FEMSWEEP is in
+  // --kernels.
+  //
+  // ================================================================
+
+  if ( femsweep_mesh_file.empty() ) {
+    std::cout << "Excluding FEMSWEEP because no --femsweep-mesh-file provided." << std::endl;
+    exclude_kernel_input.push_back( std::string("FEMSWEEP") );
+  }
 
   // ================================================================
   //
