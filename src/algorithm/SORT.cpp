@@ -33,6 +33,9 @@ SORT::SORT(const RunParams& params)
 
   setComplexity(Complexity::N_logN);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Sort);
 
   addVariantTunings( );

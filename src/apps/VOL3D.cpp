@@ -37,6 +37,9 @@ VOL3D::VOL3D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

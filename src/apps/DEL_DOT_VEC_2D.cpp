@@ -37,6 +37,9 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(2);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
