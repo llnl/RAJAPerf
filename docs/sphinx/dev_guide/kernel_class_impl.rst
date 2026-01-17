@@ -78,6 +78,14 @@ The methods in the source file are:
         operation complexity that does not scale linearly with problem size.
       * The operational complexity of the kernel, where N is the *problem size*
         of the kernel.
+      * The number of levels in the largest perfectly nested loop. This only counts
+        parallelized dimensions and ignores inner or outer sequential loops. For
+        example the GEMM kernel has 2 perfectly nested loop levels as the inner
+        loop is implemented sequentially to perform a reduction.
+      * The dimensionality of the problem domain, regardless of physical data
+        layout. For example, the LTIMES kernel has a problem dimensionality of 3,
+        because phi (g, m, and z) and psi (g, d, and z) are indexed over 3
+        dimensions.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
         the various ``define*VariantTunings`` methods that are defined in the

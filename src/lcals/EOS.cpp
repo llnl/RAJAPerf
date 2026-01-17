@@ -33,6 +33,9 @@ EOS::EOS(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

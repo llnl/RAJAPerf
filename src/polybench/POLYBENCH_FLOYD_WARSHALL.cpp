@@ -34,6 +34,9 @@ POLYBENCH_FLOYD_WARSHALL::POLYBENCH_FLOYD_WARSHALL(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_three_halves);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

@@ -37,6 +37,9 @@ ZONAL_ACCUMULATION_3D::ZONAL_ACCUMULATION_3D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

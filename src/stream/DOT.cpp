@@ -33,6 +33,9 @@ DOT::DOT(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature( Forall );
   setUsesFeature( Reduction );
 

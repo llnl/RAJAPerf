@@ -33,6 +33,9 @@ FIRST_DIFF::FIRST_DIFF(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
