@@ -41,6 +41,9 @@ POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

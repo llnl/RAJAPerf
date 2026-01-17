@@ -36,6 +36,9 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(3);
+
   setUsesFeature(Launch);
 
   addVariantTunings();

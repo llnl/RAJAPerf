@@ -42,6 +42,9 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

@@ -35,6 +35,9 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

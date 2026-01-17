@@ -45,6 +45,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Launch);
   //setUsesFeature(View);
 

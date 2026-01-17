@@ -111,6 +111,14 @@ Information reported in the file for each kernel is:
     run to run are ``Inconsistent``.
   * **OperationalComplexity** -- The operational complexity of the kernel, where
     N is the *problem size* of the kernel.
+  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
+    nested loop. This only counts parallelized dimensions and ignores inner or
+    outer sequential loops. For example the GEMM kernel has 2 perfectly nested
+    loop levels as the inner loop is implemented sequentially to perform a reduction.
+  * **ProblemDimensionality** -- The dimensionality of the problem domain, 
+    regardless of physical data layout. For example, the LTIMES kernel has
+    a problem dimensionality of 3, because phi (g, m, and z) and psi 
+    (g, d, and z) are indexed over 3 dimensions.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
            like DRAM or HBM under idealized conditions. They assume caching is

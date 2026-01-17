@@ -37,6 +37,9 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

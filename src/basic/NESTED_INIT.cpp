@@ -38,6 +38,9 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

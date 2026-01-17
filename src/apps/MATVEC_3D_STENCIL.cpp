@@ -37,6 +37,9 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

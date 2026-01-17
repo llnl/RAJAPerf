@@ -39,6 +39,9 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_three_halves);
 
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();

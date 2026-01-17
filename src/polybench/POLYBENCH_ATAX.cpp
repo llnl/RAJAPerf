@@ -34,6 +34,9 @@ POLYBENCH_ATAX::POLYBENCH_ATAX(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();
