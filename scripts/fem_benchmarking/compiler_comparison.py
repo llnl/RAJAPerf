@@ -239,3 +239,111 @@ for kernel in kernels:
     plt.show()
 
 print(f"Vertical bar plots saved in: {output_dir.resolve()}")
+
+
+#Plot subfigures
+fig_idx = 1
+
+for kernel_chunk in chunk_list(list(kernels), PLOTS_PER_FIG):
+    fig, axes = plt.subplots(N_ROWS, N_COLS, squeeze=False)
+    fig.set_size_inches(*PPT_FIGSIZE)
+
+    fig.suptitle(
+        f"Kernel Performance Comparison  -  {metric_col}",
+        fontsize=20,
+        y=0.97,
+        fontweight="bold",
+    )
+
+    shared_handles = None
+    shared_labels = None
+
+    for ax_idx, kernel in enumerate(kernel_chunk):
+        row = ax_idx // N_COLS
+        col = ax_idx % N_COLS
+        ax = axes[row][col]
+
+        kernel_df = grouped[grouped["Kernel"] == kernel].copy()
+        variant_tunings = sorted(kernel_df["VariantTuning"].dropna().unique())
+        n_vt = len(variant_tunings)
+        if n_vt == 0:
+            ax.set_visible(False)
+            continue
+
+        x_idx = np.arange(n_vt)
+        n_folders = len(build_folders)
+
+        total_width = 0.8
+        bar_width = total_width / max(n_folders, 1)
+        cmap = plt.get_cmap("tab10")
+
+        for i, folder in enumerate(build_folders):
+            sub = kernel_df[kernel_df["BuildFolder"] == folder]
+
+            y_vals = []
+            for vt in variant_tunings:
+                row_sel = sub[sub["VariantTuning"] == vt]
+                if not row_sel.empty:
+                    y_vals.append(row_sel[metric_col].iloc[0])
+                else:
+                    y_vals.append(np.nan)
+
+            offset = (i - n_folders / 2) * bar_width + bar_width / 2
+            color = cmap(i % 10)
+
+            ax.bar(
+                x_idx + offset,
+                y_vals,
+                width=bar_width,
+                label=folder,
+                color=color,
+                alpha=0.85,
+                edgecolor="black",
+                linewidth=0.3,
+            )
+
+        ax.set_xticks(x_idx)
+        ax.set_xticklabels(variant_tunings, rotation=45, ha="right")
+        ax.set_ylabel(metric_col)
+        ax.set_xlabel("Variant | Tuning")
+        ax.set_title(f"Kernel: {kernel}", pad=14, fontweight="semibold")
+        ax.grid(axis="y", linestyle="--", alpha=0.35)
+        ax.set_axisbelow(True)
+
+        ymin, ymax = ax.get_ylim()
+        ax.set_ylim(bottom=0, top=ymax * 1.08 if ymax > 0 else 1)
+
+        if shared_handles is None or shared_labels is None:
+            shared_handles, shared_labels = ax.get_legend_handles_labels()
+
+    total_axes = N_ROWS * N_COLS
+    used_axes = len(kernel_chunk)
+    if used_axes < total_axes:
+        for empty_idx in range(used_axes, total_axes):
+            row = empty_idx // N_COLS
+            col = empty_idx % N_COLS
+            axes[row][col].set_visible(False)
+
+    fig.tight_layout(rect=[0.03, 0.12, 0.97, 0.90])
+
+    if shared_handles and shared_labels:
+        fig.legend(
+            shared_handles,
+            shared_labels,
+            title="BuildFolder",
+            loc="lower center",
+            ncol=min(len(build_folders), 5),
+            bbox_to_anchor=(0.5, 0.04),
+            frameon=False,
+        )
+
+    out_path = output_dir / f"kernels_4up_page_{fig_idx}.png"
+    fig.savefig(out_path, dpi=PPT_DPI)
+
+    # show instead of close, so you see it in the notebook
+    plt.show()
+
+    print(f"Saved slide figure: {out_path}")
+    fig_idx += 1
+
+print(f"All 4-up PPT-ready figures saved in: {output_dir.resolve()}")
