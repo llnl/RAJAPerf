@@ -232,7 +232,7 @@ for kernel in kernels:
     fig.tight_layout()
     plt.subplots_adjust(top=0.88)  # smaller than 1.0; reduce this number for more space
 
-    safe_kernel_name = str(kernel)
+    safe_kernel_name = str(kernel).replace(" ", "")
     out_path = output_dir / f"kernel_{safe_kernel_name}.png"
     fig.savefig(out_path, dpi=200)
 
