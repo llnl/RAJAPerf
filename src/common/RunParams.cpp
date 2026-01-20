@@ -1393,7 +1393,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
 
   str << "\t --refvar, -rv <string> [Default is none]\n"
       << "\t      (reference variant used for speedup calculation and checksum difference;\n"
-      << "\t       same variant will be used for all kernels run)\n\n";
+      << "\t       same reference variant will be used for all kernels run)\n\n";
   str << "\t\t Example...\n"
       << "\t\t --refvar Base_Seq (speedups reported relative to Base_Seq variants)\n\n";
 
