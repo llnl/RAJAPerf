@@ -34,20 +34,58 @@ void REDUCE_SUM::runSeqVariant(VariantID vid)
 
     case Base_Seq : {
 
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+      if constexpr (tune_idx == 0) {
 
-        Real_type sum = m_sum_init;
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type i = ibegin; i < iend; ++i ) {
-          REDUCE_SUM_BODY;
+          Real_type sum = m_sum_init;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_SUM_BODY;
+          }
+
+          m_sum = sum;
+
         }
+        stopTimer();
 
-        m_sum = sum;
+      } else if constexpr (tune_idx == 1) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::KahanSum<Real_type> sum(m_sum_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_SUM_BODY;
+          }
+
+          m_sum = sum.get();
+
+        }
+        stopTimer();
+
+      } else if constexpr (tune_idx == 2) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> sum(m_sum_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_SUM_BODY;
+          }
+
+          m_sum = sum.get();
+
+        }
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -143,6 +181,17 @@ void REDUCE_SUM::defineSeqVariantTunings()
 {
 
   for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    if (vid == Base_Seq) {
+
+      // out most accurate tuning
+      addVariantTuning<&REDUCE_SUM::runSeqVariant<1>>(
+          vid, "kahan");
+
+      addVariantTuning<&REDUCE_SUM::runSeqVariant<2>>(
+          vid, "cascade");
+
+    }
 
     addVariantTuning<&REDUCE_SUM::runSeqVariant<0>>(
         vid, "default");

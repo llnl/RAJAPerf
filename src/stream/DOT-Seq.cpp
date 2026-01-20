@@ -34,20 +34,58 @@ void DOT::runSeqVariant(VariantID vid)
 
     case Base_Seq : {
 
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+      if constexpr (tune_idx == 0) {
 
-        Real_type dot = m_dot_init;
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type i = ibegin; i < iend; ++i ) {
-          DOT_BODY;
+          Real_type dot = m_dot_init;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot;
+
         }
+        stopTimer();
 
-         m_dot += dot;
+      } else if constexpr (tune_idx == 1) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::KahanSum<Real_type> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
+
+      } else if constexpr (tune_idx == 2) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -142,6 +180,16 @@ void DOT::defineSeqVariantTunings()
 {
 
   for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    if (vid == Base_Seq) {
+
+      addVariantTuning<&DOT::runSeqVariant<1>>(
+          vid, "kahan");
+
+      addVariantTuning<&DOT::runSeqVariant<2>>(
+          vid, "cascade");
+
+    }
 
     addVariantTuning<&DOT::runSeqVariant<0>>(
         vid, "default");
