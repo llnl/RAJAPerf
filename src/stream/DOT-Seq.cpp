@@ -181,18 +181,18 @@ void DOT::defineSeqVariantTunings()
 
   for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
+    addVariantTuning<&DOT::runSeqVariant<0>>(
+        vid, "default");
+
     if (vid == Base_Seq) {
 
       addVariantTuning<&DOT::runSeqVariant<1>>(
-          vid, "kahan");
+          vid, "kahan", TuningAttribute::preferred_checksum);
 
       addVariantTuning<&DOT::runSeqVariant<2>>(
-          vid, "cascade");
+          vid, "cascade", TuningAttribute::preferred_checksum);
 
     }
-
-    addVariantTuning<&DOT::runSeqVariant<0>>(
-        vid, "default");
 
     if (vid == RAJA_Seq) {
 

@@ -182,19 +182,18 @@ void REDUCE_SUM::defineSeqVariantTunings()
 
   for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
 
-    if (vid == Base_Seq) {
-
-      // out most accurate tuning
-      addVariantTuning<&REDUCE_SUM::runSeqVariant<1>>(
-          vid, "kahan");
-
-      addVariantTuning<&REDUCE_SUM::runSeqVariant<2>>(
-          vid, "cascade");
-
-    }
-
     addVariantTuning<&REDUCE_SUM::runSeqVariant<0>>(
         vid, "default");
+
+    if (vid == Base_Seq) {
+
+      addVariantTuning<&REDUCE_SUM::runSeqVariant<1>>(
+          vid, "kahan", TuningAttribute::preferred_checksum);
+
+      addVariantTuning<&REDUCE_SUM::runSeqVariant<2>>(
+          vid, "cascade", TuningAttribute::preferred_checksum);
+
+    }
 
     if (vid == RAJA_Seq) {
 
