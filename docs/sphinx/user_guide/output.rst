@@ -38,7 +38,7 @@ The output files include:
     detail in a later section.
   * **Kernel Details** -- a CSV file containing basic information about each kernel
     that is run, which is the same for each variant of a kernel that is run.
-    Kernel information is described in more detail in a later section.
+    Kernel information is described in more detail in :ref:`output_kernel_details-label`.
   * **Timing** -- a CSV file containing execution time (sec.) of each loop
     kernel and variant run. Variants that are not run are indicated with the
     string "Not run".
@@ -76,7 +76,7 @@ Data reported in the file for each kernel variant tuning is:
   * **Variant** -- variant name, format is the implementation approach set
     name followed by the backend set name, separated by an underscore.
   * **Tuning** -- tuning name, these names are normally chosen to differentiate
-    different tunings by indicating how the tuning was implemented. For example
+    tunings by indicating how each tuning was implemented. For example
     "Default" is used for tunings similar to the reference implementation. For
     GPU variant tunings the block size is often included, for example
     "block_256" is a tuning using a block size of 256. Some tuning names refer
@@ -88,18 +88,18 @@ Data reported in the file for each kernel variant tuning is:
   * **Checksum** -- Whether the checksum of the kernel passes or fails to meet
     the tolerance relative to the reference variant tuning. Find more
     information on checksums here :ref:`kernel_class_impl_gen-label`.
-  * **Mean time per rep (sec.)** -- time of the benchmark, the time that a
-    single repetition of the benchmark took to complete averaged over all
+  * **Mean time per rep (sec.)** -- the execution time for a
+    single repetition to complete averaged over all
     passes. This is calculated from the timing information in the
     ``RAJAPerf-timing-Average.csv`` file divided by the *Reps* for the kernel
     from the ``RAJAPerf-kernel-details.csv`` file.
-  * **Mean Bandwidth (GiB per sec.)** -- bandwidth achieved of the benchmark,
-    the bandwidth in giga-bytes per second achieved of the benchmark averaged
+  * **Mean Bandwidth (GiB per sec.)** -- 
+    the bandwidth, in giga-bytes per second, achieved by the benchmark averaged
     over all passes. This is calculated by taking from the *Bytes/rep* for the
     kernel from the ``RAJAPerf-kernel-details.csv`` file divided by the
     *Mean time per rep (sec.)*.
-  * **Mean flops (gigaFLOP per sec.)** -- flops achieved of the benchmark, the
-    floating point operation rate in giga-flops acheved of the benchmark
+  * **Mean flops (gigaFLOP per sec.)** -- the
+    floating point operation rate, in giga-flops, achieved by the benchmark
     averaged over all passes. This is calculated by taking from the *FLOPs/rep*
     for the kernel from the ``RAJAPerf-kernel-details.csv`` file divided by the
     *Mean time per rep (sec.)*.
