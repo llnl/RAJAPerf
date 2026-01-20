@@ -35,7 +35,7 @@ The output files include:
   * **Kernel Run Data** -- a CSV file containing summarized run data about each
     kernel variant tuning that is run. These commonly used values are calculated
     using values output in other files, how that is done is described in more
-    detail in a later section.
+    detail in :ref:`output_kernel_run_data-label`.
   * **Kernel Details** -- a CSV file containing basic information about each kernel
     that is run, which is the same for each variant of a kernel that is run.
     Kernel information is described in more detail in :ref:`output_kernel_details-label`.
@@ -83,20 +83,19 @@ Data reported in the file for each kernel variant tuning is:
     to vendor libraries or RAJA APIs used in the implementation of the tuning,
     for example REDUCE_SUM has a "cub" tuning in Base_CUDA that uses the Cub
     library from Nvidia to implement the reduction.
-  * **Problem Size** -- Size of the problem run in a kernel. Please see section
-    below for more details about problem sizes.
+  * **Problem Size** -- Size of the problem run in a kernel. Find a discussion
+    about the meaning of problem size in :ref:`output_probsize-label`.
   * **Checksum** -- Whether the checksum of the kernel passes or fails to meet
     the tolerance relative to the reference variant tuning. Find more
     information on checksums here :ref:`kernel_class_impl_gen-label`.
-  * **Mean time per rep (sec.)** -- the execution time for a
-    single repetition to complete averaged over all
-    passes. This is calculated from the timing information in the
-    ``RAJAPerf-timing-Average.csv`` file divided by the *Reps* for the kernel
-    from the ``RAJAPerf-kernel-details.csv`` file.
-  * **Mean Bandwidth (GiB per sec.)** -- 
-    the bandwidth, in giga-bytes per second, achieved by the benchmark averaged
-    over all passes. This is calculated by taking from the *Bytes/rep* for the
-    kernel from the ``RAJAPerf-kernel-details.csv`` file divided by the
+  * **Mean time per rep (sec.)** -- the execution time for a single repetition
+    to complete averaged over all passes. This is calculated from the timing
+    information in the ``RAJAPerf-timing-Average.csv`` file divided by the *Reps*
+    for the kernel from the ``RAJAPerf-kernel-details.csv`` file.
+  * **Mean Bandwidth (GiB per sec.)** -- the bandwidth, in giga-bytes per
+    second, achieved by the benchmark averaged over all passes. This is
+    calculated by taking from the *Bytes/rep* for the kernel from the
+    ``RAJAPerf-kernel-details.csv`` file divided by the
     *Mean time per rep (sec.)*.
   * **Mean flops (gigaFLOP per sec.)** -- the
     floating point operation rate, in giga-flops, achieved by the benchmark
@@ -122,11 +121,12 @@ Information reported in the file for each kernel is:
 
   * **Name** -- full kernel name, format is group name followed by the kernel 
     name, separated by an underscore.
-  * **Problem size** -- Size of the problem run in a kernel. Please see section
-    below for more details about problem sizes.
+  * **Problem size** -- Size of the problem run in a kernel. Find a discussion
+    about the meaning of problem size in :ref:`output_probsize-label`.
   * **Reps** -- Number of times a kernel runs in a single pass through the 
     Suite.  
-  * **Iterations/rep** -- Sum of sizes of all parallel iteration spaces for all     loops run in a single kernel execution.
+  * **Iterations/rep** -- Sum of sizes of all parallel iteration spaces for all
+    loops run in a single kernel execution.
   * **Kernels/rep** -- total number of loop structures run (or GPU kernels 
     launched) in each kernel repetition.
   * **Bytes/rep** -- Total number of bytes read from and written to memory for 
@@ -160,13 +160,13 @@ Information reported in the file for each kernel is:
     run to run are ``Inconsistent``.
   * **OperationalComplexity** -- The operational complexity of the kernel, where
     N is the *problem size* of the kernel.
-  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly 
+  * **MaxPerfectLoopDimensions** -- Number of levels in the largest perfectly
     nested loop. This only counts parallelized dimensions and ignores inner or
     outer sequential loops. For example the GEMM kernel has 2 perfectly nested
     loop levels as the inner loop is implemented sequentially to perform a reduction.
-  * **ProblemDimensionality** -- The dimensionality of the problem domain, 
+  * **ProblemDimensionality** -- The dimensionality of the problem domain,
     regardless of physical data layout. For example, the LTIMES kernel has
-    a problem dimensionality of 3, because phi (g, m, and z) and psi 
+    a problem dimensionality of 3, because phi (g, m, and z) and psi
     (g, d, and z) are indexed over 3 dimensions.
 
   ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
