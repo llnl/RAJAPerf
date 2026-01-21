@@ -27,6 +27,19 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
+  auto readOneLong = [=](std::ifstream & file, Index_type & val, std::string valname) {
+    // Read next line for value.
+    std::string line;
+    if ( std::getline(file, line) )
+    {
+      val = std::stol(line);
+    }
+    else
+    {
+      std::cout << "Unable to initialize " << valname << " properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
+    }
+  };
+
   m_mesh_file = params.getFemsweepMeshFile();
 
   // Read problem size from file.
@@ -43,67 +56,27 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
     if ( line == std::string("m_nx") )
     {
-      // Read next line for value.
-      if ( std::getline(dataFile, line) )
-      {
-        m_nx = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Unable to initialize m_nx properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-      }
+      readOneLong(dataFile, m_nx, "m_nx");
     }
 
     else if ( line == std::string("m_ny") )
     {
-      // Read next line for value.
-      if ( std::getline(dataFile, line) )
-      {
-        m_ny = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Unable to initialize m_ny properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-      }
+      readOneLong(dataFile, m_ny, "m_ny");
     }
 
     else if ( line == std::string("m_nz") )
     {
-      // Read next line for value.
-      if ( std::getline(dataFile, line) )
-      {
-        m_nz = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Unable to initialize m_nz properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-      }
+      readOneLong(dataFile, m_nz, "m_nz");
     }
 
     else if ( line == std::string("m_na") )
     {
-      // Read next line for value.
-      if ( std::getline(dataFile, line) )
-      {
-        m_na = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Unable to initialize m_na properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-      }
+      readOneLong(dataFile, m_na, "m_na");
     }
 
     else if ( line == std::string("m_ng") )
     {
-      // Read next line for value.
-      if ( std::getline(dataFile, line) )
-      {
-        m_ng = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Unable to initialize m_ng properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-      }
+      readOneLong(dataFile, m_ng, "m_ng");
     }
 
   }
