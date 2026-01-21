@@ -8,7 +8,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D mass matrix via partial assembly
+/// Element-wise action of a 3D finite element mass matrix via partial assembly
+/// and sum factorization
 ///
 /// Based on MFEM's/CEED algorithms.
 /// Reference implementation - MFEM-v4.9

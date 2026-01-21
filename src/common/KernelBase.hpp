@@ -128,6 +128,8 @@ public:
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
   void setComplexity(Complexity ac) { complexity = ac; }
+  void setMaxPerfectLoopDimensions(Index_type nploops) { num_nested_perfect_loops = nploops; }
+  void setProblemDimensionality(Index_type pdim) { problem_dimensionality = pdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -217,6 +219,8 @@ public:
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
+  Index_type getMaxPerfectLoopDimensions() const { return num_nested_perfect_loops; };
+  Index_type getProblemDimensionality() const { return problem_dimensionality; };
 
 
   bool usesFeature(FeatureID fid) const { return uses_feature[fid]; };
@@ -729,6 +733,9 @@ private:
 
   Complexity complexity;
 
+  Index_type num_nested_perfect_loops = -1;
+  Index_type problem_dimensionality = -1;
+
   std::vector<std::string> variant_tuning_names[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
@@ -773,6 +780,8 @@ private:
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
+  cali_id_t MaxPerfectLoopDimensions_attr;
+  cali_id_t ProblemDimensionality_attr;
 
 
   // we need a Caliper Manager object per variant

@@ -36,6 +36,9 @@ HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
   setUsesFeature(MPI);
 

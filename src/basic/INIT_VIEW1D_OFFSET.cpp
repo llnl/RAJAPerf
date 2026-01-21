@@ -33,6 +33,9 @@ INIT_VIEW1D_OFFSET::INIT_VIEW1D_OFFSET(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
   setUsesFeature(View);
 

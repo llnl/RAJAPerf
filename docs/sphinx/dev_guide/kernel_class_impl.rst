@@ -78,6 +78,14 @@ The methods in the source file are:
         operation complexity that does not scale linearly with problem size.
       * The operational complexity of the kernel, where N is the *problem size*
         of the kernel.
+      * The number of levels in the largest perfectly nested loop. This only counts
+        parallelized dimensions and ignores inner or outer sequential loops. For
+        example the GEMM kernel has 2 perfectly nested loop levels as the inner
+        loop is implemented sequentially to perform a reduction.
+      * The dimensionality of the problem domain, regardless of physical data
+        layout. For example, the LTIMES kernel has a problem dimensionality of 3,
+        because phi (g, m, and z) and psi (g, d, and z) are indexed over 3
+        dimensions.
       * Which RAJA features the kernel exercises.
       * Adding Suite variants and tunings via ``addVariantTunings``. This calls
         the various ``define*VariantTunings`` methods that are defined in the
@@ -144,10 +152,31 @@ the ``setUp`` and ``tearDown`` methods take a ``VariantID`` argument and pass
 it to data allocation, initialization, and deallocation methods so
 this data management can be done in a variant-specific manner as needed.
 
+Data Utility Methods
+--------------------
+
 To simplify these operations and help ensure consistency, there exist utility 
 methods to allocate, initialize, deallocate, and copy data, and compute 
 checksums defined in the various *data utils* files in the ``common``
 directory.
+
+When calculating checksums use the ``addToChecksum`` methods. Individual numbers
+are added directly to the overall checksum. Arrays of numbers are checksummed to
+an intermediate checksum value via a function in the *data utils* file discussed
+below and then the intermediate checksum value is added into the overall
+checksum. Checksums are calculated via a Kahan sum to improve accuracy.
+
+This function transforms each number in the array before adding the number to
+its checksum. The function converts the number into the checksum type, takes the
+absolute value of the result, and multiplies the result by a value that differs
+for each member of the array and depends on the sign of the number. This
+procedure creates different checksums for permutations of the same numbers and
+numbers with opposite signs. See the implementation below for details.
+
+.. literalinclude:: ../../../src/common/DataUtils.cpp
+   :start-after: _calc_checksum_impl_start
+   :end-before: _calc_checksum_impl_end
+   :language: C++
 
 ---------------------------
 Kernel object construction 

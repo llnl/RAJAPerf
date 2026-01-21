@@ -33,6 +33,9 @@ FIRST_DIFF::FIRST_DIFF(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
@@ -61,7 +64,7 @@ FIRST_DIFF::~FIRST_DIFF()
 void FIRST_DIFF::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitDataConst(m_x, m_N, 0.0, vid);
-  allocAndInitData(m_y, m_N, vid);
+  allocAndInitDataRandValue(m_y, m_N, vid);
 }
 
 void FIRST_DIFF::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

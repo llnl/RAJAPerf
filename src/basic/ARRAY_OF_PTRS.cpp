@@ -35,6 +35,9 @@ ARRAY_OF_PTRS::ARRAY_OF_PTRS(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();

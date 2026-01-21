@@ -32,6 +32,9 @@ INDEXLIST_3LOOP::INDEXLIST_3LOOP(const RunParams& params)
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
   setUsesFeature(Scan);
 
