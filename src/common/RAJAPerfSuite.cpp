@@ -753,6 +753,62 @@ const std::string& getComplexityName(Complexity ac)
 /*
  *******************************************************************************
  *
+ * Return tuning attribute name associated with TuningAttribute enum value.
+ *
+ * NOTE: TuningAttributes may be bitwise or'd together so constructing a
+ *       string for a
+ *
+ *******************************************************************************
+ */
+std::string getTuningAttributeName(TuningAttribute ta)
+{
+  std::string name;
+  if (ta == TuningAttribute::none) {
+    name = "none";
+  } else {
+    // add names of attributes and removing them from ta as they are found
+    for (TuningAttribute test : { // list all tuning attributes besides none
+              TuningAttribute::preferred_checksum
+            }) {
+      if (hasTuningAttribute(ta, test)) {
+        if (!name.empty()) {
+          name += '|';
+        }
+        switch(test) {
+          case TuningAttribute::none: // add to silence compiler warning
+            name += "none"; break; // should never be used
+          case TuningAttribute::preferred_checksum:
+            name += "preferred_checksum"; break;
+        }
+        ta = static_cast<TuningAttribute>(static_cast<size_t>(ta) ^ static_cast<size_t>(test));
+      }
+    }
+    if (ta != TuningAttribute::none) {
+      if (!name.empty()) {
+        name += '|';
+      }
+      name += "Unknown TuningAttribute";
+    }
+  }
+  return name;
+}
+
+/*!
+ *******************************************************************************
+ *
+ * Return whether tuning attribute ta has the attribute test set.
+ *
+ *******************************************************************************
+ */
+bool hasTuningAttribute(TuningAttribute ta, TuningAttribute test)
+{
+  return (static_cast<size_t>(ta) & static_cast<size_t>(test)) != static_cast<size_t>(0);
+}
+
+
+/*
+ *******************************************************************************
+ *
  * Return memory space name associated with DataSpace enum value.
  *
  *******************************************************************************
