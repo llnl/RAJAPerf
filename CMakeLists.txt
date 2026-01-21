@@ -163,6 +163,11 @@ endif()
 # exclude RAJA make targets from top-level build...
 add_subdirectory(tpl/RAJA)
 
+# Bring in RAJA macros so we can replicate RAJA's formatting
+include(tpl/RAJA/cmake/RAJAMacros.cmake)
+# Setup the style target
+raja_add_code_checks(DIRS "src" "test")
+
 get_property(RAJA_INCLUDE_DIRS DIRECTORY tpl/RAJA PROPERTY INCLUDE_DIRECTORIES)
 include_directories(${RAJA_INCLUDE_DIRS})
 
