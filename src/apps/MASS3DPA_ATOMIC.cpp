@@ -49,11 +49,11 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
 void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
 {
   // approximate how many elements we need
-  m_NE = std::max(static_cast<Index_type>(target_size / pow(m_P, 3)),
+  m_NE = std::max(static_cast<Index_type>(target_size / (m_P*m_P*m_P)),
                   Index_type(1));
 
   // Construct the mesh
-  m_Nx = static_cast<int>(std::cbrt(m_NE));
+  m_Nx = static_cast<Index_type>(std::cbrt(m_NE));
   m_Ny = m_Nx;
   m_Nz = m_Ny;
   m_NE = m_Nx * m_Ny * m_Nz;
@@ -61,35 +61,32 @@ void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
   // compute true number of dofs
   m_Tot_Dofs = (m_Nx * m_P + 1) * (m_Ny * m_P + 1) * (m_Nz * m_P + 1);
 
+  const Index_type ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);
+
   setActualProblemSize(m_Tot_Dofs);
   setRunReps( target_reps );
 
   setItsPerRep(m_NE * mpa_at::D1D * mpa_at::D1D);
   setKernelsPerRep(1);
 
-  setBytesReadPerRep(2 * sizeof(Real_type) * mpa_at::Q1D *
-                         mpa_at::D1D + // B, Bt
-                     1 * sizeof(Index_type) * mpa_at::D1D * mpa_at::D1D *
-                         mpa_at::D1D * m_NE +           // ElemToDoF
-                     1 * sizeof(Real_type) * m_Tot_Dofs + // X
-                     1 * sizeof(Real_type) * mpa_at::Q1D * mpa_at::Q1D *
-                         mpa_at::Q1D * m_NE); // D
-
+  setBytesReadPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
+                      1*sizeof(Index_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE + // ElemToDoF
+                      1*sizeof(Real_type) * m_Tot_Dofs + // X
+                      1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE ); // D
   setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE ); // Y
-
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE ); // Y
 
   setFLOPsPerRep(
       m_NE *
-      (2 * mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * mpa_at::Q1D +
-       2 * mpa_at::D1D * mpa_at::D1D * mpa_at::Q1D * mpa_at::Q1D +
-       2 * mpa_at::D1D * mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D +
-       mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D +
-       2 * mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * mpa_at::D1D +
-       2 * mpa_at::Q1D * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D +
-       2 * mpa_at::Q1D * mpa_at::D1D * mpa_at::D1D * mpa_at::D1D +
-       mpa_at::D1D * mpa_at::D1D * mpa_at::D1D));
+      (2 * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*mpa_at::Q1D +
+       2 * mpa_at::D1D*mpa_at::D1D*mpa_at::Q1D*mpa_at::Q1D +
+       2 * mpa_at::D1D*mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D +
+       mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D +
+       2 * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*mpa_at::D1D +
+       2 * mpa_at::Q1D*mpa_at::Q1D*mpa_at::D1D*mpa_at::D1D +
+       2 * mpa_at::Q1D*mpa_at::D1D*mpa_at::D1D*mpa_at::D1D +
+       mpa_at::D1D*mpa_at::D1D*mpa_at::D1D));
 }
 
 MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() {}
@@ -102,11 +99,10 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
   allocAndInitDataConst(m_X, m_Tot_Dofs, Real_type(1.0), vid);
   allocAndInitDataConst(m_Y, m_Tot_Dofs, Real_type(0.0), vid);
 
-  // Compute table elem to dof table size
   const int ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);
-  const int total_size = ndof_per_elem * m_NE;
 
-  auto a_elemToDoF = allocDataForInit(m_ElemToDoF, total_size, vid);
+  auto a_elemToDoF = allocDataForInit(m_ElemToDoF, ndof_per_elem*m_NE, vid);
+
   buildElemToDofTable(m_Nx, m_Ny, m_Nz, m_P, m_ElemToDoF);
 }
 

@@ -35,10 +35,10 @@
 ///   for(Index_type dz=0; dz<mpa_at::D1D; ++dz) {
 ///     for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
 ///       for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
-///         Index_type j          = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
+///         Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 ///         //missing dof_map for lexicographical ordering
-///         thread_dofs[j] = elemToDoF[j + mpa_at::D1D * mpa_at::D1D *
-///         mpa_at::D1D * e]; sm_X[dz][dy][dx]  = X[thread_dofs[j]];
+///         thread_dofs[j] = ElemToDoF[j + mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * e];
+///         sm_X[dz][dy][dx]  = X[thread_dofs[j]];
 ///       }
 ///     }
 ///   }
