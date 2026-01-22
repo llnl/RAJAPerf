@@ -28,6 +28,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
   auto readOneLong = [=](std::ifstream & file, Index_type & val, std::string valname) {
+
     // Read next line for value.
     std::string line;
     if ( std::getline(file, line) )
@@ -38,6 +39,7 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
     {
       std::cout << "Unable to initialize " << valname << " properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
     }
+
   };
 
   m_mesh_file = params.getFemsweepMeshFile();
