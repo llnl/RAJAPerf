@@ -76,25 +76,7 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void INT_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  Real_ptr px_host = m_px;
-
-  DataSpace ds = getDataSpace(vid);
-  DataSpace hds = rajaperf::hostCopyDataSpace(ds);
-  if (ds != hds) {
-    allocData(hds, px_host, m_array_length);
-    copyData(hds, px_host, ds, m_px, m_array_length);
-  }
-
-  for (Index_type i = 0; i < getActualProblemSize(); ++i) {
-    px_host[i] -= m_px_initval;
-  }
-
-  addToChecksum(px_host, getActualProblemSize(), vid);
-
-  if (ds != hds) {
-    copyData(ds, m_px, hds, px_host, m_array_length);
-    deallocData(hds, px_host);
-  }
+  addToChecksum(m_px, getActualProblemSize(), vid);
 }
 
 void INT_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
