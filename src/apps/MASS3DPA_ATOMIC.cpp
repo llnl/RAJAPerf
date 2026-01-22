@@ -66,7 +66,7 @@ void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
   setActualProblemSize(m_Tot_Dofs);
   setRunReps( target_reps );
 
-  setItsPerRep(m_NE * mpa_at::D1D * mpa_at::D1D);
+  setItsPerRep(m_NE * mpa_at::D1D*mpa_at::D1D);
   setKernelsPerRep(1);
 
   setBytesReadPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
@@ -75,7 +75,7 @@ void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
                       1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE ); // D
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE ); // Y
+  setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * m_Tot_Dofs ); // Y
 
   setFLOPsPerRep(
       m_NE *
