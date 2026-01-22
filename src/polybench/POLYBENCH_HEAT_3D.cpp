@@ -71,10 +71,8 @@ POLYBENCH_HEAT_3D::~POLYBENCH_HEAT_3D()
 
 void POLYBENCH_HEAT_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_Ainit, m_N*m_N*m_N, vid);
-  allocAndInitData(m_Binit, m_N*m_N*m_N, vid);
-  allocData(m_A, m_N*m_N*m_N, vid);
-  allocData(m_B, m_N*m_N*m_N, vid);
+  allocAndInitData(m_A, m_N*m_N*m_N, vid);
+  allocAndInitData(m_B, m_N*m_N*m_N, vid);
 }
 
 void POLYBENCH_HEAT_3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -87,8 +85,6 @@ void POLYBENCH_HEAT_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 {
   deallocData(m_A, vid);
   deallocData(m_B, vid);
-  deallocData(m_Ainit, vid);
-  deallocData(m_Binit, vid);
 }
 
 } // end namespace polybench
