@@ -30,13 +30,12 @@
 ///       double const *xplane ;
 ///       int jz, jy, jx ;
 ///       {
-///         int *ncord = (int*) ncord_gpu ;
-///         double const **planes = ( double const** ) ( ncord + 4 ) ;
-///         zplane = ( double const* ) ( planes + 3 ) ;
-///         yplane = zplane + ncord[0] + 1 ;
-///         xplane = yplane + ncord[1] + 1 ;
-///         int const nyzones = ncord[1] ;
-///         int const nxzones = ncord[2] ;
+///         Plane* plane = reinterpret_cast<Plane*>(ncord_gpu) ;
+///         zplane = plane->planes[0] ;
+///         yplane = plane->planes[1] ;
+///         xplane = plane->planes[2] ;
+///         Int_type const nyzones = plane->ncord[1] ;
+///         Int_type const nxzones = plane->ncord[2] ;
 ///         int tz = intsc_t[irec] ;
 ///         jz = tz / ( nxzones * nyzones ) ;
 ///         jy = ( tz / nxzones ) % nyzones ;
@@ -127,61 +126,29 @@ public:
   void runHipVariantImpl(VariantID vid);
 
 private:
-  void setupTargetPlanes
-      ( Real_ptr_ptr planes, Int_ptr ncord,
-        Int_type const ndx, Int_type const ndy, Int_type const ndz,
-        Real_type const x0, Real_type const y0, Real_type const z0,
-        Real_type const sep ) ;
+  struct Plane {
+    Int_type ncord[3];  // number of target zones
+    Real_ptr planes[3]; // pointers to planes arrays
+  };
 
-  void setupDonorMesh
-      ( Real_type const sep,
-        Real_type const xd0, Real_type const yd0, Real_type const zd0,
-        Int_type const ndx, Int_type const ndy, Int_type const ndz,
-        Real_ptr x, Real_ptr y, Real_ptr z,
-        Int_ptr znlist ) ;
+  void setupTargetPlanes(VariantID vid);
+  void setupDonorMesh();
+  void setupIntscPairs();
 
-  void setupIntscPairs
-      ( Int_const_ptr ncord,
-        Int_type const ndx, Int_type const ndy, Int_type const ndz,
-        Int_ptr intsc_d,
-        Int_ptr intsc_t ) ;
-
-  void copyTargetToDevice
-      ( Real_const_ptr_ptr planes,
-        Int_const_ptr ncord,
-        VariantID vid ) ;
-
-  void checkMoments
-      ( Real_ptr records, Int_type const n_intsc,
-        Int_type const ndx, Int_type const ndy, Int_type const ndz,
-        Real_type const xd0, Real_type const yd0, Real_type const zd0,
-        Real_type const x0, Real_type const y0, Real_type const z0,
-        Real_type const sep,
-        Real_type const sep1x, Real_type const sep1y, Real_type const sep1z,
-        VariantID vid ) ;
-
-  void checkScaledVolumes
-      ( Real_const_ptr records,
-        Int_type const x_scl_offs,
-        Int_type const y_scl_offs,
-        Int_type const z_scl_offs,
-        Real_type const sep, VariantID vid ) ;
+  void checkMoments(VariantID vid);
+  void checkScaledVolumes(VariantID vid);
 
   static const Size_type default_gpu_block_size = 64;
   using gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
-  Size_type m_ndzones ;    // number of "donor zones"
-  Size_type m_ntzones ;    // number of "target zones"
-
   Real_ptr m_xdnode ;          // [ndnodes] x coordinates for donor
   Real_ptr m_ydnode ;          // [ndnodes] y coordinates for donor
   Real_ptr m_zdnode ;          // [ndnodes] z coordinates for donor
   Int_ptr m_znlist ;           // [donor zones][8] donor zone node list
-  Char_ptr m_ncord ;           //  target dimensions and coordinates
+  Char_ptr m_ncord ;           // target dimensions and coordinates
   Int_ptr m_intsc_d ;          // [nrecords] donor zones to intersect
   Int_ptr m_intsc_t ;          // [nrecords] target zones to intersect
-  Index_type m_nrecords ;      // Number of threads (one thread per record)
   Real_ptr m_records ;         // output volumes, moments
   Real_ptr m_records_h ;       // volumes, moments on the host
 
@@ -190,7 +157,13 @@ private:
   Real_type m_sep ;                  // target mesh pitch (separation)
   Real_type m_sep1x, m_sep1y, m_sep1z ;   // donor mesh zone widths
   Int_type  m_x_scl_offs, m_y_scl_offs, m_z_scl_offs ;  // donor scaled offsets
-  Int_type  m_ndx, m_ndy, m_ndz ;     // donor mesh dimensions (are equal)
+  Int_type  m_ndx, m_ndy, m_ndz ;    // donor mesh dimensions (are equal)
+
+  Index_type m_ndzones ;    // number of "donor zones"
+  Index_type m_ntzones ;    // number of "target zones"
+  Index_type m_ndnodes;     // number of nodes in donor mesh
+  Index_type m_nrecords ;   // Number of threads (one thread per record)
+  Index_type m_nplanes;     // total number of target places (in all dimensions)
 };
 
 } // end namespace apps
