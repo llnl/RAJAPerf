@@ -160,9 +160,10 @@ public:
 #endif
 
   template < auto method >
-  void addVariantTuning(VariantID vid, std::string name)
+  void addVariantTuning(VariantID vid, std::string name,
+                        TuningAttribute attrs = TuningAttribute::none)
   {
-    addVariantTuning(vid, std::move(name),
+    addVariantTuning(vid, std::move(name), attrs,
         &KernelBase::wrapDerivedVariantTuningMethod<
             class_of_member_function_pointer_t<decltype(method)>, method>);
   }
@@ -261,6 +262,9 @@ public:
   { return getVariantTuningNames(vid).at(tune_idx); }
   std::vector<std::string> const& getVariantTuningNames(VariantID vid) const
   { return variant_tuning_names[vid]; }
+
+  TuningAttribute getTuningAttributes(VariantID vid, size_t tune_idx) const
+  { return variant_tuning_attrs[vid].at(tune_idx); }
 
   //
   // Methods to get information about kernel execution for reports
@@ -700,7 +704,7 @@ private:
     (self.*method)(vid);
   }
 
-  void addVariantTuning(VariantID vid, std::string name,
+  void addVariantTuning(VariantID vid, std::string name, TuningAttribute attrs,
                         variant_tuning_method_pointer method);
 
   //
@@ -737,6 +741,7 @@ private:
   Index_type problem_dimensionality = -1;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
+  std::vector<TuningAttribute> variant_tuning_attrs[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
   //
@@ -757,6 +762,7 @@ private:
   Checksum_type checksum_reference;
   VariantID checksum_reference_variant;
   size_t checksum_reference_tuning;
+  TuningAttribute checksum_reference_tuning_attributes;
 
   std::vector<int> num_exec[NumVariants];
 
