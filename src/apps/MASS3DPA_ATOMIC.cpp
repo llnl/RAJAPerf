@@ -92,13 +92,10 @@ MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() {}
 void MASS3DPA_ATOMIC::setUp(VariantID vid,
                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
 
-  allocAndInitDataConst(m_B, Index_type(mpa_at::Q1D * mpa_at::D1D),
-                        Real_type(1.0), vid);
-  allocAndInitDataConst(
-      m_D, Index_type(mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * m_NE),
-      Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(m_Tot_Dofs), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(m_Tot_Dofs), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, mpa_at::Q1D*mpa_at::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, m_Tot_Dofs, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, m_Tot_Dofs, Real_type(0.0), vid);
 
   // Compute table elem to dof table size
   const int ndof_per_elem = (m_P + 1) * (m_P + 1) * (m_P + 1);

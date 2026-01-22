@@ -76,11 +76,11 @@ MASS3DPA::~MASS3DPA()
 void MASS3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, Index_type(mpa::Q1D*mpa::D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt,Index_type(mpa::Q1D*mpa::D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(mpa::D1D*mpa::D1D*mpa::D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(mpa::D1D*mpa::D1D*mpa::D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B,  mpa::Q1D*mpa::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt, mpa::Q1D*mpa::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_D,  mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_X,  mpa::D1D*mpa::D1D*mpa::D1D*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y,  mpa::D1D*mpa::D1D*mpa::D1D*m_NE, Real_type(0.0), vid);
 }
 
 void MASS3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
