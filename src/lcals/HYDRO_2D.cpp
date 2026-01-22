@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -33,39 +34,53 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
   setDefaultProblemSize(m_kn * m_jn);
   setDefaultReps(100);
 
-  m_jn = m_kn = std::sqrt(getTargetProblemSize()) + std::sqrt(2)-1;
-  m_array_length = m_kn * m_jn;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setActualProblemSize( m_array_length );
-
-  setItsPerRep( 3 * (m_kn-2) * (m_jn-2) );
-  setKernelsPerRep(3);
-  setBytesReadPerRep( 4*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) +
-
-                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
-                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-1) +
-                      2*sizeof(Real_type ) * ((m_kn) * (m_jn) - 4) +
-
-                      4*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
-
-                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) +
-
-                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep((14 +
-                  26 +
-                  4  ) * (m_jn-2)*(m_kn-2));
-
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
 
   setUsesFeature(Kernel);
 
   addVariantTunings();
+}
+
+void HYDRO_2D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_jn = m_kn = std::sqrt(target_size) + std::sqrt(2)-1;
+  m_array_length = m_kn * m_jn;
+
+  setActualProblemSize( m_array_length );
+  setRunReps( target_reps );
+
+  setItsPerRep( 3 * (m_kn-2) * (m_jn-2) );
+  setKernelsPerRep(3);
+  setBytesReadPerRep( 2*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) + // zp, zq (4 point stencil)
+                      2*sizeof(Real_type ) * ((m_kn-1) * (m_jn-1) - 1) + // zr, zm (3 point stencil)
+
+                      2*sizeof(Real_type ) * (m_kn-2) * (m_jn-1) + // za, zb (2 point stencil)
+                      2*sizeof(Real_type ) * ((m_kn) * (m_jn) - 4) + // zz, zr (5 point stencil)
+
+                      4*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) ); // zr, zu, zz, zv
+  setBytesWrittenPerRep( 2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) + // za, zb
+
+                         0 +
+
+                         2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) ); // zrout, zzout
+  setBytesModifyWrittenPerRep( 0 +
+
+                               2*sizeof(Real_type ) * (m_kn-2) * (m_jn-2) + // zu, zv
+
+                               0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep((14 +
+                  26 +
+                  4  ) * (m_jn-2)*(m_kn-2));
 }
 
 HYDRO_2D::~HYDRO_2D()
@@ -87,15 +102,14 @@ void HYDRO_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_zz, m_array_length, vid);
 }
 
-void HYDRO_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void HYDRO_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_zzout, m_array_length, checksum_scale_factor , vid);
-  checksum[vid][tune_idx] += calcChecksum(m_zrout, m_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_zzout, m_array_length, vid);
+  addToChecksum(m_zrout, m_array_length, vid);
 }
 
 void HYDRO_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_zrout, vid);
   deallocData(m_zzout, vid);
   deallocData(m_za, vid);

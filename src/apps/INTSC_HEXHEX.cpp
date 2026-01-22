@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -38,18 +39,38 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setDefaultProblemSize(n_std_intsc_def);
 
   setDefaultReps  (1);
-  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void INTSC_HEXHEX::setSize(Index_type target_size, Index_type target_reps)
+{
   // Number of standard intersections, by convention a cube number.
   Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
 
   if ( a3 < 1UL ) { a3 = 1UL ; }
 
   Size_type n_std_intsc = a3*a3*a3 ;
 
   setActualProblemSize( n_std_intsc ) ;
-  setItsPerRep        ( n_std_intsc );
+  setRunReps( target_reps );
+
+  setItsPerRep( n_std_intsc );
+  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
@@ -65,18 +86,13 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   //   A standard intersection is 8 subzone intersections.
   //
   setBytesWrittenPerRep( 13*8*sizeof(Real_type) * getItsPerRep() );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 336 ;
   constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_std_intsc ;
 
   setFLOPsPerRep(n_std_intsc * flops_per_intsc);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
@@ -134,7 +150,7 @@ void INTSC_HEXHEX::setUp(VariantID vid,
   allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
 
   // output volumes and moments on the host
-  allocData ( m_vv, nvals_per_pair * n_subz_intsc, Base_Seq ) ;
+  allocData ( DataSpace::Host, m_vv, nvals_per_pair * n_subz_intsc ) ;
 }
 
 
@@ -243,7 +259,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 
 
 void INTSC_HEXHEX::updateChecksum(VariantID vid,
-                                  size_t tune_idx)
+                                  size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   // One standard intersection is 8 subzone intersections.
   Index_type n_std_intsc  = getActualProblemSize() ;
@@ -254,8 +270,7 @@ void INTSC_HEXHEX::updateChecksum(VariantID vid,
 
   check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum
-      (m_vv_out, nvals_per_pair*n_subz_intsc, vid  );
+  addToChecksum(m_vv_out, nvals_per_pair*n_subz_intsc, vid);
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid,
@@ -265,7 +280,7 @@ void INTSC_HEXHEX::tearDown(VariantID vid,
   deallocData ( m_tsubz, vid ) ;
   deallocData ( m_vv_int, vid ) ;
   deallocData ( m_vv_out, vid ) ;
-  deallocData ( m_vv, Base_Seq ) ;
+  deallocData ( DataSpace::Host, m_vv ) ;
 }
 
 } // end namespace apps

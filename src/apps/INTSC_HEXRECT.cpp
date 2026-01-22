@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -39,13 +40,32 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   constexpr Size_type a3_def = 50 ;
   Size_type n_intsc_def = intsc_per_zone * a3_def * a3_def * a3_def ;
   setDefaultProblemSize(n_intsc_def);
+  setDefaultReps(1);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void INTSC_HEXRECT::setSize(Index_type target_size, Index_type target_reps)
+{
   //  Command line --size specifies requested number of intersections.
   //  Requested number of intersections will be converted to an even cube
   //  number of intersections.
   //
   Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
 
   // number of donor zones on a side of the cube
   Size_type side = a3 / 2 ;
@@ -55,9 +75,9 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
   m_ndzones = side * side * side ;   // number of "donor zones" on a side
   Size_type n_intsc = intsc_per_zone*m_ndzones ;   // number of intersections
   m_ntzones = n_intsc ;          // one "target zone" per intersection
-  setDefaultReps(1);
 
   setActualProblemSize( n_intsc );
+  setRunReps( target_reps );
 
   setItsPerRep( n_intsc );
   setKernelsPerRep(1);
@@ -73,18 +93,13 @@ INTSC_HEXRECT::INTSC_HEXRECT(const RunParams& params)
 
   // Bytes written : nvals_hexrect (=4) doubles for each intersection.
   setBytesWrittenPerRep( nvals_hexrect*sizeof(Real_type) * getItsPerRep() );
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr Size_type flops_per_tri = 150 ;
   constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_hex ;
 
   setFLOPsPerRep(n_intsc * flops_per_intsc);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 INTSC_HEXRECT::~INTSC_HEXRECT()
@@ -156,7 +171,7 @@ void INTSC_HEXRECT::setupTargetPlanes
   Int_type nty = ndy + 1 ;
   Int_type ntz = ndz + 1 ;
 
-  allocData  ( planes[0], (nx+ny+nz), Base_Seq ) ;
+  allocData  ( DataSpace::Host, planes[0], (nx+ny+nz) ) ;
   planes[1] = planes[0] + nz ;
   planes[2] = planes[1] + ny ;
 
@@ -335,9 +350,9 @@ void INTSC_HEXRECT::setUp(VariantID vid,
   allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
   //  Output records copied to the host.
-  allocData             ( m_records_h, 4L*m_nrecords, Base_Seq ) ;
+  allocData             ( DataSpace::Host, m_records_h, 4L*m_nrecords ) ;
 
-  deallocData ( planes[0], Base_Seq ) ;
+  deallocData ( DataSpace::Host, planes[0] ) ;
 }
 
 
@@ -377,12 +392,12 @@ void INTSC_HEXRECT::checkMoments
     }
 
     Real_ptr zca, zcb, yca, ycb, xca, xcb ;
-    allocData  ( zca, ndz, Base_Seq ) ;
-    allocData  ( zcb, ndz, Base_Seq ) ;
-    allocData  ( yca, ndy, Base_Seq ) ;
-    allocData  ( ycb, ndy, Base_Seq ) ;
-    allocData  ( xca, ndx, Base_Seq ) ;
-    allocData  ( xcb, ndx, Base_Seq ) ;
+    allocData  ( DataSpace::Host, zca, ndz ) ;
+    allocData  ( DataSpace::Host, zcb, ndz ) ;
+    allocData  ( DataSpace::Host, yca, ndy ) ;
+    allocData  ( DataSpace::Host, ycb, ndy ) ;
+    allocData  ( DataSpace::Host, xca, ndx ) ;
+    allocData  ( DataSpace::Host, xcb, ndx ) ;
 
     for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
       Real_type za = zd0 + jz * sep1z ;
@@ -492,12 +507,12 @@ void INTSC_HEXRECT::checkMoments
       }
     }
 
-    deallocData ( xca, Base_Seq ) ;
-    deallocData ( xcb, Base_Seq ) ;
-    deallocData ( yca, Base_Seq ) ;
-    deallocData ( ycb, Base_Seq ) ;
-    deallocData ( zca, Base_Seq ) ;
-    deallocData ( zcb, Base_Seq ) ;
+    deallocData ( DataSpace::Host, xca ) ;
+    deallocData ( DataSpace::Host, xcb ) ;
+    deallocData ( DataSpace::Host, yca ) ;
+    deallocData ( DataSpace::Host, ycb ) ;
+    deallocData ( DataSpace::Host, zca ) ;
+    deallocData ( DataSpace::Host, zcb ) ;
   }
 }
 
@@ -614,7 +629,7 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 
 
-void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
+void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   copyData ( DataSpace::Host, m_records_h,
              getDataSpace(vid), m_records, 4L*m_nrecords ) ;
@@ -628,7 +643,7 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t tune_idx)
       ( m_records_h,
         m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
 
-  checksum[vid][tune_idx] += calcChecksum(m_records, 4L*m_nrecords, vid  );
+  addToChecksum(m_records, 4L*m_nrecords, vid);
 }
 
 void INTSC_HEXRECT::tearDown(VariantID vid,
@@ -641,7 +656,7 @@ void INTSC_HEXRECT::tearDown(VariantID vid,
   deallocData ( m_xdnode, vid ) ;
   deallocData ( m_ydnode, vid ) ;
   deallocData ( m_zdnode, vid ) ;
-  deallocData ( m_records_h, Base_Seq ) ;
+  deallocData ( DataSpace::Host, m_records_h ) ;
 }
 
 } // end namespace apps

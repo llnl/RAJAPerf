@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -28,12 +29,31 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void MATVEC_3D_STENCIL::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
 
   m_zonal_array_length = m_domain->lpz+1;
 
   setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
@@ -69,30 +89,20 @@ MATVEC_3D_STENCIL::MATVEC_3D_STENCIL(const RunParams& params)
                             get_size_matrix(1, 1, 1) +
                             get_size_matrix(0, 1, 1) +
                             get_size_matrix(1, 1, 1) ;
-  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() +
-                      1*sizeof(Real_type) * x_accessed +
-                      1*sizeof(Real_type) * m_accessed );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed );
+  setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
+                      1*sizeof(Real_type) * x_accessed + // x
+                      1*sizeof(Real_type) * m_accessed ); // m
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * b_accessed ); // b
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   const size_t multiplies = 27;
   const size_t adds = 26;
   setFLOPsPerRep((multiplies + adds) * getItsPerRep());
-
-  checksum_scale_factor = 1.0 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 MATVEC_3D_STENCIL::~MATVEC_3D_STENCIL()
 {
-  delete m_domain;
 }
 
 void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -134,15 +144,13 @@ void MATVEC_3D_STENCIL::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   setRealZones_3d(m_real_zones, *m_domain);
 }
 
-void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t tune_idx)
+void MATVEC_3D_STENCIL::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid].at(tune_idx) += calcChecksum(m_b, m_zonal_array_length, checksum_scale_factor , vid);
+  addToChecksum(m_b, m_zonal_array_length, vid);
 }
 
 void MATVEC_3D_STENCIL::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_b, vid);
   deallocData(m_x, vid);
 

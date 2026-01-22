@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -23,21 +24,35 @@ DIFF_PREDICT::DIFF_PREDICT(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(200);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 10*sizeof(Real_type) * getActualProblemSize() );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(9 * getActualProblemSize());
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void DIFF_PREDICT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
+  setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(9 * getActualProblemSize());
 }
 
 DIFF_PREDICT::~DIFF_PREDICT()
@@ -53,14 +68,13 @@ void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_cx, m_array_length, vid);
 }
 
-void DIFF_PREDICT::updateChecksum(VariantID vid, size_t tune_idx)
+void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_px, m_array_length, vid);
+  addToChecksum(m_px, m_array_length, vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_px, vid);
   deallocData(m_cx, vid);
 }

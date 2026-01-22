@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,21 +25,35 @@ TRAP_INT::TRAP_INT(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(10 * getActualProblemSize()); // 1 sqrt
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
   addVariantTunings();
+}
+
+void TRAP_INT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(10 * getActualProblemSize()); // 1 sqrt
 }
 
 TRAP_INT::~TRAP_INT()
@@ -62,14 +77,14 @@ void TRAP_INT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_sumx = 0;
 }
 
-void TRAP_INT::updateChecksum(VariantID vid, size_t tune_idx)
+void TRAP_INT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += m_sumx;
+  addToChecksum(m_sumx);
 }
 
-void TRAP_INT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void TRAP_INT::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
+
 }
 
 } // end namespace basic

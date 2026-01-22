@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -32,50 +33,62 @@ POLYBENCH_FDTD_2D::POLYBENCH_FDTD_2D(const RunParams& params)
                                     nx_default * (ny_default-1) ) );
   setDefaultReps(8 * m_tsteps);
 
-  m_nx = std::sqrt( getTargetProblemSize() ) + 1 + std::sqrt(2)-1;
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(2);
+  setProblemDimensionality(2);
+
+  setUsesFeature(Kernel);
+
+  addVariantTunings();
+}
+
+void POLYBENCH_FDTD_2D::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_nx = std::sqrt( target_size ) + 1 + std::sqrt(2)-1;
   m_ny = m_nx;
 
-
   setActualProblemSize( std::max( (m_nx-1)*m_ny, m_nx*(m_ny-1) ) );
+  setRunReps( target_reps );
 
   setItsPerRep( m_ny +
                 (m_nx-1)*m_ny +
                 m_nx*(m_ny-1) +
                 (m_nx-1)*(m_ny-1) );
   setKernelsPerRep(4);
-  setBytesReadPerRep( 1*sizeof(Real_type ) +
+  setBytesReadPerRep( 1*sizeof(Real_type ) + // fict
 
-                      1*sizeof(Real_type ) * (m_nx-1) * m_ny +
-                      1*sizeof(Real_type ) * m_nx * m_ny +
+                      1*sizeof(Real_type ) * m_nx * m_ny + // hz
 
-                      1*sizeof(Real_type ) * m_nx * (m_ny-1) +
-                      1*sizeof(Real_type ) * m_nx * m_ny +
+                      1*sizeof(Real_type ) * m_nx * m_ny + // hz
 
-                      1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) +
-                      1*sizeof(Real_type ) * (m_nx-1) * m_ny +
-                      1*sizeof(Real_type ) * m_nx * (m_ny-1) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ny +
+                      1*sizeof(Real_type ) * (m_nx-1) * m_ny + // ex
+                      1*sizeof(Real_type ) * m_nx * (m_ny-1) ); // ey
+  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ny + // ey
 
-                         1*sizeof(Real_type ) * (m_nx-1) * m_ny +
+                         0 +
 
-                         1*sizeof(Real_type ) * m_nx * (m_ny-1) +
+                         0 +
 
-                         1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) );
+                         0 ); // hz
+  setBytesModifyWrittenPerRep( 0 +
+
+                               1*sizeof(Real_type ) * (m_nx-1) * m_ny + // ey
+
+                               1*sizeof(Real_type ) * m_nx * (m_ny-1) + // ex
+
+                               1*sizeof(Real_type ) * (m_nx-1) * (m_ny-1) ); // hz
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( 0 * m_ny +
                   3 * (m_nx-1)*m_ny +
                   3 * m_nx*(m_ny-1) +
                   5 * (m_nx-1)*(m_ny-1) );
-
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Kernel);
-
-  addVariantTunings();
 }
 
 POLYBENCH_FDTD_2D::~POLYBENCH_FDTD_2D()
@@ -90,14 +103,13 @@ void POLYBENCH_FDTD_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   allocAndInitData(m_fict, m_tsteps, vid);
 }
 
-void POLYBENCH_FDTD_2D::updateChecksum(VariantID vid, size_t tune_idx)
+void POLYBENCH_FDTD_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_hz, m_nx * m_ny, checksum_scale_factor, vid);
+  addToChecksum(m_hz, m_nx * m_ny, vid);
 }
 
 void POLYBENCH_FDTD_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_fict, vid);
   deallocData(m_ex, vid);
   deallocData(m_ey, vid);

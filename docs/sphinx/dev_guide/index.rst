@@ -1,7 +1,8 @@
 .. ##
-.. ## Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-.. ## and RAJA Performance Suite project contributors. 
-.. ## See the RAJAPerf/LICENSE file for details.
+.. ## Copyright (c) Lawrence Livermore National Security, LLC and other
+.. ## RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+.. ## files for dates and other details. No copyright assignment is required
+.. ## to contribute to RAJA Performance Suite.
 .. ##
 .. ## SPDX-License-Identifier: (BSD-3-Clause)
 .. ##
@@ -16,10 +17,9 @@ The RAJA Performance Suite project follows nearly identical development
 processes as RAJA, which are documented in the 
 `RAJA Developer Guide <https://raja.readthedocs.io/en/develop/sphinx/dev_guide/index.html>`_ 
 
-This guide is structured similarly to the RAJA Developer Guide and refers to 
-sections in that on various development topics to avoid redundancy. In
-addition, it contains information about development and maintenance 
-practices that are specific to the RAJA Performance Suite.
+This guide describes development items that are specific to the RAJA Performance
+Suite and refers to sections in the RAJA Developer Guide on common things to
+avoid redundancy and simplify documentation maintenance.
 
 .. toctree::
    :maxdepth: 1

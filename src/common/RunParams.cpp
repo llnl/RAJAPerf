@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -35,8 +36,10 @@ RunParams::RunParams(int argc, char** argv)
    npasses_combiners(),
    rep_fact(1.0),
    size_meaning(SizeMeaning::Unset),
+   size_factor(1.0),
    size(0.0),
-   size_factor(0.0),
+   memory(0.0),
+   min_size(0.0),
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
@@ -58,6 +61,7 @@ RunParams::RunParams(int argc, char** argv)
    checkrun_reps(1),
    reference_variant(),
    reference_vid(NumVariants),
+   warmup_mode(WarmupMode::Default),
    warmup_kernel_input(),
    invalid_warmup_kernel_input(),
    kernel_input(),
@@ -83,7 +87,6 @@ RunParams::RunParams(int argc, char** argv)
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
-   disable_warmup(false),
    run_kernels(),
    run_variants()
 {
@@ -129,6 +132,8 @@ void RunParams::print(std::ostream& str) const
   str << "\n rep_fact = " << rep_fact;
   str << "\n size_meaning = " << SizeMeaningToStr(getSizeMeaning());
   str << "\n size = " << size;
+  str << "\n memory = " << memory;
+  str << "\n min_size = " << min_size;
   str << "\n size_factor = " << size_factor;
   str << "\n data_alignment = " << data_alignment;
 
@@ -176,8 +181,6 @@ void RunParams::print(std::ostream& str) const
   }
 #endif
 
-  str << "\n disable_warmup = " << disable_warmup;
-
   str << "\n seq data space = " << getDataSpaceName(seqDataSpace);
   str << "\n omp data space = " << getDataSpaceName(ompDataSpace);
   str << "\n omp target data space = " << getDataSpaceName(ompTargetDataSpace);
@@ -199,6 +202,8 @@ void RunParams::print(std::ostream& str) const
   str << "\n cuda MPI data space = " << getDataSpaceName(cudaMPIDataSpace);
   str << "\n hip MPI data space = " << getDataSpaceName(hipMPIDataSpace);
   str << "\n kokkos MPI data space = " << getDataSpaceName(kokkosMPIDataSpace);
+
+  str << "\n warmup_mode = " << WarmupModeToStr(warmup_mode);
 
   str << "\n warmup_kernel_input = ";
   for (size_t j = 0; j < warmup_kernel_input.size(); ++j) {
@@ -356,6 +361,24 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       printKernelFeatures(getCout());
       input_state = InfoRequest;
 
+    } else if ( opt == std::string("--print-checksum-consistencies") ||
+                opt == std::string("-pcc") ) {
+
+      printChecksumConsistencyNames(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-checksum-consistency-kernels") ||
+                opt == std::string("-pcck") ) {
+
+      printChecksumConsistencyKernels(getCout());
+      input_state = InfoRequest;
+
+    } else if ( opt == std::string("--print-kernel-checksum-consistencies") ||
+                opt == std::string("-pkcc") ) {
+
+      printKernelChecksumConsistencies(getCout());
+      input_state = InfoRequest;
+
     } else if ( opt == std::string("--print-complexities") ||
                 opt == std::string("-pc") ) {
 
@@ -417,21 +440,12 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Direct) {
+        size_factor = ::atof( argv[i] );
+        if ( size_factor < 0.0 ) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
-                    << std::endl;
+                << " must give --sizefact a POSITIVE value (double)"
+                << std::endl;
           input_state = BadInput;
-        } else {
-          size_factor = ::atof( argv[i] );
-          if ( size_factor >= 0.0 ) {
-            size_meaning = SizeMeaning::Factor;
-          } else {
-            getCout() << "\nBad input:"
-                  << " must give --sizefact a POSITIVE value (double)"
-                  << std::endl;
-            input_state = BadInput;
-          }
         }
       } else {
         getCout() << "\nBad input:"
@@ -444,9 +458,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Factor) {
+        if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
+                    << " may only set one of --size or --memory once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -463,6 +477,51 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       } else {
         getCout() << "\nBad input:"
                   << " must give --size a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--memory") ) {
+
+      i++;
+      if ( i < argc ) {
+        if (size_meaning != SizeMeaning::Unset) {
+          getCout() << "\nBad input:"
+                    << " may only set one of --size or --memory once"
+                    << std::endl;
+          input_state = BadInput;
+        } else {
+          memory = ::atof( argv[i] );
+          if ( memory >= 0.0 ) {
+            size_meaning = SizeMeaning::Memory;
+          } else {
+            getCout() << "\nBad input:"
+                  << " must give --memory a POSITIVE value (double)"
+                  << std::endl;
+            input_state = BadInput;
+          }
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give --memory a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--min-size") ) {
+
+      i++;
+      if ( i < argc ) {
+        min_size = ::atof( argv[i] );
+        if ( min_size < 0.0 ) {
+          getCout() << "\nBad input:"
+                << " must give --min-size a POSITIVE value (double)"
+                << std::endl;
+          input_state = BadInput;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give --min-size a value (int)"
                   << std::endl;
         input_state = BadInput;
       }
@@ -845,6 +904,8 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         }
       }
 
+      warmup_mode = WarmupMode::Explicit;
+
     } else if ( opt == std::string("--kernels") ||
                 opt == std::string("-k") ) {
 
@@ -1140,9 +1201,13 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = DryRun;
       }
 
-    } else if ( std::string(argv[i]) == std::string("--disable-warmup") ) {
+    } else if ( std::string(argv[i]) == std::string("--warmup-disable") ) {
 
-      disable_warmup = true;
+      warmup_mode = WarmupMode::Disable;
+
+    } else if ( std::string(argv[i]) == std::string("--warmup-perfrun-same") ) {
+
+      warmup_mode = WarmupMode::PerfRunSame;
 
     } else if ( std::string(argv[i]) == std::string("--checkrun") ) {
 
@@ -1209,8 +1274,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
   // Default size and size_meaning if unset
   if (size_meaning == SizeMeaning::Unset) {
-    size_meaning = SizeMeaning::Factor;
-    size_factor = 1.0;
+    size_meaning = SizeMeaning::Default;
   }
 
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -1302,6 +1366,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --print-kernel-features, -pkf \n"
       << "\t      (print names of features used by each kernel)\n\n";
 
+  str << "\t --print-consistencies, -pcc (print names of checksum consistencies exercised in Suite)\n\n";
+
+  str << "\t --print-consistency-kernels, -pcck \n"
+      << "\t      (print names of kernels that have each consistency)\n\n";
+
+  str << "\t --print-kernel-consistencies, -pkcc \n"
+      << "\t      (print the name of the consistency of each kernel)\n\n";
+
   str << "\t --print-complexities, -pc (print names of algorithmic complexities exercised in Suite)\n\n";
 
   str << "\t --print-complexity-kernels, -pck \n"
@@ -1320,7 +1392,8 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --dryrun (print summary of how Suite will run without running it)\n\n";
 
   str << "\t --refvar, -rv <string> [Default is none]\n"
-      << "\t      (reference variant for speedup calculation)\n\n";
+      << "\t      (reference variant used for speedup calculation and checksum difference;\n"
+      << "\t       same reference variant will be used for all kernels run)\n\n";
   str << "\t\t Example...\n"
       << "\t\t --refvar Base_Seq (speedups reported relative to Base_Seq variants)\n\n";
 
@@ -1330,10 +1403,10 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -pftol 0.2 (RAJA kernel variants that run 20% or more slower than Base variants will be reported as OVER_TOL in FOM report)\n\n";
 
   str << "\t --npasses-combiners <space-separated strings> [Default is 'Average']\n"
-      << "\t      (Specify combining npasses timing data into timing files)\n";
+      << "\t      (Specify how npasses timing data is combined into timing files)\n";
   str << "\t\t Example...\n"
       << "\t\t --npasses-combiners Average Minimum Maximum (produce average, min, and\n"
-      << "\t\t   max timing .csv files)\n\n";
+      << "\t\t   max timing in .csv files)\n\n";
 
   str << "\t --outdir, -od <string> [Default is current directory]\n"
       << "\t      (directory path for output data files)\n";
@@ -1344,15 +1417,20 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --outfile, -of <string> [Default is RAJAPerf]\n"
       << "\t      (file name prefix for output files)\n";
   str << "\t\t Examples...\n"
-      << "\t\t --outfile mydata (output data will be in files 'mydata*')\n"
-      << "\t\t -of dat (output data will be in files 'dat*')\n\n";
+      << "\t\t --outfile mydata (output data will be in files named 'mydata*')\n"
+      << "\t\t -of dat (output data will be in files named 'dat*')\n\n";
 
-  str << "\t Options for selecting kernels to run....\n"
-      << "\t ========================================\n\n";;
+  str << "\t Options for selecting which kernels to run....\n"
+      << "\t ========================================\n\n";
 
-  str << "\t --disable-warmup (disable warmup kernels) [Default is run warmup kernels that are relevant to kernels selected to run]\n\n";
+  str << "\t For warmup kernels, the default case (no option given) will run a minimal set of warmup kernels based on\n"
+      << "\t RAJA features exercised in kernels selected to run. Other options are:\n\n";
 
-  str << "\t --warmup-kernels, -wk <space-separated strings> [Default is run warmup kernels that are relevant to kernels selected to run]\n"
+  str << "\t --warmup-disable (do not run any warmup kernels)\n\n";
+
+  str << "\t --warmup-perfrun-same (run same set of kernels for warmup as selected to run)\n\n";
+
+  str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, none will be run for warmup]\n"
       << "\t      (names of individual kernels and/or groups of kernels to warmup)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
@@ -1361,7 +1439,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -wk INIT3 MULADDSUB (warmup INIT3 and MULADDSUB kernels)\n"
       << "\t\t -wk INIT3 Apps (warmup INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --kernels, -k <space-separated strings> [Default is run all]\n"
+  str << "\t --kernels, -k <space-separated strings> [Default is to run all kernels]\n"
       << "\t      (names of individual kernels and/or groups of kernels to run)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
@@ -1370,8 +1448,8 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -k INIT3 MULADDSUB (run INIT3 and MULADDSUB kernels)\n"
       << "\t\t -k INIT3 Apps (run INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --exclude-kernels, -ek <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of individual kernels and/or groups of kernels to exclude)\n"
+  str << "\t --exclude-kernels, -ek <space-separated strings> [Default is to exclude none]\n"
+      << "\t      (names of individual kernels and/or groups of kernels to exclude from run)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
   str << "\t\t Examples...\n"
@@ -1379,28 +1457,45 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ek INIT3 MULADDSUB (exclude INIT3 and MULADDSUB kernels)\n"
       << "\t\t -ek INIT3 Apps (exclude INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --variants, -v <space-separated strings> [Default is run all]\n"
-      << "\t      (names of variants to run)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+  str << "\t --variants, -v <space-separated strings> [Default is to run all available variants]\n"
+      << "\t      (names of variants and/or sets of variants to run)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --variants RAJA_CUDA (run all RAJA_CUDA kernel variants)\n"
-      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --variants RAJA (run all RAJA kernel variants)\n"
+      << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -v Base_Seq RAJA (run Base_Seq and RAJA variants)\n\n";
 
-  str << "\t --exclude-variants, -ev <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of variants to exclude)\n"
-      << "\t      See '--print-variants'/'-pv' option for list of valid variant names.\n";
+  str << "\t --exclude-variants, -ev <space-separated strings> [Default is to exclude none]\n"
+      << "\t      (names of variants and/or sets of variants to exclude)\n"
+      << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
-      << "\t\t --exclude-variants RAJA_CUDA (exclude all RAJA_CUDA kernel variants)\n"
-      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and  RAJA_CUDA variants)\n\n";
+      << "\t\t --exclude-variants RAJA (exclude all RAJA kernel variants)\n"
+      << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and RAJA_CUDA variants)\n"
+      << "\t\t -ev Base_Seq RAJA (exclude Base_Seq and RAJA variants)\n\n";
 
-  str << "\t --features, -f <space-separated strings> [Default is run all]\n"
+  str << "\t --tunings, -t <space-separated strings> [Default is run all]\n"
+      << "\t      (names of tunings to run)\n"
+      << "\t      Note: knowing which tunings are available requires knowledge about the variants,\n"
+      << "\t      since available tunings depend on the given variant (and potentially other args).\n";
+  str << "\t\t Examples...\n"
+      << "\t\t --tunings default (run all default tunings)\n"
+      << "\t\t -t default block_128 (run default and block_128 tunings)\n\n";
+
+  str << "\t --exclude-tunings, -et <space-separated strings> [Default is exclude none]\n"
+      << "\t      (names of tunings to exclude)\n"
+      << "\t      See --tunings option for more information.\n";
+  str << "\t\t Examples...\n"
+      << "\t\t --exclude-tunings library (exclude all library tunings)\n"
+      << "\t\t -et default library (exclude default and library tunings)\n\n";
+
+  str << "\t --features, -f <space-separated strings> [Default is to run all]\n"
       << "\t      (names of features to run)\n"
       << "\t      See '--print-kernel-features'/'-pkf' option for list of RAJA features used by kernels.\n";
   str << "\t\t Examples...\n"
       << "\t\t --features Forall (run all kernels that use RAJA forall)\n"
       << "\t\t -f Forall Reduction (run all kernels that use RAJA forall or RAJA reductions)\n\n";
 
-  str << "\t --exclude-features, -ef <space-separated strings> [Default is exclude none]\n"
+  str << "\t --exclude-features, -ef <space-separated strings> [Default is to exclude none]\n"
       << "\t      (names of features to exclude)\n"
       << "\t      See '--print-kernel-features'/'-pkf' option for list of RAJA features used by kernels.\n";
   str << "\t\t Examples...\n"
@@ -1408,12 +1503,12 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ef Forall Reduction (exclude all kernels that use RAJA forall or RAJA reductions)\n\n";
 
   str << "\t --enable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
-      << "\t      (when this option is given, enable custom scan tunings HIP and CUDA kernel variants)\n\n";
+      << "\t      (when this option is given, enable custom scan tunings for HIP and CUDA kernel variants)\n\n";
   str << "\t --disable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
-      << "\t      (when this option is given, disable custom scan tunings HIP and CUDA kernel variants)\n\n";
+      << "\t      (when this option is given, disable custom scan tunings for HIP and CUDA kernel variants)\n\n";
 
-  str << "\t Options for selecting run size....\n"
-      << "\t ==================================\n\n";;
+  str << "\t Options for selecting problem/run size parameters....\n"
+      << "\t ======================================================\n\n";
 
   str << "\t --checkrun <int> [default is 1]\n"
       << "\t      (run each kernel a given number of times)\n"
@@ -1432,17 +1527,93 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --repfact 0.5 (run each kernels 1/2 as many times as its default reps)\n\n";
 
-  str << "\t --sizefact <double> [default is 1.0]\n"
-      << "\t      (fraction of default kernel sizes to run)\n"
-      << "\t      May not be set if '--size' is set.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --sizefact 2.0 (run each kernel with size twice its default size)\n\n";
-
   str << "\t --size <int> [no default]\n"
-      << "\t      (kernel size to run for all kernels)\n"
-      << "\t      May not be set if --sizefact is set.\n";
+      << "\t      (problem size to run each kernel)\n"
+      << "\t      May not be set if --memory option is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
+
+  str << "\t --memory <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will touch per rep; note that each kernel calculates a problem size so that it will\n"
+      << "\t        touch the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory 1000000 (runs each kernel such that it touches ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --min-size <int> [default is 0]\n"
+      << "\t      (minimum problem size to run for all kernels)\n"
+      << "\t      (intended for use with --memory to avoid small problem sizes)\n"
+      << "\t      Applied before the --sizefact multiplier.\n"
+      << "\t      Approximate for kernels where size is approximate.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --min-size 1000000 (runs each kernel with at least size ~1,000,000)\n\n";
+
+  str << "\t --sizefact <double> [default is 1.0]\n"
+      << "\t      (multiplier to apply to the problem size of each kernel)\n"
+      << "\t      (intended to simplify input for scaling studies)\n"
+      << "\t      Applied after the --min-size limiter.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --sizefact 0.5 (run each kernel with size half its calculated size)\n"
+      << "\t\t --sizefact 2.0 (run each kernel with size twice its calculated size)\n\n";
+
+  str << "\t --ltimes_num_d <int> [default is 64]\n"
+      << "\t      (For LTIMES kernels only: num_d used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_d 32\n\n";
+
+  str << "\t --ltimes_num_g <int> [default is 32]\n"
+      << "\t      (For LTIMES kernels only: num_g used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_g 64\n\n";
+
+  str << "\t --ltimes_num_m <int> [default is 25]\n"
+      << "\t      (For LTIMES kernels only: num_m used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_m 100\n\n";
+
+  str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
+      << "\t      (For ARRAY_OF_PTRS only: array size used in kernel)\n"
+      << "\t      Must be greater than 0.\n"
+      << "\t      Must be less than or equal to " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << ".\n";
+  str << "\t\t Example...\n"
+      << "\t\t --array_of_ptrs_array_size 4\n\n";
+
+  str << "\t --halo_width <int> [default is 1]\n"
+      << "\t      (For HALO kernels only: halo width used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --halo_width 2\n\n";
+
+  str << "\t --halo_num_vars <int> [default is 3]\n"
+      << "\t      (For HALO kernels only: num vars used in halo kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --halo_num_vars 10\n\n";
+
+  str << "\t --multi_reduce_num_bins <int> [default is 10]\n"
+      << "\t      (For MULTI_REDUCE kernel only: number of bins used)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --multi_reduce_num_bins 100\n\n";
+
+  str << "\t --multi_reduce_bin_assignment_algorithm <string> [default is RunsRandomSizes]\n"
+      << "\t      (For MULTI_REDUCE kernel only: algorithm used to assign bins to iterates)\n"
+      << "\t      Valid assignment algorithm names are 'Random', 'RunsRandomSizes', 'RunsEvenSizes', or 'Single'\n";
+  str << "\t\t Example...\n"
+      << "\t\t --multi_reduce_bin_assignment_algorithm Random\n\n";
+
+  str << "\t Options for selecting MPI execution details....\n"
+      << "\t ===============================================\n\n";;
+
+  str << "\t --mpi_3d_division <space-separated ints> [no default]\n"
+      << "\t      (number of mpi ranks in each dimension in a 3d grid)\n"
+      << "\t      (3D MPI kernels will be skipped if the product of mpi_3d_division is not equal to the number of ranks)\n";
+  str << "\t\t Example...\n"
+      << "\t\t --mpi_3d_division 2 3 5 (runs 3d MPI kernels on a 2 by 3 by 5 grid)\n\n";
 
   str << "\t Options for selecting GPU execution details....\n"
       << "\t ===============================================\n\n";;
@@ -1476,84 +1647,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --items_per_thread 128 256 512 (runs kernels with items_per_thread 128, 256, and 512)\n\n";
 
-  str << "\t --mpi_3d_division <space-separated ints> [no default]\n"
-      << "\t      (number of mpi ranks in each dimension in a 3d grid)\n"
-      << "\t      (3D MPI kernels will be skipped if the product of mpi_3d_division is not equal to the number of ranks)\n";
-  str << "\t\t Example...\n"
-      << "\t\t --mpi_3d_division 2 3 5 (runs 3d MPI kernels on a 2 by 3 by 5 grid)\n\n";
-
-  str << "\t --tunings, -t <space-separated strings> [Default is run all]\n"
-      << "\t      (names of tunings to run)\n"
-      << "\t      Note: knowing which tunings are available requires knowledge about the variants,\n"
-      << "\t      since available tunings depend on the given variant (and potentially other args).\n";
-  str << "\t\t Examples...\n"
-      << "\t\t --tunings default (run all default tunings)\n"
-      << "\t\t -t default block_128 (run default and block_128 tunings)\n\n";
-
-  str << "\t --exclude-tunings, -et <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of tunings to exclude)\n"
-      << "\t      See --tunings option for more information.\n";
-  str << "\t\t Examples...\n"
-      << "\t\t --exclude-tunings library (exclude all library tunings)\n"
-      << "\t\t -et default library (exclude default and library tunings)\n\n";
-
-  str << "\t Options for selecting kernel data used in kernels....\n"
-      << "\t ======================================================\n\n";
+  str << "\t Options for selecting data used in kernels....\n"
+      << "\t ===============================================\n\n";
 
   str << "\t --data_alignment, -align <int> [default is RAJA::DATA_ALIGN]\n"
       << "\t      (minimum memory alignment for host allocations)\n"
       << "\t      Must be a power of 2 at least as large as default alignment.\n";
   str << "\t\t Example...\n"
       << "\t\t -align 4096 (allocates memory aligned to 4KiB boundaries)\n\n";
-
-  str << "\t --multi_reduce_num_bins <int> [default is 10]\n"
-      << "\t      (number of bins used in multi-reduce kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --multi_reduce_num_bins 100\n\n";
-
-  str << "\t --multi_reduce_bin_assignment_algorithm <string> [default is RunsRandomSizes]\n"
-      << "\t      (algorithm used to assign bins to iterates in multi-reduce kernels)\n"
-      << "\t      Valid assignment algorithm names are 'Random', 'RunsRandomSizes', 'RunsEvenSizes', or 'Single'\n";
-  str << "\t\t Example...\n"
-      << "\t\t --multi_reduce_bin_assignment_algorithm Random\n\n";
-
-  str << "\t --ltimes_num_d <int> [default is 64]\n"
-      << "\t      (num_d used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_d 32\n\n";
-
-  str << "\t --ltimes_num_g <int> [default is 32]\n"
-      << "\t      (num_g used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_g 64\n\n";
-
-  str << "\t --ltimes_num_m <int> [default is 25]\n"
-      << "\t      (num_m used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_m 100\n\n";
-
-  str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
-      << "\t      (array size used in ARRAY_OF_PTRS kernel)\n"
-      << "\t      Must be greater than 0.\n"
-      << "\t      Must be less than or equal to " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << ".\n";
-  str << "\t\t Example...\n"
-      << "\t\t --array_of_ptrs_array_size 4\n\n";
-
-  str << "\t --halo_width <int> [default is 1]\n"
-      << "\t      (halo width used in halo kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --halo_width 2\n\n";
-
-  str << "\t --halo_num_vars <int> [default is 3]\n"
-      << "\t      (num vars used in halo kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --halo_num_vars 10\n\n";
 
   str << "\t --seq-data-space, -sds <string> [Default is Host]\n"
       << "\t      (name of data space to use for sequential variants)\n"
@@ -1720,8 +1821,8 @@ void RunParams::printFullKernelNames(std::ostream& str) const
 
 void RunParams::printVariantNames(std::ostream& str) const
 {
-  str << "\nAvailable variants:";
-  str << "\n-------------------\n";
+  str << "\nAvailable variants (<set name>_<set name>):";
+  str << "\n-----------------------------------------------\n";
   for (int vid = 0; vid < NumVariants; ++vid) {
     str << getVariantName(static_cast<VariantID>(vid)) << std::endl;
   }
@@ -1757,12 +1858,22 @@ void RunParams::printDataSpaceNames(std::ostream& str) const
 }
 
 
-void RunParams::printGroupNames(std::ostream& str) const
+void RunParams::printKernelGroupNames(std::ostream& str) const
 {
-  str << "\nAvailable groups:";
-  str << "\n-----------------\n";
-  for (int gid = 0; gid < NumGroups; ++gid) {
-    str << getGroupName(static_cast<GroupID>(gid)) << std::endl;
+  str << "\nAvailable kernel groups:";
+  str << "\n------------------------\n";
+  for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+    str << getKernelGroupName(static_cast<KernelGroupID>(kgid)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printVariantSetNames(std::ostream& str) const
+{
+  str << "\nAvailable variant sets:";
+  str << "\n-------------------------\n";
+  for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+    str << getVariantSetName(static_cast<VariantSetID>(vgid)) << std::endl;
   }
   str.flush();
 }
@@ -1811,6 +1922,51 @@ void RunParams::printKernelFeatures(std::ostream& str) const
          str << "\t" << getFeatureName(tfid) << std::endl;
       }
     }  // loop over features
+    delete kern;
+  }  // loop over kernels
+  str.flush();
+}
+
+void RunParams::printChecksumConsistencyNames(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies:";
+  str << "\n-------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    str << getChecksumConsistencyName(static_cast<ChecksumConsistency>(cc)) << std::endl;
+  }
+  str.flush();
+}
+
+void RunParams::printChecksumConsistencyKernels(std::ostream& str) const
+{
+  str << "\nAvailable checksum consistencies and kernels that use each:";
+  str << "\n---------------------------------------------\n";
+  for (int cc = 0; cc < int(ChecksumConsistency::NumChecksumConsistencies); ++cc) {
+    ChecksumConsistency tcc = static_cast<ChecksumConsistency>(cc);
+    str << getChecksumConsistencyName(tcc) << std::endl;
+    for (int kid = 0; kid < NumKernels; ++kid) {
+      KernelID tkid = static_cast<KernelID>(kid);
+      KernelBase* kern = getKernelObject(tkid, *this);
+      if ( kern->getChecksumConsistency() == tcc ) {
+        str << "\t" << getFullKernelName(tkid) << std::endl;
+      }
+      delete kern;
+    }  // loop over kernels
+    str << std::endl;
+  }  // loop over consistencies
+  str.flush();
+}
+
+void RunParams::printKernelChecksumConsistencies(std::ostream& str) const
+{
+  str << "\nAvailable kernels and checksum consistencies each uses:";
+  str << "\n-----------------------------------------\n";
+  for (int kid = 0; kid < NumKernels; ++kid) {
+    KernelID tkid = static_cast<KernelID>(kid);
+    str << getFullKernelName(tkid) << std::endl;
+    KernelBase* kern = getKernelObject(tkid, *this);
+    ChecksumConsistency tcc = kern->getChecksumConsistency();
+    str << "\t" << getChecksumConsistencyName(tcc) << std::endl;
     delete kern;
   }  // loop over kernels
   str.flush();
@@ -1935,11 +2091,10 @@ void RunParams::processKernelInput()
     // groups2exclude will contain names of valid groups to exclude.
     //
     Svector groups2exclude;
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+    for (auto const& kern_name : exclude_kern_names) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2exclude.push_back(group_name);
         }
       }
@@ -1950,17 +2105,16 @@ void RunParams::processKernelInput()
     // those group(s) to exclude from run. Also remove the group names from
     // the exclude_kern_names list.
     //
-    for (size_t ig = 0; ig < groups2exclude.size(); ++ig) {
-      const std::string& gname(groups2exclude[ig]);
+    for (auto const& group_name : groups2exclude) {
 
       for (size_t ik = 0; ik < NumKernels; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getFullKernelName(kid).find(gname) != std::string::npos ) {
+        if ( getFullKernelName(kid).find(group_name) != std::string::npos ) {
           exclude_kernels.insert(kid);
         }
       }
 
-      exclude_kern_names.remove(gname);
+      exclude_kern_names.remove(group_name);
 
     }  // iterate over groups to exclude
 
@@ -1968,13 +2122,13 @@ void RunParams::processKernelInput()
     // Search for valid names of individual kernels in remaining items in
     // exclude_kern_names list.
     //
-    for (Slist::iterator it = exclude_kern_names.begin(); 
-         it != exclude_kern_names.end(); ++it) {
+    for (auto const& kern_name : exclude_kern_names) {
       bool found_it = false;
 
       for (size_t ik = 0; ik < NumKernels && !found_it; ++ik) {
         KernelID kid = static_cast<KernelID>(ik);
-        if ( getKernelName(kid) == *it || getFullKernelName(kid) == *it ) {
+        if ( getKernelName(kid) == kern_name ||
+             getFullKernelName(kid) == kern_name ) {
           exclude_kernels.insert(kid);
           found_it = true;
         }
@@ -1982,7 +2136,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_kernel_input.push_back(*it);
+        invalid_exclude_kernel_input.push_back(kern_name);
       }
 
     }  // iterate over names of kernels to exclude
@@ -2065,7 +2219,7 @@ void RunParams::processKernelInput()
   //
   // ================================================================
 
-  run_warmup_kernels.clear();
+  specified_warmup_kernel_ids.clear();
 
   if ( !warmup_kernel_input.empty() ) {
 
@@ -2084,8 +2238,8 @@ void RunParams::processKernelInput()
     Svector warmup_groups2run;
     for (Slist::iterator it = warmup_kern_names.begin(); it != warmup_kern_names.end(); ++it)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
         if ( group_name == *it ) {
           warmup_groups2run.push_back(group_name);
         }
@@ -2096,14 +2250,14 @@ void RunParams::processKernelInput()
     // If group name(s) found in warmup_kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from warmup_kern_names list.
     //
-    for (size_t ig = 0; ig < warmup_groups2run.size(); ++ig) {
-      const std::string& gname(warmup_groups2run[ig]);
+    for (size_t ikg = 0; ikg < warmup_groups2run.size(); ++ikg) {
+      const std::string& gname(warmup_groups2run[ikg]);
 
       for (size_t kid = 0; kid < NumKernels; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
-          run_warmup_kernels.insert(tkid);
+          specified_warmup_kernel_ids.insert(tkid);
         }
       }
 
@@ -2121,7 +2275,7 @@ void RunParams::processKernelInput()
         KernelID tkid = static_cast<KernelID>(kid);
         if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
-            run_warmup_kernels.insert(tkid);
+            specified_warmup_kernel_ids.insert(tkid);
           }
           found_it = true;
         }
@@ -2227,11 +2381,11 @@ void RunParams::processKernelInput()
     // groups2run will contain names of groups to run.
     //
     Svector groups2run;
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
-      for (size_t ig = 0; ig < NumGroups; ++ig) {
-        const std::string& group_name = getGroupName(static_cast<GroupID>(ig));
-        if ( group_name == *it ) {
+      for (int kgid = 0; kgid < static_cast<int>(KernelGroupID::NumKernelGroups); ++kgid) {
+        const std::string& group_name = getKernelGroupName(static_cast<KernelGroupID>(kgid));
+        if ( group_name == kern_name ) {
           groups2run.push_back(group_name);
         }
       }
@@ -2241,30 +2395,31 @@ void RunParams::processKernelInput()
     // If group name(s) found in kern_names, assemble kernels in group(s)
     // to run and remove those group name(s) from kern_names list.
     //
-    for (size_t ig = 0; ig < groups2run.size(); ++ig) {
-      const std::string& gname(groups2run[ig]);
-
-      for (size_t kid = 0; kid < NumKernels; ++kid) {
+    for (auto const& group_name : groups2run)
+    {
+      for (size_t kid = 0; kid < NumKernels; ++kid)
+      {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getFullKernelName(tkid).find(gname) != std::string::npos &&
+        if ( getFullKernelName(tkid).find(group_name) != std::string::npos &&
              exclude_kernels.find(tkid) == exclude_kernels.end()) {
           run_kernels.insert(tkid);
         }
       }
 
-      kern_names.remove(gname);
+      kern_names.remove(group_name);
     }
 
     //
     // Look for matching names of individual kernels in remaining kern_names.
     //
-    for (Slist::iterator it = kern_names.begin(); it != kern_names.end(); ++it)
+    for (auto const& kern_name : kern_names)
     {
       bool found_it = false;
 
       for (size_t kid = 0; kid < NumKernels && !found_it; ++kid) {
         KernelID tkid = static_cast<KernelID>(kid);
-        if ( getKernelName(tkid) == *it || getFullKernelName(tkid) == *it ) {
+        if ( getKernelName(tkid) == kern_name ||
+             getFullKernelName(tkid) == kern_name ) {
           if (exclude_kernels.find(tkid) == exclude_kernels.end()) {
             run_kernels.insert(tkid);
           }
@@ -2274,7 +2429,7 @@ void RunParams::processKernelInput()
 
       // Assemble invalid input for output message.
       if ( !found_it ) {
-        invalid_kernel_input.push_back(*it);
+        invalid_kernel_input.push_back(kern_name);
       }
 
     } // iterate over kernel name input
@@ -2310,6 +2465,8 @@ void RunParams::processKernelInput()
  */
 void RunParams::processVariantInput()
 {
+  using Slist = std::list<std::string>;
+  using Svector = std::vector<std::string>;
   using VIDset = std::set<VariantID>;
 
   //
@@ -2338,19 +2495,56 @@ void RunParams::processVariantInput()
 
   if ( !exclude_variant_input.empty() ) {
 
+    // Make list copy of exclude variant name input to manipulate for
+    // processing potential set names and/or variant names, next
+    Slist exclude_variant_names( exclude_variant_input.begin(),
+                                 exclude_variant_input.end() );
+
+    //
+    // Search exclude_variant_names for valid set names.
+    // sets2exclude will contain names of valid sets to exclude.
+    //
+    Svector sets2exclude;
+    for (auto const& variant_name : exclude_variant_names) {
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2exclude.push_back(set_name);
+        }
+      }
+    }
+
+    //
+    // If set name(s) found in exclude_variant_names, assemble kernels in
+    // those set(s) to exclude from run. Also remove the set names from
+    // the exclude_variant_names list.
+    //
+    for (auto const& set_name : sets2exclude) {
+
+      for (size_t iv = 0; iv < NumVariants; ++iv) {
+        VariantID vid = static_cast<VariantID>(iv);
+        if ( getVariantName(vid).find(set_name) != std::string::npos ) {
+          exclude_variants.insert(vid);
+        }
+      }
+
+      exclude_variant_names.remove(set_name);
+
+    }  // iterate over sets to exclude
+
     //
     // Parse input to determine which variants to exclude.
     //
     // Assemble invalid input for warning message.
     //
 
-    for (size_t it = 0; it < exclude_variant_input.size(); ++it) {
+    for (auto const& variant_name : exclude_variant_names) {
       bool found_it = false;
 
       for (VIDset::iterator vid_it = available_variants.begin();
            vid_it != available_variants.end(); ++vid_it) {
         VariantID vid = *vid_it;
-        if ( getVariantName(vid) == exclude_variant_input[it] ) {
+        if ( getVariantName(vid) == variant_name ) {
           exclude_variants.insert(vid);
           found_it = true;
         }
@@ -2358,7 +2552,7 @@ void RunParams::processVariantInput()
 
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_exclude_variant_input.push_back(exclude_variant_input[it]);
+        invalid_exclude_variant_input.push_back(variant_name);
       }
 
     }
@@ -2382,9 +2576,7 @@ void RunParams::processVariantInput()
     // No variants specified in input options, run all available.
     // Also, set reference variant if specified.
     //
-    for (VIDset::iterator vid_it = available_variants.begin();
-         vid_it != available_variants.end(); ++vid_it) {
-      VariantID vid = *vid_it;
+    for (VariantID vid : available_variants) {
 
       if (exclude_variants.find(vid) == exclude_variants.end()) {
         run_variants.insert( vid );
@@ -2397,6 +2589,42 @@ void RunParams::processVariantInput()
 
   } else {  // variant input given
 
+    // Make list copy of variant name input to manipulate for
+    // processing potential set names and/or variant names, next
+    Slist variant_names(variant_input.begin(), variant_input.end());
+
+    //
+    // Search variant_names for matching set names.
+    // sets2run will contain names of sets to run.
+    //
+    Svector sets2run;
+    for (auto const& variant_name : variant_names)
+    {
+      for (int vgid = 0; vgid < static_cast<int>(VariantSetID::NumVariantSets); ++vgid) {
+        const std::string& set_name = getVariantSetName(static_cast<VariantSetID>(vgid));
+        if ( set_name == variant_name ) {
+          sets2run.push_back(set_name);
+        }
+      }
+    }
+
+    //
+    // If set name(s) found in variant_names, assemble variants in set(s)
+    // to run and remove those set name(s) from variant_names list.
+    //
+    for (auto const& set_name : sets2run)
+    {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid).find(set_name) != std::string::npos &&
+             exclude_variants.find(vid) == exclude_variants.end()) {
+          run_variants.insert(vid);
+        }
+      }
+
+      variant_names.remove(set_name);
+    }
+
     //
     // Parse input to determine which variants to run:
     //   - variants to run will be the intersection of available variants
@@ -2405,14 +2633,13 @@ void RunParams::processVariantInput()
     //     and variant will be run; else first variant that will be run.
     //
 
-    for (size_t it = 0; it < variant_input.size(); ++it) {
+    for (auto const& variant_name : variant_names)
+    {
       bool found_it = false;
 
-      for (VIDset::iterator vid_it = available_variants.begin();
-           vid_it != available_variants.end(); ++vid_it) {
-        VariantID vid = *vid_it;
-
-        if ( getVariantName(vid) == variant_input[it] ) {
+      for (VariantID vid : available_variants)
+      {
+        if ( getVariantName(vid) == variant_name ) {
           if (exclude_variants.find(vid) == exclude_variants.end()) {
             run_variants.insert(vid);
             if ( getVariantName(vid) == reference_variant ) {
@@ -2421,12 +2648,11 @@ void RunParams::processVariantInput()
           }
           found_it = true;
         }
-
       }
   
       // Assemble invalid input items for output message.
       if ( !found_it ) {
-        invalid_variant_input.push_back(variant_input[it]);
+        invalid_variant_input.push_back(variant_name);
       } 
 
     }
