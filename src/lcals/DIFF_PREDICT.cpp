@@ -61,16 +61,13 @@ DIFF_PREDICT::~DIFF_PREDICT()
 
 void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  m_array_length = getActualProblemSize() * 14;
-  m_offset = getActualProblemSize();
-
-  allocAndInitDataConst(m_px, m_array_length, 0.0, vid);
-  allocAndInitData(m_cx, m_array_length, vid);
+  allocAndInitDataConst(m_px, 10*getActualProblemSize(), 0.0, vid);
+  allocAndInitData(m_cx, getActualProblemSize(), vid);
 }
 
 void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_px, m_array_length, vid);
+  addToChecksum(m_px, 14*getActualProblemSize(), vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -53,9 +53,8 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
 void HYDRO_2D::setSize(Index_type target_size, Index_type target_reps)
 {
   m_jn = m_kn = std::sqrt(target_size) + std::sqrt(2)-1;
-  m_array_length = m_kn * m_jn;
 
-  setActualProblemSize( m_array_length );
+  setActualProblemSize( m_kn*m_jn );
   setRunReps( target_reps );
 
   setItsPerRep( 3 * (m_kn-2)*(m_jn-2) );
@@ -90,23 +89,23 @@ HYDRO_2D::~HYDRO_2D()
 
 void HYDRO_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_zrout, m_array_length, 0.0, vid);
-  allocAndInitDataConst(m_zzout, m_array_length, 0.0, vid);
-  allocAndInitData(m_za, m_array_length, vid);
-  allocAndInitData(m_zb, m_array_length, vid);
-  allocAndInitData(m_zm, m_array_length, vid);
-  allocAndInitData(m_zp, m_array_length, vid);
-  allocAndInitData(m_zq, m_array_length, vid);
-  allocAndInitData(m_zr, m_array_length, vid);
-  allocAndInitData(m_zu, m_array_length, vid);
-  allocAndInitData(m_zv, m_array_length, vid);
-  allocAndInitData(m_zz, m_array_length, vid);
+  allocAndInitDataConst(m_zrout, m_kn*m_jn, 0.0, vid);
+  allocAndInitDataConst(m_zzout, m_kn*m_jn, 0.0, vid);
+  allocAndInitData(m_za, m_kn*m_jn, vid);
+  allocAndInitData(m_zb, m_kn*m_jn, vid);
+  allocAndInitData(m_zm, m_kn*m_jn, vid);
+  allocAndInitData(m_zp, m_kn*m_jn, vid);
+  allocAndInitData(m_zq, m_kn*m_jn, vid);
+  allocAndInitData(m_zr, m_kn*m_jn, vid);
+  allocAndInitData(m_zu, m_kn*m_jn, vid);
+  allocAndInitData(m_zv, m_kn*m_jn, vid);
+  allocAndInitData(m_zz, m_kn*m_jn, vid);
 }
 
 void HYDRO_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_zzout, m_array_length, vid);
-  addToChecksum(m_zrout, m_array_length, vid);
+  addToChecksum(m_zzout, m_kn*m_jn, vid);
+  addToChecksum(m_zrout, m_kn*m_jn, vid);
 }
 
 void HYDRO_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
