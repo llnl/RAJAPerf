@@ -56,7 +56,7 @@ void DIFFUSION3DPA::setSize(Index_type target_size, Index_type target_reps)
 
   setBytesReadPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
                       1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE + // x
-                diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE ); // d
+          diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE ); // d
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE ); // y
   setBytesAtomicModifyWrittenPerRep( 0 );

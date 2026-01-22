@@ -49,14 +49,14 @@ void POLYBENCH_GESUMMV::setSize(Index_type target_size, Index_type target_reps)
 {
   m_N = std::sqrt( target_size ) + std::sqrt(2)-1;
 
-  setActualProblemSize( m_N * m_N );
+  setActualProblemSize( m_N*m_N );
   setRunReps( target_reps );
 
   setItsPerRep( m_N );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // x
-                      2*sizeof(Real_type ) * m_N * m_N ); // A, B
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N ); // y
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N +      // x
+                      2*sizeof(Real_type) * m_N*m_N ); // A, B
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N ); // y
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((4 * m_N +
@@ -71,8 +71,8 @@ void POLYBENCH_GESUMMV::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 {
   allocAndInitData(m_x, m_N, vid);
   allocAndInitDataConst(m_y, m_N, 0.0, vid);
-  allocAndInitData(m_A, m_N * m_N, vid);
-  allocAndInitData(m_B, m_N * m_N, vid);
+  allocAndInitData(m_A, m_N*m_N, vid);
+  allocAndInitData(m_B, m_N*m_N, vid);
 }
 
 void POLYBENCH_GESUMMV::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
