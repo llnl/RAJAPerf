@@ -1,0 +1,29 @@
+A method to approximate sauration point for noisy or non-monotonic
+throughput curves....
+
+Assume we have a set of x and y values:
+
+x0, x1, x2, ..., xN  (e.g. problem size)
+y0, y1, y2, ..., yN  (e.g. FLOP / sec)
+
+Step 1: Smooth curve via moving median method (robust to outliers,
+        a few extreme values do not affect the result much)
+
+Choose window size k (odd integer such as 3, 5, or 7)
+Define m = (k - 1) / 2
+
+Define smooth curve with same x values as above, but with
+y values y_smooth_i defined as:
+For i in 0..N:
+  window indices = { max(0, i-m), ..., min(N, i+m) }
+  window values = x[window indices]
+  y_smooth[i] = median(window_values)
+
+Step 2: Find global max of smoothed curve
+
+y_max = max(y_smooth[i]) i = 0..N
+
+Step 3: Approximate saturation point
+
+smallest x_i value where y_smooth[i] >= (1 - eps) * y_max
+for w consecutive i values; e.g., eps = 0.1 and w = 3
