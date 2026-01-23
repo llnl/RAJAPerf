@@ -593,7 +593,7 @@ RAJA_INLINE Int_type intsc24_hex
       Real_const_ptr xplane ; \
       Int_type jz, jy, jx ; \
       { \
-        Plane* plane = reinterpret_cast<Plane*>(ncord_gpu) ; \
+        auto plane = reinterpret_cast<typename INTSC_HEXRECT::Plane*>(ncord_gpu) ; \
         zplane = plane->planes[0] ; \
         yplane = plane->planes[1] ; \
         xplane = plane->planes[2] ; \
