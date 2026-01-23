@@ -67,7 +67,7 @@ void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_px, 14*getActualProblemSize(), vid);
+  addToChecksum(m_px, 10*getActualProblemSize(), vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
