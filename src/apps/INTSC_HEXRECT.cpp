@@ -581,6 +581,7 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
   copyData(DataSpace::Host, m_records_h,
            getDataSpace(vid), m_records, 4L*m_nrecords) ;
 
+  // this scales the values in m_records_h so they look like integers
   checkMoments(vid);
 
   checkScaledVolumes(vid);
