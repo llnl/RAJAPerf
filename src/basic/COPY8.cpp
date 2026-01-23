@@ -48,6 +48,9 @@ void COPY8::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 8*sizeof(Real_type) * getActualProblemSize() + // y0, y1, y2, y3, y4, y5, y6, y7
+                           8*sizeof(Real_type) * getActualProblemSize() ); // x0, x1, x2, x3, x4, x5, x6, x7
   setBytesReadPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // x0, x1, x2, x3, x4, x5, x6, x7
   setBytesWrittenPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // y0, y1, y2, y3, y4, y5, y6, y7
   setBytesModifyWrittenPerRep( 0 );

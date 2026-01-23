@@ -60,6 +60,7 @@ void HYDRO_2D::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( 3 * (m_kn-2)*(m_jn-2) );
   setKernelsPerRep(3);
 
+  setBytesAllocatedPerRep( 11*sizeof(Real_type) * m_kn*m_jn ); // zrout, zzout, za, zb, zm, zp, zq, zr, zu, zv, zz
   setBytesReadPerRep( 2*sizeof(Real_type) * ((m_kn-1)*(m_jn-1) - 1) + // zp, zq (4 point stencil)
                       2*sizeof(Real_type) * ((m_kn-1)*(m_jn-1) - 1) + // zr, zm (3 point stencil)
 

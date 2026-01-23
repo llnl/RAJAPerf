@@ -55,6 +55,7 @@ void FIRST_MIN::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_N ); // x
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N ); // x
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );

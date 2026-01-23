@@ -48,6 +48,9 @@ void HALO_PACKING::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( 2 * m_num_vars * m_halo_size );
   setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
 
+  setBytesAllocatedPerRep( 2*sizeof(Int_type) * m_halo_size + // pack_index_lists, unpack_index_lists
+                           2*sizeof(Real_type) * m_num_vars * m_halo_size + // pack_buffers, unpack_buffers (ignore send_buffers, unpack_buffers)
+                           1*sizeof(Real_type) * m_num_vars * m_var_size );  // vars
   setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * m_halo_size +   // pack_index_lists
                       1*sizeof(Real_type) * m_num_vars * m_halo_size +  // vars
 

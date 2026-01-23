@@ -315,13 +315,9 @@ Executor::Executor(int argc, char** argv)
   }
 
   adiak::value("SizeMeaning",(adiak::catstring)run_params.SizeMeaningToStr(run_params.getSizeMeaning()));
-  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Default) {
-    adiak::value("ProblemSizeRunParam",(uint)0);
-  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
-    adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
-  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
-    adiak::value("ProblemSizeRunParam",(uint)run_params.getMemory());
-  }
+  adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
+  adiak::value("MemoryMeaning",(adiak::catstring)run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()));
+  adiak::value("MemorySizeRunParam",(uint)run_params.getMemory());
   adiak::value("ProblemSizeFactorRunParam",(uint)run_params.getSizeFactor());
   adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
@@ -528,7 +524,7 @@ void Executor::reportRunSummary(ostream& str) const
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
       str << "\t Kernel size = " << run_params.getSize() << endl;
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
-      str << "\t Kernel memory touched = " << run_params.getMemory() << endl;
+      str << "\t Kernel memory " << run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()) << " = " << run_params.getMemory() << endl;
     }
     str << "\t Kernel min size = " << run_params.getMinSize() << endl;
     str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
@@ -655,6 +651,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type bytesWrittenrep_width = 0;
   Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
+  Index_type bytesAllocatedrep_width = 0;
   size_t     checksumConsistency_width = 0;
   size_t     operationalComplexity_width = 0;
 
@@ -667,11 +664,12 @@ void Executor::writeKernelInfoSummary(ostream& str,
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
     bytesrep_width = max(bytesrep_width, kernels[ik]->getBytesPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
-    bytesTouchedrep_width = max(bytesrep_width, kernels[ik]->getBytesTouchedPerRep());
+    bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
     bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
     bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
+    bytesAllocatedrep_width = max(bytesAllocatedrep_width, kernels[ik]->getBytesAllocatedPerRep());
     checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
     operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
   }
@@ -749,6 +747,12 @@ void Executor::writeKernelInfoSummary(ostream& str,
                         static_cast<Index_type>(bamrrsize) ) + 3;
   dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
+  double barsize = log10( static_cast<double>(bytesAllocatedrep_width) );
+  string bytesAllocatedrep_head("BytesAllocated/rep");
+  bytesAllocatedrep_width = max( static_cast<Index_type>(bytesAllocatedrep_head.size()),
+                                 static_cast<Index_type>(barsize) ) + 3;
+  dash_width += bytesAllocatedrep_width + static_cast<Index_type>(sepchr.size());
+
   string checksumConsistency_head("ChecksumConsistency");
   checksumConsistency_width = max( checksumConsistency_head.size(),
                                      checksumConsistency_width ) + 2;
@@ -771,6 +775,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
       << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
+      << sepchr <<right<< setw(bytesAllocatedrep_width) << bytesAllocatedrep_head
       << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
       << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
       << endl;
@@ -796,6 +801,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
         << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
+        << sepchr <<right<< setw(bytesAllocatedrep_width) << kern->getBytesAllocatedPerRep()
         << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
         << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
         << endl;

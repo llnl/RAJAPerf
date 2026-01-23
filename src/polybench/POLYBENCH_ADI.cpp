@@ -52,6 +52,7 @@ void POLYBENCH_ADI::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( 2 * (m_n-2) + (m_n-2) );
   setKernelsPerRep( 2 );
 
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_n * m_n ); // u, v, p, q
   setBytesReadPerRep( 1*sizeof(Real_type) * (m_n-2) * (m_n  ) + // u
 
                       1*sizeof(Real_type) * (m_n-2) * (m_n  ) ); // v

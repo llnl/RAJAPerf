@@ -46,8 +46,9 @@ void DIFF_PREDICT::setSize(Index_type target_size, Index_type target_reps)
   setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
-
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 11*sizeof(Real_type) * getActualProblemSize() ); // px, cx
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
   setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)

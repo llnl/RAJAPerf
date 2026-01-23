@@ -100,6 +100,15 @@ void INTSC_HEXRECT::setSize(Index_type target_size, Index_type target_reps)
   // Pack the sizes, pointers, and coordinates together.
   Size_type planes_size = sizeof(Plane) + m_nplanes * sizeof(Real_type);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_ndnodes + // xdnode
+                           1*sizeof(Real_type) * m_ndnodes + // ydnode
+                           1*sizeof(Real_type) * m_ndnodes + // zdnode
+                           1*sizeof(Int_type) * 8*m_ndzones + // znlist
+                           1*sizeof(Char_type) * planes_size + // ncord
+                           1*sizeof(Int_type) * m_nrecords + // intsc_d
+                           1*sizeof(Int_type) * m_nrecords + // intsc_t
+                           1*sizeof(Real_type) * 4L*m_nrecords ); // records
+
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
   //  Bytes Read : donor node coords (3 doubles), target plane

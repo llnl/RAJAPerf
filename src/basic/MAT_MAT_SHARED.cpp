@@ -51,6 +51,7 @@ void MAT_MAT_SHARED::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( num_tiles*num_tiles * TL_SZ*TL_SZ );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * m_N*m_N ); // A, B, C
   setBytesReadPerRep( 2*sizeof(Real_type) * m_N*m_N ); // A, B
   setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N*m_N  ); // C
   setBytesModifyWrittenPerRep( 0 );

@@ -54,6 +54,9 @@ void DIFFUSION3DPA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_NE*diff::D1D*diff::D1D*diff::D1D );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
+               diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE + // d
+                           2*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE ); // x, y
   setBytesReadPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
                       1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE + // x
           diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE ); // d

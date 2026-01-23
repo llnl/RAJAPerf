@@ -50,6 +50,9 @@ void ARRAY_OF_PTRS::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // y
+                m_array_size*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesReadPerRep( m_array_size*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
   setBytesModifyWrittenPerRep( 0 );

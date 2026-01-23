@@ -63,6 +63,10 @@ void LTIMES::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_philen );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                           1*sizeof(Real_type) * m_psilen + // psi
+                           1*sizeof(Real_type) * m_philen ); // phi
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
                       1*sizeof(Real_type) * m_psilen ); // psi

@@ -1316,16 +1316,29 @@ KernelBase* getKernelObject(KernelID kid,
     const Index_type target_memory = run_params.getMemory();
     const Index_type target_reps = run_params.getReps(kernel->getDefaultReps());
 
+    Index_type (KernelBase::* getMemory)() const = nullptr;
+    switch (run_params.getMemoryMeaning()) {
+      case RunParams::MemoryMeaning::Default:
+        getMemory = &KernelBase::getBytesPerRep; break;
+      case RunParams::MemoryMeaning::Touched:
+        getMemory = &KernelBase::getBytesTouchedPerRep; break;
+      case RunParams::MemoryMeaning::Allocated:
+        getMemory = &KernelBase::getBytesAllocatedPerRep; break;
+      default:
+        getCout() << "Invalid value of memory meaning " << run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()); break;
+    }
+
+
     Index_type target_size = target_memory;
 
-    if (kernel->getBytesTouchedPerRep() != 0) {
+    if ((kernel->*getMemory)() != 0) {
 
       Index_type target_upper_bound = target_memory;
       Index_type target_lower_bound = target_upper_bound;
 
       // find initial bounds
       // search down (assume memory usage is greater than problem size)
-      while (kernel->getBytesTouchedPerRep() > target_memory &&
+      while ((kernel->*getMemory)() > target_memory &&
              target_lower_bound > 1) {
 
         target_upper_bound = target_lower_bound;
@@ -1344,7 +1357,7 @@ KernelBase* getKernelObject(KernelID kid,
 
         kernel->setSize(target_next_bound, target_reps);
 
-        if (kernel->getBytesTouchedPerRep() > target_memory) {
+        if ((kernel->*getMemory)() > target_memory) {
 
           target_upper_bound = target_next_bound;
 
@@ -1359,7 +1372,7 @@ KernelBase* getKernelObject(KernelID kid,
             // end of loop
             // pick a final problem size that produces memory usage greater than
             // or equal to target_memory
-            if (kernel->getBytesTouchedPerRep() == target_memory) {
+            if ((kernel->*getMemory)() == target_memory) {
 
               target_upper_bound = target_lower_bound;
 

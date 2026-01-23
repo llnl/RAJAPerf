@@ -67,6 +67,13 @@ void POLYBENCH_3MM::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_ni*m_nj + m_nj*m_nl + m_ni*m_nl );
   setKernelsPerRep(3);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_ni * m_nk + // A
+                           1*sizeof(Real_type) * m_nj * m_nk + // B
+                           1*sizeof(Real_type) * m_nj * m_nm + // C
+                           1*sizeof(Real_type) * m_nl * m_nm + // D
+                           1*sizeof(Real_type) * m_ni * m_nj + // E
+                           1*sizeof(Real_type) * m_nj * m_nl + // F
+                           1*sizeof(Real_type) * m_ni * m_nl ); // G
   setBytesReadPerRep( 1*sizeof(Real_type) * m_ni * m_nk + // A
                       1*sizeof(Real_type) * m_nj * m_nk + // B
 

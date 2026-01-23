@@ -50,6 +50,9 @@ void FIRST_DIFF::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
+                           1*sizeof(Real_type) * m_N ); // y
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N ); // y (each iterate accesses the range [i, i+1])
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesModifyWrittenPerRep( 0 );
