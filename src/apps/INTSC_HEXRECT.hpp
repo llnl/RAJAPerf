@@ -30,7 +30,7 @@
 ///       double const *xplane ;
 ///       int jz, jy, jx ;
 ///       {
-///         Plane* plane = reinterpret_cast<Plane*>(ncord_gpu) ;
+///         auto plane = reinterpret_cast<typename INTSC_HEXRECT::Plane*>(ncord_gpu) ;
 ///         zplane = plane->planes[0] ;
 ///         yplane = plane->planes[1] ;
 ///         xplane = plane->planes[2] ;
@@ -102,6 +102,10 @@ namespace apps
 class INTSC_HEXRECT : public KernelBase
 {
 public:
+  struct Plane {
+    Int_type ncord[3];  // number of target zones
+    Real_ptr planes[3]; // pointers to planes arrays
+  };
 
   INTSC_HEXRECT(const RunParams& params);
 
@@ -126,11 +130,6 @@ public:
   void runHipVariantImpl(VariantID vid);
 
 private:
-  struct Plane {
-    Int_type ncord[3];  // number of target zones
-    Real_ptr planes[3]; // pointers to planes arrays
-  };
-
   void setupTargetPlanes(VariantID vid);
   void setupDonorMesh();
   void setupIntscPairs();
