@@ -63,7 +63,7 @@ FIRST_DIFF::~FIRST_DIFF()
 
 void FIRST_DIFF::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_x, m_N, 0.0, vid);
+  allocAndInitDataConst(m_x, getActualProblemSize(), 0.0, vid);
   allocAndInitDataRandValue(m_y, m_N, vid);
 }
 

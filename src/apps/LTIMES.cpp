@@ -78,9 +78,9 @@ LTIMES::~LTIMES()
 
 void LTIMES::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_phidat, int(m_philen), Real_type(0.0), vid);
-  allocAndInitData(m_elldat, int(m_elllen), vid);
-  allocAndInitData(m_psidat, int(m_psilen), vid);
+  allocAndInitDataConst(m_phidat, m_philen, Real_type(0.0), vid);
+  allocAndInitData(m_elldat, m_elllen, vid);
+  allocAndInitData(m_psidat, m_psilen, vid);
 }
 
 void LTIMES::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -36,7 +36,7 @@
   Real_type dm27 = m_dm27; \
   Real_type dm28 = m_dm28; \
   Real_type c0 = m_c0; \
-  const Index_type offset = m_offset;
+  const Index_type offset = getActualProblemSize();
 
 #define INT_PREDICT_BODY  \
   px[i] = dm28*px[i + offset * 12] + dm27*px[i + offset * 11] + \
@@ -92,9 +92,6 @@ public:
 private:
   static const size_t default_gpu_block_size = 256;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
-
-  Index_type m_array_length;
-  Index_type m_offset;
 
   Real_ptr m_px;
   Real_type m_px_initval;

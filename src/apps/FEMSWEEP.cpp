@@ -74,7 +74,16 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
                       1*sizeof(Real_type) * m_Alen + // Adat
                       1*sizeof(Real_type) * m_Flen + // Fdat
                       1*sizeof(Real_type) * m_Sglen + // Sgdat
-                      1*sizeof(Real_type) * m_M0len ); // M0dat
+                      1*sizeof(Real_type) * m_M0len + // M0dat
+                      1*sizeof(Index_type) * m_na + // nhpaa_r,
+                      1*sizeof(Index_type) * m_na + // ohpaa_r,
+                      1*sizeof(Index_type) * m_na * 43 + // phpaa_r,
+                      1*sizeof(Index_type) * m_na * m_ne + // order_r,
+                      1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                      1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
+                      1*sizeof(Index_type) * 10800 + // F_g2l
+                      1*sizeof(Index_type) * 37800 + // idx1
+                      1*sizeof(Index_type) * 37800 );// idx2
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_Xlen ); // Xdat
   setBytesAtomicModifyWrittenPerRep( 0 );

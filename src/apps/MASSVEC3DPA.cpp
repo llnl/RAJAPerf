@@ -54,25 +54,22 @@ void MASSVEC3DPA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep(getActualProblemSize());
   setKernelsPerRep(1);
 
-  setBytesReadPerRep(2 * sizeof(Real_type) * mvpa::Q1D * mvpa::D1D + // B, Bt
-                     3 * sizeof(Real_type) * mvpa::D1D * mvpa::D1D * mvpa::D1D *
-                         mvpa::DIM * m_NE + // X (3 components)
-                     1 * sizeof(Real_type) * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D *
-                         m_NE); // D
-  setBytesWrittenPerRep(3 * sizeof(Real_type) * mvpa::D1D * mvpa::D1D * mvpa::D1D *
-                        mvpa::DIM * m_NE); // Y (3 components)
+  setBytesReadPerRep( 1*sizeof(Real_type) * mvpa::Q1D*mvpa::D1D + // B
+                      1*sizeof(Real_type) * mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE + // X
+                      1*sizeof(Real_type) * mvpa::Q1D*mvpa::Q1D*mvpa::Q1D*m_NE ); // D
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE ); // Y
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(0);
 
   //3 for the dimension loop
-  setFLOPsPerRep(m_NE * mvpa::DIM *
-                 (2 * mvpa::D1D * mvpa::Q1D * mvpa::D1D * mvpa::D1D +
-                  2 * mvpa::D1D * mvpa::Q1D * mvpa::Q1D * mvpa::D1D +
-                  2 * mvpa::D1D * mvpa::Q1D * mvpa::Q1D * mvpa::Q1D +
-                  mvpa::Q1D * mvpa::Q1D * mvpa::Q1D +
-                  2 * mvpa::Q1D * mvpa::D1D * mvpa::Q1D * mvpa::Q1D +
-                  2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::Q1D +
-                  2 * mvpa::Q1D * mvpa::D1D * mvpa::D1D * mvpa::D1D));
+  setFLOPsPerRep( m_NE*mvpa::DIM *
+                  ( 2 * mvpa::D1D*mvpa::Q1D*mvpa::D1D*mvpa::D1D +
+                    2 * mvpa::D1D*mvpa::Q1D*mvpa::Q1D*mvpa::D1D +
+                    2 * mvpa::D1D*mvpa::Q1D*mvpa::Q1D*mvpa::Q1D +
+                    mvpa::Q1D*mvpa::Q1D*mvpa::Q1D +
+                    2 * mvpa::Q1D*mvpa::D1D*mvpa::Q1D*mvpa::Q1D +
+                    2 * mvpa::Q1D*mvpa::D1D*mvpa::D1D*mvpa::Q1D +
+                    2 * mvpa::Q1D*mvpa::D1D*mvpa::D1D*mvpa::D1D ) );
 }
 
 MASSVEC3DPA::~MASSVEC3DPA() {}
@@ -80,12 +77,10 @@ MASSVEC3DPA::~MASSVEC3DPA() {}
 void MASSVEC3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, mvpa::Q1D * mvpa::D1D, 1.0, vid);
-  allocAndInitDataConst(m_D, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D * m_NE, 1.0, vid);
-
-  allocAndInitDataConst(m_X, mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * m_NE, 1.0, vid);
-
-  allocAndInitDataConst(m_Y, mvpa::D1D * mvpa::D1D * mvpa::D1D * mvpa::DIM * m_NE, 0.0, vid);
+  allocAndInitDataConst(m_B, mvpa::Q1D*mvpa::D1D, 1.0, vid);
+  allocAndInitDataConst(m_D, mvpa::Q1D*mvpa::Q1D*mvpa::Q1D*m_NE, 1.0, vid);
+  allocAndInitDataConst(m_X, mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE, 1.0, vid);
+  allocAndInitDataConst(m_Y, mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE, 0.0, vid);
 
 }
 
