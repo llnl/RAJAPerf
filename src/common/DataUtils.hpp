@@ -271,6 +271,7 @@ struct AutoDataMover
 
   AutoDataMover(AutoDataMover&& rhs)
     : m_ptr(std::exchange(rhs.m_ptr, nullptr))
+    , m_new_ptr(std::exchange(rhs.m_new_ptr, nullptr))
     , m_new_dataSpace(rhs.m_new_dataSpace)
     , m_old_dataSpace(rhs.m_old_dataSpace)
     , m_len(rhs.m_len)
@@ -280,6 +281,7 @@ struct AutoDataMover
   {
     finalize();
     m_ptr = std::exchange(rhs.m_ptr, nullptr);
+    m_new_ptr = std::exchange(rhs.m_new_ptr, nullptr);
     m_new_dataSpace = rhs.m_new_dataSpace;
     m_old_dataSpace = rhs.m_old_dataSpace;
     m_len = rhs.m_len;
@@ -287,22 +289,56 @@ struct AutoDataMover
     return *this;
   }
 
-  void finalize()
-  {
-    if (m_ptr) {
-      moveData(m_new_dataSpace, m_old_dataSpace,
-          *m_ptr, m_len, m_align);
-      m_ptr = nullptr;
-    }
-  }
-
   ~AutoDataMover()
   {
     finalize();
   }
 
+  // Get the pointer that will replace *m_ptr after finalize is called.
+  // Use this to populate pointers into the final data structure but do not
+  // dereference this pointer in setup code.
+  T* get_final_ptr()
+  {
+    if (m_ptr && !m_new_ptr) {
+
+      if (m_new_dataSpace != m_old_dataSpace) {
+
+        allocData(m_new_dataSpace, m_new_ptr, m_len, m_align);
+
+      } else {
+
+        m_new_ptr = *m_ptr;
+
+      }
+    }
+
+    return m_new_ptr;
+  }
+
+  void finalize()
+  {
+    if (m_ptr) {
+
+      get_final_ptr();
+
+      if (m_new_dataSpace != m_old_dataSpace) {
+
+        copyData(m_new_dataSpace, m_new_ptr, m_old_dataSpace, *m_ptr, m_len);
+
+        deallocData(m_old_dataSpace, *m_ptr);
+
+        *m_ptr = m_new_ptr;
+
+      }
+
+      m_ptr = nullptr;
+      m_new_ptr = nullptr;
+    }
+  }
+
 private:
   T** m_ptr;
+  T* m_new_ptr = nullptr;
   DataSpace m_new_dataSpace;
   DataSpace m_old_dataSpace;
   Size_type m_len;

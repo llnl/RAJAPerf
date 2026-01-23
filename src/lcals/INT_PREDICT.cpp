@@ -48,8 +48,8 @@ void INT_PREDICT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 10*sizeof(Real_type ) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // px(0)
+  setBytesReadPerRep( 10*sizeof(Real_type) * getActualProblemSize() ); // px(12), px(11), px(10), px(9), px(8), px(7), px(6), px(4), px(5), px(2)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(0)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(17 * getActualProblemSize());
@@ -61,11 +61,8 @@ INT_PREDICT::~INT_PREDICT()
 
 void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  m_array_length = getActualProblemSize() * 13;
-  m_offset = getActualProblemSize();
-
   m_px_initval = 1.0;
-  allocAndInitDataConst(m_px, m_array_length, m_px_initval, vid);
+  allocAndInitDataConst(m_px, 13*getActualProblemSize(), m_px_initval, vid);
 
   initData(m_dm22, vid);
   initData(m_dm23, vid);
@@ -79,25 +76,7 @@ void INT_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
 void INT_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  Real_ptr px_host = m_px;
-
-  DataSpace ds = getDataSpace(vid);
-  DataSpace hds = rajaperf::hostCopyDataSpace(ds);
-  if (ds != hds) {
-    allocData(hds, px_host, m_array_length);
-    copyData(hds, px_host, ds, m_px, m_array_length);
-  }
-
-  for (Index_type i = 0; i < getActualProblemSize(); ++i) {
-    px_host[i] -= m_px_initval;
-  }
-
-  addToChecksum(px_host, getActualProblemSize(), vid);
-
-  if (ds != hds) {
-    copyData(ds, m_px, hds, px_host, m_array_length);
-    deallocData(hds, px_host);
-  }
+  addToChecksum(m_px, getActualProblemSize(), vid);
 }
 
 void INT_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

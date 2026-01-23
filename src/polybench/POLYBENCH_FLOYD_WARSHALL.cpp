@@ -51,8 +51,8 @@ void POLYBENCH_FLOYD_WARSHALL::setSize(Index_type target_size, Index_type target
 
   setItsPerRep( m_N * m_N*m_N );
   setKernelsPerRep(m_N);
-  setBytesReadPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pin
-  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type ) * m_N * m_N ); // pout
+  setBytesReadPerRep( m_N * 1*sizeof(Real_type) * m_N*m_N ); // pin
+  setBytesWrittenPerRep( m_N * 1*sizeof(Real_type) * m_N*m_N ); // pout
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep( m_N*m_N*m_N * 3 / 2 ); // conditional is true about half of the time

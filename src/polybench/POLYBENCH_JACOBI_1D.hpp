@@ -24,10 +24,6 @@
 #define POLYBENCH_JACOBI_1D_DATA_SETUP \
   Real_ptr A = m_A; \
   Real_ptr B = m_B; \
-  \
-  copyData(getDataSpace(vid), A, getDataSpace(vid), m_Ainit, m_N); \
-  copyData(getDataSpace(vid), B, getDataSpace(vid), m_Binit, m_N); \
-  \
   const Index_type N = m_N;
 
 
@@ -88,8 +84,6 @@ private:
 
   Real_ptr m_A;
   Real_ptr m_B;
-  Real_ptr m_Ainit;
-  Real_ptr m_Binit;
 };
 
 } // end namespace polybench

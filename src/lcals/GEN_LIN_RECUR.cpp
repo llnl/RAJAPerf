@@ -50,12 +50,12 @@ void GEN_LIN_RECUR::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 2*sizeof(Real_type ) * m_N + // sa, sb
-                      2*sizeof(Real_type ) * m_N ); // sa, sb
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N + // b5
-                         1*sizeof(Real_type ) * m_N ); // b5
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type ) * m_N + // stb5
-                               1*sizeof(Real_type ) * m_N ); // stb5
+  setBytesReadPerRep( 2*sizeof(Real_type) * m_N + // sa, sb
+                      2*sizeof(Real_type) * m_N ); // sa, sb
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N + // b5
+                         1*sizeof(Real_type) * m_N ); // b5
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_N + // stb5
+                               1*sizeof(Real_type) * m_N ); // stb5
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((3 +
                   3 ) * m_N);
