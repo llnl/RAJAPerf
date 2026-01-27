@@ -37,17 +37,17 @@ CSV table for each kernel like the following:
 
 KernelName (Raw data)
 Problem Size, Variant1-Tuning1    , Variant2-Tuning1, ......, VariantN-TuningM
-<size 1>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
-<size 2>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
-....        , ....     , ....     ,                 , ....  , ....
-<size 2>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
+<size 1>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
+<size 2>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
+....        , ....                , ....            , ....  , ....
+<size 2>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
 
 KernelName (Smoothed data)
 Problem Size, Variant1-Tuning1    , Variant2-Tuning1, ......, VariantN-TuningM
-<size 1>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
-<size 2>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
-....        , ....     , ....     ,                 , ....  , ....
-<size 2>    , <FLOP/s> , <FLOP/s> ,                 , ......, <FLOP/s>
+<size 1>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
+<size 2>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
+....        , ....                , ....            , ....  , ....
+<size 2>    , <FLOP/s>            , <FLOP/s>        , ......, <FLOP/s>
 
 ..... Same two tables for each kernel that was run...
 
