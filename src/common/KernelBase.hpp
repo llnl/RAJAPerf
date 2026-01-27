@@ -779,7 +779,7 @@ private:
   cali_id_t Iters_Rep_attr;
   cali_id_t Kernels_Rep_attr;
   cali_id_t Bytes_Allocated_Rep_attr;
-  cali_id_t Bytes_Rep_attr;
+  cali_id_t Bytes_Moved_Rep_attr;
   cali_id_t Bytes_Touched_Rep_attr;
   cali_id_t Bytes_Read_Rep_attr;
   cali_id_t Bytes_Written_Rep_attr;

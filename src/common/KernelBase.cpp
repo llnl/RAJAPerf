@@ -95,7 +95,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("BytesMoved/Rep", CALI_TYPE_INT,
+  Bytes_Moved_Rep_attr = cali_create_attribute("BytesMoved/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
@@ -501,7 +501,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Iters_Rep_attr, getItsPerRep());
     cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
     cali_set_helper(Bytes_Allocated_Rep_attr, getBytesAllocatedPerRep());
-    cali_set_helper(Bytes_Rep_attr, getBytesMovedPerRep());
+    cali_set_helper(Bytes_Moved_Rep_attr, getBytesMovedPerRep());
     cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
     cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
     cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
