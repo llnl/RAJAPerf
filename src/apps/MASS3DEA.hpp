@@ -172,7 +172,6 @@ private:
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
-  Real_ptr m_Bt;
   Real_ptr m_D;
   Real_ptr m_M;
 

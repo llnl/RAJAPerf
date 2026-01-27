@@ -10,7 +10,7 @@
 # C is required for googletest to find Threads
 project(RAJAPerfSuite LANGUAGES CXX C)
 
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.24)
 
 # Detect C++ standard and add appropriate flag _before_ loading BLT
 set(COMPILERS_KNOWN_TO_CMAKE33 AppleClang Clang GNU MSVC)

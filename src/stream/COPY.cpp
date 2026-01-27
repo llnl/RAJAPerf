@@ -49,7 +49,7 @@ void COPY::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // c
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // c
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);

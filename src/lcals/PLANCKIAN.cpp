@@ -48,8 +48,8 @@ void PLANCKIAN::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * getActualProblemSize() ); // u, v, x
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * getActualProblemSize() ); // y, w
+  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // u, v, x
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // y, w
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp

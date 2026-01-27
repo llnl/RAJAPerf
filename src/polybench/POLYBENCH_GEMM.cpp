@@ -58,9 +58,9 @@ void POLYBENCH_GEMM::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_ni * m_nj );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_ni * m_nk + // A
-                      1*sizeof(Real_type ) * m_nj * m_nk ); // B
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_ni * m_nj); // C
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_ni * m_nk + // A
+                      1*sizeof(Real_type) * m_nj * m_nk ); // B
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_ni * m_nj); // C
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((1 +

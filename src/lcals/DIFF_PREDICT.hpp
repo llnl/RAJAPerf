@@ -40,9 +40,9 @@
 
 
 #define DIFF_PREDICT_DATA_SETUP \
-  Real_ptr px = m_px; \
-  Real_ptr cx = m_cx; \
-  const Index_type offset = m_offset;
+  const Index_type offset = getActualProblemSize(); \
+  Real_ptr px = m_px - offset * 4; \
+  Real_ptr cx = m_cx - offset * 4;
 
 #define DIFF_PREDICT_BODY  \
   Real_type ar, br, cr; \
@@ -116,9 +116,6 @@ private:
 
   Real_ptr m_px;
   Real_ptr m_cx;
-
-  Index_type m_array_length;
-  Index_type m_offset;
 };
 
 } // end namespace lcals

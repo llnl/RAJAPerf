@@ -52,12 +52,12 @@ void HALO_SENDRECV::setSize(Index_type target_size, Index_type target_reps)
   setSize_base(target_size, target_reps);
 
   m_var_size = m_grid_plus_halo_size ;
-  const Size_type halo_size = m_var_size - getActualProblemSize();
 
   setItsPerRep( 0 );
   setKernelsPerRep( 0 );
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // send_buffers (MPI)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size ); // recv_buffers (MPI)
+
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_num_vars * m_halo_size ); // send_buffers (MPI)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * m_halo_size ); // recv_buffers (MPI)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(0);
