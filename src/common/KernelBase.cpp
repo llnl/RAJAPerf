@@ -95,7 +95,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_INT,
+  Bytes_Rep_attr = cali_create_attribute("BytesMoved/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
@@ -501,7 +501,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Iters_Rep_attr, getItsPerRep());
     cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
     cali_set_helper(Bytes_Allocated_Rep_attr, getBytesAllocatedPerRep());
-    cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Rep_attr, getBytesMovedPerRep());
     cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
     cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
     cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
@@ -557,7 +557,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Reps)", "as": "Reps" },
           { "expr": "any(max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
           { "expr": "any(max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
@@ -588,7 +588,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Reps)", "as": "Reps" },
           { "expr": "any(any#max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(any#max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(any#max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(any#max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
           { "expr": "any(any#max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(any#max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(any#max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },

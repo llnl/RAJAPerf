@@ -1318,8 +1318,8 @@ KernelBase* getKernelObject(KernelID kid,
 
     Index_type (KernelBase::* getMemory)() const = nullptr;
     switch (run_params.getMemoryMeaning()) {
-      case RunParams::MemoryMeaning::Default:
-        getMemory = &KernelBase::getBytesPerRep; break;
+      case RunParams::MemoryMeaning::Moved:
+        getMemory = &KernelBase::getBytesMovedPerRep; break;
       case RunParams::MemoryMeaning::Touched:
         getMemory = &KernelBase::getBytesTouchedPerRep; break;
       case RunParams::MemoryMeaning::Allocated:

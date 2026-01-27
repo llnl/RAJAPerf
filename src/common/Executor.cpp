@@ -644,7 +644,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
-  Index_type bytesrep_width = 0;
+  Index_type bytesMovedrep_width = 0;
   Index_type flopsrep_width = 0;
   Index_type bytesTouchedrep_width = 0;
   Index_type bytesReadrep_width = 0;
@@ -662,7 +662,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
-    bytesrep_width = max(bytesrep_width, kernels[ik]->getBytesPerRep());
+    bytesMovedrep_width = max(bytesMovedrep_width, kernels[ik]->getBytesMovedPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
     bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
     bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
@@ -705,11 +705,11 @@ void Executor::writeKernelInfoSummary(ostream& str,
          static_cast<Index_type>(4) );
   dash_width += kernsrep_width + static_cast<Index_type>(sepchr.size());
 
-  double brsize = log10( static_cast<double>(bytesrep_width) );
-  string bytesrep_head("Bytes/rep");
-  bytesrep_width = max( static_cast<Index_type>(bytesrep_head.size()),
+  double brsize = log10( static_cast<double>(bytesMovedrep_width) );
+  string bytesMovedrep_head("BytesMoved/rep");
+  bytesMovedrep_width = max( static_cast<Index_type>(bytesMovedrep_head.size()),
                         static_cast<Index_type>(brsize) ) + 3;
-  dash_width += bytesrep_width + static_cast<Index_type>(sepchr.size());
+  dash_width += bytesMovedrep_width + static_cast<Index_type>(sepchr.size());
 
   double frsize = log10( static_cast<double>(flopsrep_width) );
   string flopsrep_head("FLOPS/rep");
@@ -768,7 +768,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
-      << sepchr <<right<< setw(bytesrep_width) << bytesrep_head
+      << sepchr <<right<< setw(bytesMovedrep_width) << bytesMovedrep_head
       << sepchr <<right<< setw(flopsrep_width) << flopsrep_head
       << sepchr <<right<< setw(bytesTouchedrep_width) << bytesTouchedrep_head
       << sepchr <<right<< setw(bytesReadrep_width) << bytesReadrep_head
@@ -794,7 +794,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
-        << sepchr <<right<< setw(bytesrep_width) << kern->getBytesPerRep()
+        << sepchr <<right<< setw(bytesMovedrep_width) << kern->getBytesMovedPerRep()
         << sepchr <<right<< setw(flopsrep_width) << kern->getFLOPsPerRep()
         << sepchr <<right<< setw(bytesTouchedrep_width) << kern->getBytesTouchedPerRep()
         << sepchr <<right<< setw(bytesReadrep_width) << kern->getBytesReadPerRep()
@@ -904,7 +904,7 @@ void Executor::writeKernelRunDataSummary(ostream& str,
     Checksum_type cksum_tol = kern->getChecksumTolerance();
     Index_type problem_size = kern->getActualProblemSize();
     Index_type reps = kern->getRunReps();
-    Index_type bytes_per_rep = kern->getBytesPerRep();
+    Index_type bytes_moved_per_rep = kern->getBytesMovedPerRep();
     Index_type flops_per_rep = kern->getFLOPsPerRep();
 
     for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
@@ -928,7 +928,7 @@ void Executor::writeKernelRunDataSummary(ostream& str,
         }
 
         auto time_per_rep = getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Average, kern, vid, tune_idx) / reps;
-        auto bandwidth = bytes_per_rep / time_per_rep / (1024.0 * 1024.0 * 1024.0);
+        auto bandwidth = bytes_moved_per_rep / time_per_rep / (1024.0 * 1024.0 * 1024.0);
         auto flops = flops_per_rep / time_per_rep / (1000.0 * 1000.0 * 1000.0);
 
         str           <<left << setw(kernel_width) << kern->getName()

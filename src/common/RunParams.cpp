@@ -483,7 +483,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--memory") ||
+    } else if ( opt == std::string("--memory-moved") ||
                 opt == std::string("--memory-touched") ||
                 opt == std::string("--memory-allocated") ) {
 
@@ -497,9 +497,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         } else {
           memory = ::atof( argv[i] );
           if ( memory >= 0.0 ) {
-            if ( opt == std::string("--memory") ) {
+            if ( opt == std::string("--memory-moved") ) {
               size_meaning = SizeMeaning::Memory;
-              memory_meaning = MemoryMeaning::Default;
+              memory_meaning = MemoryMeaning::Moved;
             } else if ( opt == std::string("--memory-touched") ) {
               size_meaning = SizeMeaning::Memory;
               memory_meaning = MemoryMeaning::Touched;
@@ -1551,14 +1551,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
 
-  str << "\t --memory <int> [no default]\n"
-      << "\t      (# of bytes of memory each kernel will \"use\" per rep; note that\n"
+  str << "\t --memory-moved <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will move per rep; note that\n"
       << "\t        each kernel calculates a problem size so that its\n"
-      << "\t        Bytes/rep will match the given # of bytes of memory per rep)\n"
+      << "\t        BytesMoved/rep will match the given # of bytes of memory per rep)\n"
       << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
       << "\t      May not be set if --size or other --memory* option is set.\n";
   str << "\t\t Example...\n"
-      << "\t\t --memory 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+      << "\t\t --memory-moved 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
 
   str << "\t --memory-touched <int> [no default]\n"
       << "\t      (# of bytes of memory each kernel will touch per rep; note that\n"

@@ -111,7 +111,7 @@ public:
    */
   enum struct MemoryMeaning {
     Unset,    /*!< indicates value is unset */
-    Default,  /*!< Find problem size that matches bytes/rep */
+    Moved,    /*!< Find problem size that matches bytesMoved/rep */
     Touched,  /*!< Find problem size that matches bytesTouched/rep */
     Allocated /*!< Find problem size that matches bytesAllocated/rep */
   };
@@ -124,8 +124,8 @@ public:
     switch (sm) {
       case MemoryMeaning::Unset:
         return "Unset";
-      case MemoryMeaning::Default:
-        return "Default";
+      case MemoryMeaning::Moved:
+        return "Moved";
       case MemoryMeaning::Touched:
         return "Touched";
       case MemoryMeaning::Allocated:
