@@ -9,6 +9,9 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.25.2
+
 if [[ $# -lt 3 ]]; then
   echo
   echo "You must pass 3 or more arguments to the script (in this order): "

@@ -15,7 +15,7 @@ DEFAULT_CMAKE_VER=3.25.2
 if [[ $# -lt 4 ]]; then
   echo
   echo "You must pass 4 or more arguments to the script (in this order): "
-  echo "   1) mvapich2 compiler version number"
+  echo "   1) mvapich2 version number"
   echo "   2) NVCC compiler version number"
   echo "   3) CUDA compute architecture"
   echo "   4) GCC compiler version number"

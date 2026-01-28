@@ -15,7 +15,7 @@ DEFAULT_CMAKE_VER=3.24.2
 if [[ $# -lt 5 ]]; then
   echo
   echo "You must pass 5 or more arguments to the script (in this order): "
-  echo "   1) cray-mpich compiler version number"
+  echo "   1) cray-mpich version number"
   echo "   2) HIP compiler version number"
   echo "   3) HIP compute architecture"
   echo "   4) path to caliper cmake directory"
