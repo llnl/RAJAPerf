@@ -59,6 +59,8 @@ void POLYBENCH_GEMVER::setSize(Index_type target_size, Index_type target_reps)
                 m_n );
   setKernelsPerRep(4);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_n*m_n + // A
+                           8*sizeof(Real_type) * m_n );    // u1, v1, u2, v2, w, x, y, z
   setBytesReadPerRep( 4*sizeof(Real_type) * m_n +     // u1, v1, u2, v2
 
                       1*sizeof(Real_type) * m_n*m_n + // A

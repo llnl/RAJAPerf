@@ -69,6 +69,10 @@ void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep(m_NE * mpa_at::D1D*mpa_at::D1D);
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
+                           1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE + // D
+                           2*sizeof(Real_type) * m_Tot_Dofs + // X, Y
+                           1*sizeof(Index_type) * ndof_per_elem*m_NE ); // ElemToDoF
   setBytesReadPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
                       1*sizeof(Index_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE + // ElemToDoF
                       1*sizeof(Real_type) * m_Tot_Dofs + // X

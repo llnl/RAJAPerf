@@ -54,6 +54,9 @@ void MASSVEC3DPA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep(getActualProblemSize());
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * mvpa::Q1D*mvpa::D1D + // B
+                           1*sizeof(Real_type) * mvpa::Q1D*mvpa::Q1D*mvpa::Q1D*m_NE + // D
+                           2*sizeof(Real_type) * mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE ); // X, Y
   setBytesReadPerRep( 1*sizeof(Real_type) * mvpa::Q1D*mvpa::D1D + // B
                       1*sizeof(Real_type) * mvpa::D1D*mvpa::D1D*mvpa::D1D*mvpa::DIM*m_NE + // X
                       1*sizeof(Real_type) * mvpa::Q1D*mvpa::Q1D*mvpa::Q1D*m_NE ); // D

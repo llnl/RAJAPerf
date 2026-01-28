@@ -54,6 +54,8 @@ void REDUCE3_INT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
   setBytesReadPerRep( 1*sizeof(Int_type) * getActualProblemSize() ); // vec
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );
