@@ -63,6 +63,8 @@ void POLYBENCH_FDTD_2D::setSize(Index_type target_size, Index_type target_reps)
                 (m_nx-1)*(m_ny-1) );
   setKernelsPerRep(4);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_nx * m_ny + // hz, ex, ey
+                           1*sizeof(Real_type) );              // fict
   setBytesReadPerRep( 1*sizeof(Real_type) + // fict
 
                       1*sizeof(Real_type) * m_nx * m_ny + // hz

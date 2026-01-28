@@ -53,6 +53,7 @@ void POLYBENCH_HEAT_3D::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep( 2 );
 
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N*m_N*m_N ); // A, B
   setBytesReadPerRep( 1*sizeof(Real_type) * (m_N*m_N*m_N - 12*(m_N-2) - 8) + // A (7 point stencil)
 
                       1*sizeof(Real_type) * (m_N*m_N*m_N - 12*(m_N-2) - 8)); // B (7 point stencil)

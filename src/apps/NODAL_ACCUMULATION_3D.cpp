@@ -59,6 +59,10 @@ void NODAL_ACCUMULATION_3D::setSize(Index_type target_size, Index_type target_re
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_nodal_array_length + // x
+                           1*sizeof(Real_type) * m_zonal_array_length + // vol
+                           1*sizeof(Index_type) * m_domain->n_real_zones ); // real_zones
   // touched data size, not actual number of stores and loads
   setBytesReadPerRep( 1*sizeof(Index_type) * getItsPerRep() + // real_zones
                       1*sizeof(Real_type) * getItsPerRep() ); // vol

@@ -48,6 +48,8 @@ void MUL::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // b, c
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // c
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // b
   setBytesModifyWrittenPerRep( 0 );

@@ -48,6 +48,7 @@ void SORTPAIRS::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, i
   // not useful in this case due to O(n*log(n)) algorithm
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );

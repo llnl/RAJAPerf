@@ -59,6 +59,8 @@ void NESTED_INIT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_array_length ); // array
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // array
   setBytesModifyWrittenPerRep( 0 );

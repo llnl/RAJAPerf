@@ -51,6 +51,8 @@ void ENERGY::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( 6 * getActualProblemSize() );
   setKernelsPerRep(6);
+
+  setBytesAllocatedPerRep( 15*sizeof(Real_type) * getActualProblemSize() ); // e_new, e_old, delvc, p_new, p_old, q_new, q_old, work, compHalfStep, pHalfStep, bvc, pbvc, ql_old, qq_old, vnewc
   // some branches are never taken due to the nature of the initialization of delvc
   // the additional ops that would be done if those branches were taken are noted in the comments
   setBytesReadPerRep((5*sizeof(Real_type) + // e_old, delvc, p_old, q_old, work

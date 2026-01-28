@@ -48,6 +48,9 @@ void HYDRO_1D::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() + // x, y
+                           1*sizeof(Real_type) * (getActualProblemSize()+1) ); // z
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // y
                       1*sizeof(Real_type) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x

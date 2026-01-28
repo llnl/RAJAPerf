@@ -48,6 +48,8 @@ void IF_QUAD::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 5*sizeof(Real_type) * getActualProblemSize() ); // a, b, c, x1, x2
   setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // b, a, c
   setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x2, x1
   setBytesModifyWrittenPerRep( 0 );

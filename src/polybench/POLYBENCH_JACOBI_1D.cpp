@@ -58,6 +58,7 @@ void POLYBENCH_JACOBI_1D::setSize(Index_type target_size, Index_type target_reps
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep(2);
 
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N ); // A, B
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N + // A (3 point stencil)
 
                       1*sizeof(Real_type) * m_N ); // B (3 point stencil)

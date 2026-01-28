@@ -56,6 +56,9 @@ void MASS3DEA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_NE*mea::D1D*mea::D1D*mea::D1D );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * mea::Q1D*mea::D1D + // B
+                           1*sizeof(Real_type) * mea::Q1D*mea::Q1D*mea::Q1D*m_NE + // D
+                           1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
   setBytesReadPerRep( 1*sizeof(Real_type) * mea::Q1D*mea::D1D + // B
                       1*sizeof(Real_type) * mea::Q1D*mea::Q1D*mea::Q1D*m_NE ); // D
   setBytesWrittenPerRep( 1*sizeof(Real_type) * ea_mat_entries*m_NE ); // M_e
