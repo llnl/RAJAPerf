@@ -562,6 +562,14 @@ public:
   }
 
   template <typename T>
+  rajaperf::AutoDataMover<T> allocAndInitDataForInit(DataSpace ds, T*& ptr, Size_type len)
+  {
+    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    rajaperf::allocAndInitData(hds, ptr, len, getDataAlignment());
+    return {ds, hds, ptr, len, getDataAlignment()};
+  }
+
+  template <typename T>
   rajaperf::AutoDataMover<T> scopedMoveData(T*& ptr, Size_type len, VariantID vid)
   {
     DataSpace ds = getDataSpace(vid);

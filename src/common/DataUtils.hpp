@@ -19,7 +19,9 @@
 #include "RPTypes.hpp"
 
 #include <limits>
+#include <cstdlib>
 #include <cstring>
+#include <string_view>
 #include <type_traits>
 
 #if defined(RAJA_ENABLE_CUDA)
@@ -34,6 +36,15 @@
 
 namespace rajaperf
 {
+
+inline bool do_extra_prints()
+{
+  static bool s_do_it = [](){
+        const char* env = std::getenv("RAJAPERF_EXTRA_PRINTS");
+        return env ? env == std::string_view("1") : false;
+      }();
+  return s_do_it;
+}
 
 namespace detail
 {

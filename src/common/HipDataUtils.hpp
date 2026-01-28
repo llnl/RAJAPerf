@@ -164,6 +164,9 @@ int getHipOccupancyMaxBlocks(Func&& func, int num_threads, size_t shmem_size)
  */
 inline void copyHipData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
+  if (do_extra_prints()) {
+    getCout() << "copyHipData " << dst_ptr << " " << src_ptr << " " << len << std::endl;
+  }
   CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpy,
       dst_ptr, src_ptr, len, hipMemcpyDefault );
   CAMP_HIP_API_INVOKE_AND_CHECK( hipDeviceSynchronize );

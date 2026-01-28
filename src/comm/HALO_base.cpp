@@ -220,6 +220,9 @@ void HALO_base::create_lists(
     const int* mpi_dims,
     VariantID vid)
 {
+  if (do_extra_prints()) {
+    getCout() << "HALO_base::create_lists" << std::endl ;
+  }
   int my_mpi_idx[3]{-1,-1,-1};
   my_mpi_idx[2] = my_mpi_rank / (mpi_dims[0]*mpi_dims[1]);
   my_mpi_idx[1] = (my_mpi_rank - my_mpi_idx[2]*(mpi_dims[0]*mpi_dims[1])) / mpi_dims[0];
@@ -273,6 +276,20 @@ void HALO_base::create_lists(
           }
         }
       }
+
+      if (do_extra_prints()) {
+        getCout() << "  m_pack_index_lists " << l << " (" << m_pack_index_list_lengths[l] << ", " << list_idx << ") " << m_pack_index_lists[l] << std::endl ;
+        for (Index_type i = 0; i < m_pack_index_list_lengths[l]; ++i) {
+          getCout() << "    " << m_pack_index_lists[l][i] << std::endl ;
+        }
+      }
+    }
+
+    if (do_extra_prints()) {
+      getCout() << "  m_pack_index_lists " << l << " (" << m_pack_index_list_lengths[l] << ") " << m_pack_index_lists[l] << std::endl ;
+      for (Index_type i = 0; i < m_pack_index_list_lengths[l]; ++i) {
+        getCout() << "    " << m_pack_index_lists[l][i] << std::endl ;
+      }
     }
 
     {
@@ -297,6 +314,18 @@ void HALO_base::create_lists(
             list_idx += 1;
           }
         }
+      }
+      if (do_extra_prints()) {
+        getCout() << "  m_unpack_index_lists " << l << " (" << m_unpack_index_list_lengths[l] << ", " << list_idx << ") " << m_unpack_index_lists[l] << std::endl ;
+        for (Index_type i = 0; i < m_unpack_index_list_lengths[l]; ++i) {
+          getCout() << "    " << m_unpack_index_lists[l][i] << std::endl ;
+        }
+      }
+    }
+    if (do_extra_prints()) {
+      getCout() << "  m_unpack_index_lists " << l << " (" << m_unpack_index_list_lengths[l] << ") " << m_unpack_index_lists[l] << std::endl ;
+      for (Index_type i = 0; i < m_unpack_index_list_lengths[l]; ++i) {
+        getCout() << "    " << m_unpack_index_lists[l][i] << std::endl ;
       }
     }
   }
@@ -323,6 +352,9 @@ void HALO_base::create_buffers(Index_ptr index_list_lengths,
                                const Index_type num_vars,
                                VariantID vid)
 {
+  if (do_extra_prints()) {
+    getCout() << "HALO_base::create_buffers" << std::endl;
+  }
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy);
 
   Size_type combined_buffer_nbytes = 0;
@@ -337,7 +369,25 @@ void HALO_base::create_buffers(Index_ptr index_list_lengths,
       allocAndInitData(getDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
       allocAndInitData(DataSpace::Host, mpi_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
     } else {
-      allocAndInitData(getMPIDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
+      Index_type len = RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type));
+      {
+        auto reset_our = allocAndInitDataForInit(getMPIDataSpace(vid),
+            our_buffers[0], len);
+
+        if (do_extra_prints()) {
+          getCout() << "  our_buffers[0] " << " (" << len << ", " << num_vars * index_list_lengths[0] << ") " << our_buffers[0] << std::endl ;
+          for (Index_type i = 0; i < len; ++i) {
+            getCout() << "    " << our_buffers[0][i] << std::endl ;
+          }
+        }
+      }
+      if (do_extra_prints()) {
+        getCout() << "  our_buffers[0] " << " (" << len << ") " << our_buffers[0] << std::endl ;
+        for (Index_type i = 0; i < len; ++i) {
+          getCout() << "    " << our_buffers[0][i] << std::endl ;
+        }
+      }
+      // allocAndInitData(getMPIDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
       mpi_buffers[0] = our_buffers[0];
     }
 
@@ -346,6 +396,10 @@ void HALO_base::create_buffers(Index_ptr index_list_lengths,
       Size_type last_buffer_nbytes = getNBytesPaddedToDataAlignment(last_buffer_len*sizeof(Real_type));
       our_buffers[l] = offsetPointer(our_buffers[l-1], last_buffer_nbytes);
       mpi_buffers[l] = offsetPointer(mpi_buffers[l-1], last_buffer_nbytes);
+
+      if (do_extra_prints()) {
+        getCout() << "  our_buffers " << l << " (" << num_vars * index_list_lengths[l] << ") " << our_buffers[l] << std::endl ;
+      }
     }
   }
 }
@@ -362,6 +416,10 @@ void HALO_base::destroy_buffers(Real_ptr_ptr our_buffers,
       deallocData(getDataSpace(vid), our_buffers[0]);
     } else {
       deallocData(getMPIDataSpace(vid), our_buffers[0]);
+    }
+    for (Index_type l = 1; l < s_num_neighbors; ++l) {
+      our_buffers[l] = nullptr;
+      mpi_buffers[l] = nullptr;
     }
   }
 }
