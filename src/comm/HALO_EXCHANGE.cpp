@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -20,45 +21,59 @@ namespace comm
 HALO_EXCHANGE::HALO_EXCHANGE(const RunParams& params)
   : HALO_base(rajaperf::Comm_HALO_EXCHANGE, params)
 {
+  setDefaultReps(200);
+
   m_mpi_size = params.getMPISize();
   m_my_mpi_rank = params.getMPIRank();
   m_mpi_dims = params.getMPI3DDivision();
-
-  setDefaultReps(200);
-
   m_num_vars = params.getHaloNumVars();
-  m_var_size = m_grid_plus_halo_size ;
-  const Size_type halo_size = m_var_size - getActualProblemSize();
 
-  setItsPerRep( 2 * m_num_vars * halo_size );
-  setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
-  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * halo_size +   // pack_index_lists
-                      1*sizeof(Real_type) * m_num_vars * halo_size +  // vars
-
-                      1*sizeof(Real_type) * m_num_vars * halo_size +  // (pack|send)_buffers (MPI)
-
-                      1*sizeof(Int_type) * m_num_vars * halo_size +   // unpack_index_lists
-                      1*sizeof(Real_type) * m_num_vars * halo_size ); // unpack_buffers
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * halo_size +  // pack_buffers
-
-                         1*sizeof(Real_type) * m_num_vars * halo_size +  // (recv|unpack)_buffers (MPI)
-
-                         1*sizeof(Real_type) * m_num_vars * halo_size ); // vars
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
   setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N_to_the_two_thirds);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
   setUsesFeature(Forall);
   setUsesFeature(MPI);
 
   if (params.validMPI3DDivision()) {
     addVariantTunings();
+  }
 }
+
+void HALO_EXCHANGE::setSize(Index_type target_size, Index_type target_reps)
+{
+  setSize_base(target_size, target_reps);
+
+  m_var_size = m_grid_plus_halo_size ;
+
+  setItsPerRep( 2 * m_num_vars * m_halo_size );
+  setKernelsPerRep( 2 * s_num_neighbors * m_num_vars );
+
+  setBytesAllocatedPerRep( 2*sizeof(Int_type) * m_halo_size + // pack_index_lists, unpack_index_lists
+                           2*sizeof(Real_type) * m_num_vars * m_halo_size + // pack_buffers, unpack_buffers (ignore send_buffers, unpack_buffers)
+                           1*sizeof(Real_type) * m_num_vars * m_var_size );  // vars
+  setBytesReadPerRep( 1*sizeof(Int_type) * m_num_vars * m_halo_size +   // pack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * m_halo_size +  // vars
+
+                      1*sizeof(Real_type) * m_num_vars * m_halo_size +  // (pack|send)_buffers (MPI)
+
+                      1*sizeof(Int_type) * m_num_vars * m_halo_size +   // unpack_index_lists
+                      1*sizeof(Real_type) * m_num_vars * m_halo_size ); // unpack_buffers
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_num_vars * m_halo_size +  // pack_buffers
+
+                         1*sizeof(Real_type) * m_num_vars * m_halo_size +  // (recv|unpack)_buffers (MPI)
+
+                         1*sizeof(Real_type) * m_num_vars * m_halo_size ); // vars
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 HALO_EXCHANGE::~HALO_EXCHANGE()

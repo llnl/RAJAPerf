@@ -1,14 +1,15 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D mass matrix via partial assembly
-///
+/// Action of a 3D finite element mass matrix on elements with shared DOFs
+/// via partial assembly and sum factorization
 ///
 /// for (Index_type e = 0; e < NE; ++e) {
 ///
@@ -34,10 +35,10 @@
 ///   for(Index_type dz=0; dz<mpa_at::D1D; ++dz) {
 ///     for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
 ///       for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
-///         Index_type j          = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
+///         Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 ///         //missing dof_map for lexicographical ordering
-///         thread_dofs[j] = elemToDoF[j + mpa_at::D1D * mpa_at::D1D *
-///         mpa_at::D1D * e]; sm_X[dz][dy][dx]  = X[thread_dofs[j]];
+///         thread_dofs[j] = ElemToDoF[j + mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * e];
+///         sm_X[dz][dy][dx]  = X[thread_dofs[j]];
 ///       }
 ///     }
 ///   }
@@ -259,71 +260,13 @@ class RunParams;
 
 namespace apps {
 
-/**
- * Build element-to-DOF connectivity for a structured 3D hex mesh
- * with arbitrary polynomial order p and 1 DOF per node.
- *
- * Inputs:
- *   Nx, Ny, Nz    : number of elements in x, y, z directions
- *   p             : polynomial order (>=1)
- *
- * Outputs:
- *   elem_to_dofs  : size = num_elems
- *                   each entry is a vector of size (p+1)^3
- *                   containing the global DOF indices of that element
- *
- * Element numbering:
- *   elem_id = ex + Nx * (ey + Ny * ez)
- */
-inline void
-buildElemToDofTable(Index_type Nx, Index_type Ny, Index_type Nz, Index_type p,
-                    Index_ptr elemToDof) // output buffer, must be preallocated
-{
-  const Index_type num_nodes_x = Nx * p + 1;
-  const Index_type num_nodes_y = Ny * p + 1;
-
-  const Index_type ndof_per_elem = (p + 1) * (p + 1) * (p + 1);
-
-  // Loop over elements
-  for (Index_type ez = 0; ez < Nz; ++ez) {
-    for (Index_type ey = 0; ey < Ny; ++ey) {
-      for (Index_type ex = 0; ex < Nx; ++ex) {
-        // Global element index (row in elemToDof)
-        Index_type e = ex + Nx * (ey + Ny * ez);
-
-        // Pointer to start of this element's DOF list
-        Index_ptr row = elemToDof + e * ndof_per_elem;
-
-        Index_type local = 0;
-
-        // Loop over local nodes of the element
-        for (Index_type kz = 0; kz <= p; ++kz) {
-          Index_type iz = ez * p + kz;
-          for (Index_type ky = 0; ky <= p; ++ky) {
-            Index_type iy = ey * p + ky;
-            for (Index_type kx = 0; kx <= p; ++kx) {
-              Index_type ix = ex * p + kx;
-
-              Index_type nodeID = ix + num_nodes_x * (iy + num_nodes_y * iz);
-
-              // Scalar DOF per node, so dofID == nodeID
-              Index_type dofID = nodeID;
-
-              row[local++] = dofID;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 class MASS3DPA_ATOMIC : public KernelBase {
 public:
   MASS3DPA_ATOMIC(const RunParams &params);
 
   ~MASS3DPA_ATOMIC();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -347,7 +290,6 @@ private:
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
-  Real_ptr m_Bt;
   Real_ptr m_D;
   Real_ptr m_X;
   Real_ptr m_Y;
@@ -361,7 +303,6 @@ private:
   Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
-  Index_type m_DOF_default;
 };
 
 } // end namespace apps

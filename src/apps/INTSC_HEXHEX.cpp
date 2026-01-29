@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -38,18 +39,50 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   setDefaultProblemSize(n_std_intsc_def);
 
   setDefaultReps  (1);
-  setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void INTSC_HEXHEX::setSize(Index_type target_size, Index_type target_reps)
+{
   // Number of standard intersections, by convention a cube number.
   Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) getTargetProblemSize() + 0.5) );
+      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
 
   if ( a3 < 1UL ) { a3 = 1UL ; }
 
-  Size_type n_std_intsc = a3*a3*a3 ;
+  // One standard intersection is 8 subzone intersections.
+  m_n_std_intsc = a3*a3*a3 ;
+  m_n_subz_intsc = npairs_per_std_intsc * m_n_std_intsc ;
 
-  setActualProblemSize( n_std_intsc ) ;
-  setItsPerRep        ( n_std_intsc );
+  const Int_type block_size = default_gpu_block_size ;
+  m_nthreads = tri_per_pair * m_n_subz_intsc ;  // 72 threads per subzone pair
+  m_gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
+
+  setActualProblemSize( m_n_std_intsc ) ;
+  setRunReps( target_reps );
+
+  setItsPerRep( m_n_std_intsc );
+  setKernelsPerRep(2);   // main intersection kernel and final fixup.
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * 24L*m_n_subz_intsc + // dsubz
+                           1*sizeof(Real_type) * 24L*m_n_subz_intsc + // tsubz
+                           1*sizeof(Real_type) * n_vvint_per_block * m_gsize + // vv_int
+                           1*sizeof(Real_type) * nvals_per_pair * m_n_subz_intsc + // vv_out
+                           1*sizeof(Real_type) * nvals_per_pair * m_n_subz_intsc ); // vv
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
@@ -71,16 +104,7 @@ INTSC_HEXHEX::INTSC_HEXHEX(const RunParams& params)
   constexpr Size_type flops_per_tri = 336 ;
   constexpr Size_type flops_per_intsc = flops_per_tri * tri_per_std_intsc ;
 
-  setFLOPsPerRep(n_std_intsc * flops_per_intsc);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
+  setFLOPsPerRep(m_n_std_intsc * flops_per_intsc);
 }
 
 INTSC_HEXHEX::~INTSC_HEXHEX()
@@ -91,10 +115,6 @@ INTSC_HEXHEX::~INTSC_HEXHEX()
 void INTSC_HEXHEX::setUp(VariantID vid,
                          Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  // One standard intersection is 8 subzone intersections.
-  Index_type n_std_intsc  = getActualProblemSize() ;
-  Index_type n_subz_intsc = npairs_per_std_intsc * n_std_intsc ;
-
   // coordinates for donor zone (the eight corner points)
   Real_type xdzone[8] =
       { m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax, m_xmin, m_xmax } ;
@@ -112,12 +132,12 @@ void INTSC_HEXHEX::setUp(VariantID vid,
     ztzone[i] = zdzone[i] + m_shift ;
   }
 
-  auto a_ds = allocDataForInit ( m_dsubz, 24L*n_subz_intsc, vid ) ;
-  auto a_ts = allocDataForInit ( m_tsubz, 24L*n_subz_intsc, vid ) ;
+  auto a_ds = allocDataForInit ( m_dsubz, 24L*m_n_subz_intsc, vid ) ;
+  auto a_ts = allocDataForInit ( m_tsubz, 24L*m_n_subz_intsc, vid ) ;
 
-  //  Repeat the same calculation n_subz_intsc times, expand the
+  //  Repeat the same calculation m_n_subz_intsc times, expand the
   //  same donor and target zones.
-  for ( Index_type k=0 ; k < n_subz_intsc ; ++k ) {
+  for ( Index_type k=0 ; k < m_n_subz_intsc ; ++k ) {
     for ( Index_type i=0 ; i<8 ; ++i ) {
       m_dsubz[24L*k+ 0+i] = xdzone[i] ;
       m_dsubz[24L*k+ 8+i] = ydzone[i] ;
@@ -128,26 +148,21 @@ void INTSC_HEXHEX::setUp(VariantID vid,
     }
   }
 
-  const Int_type block_size = default_gpu_block_size ;
-  m_nthreads = tri_per_pair * n_subz_intsc ;  // 72 threads per subzone pair
-  Index_type gsize    = RAJA_DIVIDE_CEILING_INT(m_nthreads, block_size) ;
-
   // intermediate volumes, moments
-  allocData ( m_vv_int, n_vvint_per_block * gsize, vid ) ;
+  allocData ( m_vv_int, n_vvint_per_block * m_gsize, vid ) ;
 
-  allocAndInitDataConst ( m_vv_out, nvals_per_pair * n_subz_intsc, 0.0, vid ) ;
+  allocAndInitDataConst ( m_vv_out, nvals_per_pair * m_n_subz_intsc, 0.0, vid ) ;
 
   // output volumes and moments on the host
-  allocData ( DataSpace::Host, m_vv, nvals_per_pair * n_subz_intsc ) ;
+  allocData ( DataSpace::Host, m_vv, nvals_per_pair * m_n_subz_intsc ) ;
 }
 
 
 //   Number of subzone intersections = 8 * number of standard intersections.
 //
-void INTSC_HEXHEX::check_intsc_volume_moments
-    ( Index_type const n_subz_intsc,  // number of subzone intersections
-      Real_const_ptr vv,   // computed volumes, moments on the host
-      VariantID vid )   // Print variant name in case of error
+void INTSC_HEXHEX::check_intsc_volume_moments(
+    Real_const_ptr vv,   // computed volumes, moments on the host
+    VariantID vid)       // Print variant name in case of error
 {
 
   {
@@ -191,7 +206,7 @@ void INTSC_HEXHEX::check_intsc_volume_moments
     Real_type tolsqz = tolsq * v0*v0 *
         ( fabs(zmax) + fabs(zmin) ) *  ( fabs(zmax) + fabs(zmin) ) ;
 
-    for ( Index_type k = 0 ; k < n_subz_intsc ; ++k ) {
+    for ( Index_type k = 0 ; k < m_n_subz_intsc ; ++k ) {
 
       //  differences between computed and correct
       Real_type dv  = vv[ nvals_per_pair*k + 0 ] - v0 ;
@@ -249,16 +264,12 @@ void INTSC_HEXHEX::check_intsc_volume_moments
 void INTSC_HEXHEX::updateChecksum(VariantID vid,
                                   size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  // One standard intersection is 8 subzone intersections.
-  Index_type n_std_intsc  = getActualProblemSize() ;
-  Index_type n_subz_intsc = npairs_per_std_intsc * n_std_intsc ;
-
   copyData ( DataSpace::Host, m_vv,
-             getDataSpace(vid), m_vv_out, nvals_per_pair*n_subz_intsc ) ;
+             getDataSpace(vid), m_vv_out, nvals_per_pair*m_n_subz_intsc ) ;
 
-  check_intsc_volume_moments ( n_subz_intsc, m_vv, vid ) ;
+  check_intsc_volume_moments ( m_vv, vid ) ;
 
-  addToChecksum(m_vv_out, nvals_per_pair*n_subz_intsc, vid);
+  addToChecksum(m_vv_out, nvals_per_pair*m_n_subz_intsc, vid);
 }
 
 void INTSC_HEXHEX::tearDown(VariantID vid,

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -65,8 +66,8 @@ void INTSC_HEXHEX::runHipVariantImpl(VariantID vid)
   const Index_type ibegin = 0 ;
   const Index_type iend     = tri_per_std_intsc * getActualProblemSize() ;
 
-  const Size_type  n_subz_intsc= npairs_per_std_intsc * getActualProblemSize();
-  const Size_type  nisc_stage  = n_subz_intsc ;
+  const Size_type  n_subz_intsc= m_n_subz_intsc;
+  const Size_type  nisc_stage  = m_n_subz_intsc ;
 
   // n_szgrp is number of groups of subzone pairs in fixup kernel.
   // gsize_fixup = fixup kernel grid size (1 thread per group of subzone pairs)

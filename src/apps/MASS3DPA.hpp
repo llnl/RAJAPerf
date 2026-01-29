@@ -1,13 +1,15 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D mass matrix via partial assembly
+/// Element-wise action of a 3D finite element mass matrix via partial assembly
+/// and sum factorization
 ///
 /// Based on MFEM's/CEED algorithms.
 /// Reference implementation - MFEM-v4.9
@@ -354,6 +356,7 @@ public:
 
   ~MASS3DPA();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -382,7 +385,6 @@ private:
   Real_ptr m_Y;
 
   Index_type m_NE;
-  Index_type m_NE_default;
 };
 
 } // end namespace apps

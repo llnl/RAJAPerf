@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,24 +25,37 @@ COPY8::COPY8(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // x0, x1, x2, x3, x4, x5, x6, x7
-  setBytesWrittenPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // y0, y1, y2, y3, y4, y5, y6, y7
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Consistent);
   setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void COPY8::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 8*sizeof(Real_type) * getActualProblemSize() + // y0, y1, y2, y3, y4, y5, y6, y7
+                           8*sizeof(Real_type) * getActualProblemSize() ); // x0, x1, x2, x3, x4, x5, x6, x7
+  setBytesReadPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // x0, x1, x2, x3, x4, x5, x6, x7
+  setBytesWrittenPerRep( 8*sizeof(Real_type) * getActualProblemSize() ); // y0, y1, y2, y3, y4, y5, y6, y7
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 COPY8::~COPY8()

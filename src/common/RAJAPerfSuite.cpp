@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -752,6 +753,62 @@ const std::string& getComplexityName(Complexity ac)
 /*
  *******************************************************************************
  *
+ * Return tuning attribute name associated with TuningAttribute enum value.
+ *
+ * NOTE: TuningAttributes may be bitwise or'd together so constructing a
+ *       string for a
+ *
+ *******************************************************************************
+ */
+std::string getTuningAttributeName(TuningAttribute ta)
+{
+  std::string name;
+  if (ta == TuningAttribute::none) {
+    name = "none";
+  } else {
+    // add names of attributes and removing them from ta as they are found
+    for (TuningAttribute test : { // list all tuning attributes besides none
+              TuningAttribute::preferred_checksum
+            }) {
+      if (hasTuningAttribute(ta, test)) {
+        if (!name.empty()) {
+          name += '|';
+        }
+        switch(test) {
+          case TuningAttribute::none: // add to silence compiler warning
+            name += "none"; break; // should never be used
+          case TuningAttribute::preferred_checksum:
+            name += "preferred_checksum"; break;
+        }
+        ta = static_cast<TuningAttribute>(static_cast<size_t>(ta) ^ static_cast<size_t>(test));
+      }
+    }
+    if (ta != TuningAttribute::none) {
+      if (!name.empty()) {
+        name += '|';
+      }
+      name += "Unknown TuningAttribute";
+    }
+  }
+  return name;
+}
+
+/*!
+ *******************************************************************************
+ *
+ * Return whether tuning attribute ta has the attribute test set.
+ *
+ *******************************************************************************
+ */
+bool hasTuningAttribute(TuningAttribute ta, TuningAttribute test)
+{
+  return (static_cast<size_t>(ta) & static_cast<size_t>(test)) != static_cast<size_t>(0);
+}
+
+
+/*
+ *******************************************************************************
+ *
  * Return memory space name associated with DataSpace enum value.
  *
  *******************************************************************************
@@ -1250,6 +1307,105 @@ KernelBase* getKernelObject(KernelID kid,
     }
 
   } // end switch on kernel id
+
+  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+
+    // find the first problem size that uses memory >= target_memory
+    // or if the kernel uses no memory use target_memory as the problem size
+
+    const Index_type target_memory = run_params.getMemory();
+    const Index_type target_reps = run_params.getReps(kernel->getDefaultReps());
+
+    Index_type (KernelBase::* getMemory)() const = nullptr;
+    switch (run_params.getMemoryMeaning()) {
+      case RunParams::MemoryMeaning::Moved:
+        getMemory = &KernelBase::getBytesMovedPerRep; break;
+      case RunParams::MemoryMeaning::Touched:
+        getMemory = &KernelBase::getBytesTouchedPerRep; break;
+      case RunParams::MemoryMeaning::Allocated:
+        getMemory = &KernelBase::getBytesAllocatedPerRep; break;
+      default:
+        getCout() << "Invalid value of memory meaning " << run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()); break;
+    }
+
+
+    Index_type target_size = target_memory;
+
+    if ((kernel->*getMemory)() != 0) {
+
+      Index_type target_upper_bound = target_memory;
+      Index_type target_lower_bound = target_upper_bound;
+
+      // find initial bounds
+      // search down (assume memory usage is greater than problem size)
+      while ((kernel->*getMemory)() > target_memory &&
+             target_lower_bound > 1) {
+
+        target_upper_bound = target_lower_bound;
+        target_lower_bound /= 2;
+
+        kernel->setSize(target_lower_bound, target_reps);
+
+      }
+
+      // find the first problem size that uses memory >= target_memory
+      // bisect the upper and lower bounds
+      while (target_upper_bound != target_lower_bound) {
+
+        // note this will be target_lower_bound when (target_lower_bound == target_upper_bound-1)
+        const Index_type target_next_bound = (target_upper_bound + target_lower_bound) / 2;
+
+        kernel->setSize(target_next_bound, target_reps);
+
+        if ((kernel->*getMemory)() > target_memory) {
+
+          target_upper_bound = target_next_bound;
+
+        } else {
+
+          if (target_lower_bound != target_next_bound) {
+
+            target_lower_bound = target_next_bound;
+
+          } else {
+
+            // end of loop
+            // pick a final problem size that produces memory usage greater than
+            // or equal to target_memory
+            if ((kernel->*getMemory)() == target_memory) {
+
+              target_upper_bound = target_lower_bound;
+
+            } else {
+
+              target_lower_bound = target_upper_bound;
+
+            }
+
+          }
+
+        }
+
+      }
+
+      target_size = target_upper_bound;
+
+    }
+
+    if (target_size < run_params.getMinSize()) {
+
+      target_size = run_params.getMinSize();
+
+    }
+
+    kernel->setSize(target_size, target_reps);
+
+    // scaling the actual size tends to give smoother scaling
+    target_size = static_cast<Index_type>(kernel->getActualProblemSize()*run_params.getSizeFactor());
+
+    kernel->setSize(target_size, target_reps);
+
+  }
 
   return kernel;
 }

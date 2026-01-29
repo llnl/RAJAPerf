@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -39,9 +40,9 @@
 
 
 #define DIFF_PREDICT_DATA_SETUP \
-  Real_ptr px = m_px; \
-  Real_ptr cx = m_cx; \
-  const Index_type offset = m_offset;
+  const Index_type offset = getActualProblemSize(); \
+  Real_ptr px = m_px - offset * 4; \
+  Real_ptr cx = m_cx - offset * 4;
 
 #define DIFF_PREDICT_BODY  \
   Real_type ar, br, cr; \
@@ -84,6 +85,7 @@ public:
 
   ~DIFF_PREDICT();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -114,9 +116,6 @@ private:
 
   Real_ptr m_px;
   Real_ptr m_cx;
-
-  Index_type m_array_length;
-  Index_type m_offset;
 };
 
 } // end namespace lcals

@@ -1,13 +1,15 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Action of 3D diffusion matrix via partial assembly
+/// Element-wise action of a 3D finite element volume convection operator
+/// via partial assembly and sum factorization
 ///
 /// Based on MFEM's/CEED algorithms.
 /// Reference implementation - MFEM-v4.9
@@ -16,8 +18,8 @@
 ///
 /// for(Index_type e = 0; e < NE; ++e) {
 ///
-///   constexpr Index_type max_D1D = CPA_D1D;
-///   constexpr Index_type max_Q1D = CPA_Q1D;
+///   constexpr Index_type max_D1D = conv::D1D;
+///   constexpr Index_type max_Q1D = conv::Q1D;
 ///   constexpr Index_type max_DQ = (max_Q1D > max_D1D) ? max_Q1D : max_D1D;
 ///   MFEM_SHARED Real_type sm0[max_DQ*max_DQ*max_DQ];
 ///   MFEM_SHARED Real_type sm1[max_DQ*max_DQ*max_DQ];
@@ -27,11 +29,11 @@
 ///   MFEM_SHARED Real_type sm5[max_DQ*max_DQ*max_DQ];
 ///
 ///   Real_type (*u)[max_D1D][max_D1D] = (Real_type (*)[max_D1D][max_D1D]) sm0;
-///   for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///   for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///   {
-///     for(Index_type dy = 0; dy < CPA_D1D; ++dy)
+///     for(Index_type dy = 0; dy < conv::D1D; ++dy)
 ///     {
-///       for(Index_type dx = 0; dx < CPA_D1D; ++dx)
+///       for(Index_type dx = 0; dx < conv::D1D; ++dx)
 ///       {
 ///         u[dz][dy][dx] = CPA_X(dx,dy,dz,e);
 ///       }
@@ -40,15 +42,15 @@
 ///   MFEM_SYNC_THREAD;
 ///   Real_type (*Bu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm1;
 ///   Real_type (*Gu)[max_D1D][max_Q1D] = (Real_type (*)[max_D1D][max_Q1D])sm2;
-///   for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///   for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///   {
-///     for(Index_type dy = 0; dy < CPA_D1D; ++dy)
+///     for(Index_type dy = 0; dy < conv::D1D; ++dy)
 ///     {
-///       for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///       for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///       {
 ///         Real_type Bu_ = 0.0;
 ///         Real_type Gu_ = 0.0;
-///         for(Index_type dx = 0; dx < CPA_D1D; ++dx)
+///         for(Index_type dx = 0; dx < conv::D1D; ++dx)
 ///         {
 ///           const Real_type bx = CPA_B(qx,dx);
 ///           const Real_type gx = CPA_G(qx,dx);
@@ -65,16 +67,16 @@
 ///   Real_type (*BBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
 ///   Real_type (*GBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm4;
 ///   Real_type (*BGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm5;
-///   for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///   for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///   {
-///     for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///     for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///     {
-///       for(Index_type qy = 0; qy < CPA_Q1D; ++qy)
+///       for(Index_type qy = 0; qy < conv::Q1D; ++qy)
 ///       {
 ///         Real_type BBu_ = 0.0;
 ///         Real_type GBu_ = 0.0;
 ///         Real_type BGu_ = 0.0;
-///         for(Index_type dy = 0; dy < CPA_D1D; ++dy)
+///         for(Index_type dy = 0; dy < conv::D1D; ++dy)
 ///         {
 ///           const Real_type bx = CPA_B(qy,dy);
 ///           const Real_type gx = CPA_G(qy,dy);
@@ -93,16 +95,16 @@
 ///   Real_type (*BGBu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm1; 
 ///   Real_type (*BBGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm2; 
 ///   
-///   for(Index_type qx = 0; qx <CPA_Q1D; ++qx)
+///   for(Index_type qx = 0; qx <conv::Q1D; ++qx)
 ///   {
-///     for(Index_type qy = 0; qy < CPA_Q1D; ++qy)
+///     for(Index_type qy = 0; qy < conv::Q1D; ++qy)
 ///     {
-///       for(Index_type qz = 0; qz < CPA_Q1D; ++qz)
+///       for(Index_type qz = 0; qz < conv::Q1D; ++qz)
 ///       {
 ///         Real_type GBBu_ = 0.0;
 ///         Real_type BGBu_ = 0.0;
 ///         Real_type BBGu_ = 0.0;
-///         for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///         for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///         {
 ///           const Real_type bx = CPA_B(qz,dz);
 ///           const Real_type gx = CPA_G(qz,dz);
@@ -118,11 +120,11 @@
 ///   }
 ///   MFEM_SYNC_THREAD;
 ///   Real_type (*DGu)[max_Q1D][max_Q1D] = (Real_type (*)[max_Q1D][max_Q1D])sm3;
-///   for(Index_type qz = 0; qz < CPA_Q1D; ++qz)
+///   for(Index_type qz = 0; qz < conv::Q1D; ++qz)
 ///   {
-///     for(Index_type qy = 0; qy < CPA_Q1D; ++qy)
+///     for(Index_type qy = 0; qy < conv::Q1D; ++qy)
 ///     {
-///       for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///       for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///       {
 ///         const Real_type O1 = CPA_op(qx,qy,qz,0,e);
 ///         const Real_type O2 = CPA_op(qx,qy,qz,1,e);
@@ -138,14 +140,14 @@
 ///   }
 ///   MFEM_SYNC_THREAD;
 ///   Real_type (*BDGu)[max_Q1D][max_Q1D] = (Real_type
-///   (*)[max_Q1D][max_Q1D])sm4; for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///   (*)[max_Q1D][max_Q1D])sm4; for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///   {
-///     for(Index_type qy = 0; qy < CPA_Q1D; ++qy)
+///     for(Index_type qy = 0; qy < conv::Q1D; ++qy)
 ///     {
-///       for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///       for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///       {
 ///          Real_type BDGu_ = 0.0;
-///          for(Index_type qz = 0; qz < CPA_Q1D; ++qz)
+///          for(Index_type qz = 0; qz < conv::Q1D; ++qz)
 ///          {
 ///             const Real_type w = CPA_Bt(dz,qz);
 ///             BDGu_ += w * DGu[qz][qy][qx];
@@ -156,14 +158,14 @@
 ///   }
 ///   MFEM_SYNC_THREAD;
 ///   Real_type (*BBDGu)[max_D1D][max_Q1D] = (Real_type
-///   (*)[max_D1D][max_Q1D])sm5; for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///   (*)[max_D1D][max_Q1D])sm5; for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///   {
-///     for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///     for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///      {
-///        for(Index_type dy = 0; dy < CPA_D1D; ++dy)
+///        for(Index_type dy = 0; dy < conv::D1D; ++dy)
 ///         {
 ///            Real_type BBDGu_ = 0.0;
-///            for(Index_type qy = 0; qy < CPA_Q1D; ++qy)
+///            for(Index_type qy = 0; qy < conv::Q1D; ++qy)
 ///            {
 ///              const Real_type w = CPA_Bt(dy,qy);
 ///              BBDGu_ += w * BDGu[dz][qy][qx];
@@ -173,14 +175,14 @@
 ///     }
 ///   }
 ///   MFEM_SYNC_THREAD;
-///   for(Index_type dz = 0; dz < CPA_D1D; ++dz)
+///   for(Index_type dz = 0; dz < conv::D1D; ++dz)
 ///   {
-///     for(Index_type dy = 0; dy < CPA_D1D; ++dy)
+///     for(Index_type dy = 0; dy < conv::D1D; ++dy)
 ///     {
-///       for(Index_type dx = 0; dx < CPA_D1D; ++dx)
+///       for(Index_type dx = 0; dx < conv::D1D; ++dx)
 ///       {
 ///         Real_type BBBDGu = 0.0;
-///         for(Index_type qx = 0; qx < CPA_Q1D; ++qx)
+///         for(Index_type qx = 0; qx < conv::Q1D; ++qx)
 ///         {
 ///           const Real_type w = CPA_Bt(dx,qx);
 ///           BBBDGu += w * BBDGu[dz][dy][qx];
@@ -365,6 +367,7 @@ public:
 
   ~CONVECTION3DPA();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -396,7 +399,6 @@ private:
   Real_ptr m_Y;
 
   Index_type m_NE;
-  Index_type m_NE_default;
 };
 
 } // end namespace apps

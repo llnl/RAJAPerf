@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -76,12 +77,14 @@ public:
   }
 
   /*!
-   * \brief Enumeration indicating how to interpret size input
+   * \brief Enumeration indicating how to use input variables to generate
+   *        problem size(s)
    */
-  enum SizeMeaning {
+  enum struct SizeMeaning {
     Unset,    /*!< indicates value is unset */
-    Factor,   /*!< multiplier on default kernel iteration space */
-    Direct,   /*!< directly use as kernel iteration space */
+    Default,  /*!< Use default kernel iteration space */
+    Direct,   /*!< directly use size as kernel iteration space */
+    Memory    /*!< directly use memory based on memory_meaning */
   };
 
   /*!
@@ -92,10 +95,41 @@ public:
     switch (sm) {
       case SizeMeaning::Unset:
         return "Unset";
-      case SizeMeaning::Factor:
-        return "Factor";
+      case SizeMeaning::Default:
+        return "Default";
       case SizeMeaning::Direct:
         return "Direct";
+      case SizeMeaning::Memory:
+        return "Memory";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
+   * \brief Enumeration indicating how to interpret memory input
+   */
+  enum struct MemoryMeaning {
+    Unset,    /*!< indicates value is unset */
+    Moved,    /*!< Find problem size that matches bytesMoved/rep */
+    Touched,  /*!< Find problem size that matches bytesTouched/rep */
+    Allocated /*!< Find problem size that matches bytesAllocated/rep */
+  };
+
+  /*!
+   * \brief Translate MemoryMeaning enum value to string
+   */
+  static std::string MemoryMeaningToStr(MemoryMeaning sm)
+  {
+    switch (sm) {
+      case MemoryMeaning::Unset:
+        return "Unset";
+      case MemoryMeaning::Moved:
+        return "Moved";
+      case MemoryMeaning::Touched:
+        return "Touched";
+      case MemoryMeaning::Allocated:
+        return "Allocated";
       default:
         return "Unknown";
     }
@@ -143,7 +177,7 @@ public:
   };
 
   /*!
-   * \brief Translate SizeMeaning enum value to string
+   * \brief Translate WarmupMode enum value to string
    */
   static std::string WarmupModeToStr(WarmupMode wm)
   {
@@ -181,9 +215,44 @@ public:
 
   SizeMeaning getSizeMeaning() const { return size_meaning; }
 
+  double getSizeFactor() const { return size_factor; }
+
   double getSize() const { return size; }
 
-  double getSizeFactor() const { return size_factor; }
+  MemoryMeaning getMemoryMeaning() const { return memory_meaning; }
+
+  double getMemory() const { return memory; }
+
+  double getMinSize() const { return min_size; }
+
+  Index_type getTargetSize(Index_type default_prob_size) const
+  {
+    Index_type target_size = static_cast<Index_type>(0);
+    if (size_meaning == RunParams::SizeMeaning::Default) {
+      target_size = default_prob_size;
+    } else if (size_meaning == RunParams::SizeMeaning::Direct) {
+      target_size = static_cast<Index_type>(size);
+    } else if (size_meaning == RunParams::SizeMeaning::Memory) {
+      // This will be fixed up on a per kernel basis later
+      target_size = static_cast<Index_type>(memory);
+    }
+    if (target_size < min_size) {
+      target_size = static_cast<Index_type>(min_size);
+    }
+    target_size = static_cast<Index_type>(target_size*size_factor);
+    return target_size;
+  }
+
+  Index_type getReps(Index_type default_reps) const
+  {
+    Index_type run_reps = static_cast<Index_type>(0);
+    if (input_state == RunParams::CheckRun) {
+      run_reps = static_cast<Index_type>(checkrun_reps);
+    } else {
+      run_reps = static_cast<Index_type>(default_reps*rep_fact);
+    }
+    return run_reps;
+  }
 
   Size_type getDataAlignment() const { return data_alignment; }
 
@@ -338,8 +407,11 @@ private:
   double rep_fact;       /*!< pct of default kernel reps to run */
 
   SizeMeaning size_meaning; /*!< meaning of size value */
-  double size;           /*!< kernel size to run (input option) */
   double size_factor;    /*!< default kernel size multipier (input option) */
+  double size;           /*!< kernel size to run (input option) */
+  MemoryMeaning memory_meaning; /*!< meaning of memory value */
+  double memory;           /*!< memory size to run (input option) */
+  double min_size;           /*!< minimum kernel size to run (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */

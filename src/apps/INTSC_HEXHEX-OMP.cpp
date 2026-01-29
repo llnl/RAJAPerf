@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -28,14 +29,12 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid)
   //  standard intersections among threads, iend is getActualProblemSize.
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type n_std_intsc = getActualProblemSize() ;
 
-  const Index_type n_subz_intsc= npairs_per_std_intsc * n_std_intsc ;
-  const Index_type n_szpairs   = n_subz_intsc ;
+  const Index_type n_subz_intsc= m_n_subz_intsc ;
+  const Index_type n_szpairs   = m_n_subz_intsc;
 
   //  Thread loop is over grouped intersections between subzone pairs.
-  const Index_type iend = RAJA_DIVIDE_CEILING_INT
-      ( n_subz_intsc, fixup_groupsize ) ;
+  const Index_type iend = RAJA_DIVIDE_CEILING_INT(n_subz_intsc, fixup_groupsize);
 
   INTSC_HEXHEX_DATA_SETUP ;
 
