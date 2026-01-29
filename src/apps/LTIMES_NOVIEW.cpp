@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -31,16 +32,40 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
   setDefaultProblemSize(m_num_d * m_num_g * num_z_default);
   setDefaultReps(50);
 
-  m_num_z = std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Kernel);
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void LTIMES_NOVIEW::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
 
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
 
   setActualProblemSize( m_psilen );
+  setRunReps( target_reps );
 
   setItsPerRep( m_philen );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                           1*sizeof(Real_type) * m_psilen + // psi
+                           1*sizeof(Real_type) * m_philen ); // phi
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
                       1*sizeof(Real_type) * m_psilen ); // psi
@@ -48,16 +73,6 @@ LTIMES_NOVIEW::LTIMES_NOVIEW(const RunParams& params)
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_philen ); // phi
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Kernel);
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 LTIMES_NOVIEW::~LTIMES_NOVIEW()
@@ -66,9 +81,9 @@ LTIMES_NOVIEW::~LTIMES_NOVIEW()
 
 void LTIMES_NOVIEW::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_phidat, int(m_philen), Real_type(0.0), vid);
-  allocAndInitData(m_elldat, int(m_elllen), vid);
-  allocAndInitData(m_psidat, int(m_psilen), vid);
+  allocAndInitDataConst(m_phidat, m_philen, Real_type(0.0), vid);
+  allocAndInitData(m_elldat, m_elllen, vid);
+  allocAndInitData(m_psidat, m_psilen, vid);
 }
 
 void LTIMES_NOVIEW::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

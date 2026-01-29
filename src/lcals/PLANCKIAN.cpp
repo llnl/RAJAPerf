@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,24 +25,36 @@ PLANCKIAN::PLANCKIAN(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * getActualProblemSize() ); // u, v, x
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * getActualProblemSize() ); // y, w
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void PLANCKIAN::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 5*sizeof(Real_type) * getActualProblemSize() ); // x, y, u, v, w
+  setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // u, v, x
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // y, w
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(4 * getActualProblemSize()); // 1 exp
 }
 
 PLANCKIAN::~PLANCKIAN()

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,10 +25,34 @@ ENERGY::ENERGY(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(130);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void ENERGY::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+
+  setActualProblemSize( target_size );
 
   setItsPerRep( 6 * getActualProblemSize() );
   setKernelsPerRep(6);
+
+  setBytesAllocatedPerRep( 15*sizeof(Real_type) * getActualProblemSize() ); // e_new, e_old, delvc, p_new, p_old, q_new, q_old, work, compHalfStep, pHalfStep, bvc, pbvc, ql_old, qq_old, vnewc
   // some branches are never taken due to the nature of the initialization of delvc
   // the additional ops that would be done if those branches were taken are noted in the comments
   setBytesReadPerRep((5*sizeof(Real_type) + // e_old, delvc, p_old, q_old, work
@@ -59,15 +84,6 @@ ENERGY::ENERGY(const RunParams& params)
                   19 + // 1 sqrt
                   9    // 1 sqrt
                   ) * getActualProblemSize());
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 ENERGY::~ENERGY()

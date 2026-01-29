@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -35,6 +36,26 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
+  setChecksumTolerance(ChecksumTolerance::loose);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Launch);
+  //setUsesFeature(View);
+
+  addVariantTunings();
+}
+
+void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type target_reps)
+{
   m_Blen = ND * m_ne * m_na;
   m_Alen = ND * ND * m_ne * m_na;
   // 9450 is a property of the mesh. Will need to derive this when mesh generator is available.
@@ -44,15 +65,41 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_Xlen = ND * m_ne * m_ng * m_na;
 
   setActualProblemSize( m_Xlen );
+  setRunReps( target_reps );
 
   setItsPerRep(1);
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_Blen + // Bdat
+                           1*sizeof(Real_type) * m_Alen + // Adat
+                           1*sizeof(Real_type) * m_Flen + // Fdat
+                           1*sizeof(Real_type) * m_Sglen + // Sgdat
+                           1*sizeof(Real_type) * m_M0len + // M0dat
+                           1*sizeof(Real_type) * m_Xlen + // Xdat
+                           1*sizeof(Index_type) * m_na + // nhpaa_r,
+                           1*sizeof(Index_type) * m_na + // ohpaa_r,
+                           1*sizeof(Index_type) * m_na * 43 + // phpaa_r,
+                           1*sizeof(Index_type) * m_na * m_ne + // order_r,
+                           1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                           1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
+                           1*sizeof(Index_type) * 10800 + // F_g2l
+                           1*sizeof(Index_type) * 37800 + // idx1
+                           1*sizeof(Index_type) * 37800 );// idx2
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_Blen + // Bdat
                       1*sizeof(Real_type) * m_Alen + // Adat
                       1*sizeof(Real_type) * m_Flen + // Fdat
                       1*sizeof(Real_type) * m_Sglen + // Sgdat
-                      1*sizeof(Real_type) * m_M0len ); // M0dat
+                      1*sizeof(Real_type) * m_M0len + // M0dat
+                      1*sizeof(Index_type) * m_na + // nhpaa_r,
+                      1*sizeof(Index_type) * m_na + // ohpaa_r,
+                      1*sizeof(Index_type) * m_na * 43 + // phpaa_r,
+                      1*sizeof(Index_type) * m_na * m_ne + // order_r,
+                      1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                      1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
+                      1*sizeof(Index_type) * 10800 + // F_g2l
+                      1*sizeof(Index_type) * 37800 + // idx1
+                      1*sizeof(Index_type) * 37800 );// idx2
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_Xlen ); // Xdat
   setBytesAtomicModifyWrittenPerRep( 0 );
@@ -63,17 +110,6 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
                   ND * (ND-1) * 3 +               // backward substitution
                   NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  // The checksum is inaccurate starting at the 10's digit for: AMD CPU and older clang versions on NVIDIA GPUs.
-  setChecksumTolerance(ChecksumTolerance::loose);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-  //setUsesFeature(View);
-
-  addVariantTunings();
 }
 
 FEMSWEEP::~FEMSWEEP()

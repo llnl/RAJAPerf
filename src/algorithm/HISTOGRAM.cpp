@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,28 +28,40 @@ HISTOGRAM::HISTOGRAM(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
   m_num_bins = params.getMultiReduceNumBins();
   m_bin_assignment_algorithm = params.getMultiReduceBinAssignmentAlgorithm();
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) * getActualProblemSize() ); // bins
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // counts
-  setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Consistent); // integer arithmetic
   setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
   setUsesFeature(Atomic);
 
   addVariantTunings();
+}
+
+void HISTOGRAM::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 1*sizeof(Index_type) * getActualProblemSize() + // bins
+                           1*sizeof(Data_type) * m_num_bins ); // counts
+  setBytesReadPerRep( 1*sizeof(Index_type) * getActualProblemSize() ); // bins
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // counts
+  setFLOPsPerRep( (std::is_floating_point_v<Data_type> ? 1 : 0) * getActualProblemSize() );
 }
 
 HISTOGRAM::~HISTOGRAM()

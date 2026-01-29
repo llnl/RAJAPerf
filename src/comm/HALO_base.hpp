@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -86,6 +87,7 @@ public:
 
   ~HALO_base();
 
+  void setSize_base(Index_type target_size, Index_type target_reps);
   void setUp_base(const int my_mpi_rank, const int* mpi_dims,
                   const Index_type num_vars,
                   VariantID vid, size_t tune_idx);
@@ -131,63 +133,57 @@ protected:
 
   static Index_type s_grid_dims_default[3];
 
-  Index_type m_grid_dims[3];
   Index_type m_halo_width;
+  Index_type m_halo_size;
+
+  Index_type m_grid_dims[3];
+  Index_type m_grid_size;
 
   Index_type m_grid_plus_halo_dims[3];
   Index_type m_grid_plus_halo_size;
 
-  Int_ptr m_mpi_ranks;
+  Int_type m_mpi_ranks[s_num_neighbors];
 
-  Int_ptr m_send_tags;
-  Int_ptr_ptr m_pack_index_lists;
-  Index_ptr m_pack_index_list_lengths;
-  Real_ptr_ptr m_pack_buffers;
-  Real_ptr_ptr m_send_buffers;
+  Int_type m_send_tags[s_num_neighbors];
+  Index_type m_pack_index_list_lengths[s_num_neighbors];
+  Int_ptr m_pack_index_lists[s_num_neighbors];
+  Real_ptr m_pack_buffers[s_num_neighbors];
+  Real_ptr m_send_buffers[s_num_neighbors];
 
-  Int_ptr m_recv_tags;
-  Int_ptr_ptr m_unpack_index_lists;
-  Index_ptr m_unpack_index_list_lengths;
-  Real_ptr_ptr m_unpack_buffers;
-  Real_ptr_ptr m_recv_buffers;
+  Int_type m_recv_tags[s_num_neighbors];
+  Index_type m_unpack_index_list_lengths[s_num_neighbors];
+  Int_ptr m_unpack_index_lists[s_num_neighbors];
+  Real_ptr m_unpack_buffers[s_num_neighbors];
+  Real_ptr m_recv_buffers[s_num_neighbors];
+
+  Extent m_pack_extents[s_num_neighbors];
+  Extent m_unpack_extents[s_num_neighbors];
 
   Extent make_boundary_extent(
     const message_type msg_type,
     const int (&boundary_offset)[3],
     const Index_type halo_width, const Index_type* grid_dims);
 
+  void set_list_sizes();
+
   void create_lists(
       int my_mpi_rank,
       const int* mpi_dims,
-      Int_ptr& mpi_ranks,
-      Int_ptr& send_tags,
-      Int_ptr_ptr& pack_index_lists,
-      Index_ptr& pack_index_list_lengths,
-      Int_ptr& recv_tags,
-      Int_ptr_ptr& unpack_index_lists,
-      Index_ptr& unpack_index_list_lengths,
-      const Index_type halo_width, const Index_type* grid_dims,
-      const Index_type num_neighbors,
       VariantID vid);
 
   void destroy_lists(
-      Int_ptr_ptr& pack_index_lists,
-      Int_ptr_ptr& unpack_index_lists,
-      const Index_type num_neighbors,
       VariantID vid);
 
   void create_buffers(
-      Index_ptr const& index_list_lengths,
-      Real_ptr_ptr& our_buffers,
-      Real_ptr_ptr& mpi_buffers,
-      const Index_type num_neighbors,
+      Index_ptr index_list_lengths,
+      Real_ptr_ptr our_buffers,
+      Real_ptr_ptr mpi_buffers,
       const Index_type num_vars,
       VariantID vid);
 
   void destroy_buffers(
-      Real_ptr_ptr& our_buffers,
-      Real_ptr_ptr& mpi_buffers,
-      const Index_type num_neighbors,
+      Real_ptr_ptr our_buffers,
+      Real_ptr_ptr mpi_buffers,
       VariantID vid);
 };
 

@@ -1,13 +1,14 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
-/// Assembly of 3D mass matrix
+/// Element assembly of a 3D finite element mass matrix
 ///
 /// Based on MFEM's/CEED algorithms.
 /// Reference implementation - MFEM-v4.9
@@ -148,6 +149,7 @@ public:
 
   ~MASS3DEA();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -170,12 +172,10 @@ private:
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
-  Real_ptr m_Bt;
   Real_ptr m_D;
   Real_ptr m_M;
 
   Index_type m_NE;
-  Index_type m_NE_default;
 };
 
 } // end namespace apps

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -23,19 +24,40 @@ namespace apps
 CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_CONVECTION3DPA, params)
 {
-  m_NE_default = 15625;
-
-  setDefaultProblemSize(m_NE_default*conv::D1D*conv::D1D*conv::D1D);
+  Index_type NE_default = 15625;
+  setDefaultProblemSize(NE_default*conv::D1D*conv::D1D*conv::D1D);
   setDefaultReps(50);
 
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Launch);
+
+  addVariantTunings();
+}
+
+void CONVECTION3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
   //Define problem size in terms of DOFS
-  m_NE = std::max((getTargetProblemSize() + (conv::D1D*conv::D1D*conv::D1D)/2) / (conv::D1D*conv::D1D*conv::D1D), Index_type(1));
+  m_NE = std::max((target_size + (conv::D1D*conv::D1D*conv::D1D)/2) / (conv::D1D*conv::D1D*conv::D1D), Index_type(1));
 
   setActualProblemSize( m_NE*conv::D1D*conv::D1D*conv::D1D );
+  setRunReps( target_reps );
 
   setItsPerRep( m_NE*conv::D1D*conv::D1D*conv::D1D );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * (conv::Q1D*conv::D1D) + // b, bt, g
+                  conv::VDIM*sizeof(Real_type) * (conv::Q1D*conv::Q1D*conv::Q1D*m_NE) + // d
+                           2*sizeof(Real_type) * (conv::D1D*conv::D1D*conv::D1D*m_NE) ); // x, y
   setBytesReadPerRep( 3*sizeof(Real_type) * conv::Q1D*conv::D1D + // b, bt, g
                       1*sizeof(Real_type) * conv::D1D*conv::D1D*conv::D1D*m_NE + // x
                conv::VDIM*sizeof(Real_type) * conv::Q1D*conv::Q1D*conv::Q1D*m_NE ); // d
@@ -52,15 +74,6 @@ CONVECTION3DPA::CONVECTION3DPA(const RunParams& params)
                          2 * conv::Q1D * conv::D1D * conv::Q1D * conv::D1D + // 7
                          (1 + 2*conv::Q1D) * conv::D1D * conv::D1D * conv::D1D // 8
                          ));
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Launch);
-
-  addVariantTunings();
 }
 
 CONVECTION3DPA::~CONVECTION3DPA()
@@ -70,12 +83,12 @@ CONVECTION3DPA::~CONVECTION3DPA()
 void CONVECTION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B,  Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Bt, Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_G, Index_type(conv::Q1D*conv::D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, Index_type(conv::Q1D*conv::Q1D*conv::Q1D*conv::VDIM*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, Index_type(conv::D1D*conv::D1D*conv::D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, Index_type(conv::D1D*conv::D1D*conv::D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B,  conv::Q1D*conv::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Bt, conv::Q1D*conv::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_G, conv::Q1D*conv::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, conv::Q1D*conv::Q1D*conv::Q1D*conv::VDIM*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, conv::D1D*conv::D1D*conv::D1D*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, conv::D1D*conv::D1D*conv::D1D*m_NE, Real_type(0.0), vid);
 }
 
 void CONVECTION3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

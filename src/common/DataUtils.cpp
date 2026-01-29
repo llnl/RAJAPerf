@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -572,19 +573,44 @@ void initData(Real_type& d)
   incDataInitCount();
 }
 
+// _calc_checksum_impl_start
+/*
+ * Calculate a different multiplier for each index.
+ * The multiplier is in the range [0.5, 1.5]
+ */
+Checksum_type calcMultiplier(double index, double offset)
+{
+  static constexpr double pi_inv = 0.3183098861837906715377675267450287240689L;
+  static constexpr double half = 0.5;
+
+  double val = (index + offset) * pi_inv;
+
+  double mult = val - std::floor(val) + half;
+
+  return mult;
+}
+
 /*
  * Calculate and return checksum for data arrays.
  */
 template < typename Data_getter >
 Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 {
+  static constexpr Checksum_type zero = 0.0;
+
   RAJA::KahanSum<Checksum_type> chk(0.0);
 
   for (Size_type j = 0; j < len; ++j) {
-    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(data(j));
+
+    Checksum_type val = data(j);
+
+    chk += calcMultiplier(j, (val >= zero) ? 1.0 : 0.5) * std::abs(val);
+
   }
+
   return chk.get();
 }
+// _calc_checksum_impl_end
 
 Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
 {
@@ -609,11 +635,20 @@ Checksum_type calcChecksum(Real_ptr ptr, Size_type len)
 
 Checksum_type calcChecksum(Complex_ptr ptr, Size_type len)
 {
+  static constexpr Checksum_type zero = 0.0;
+
   RAJA::KahanSum<Checksum_type> chk(0.0);
 
   for (Size_type j = 0; j < len; ++j) {
-    chk += (1.0 + 0.5 * std::sin(j+1.0)) * std::abs(real(ptr[j]));
-    chk += (1.0 + 0.5 * std::sin(j+1.5)) * std::abs(imag(ptr[j]));
+
+    Checksum_type rval = real(ptr[j]);
+
+    chk += calcMultiplier(j, (rval >= zero) ? 1.00 : 0.50) * std::abs(rval);
+
+    Checksum_type ival = imag(ptr[j]);
+
+    chk += calcMultiplier(j, (ival >= zero) ? 1.25 : 0.75) * std::abs(ival);
+
   }
   return chk.get();
 }

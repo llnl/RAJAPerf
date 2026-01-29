@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -26,25 +27,39 @@ FIR::FIR(const RunParams& params)
 
   m_coefflen = FIR_COEFFLEN;
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( m_coefflen*sizeof(Real_type) + // coeff
-                      1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) ); // in
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // out
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep((2 * m_coefflen) * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void FIR::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( m_coefflen*sizeof(Real_type) + // coeff
+                           1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) + // in
+                           1*sizeof(Real_type) * getActualProblemSize() ); // out
+  setBytesReadPerRep( m_coefflen*sizeof(Real_type) + // coeff
+                      1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) ); // in
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // out
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep((2 * m_coefflen) * getActualProblemSize());
 }
 
 FIR::~FIR()

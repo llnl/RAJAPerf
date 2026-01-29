@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -22,40 +23,51 @@ POLYBENCH_ATAX::POLYBENCH_ATAX(const RunParams& params)
   : KernelBase(rajaperf::Polybench_ATAX, params)
 {
   Index_type N_default = 1000;
-
   setDefaultProblemSize( N_default * N_default );
   setDefaultReps(100);
 
-  m_N = std::sqrt( getTargetProblemSize() ) + std::sqrt(2)-1;
-
-
-  setActualProblemSize( m_N * m_N );
-
-  setItsPerRep( 2 * m_N + m_N );
-  setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +       // x
-                      1*sizeof(Real_type ) * m_N * m_N + // A
-
-                      1*sizeof(Real_type ) * m_N +        // tmp
-                      1*sizeof(Real_type ) * m_N * m_N ); // A
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * m_N + // y, tmp
-
-                         0);
-  setBytesModifyWrittenPerRep( 0 +
-
-                               1*sizeof(Real_type ) * m_N ); // y
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * m_N*m_N +
-                 2 * m_N*m_N );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning); // Change to Inconsistent if internal reductions use atomics
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(2);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();
+}
+
+void POLYBENCH_ATAX::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_N = std::sqrt( target_size ) + std::sqrt(2)-1;
+
+  setActualProblemSize( m_N * m_N );
+  setRunReps( target_reps );
+
+  setItsPerRep( 2 * m_N + m_N );
+  setKernelsPerRep(2);
+
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * m_N +        // tmp, x, y
+                           1*sizeof(Real_type) * m_N * m_N ); // A
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N +       // x
+                      1*sizeof(Real_type) * m_N * m_N + // A
+
+                      1*sizeof(Real_type) * m_N +        // tmp
+                      1*sizeof(Real_type) * m_N * m_N ); // A
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * m_N + // y, tmp
+
+                         0);
+  setBytesModifyWrittenPerRep( 0 +
+
+                               1*sizeof(Real_type) * m_N ); // y
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * m_N*m_N +
+                 2 * m_N*m_N );
 }
 
 POLYBENCH_ATAX::~POLYBENCH_ATAX()

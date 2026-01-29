@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,26 +25,38 @@ TRIDIAG_ELIM::TRIDIAG_ELIM(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(1000);
 
-  setActualProblemSize( std::max(getTargetProblemSize(), Index_type(2)) );
-
-  m_N = getActualProblemSize();
-
-  setItsPerRep( m_N-1 );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) ); // z, y, xin
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // xout
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * (m_N-1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
 
   addVariantTunings();
+}
+
+void TRIDIAG_ELIM::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( std::max(target_size, Index_type(2)) );
+  setRunReps( target_reps );
+
+  m_N = getActualProblemSize();
+
+  setItsPerRep( m_N-1 );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_N ); // xout, xin, y, z
+  setBytesReadPerRep( 3*sizeof(Real_type) * (m_N-1) ); // z, y, xin
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_N-1) ); // xout
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * (m_N-1));
 }
 
 TRIDIAG_ELIM::~TRIDIAG_ELIM()

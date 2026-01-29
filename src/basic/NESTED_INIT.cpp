@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,30 +30,42 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
   setDefaultProblemSize(m_n_init * m_n_init * m_n_init);
   setDefaultReps(1000);
 
-  auto n_final = std::cbrt( getTargetProblemSize() ) + std::cbrt(3)-1;
-  m_ni = n_final;
-  m_nj = n_final;
-  m_nk = n_final;
-  m_array_length = m_ni * m_nj * m_nk;
-
-  setActualProblemSize( m_array_length );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // array
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(3 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
   setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Kernel);
 
   addVariantTunings();
+}
+
+void NESTED_INIT::setSize(Index_type target_size, Index_type target_reps)
+{
+  auto n_final = std::cbrt( target_size ) + std::cbrt(3)-1;
+  m_ni = n_final;
+  m_nj = n_final;
+  m_nk = n_final;
+  m_array_length = m_ni * m_nj * m_nk;
+
+  setActualProblemSize( m_array_length );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_array_length ); // array
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // array
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(3 * getActualProblemSize());
 }
 
 NESTED_INIT::~NESTED_INIT()

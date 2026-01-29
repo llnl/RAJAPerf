@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,10 +25,31 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(180);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void IF_QUAD::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 5*sizeof(Real_type) * getActualProblemSize() ); // a, b, c, x1, x2
   setBytesReadPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // b, a, c
   setBytesWrittenPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x2, x1
   setBytesModifyWrittenPerRep( 0 );
@@ -35,15 +57,6 @@ IF_QUAD::IF_QUAD(const RunParams& params)
   // estimate conditional true half of the time, 1 sqrt
   setFLOPsPerRep(4 * getActualProblemSize() +
                  7 * getActualProblemSize() / 2);
-
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
-  setChecksumTolerance(ChecksumTolerance::normal);
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 IF_QUAD::~IF_QUAD()

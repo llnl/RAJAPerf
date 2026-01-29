@@ -1,35 +1,50 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
-if [[ $# -lt 1 ]]; then
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.25.2
+
+if [[ $# -lt 3 ]]; then
   echo
   echo "You must pass 3 or more arguments to the script (in this order): "
   echo "   1) NVCC compiler version number"
   echo "   2) CUDA compute architecture"
   echo "   3) GCC compiler version number"
-  echo "   4...) optional arguments to cmake"
+  echo "   4) optional cmake version"
   echo
   echo "For example: "
-  echo "    toss4_nvcc_gcc.sh 12.2.2 90 10.3.1"
-  exit
+  echo "    toss4_nvcc_gcc.sh 12.2.2 90 10.3.1 [3.27.4]"
+  exit 1
 fi
 
 NVCC_COMP_VER=$1
 NVCC_COMP_ARCH=$2
 GCC_COMP_VER=$3
-shift 3
+
+# Detect optional fourth positional argument as a CMake version if it looks like N.M or N.M.P
+# Otherwise, treat it as a normal CMake argument.
+if [ -n "$4" ] && [[ "$4" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$4
+  shift 4
+else
+  CMAKE_VER=$DEFAULT_CMAKE_VER
+  shift 3
+fi
 
 BUILD_SUFFIX=lc_toss4-nvcc-${NVCC_COMP_VER}-${NVCC_COMP_ARCH}-gcc-${GCC_COMP_VER}
 RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/gcc_X.cmake
 
 echo
 echo "Creating build directory build_${BUILD_SUFFIX} and generating configuration in it"
+echo "Using CMake version: ${CMAKE_VER}"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -37,7 +52,7 @@ echo
 rm -rf build_${BUILD_SUFFIX} 2>/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
-module load cmake/3.25.2
+module load cmake/${CMAKE_VER}
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \

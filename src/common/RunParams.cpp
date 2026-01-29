@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -35,8 +36,11 @@ RunParams::RunParams(int argc, char** argv)
    npasses_combiners(),
    rep_fact(1.0),
    size_meaning(SizeMeaning::Unset),
+   size_factor(1.0),
    size(0.0),
-   size_factor(0.0),
+   memory_meaning(MemoryMeaning::Unset),
+   memory(0.0),
+   min_size(0.0),
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
@@ -129,6 +133,9 @@ void RunParams::print(std::ostream& str) const
   str << "\n rep_fact = " << rep_fact;
   str << "\n size_meaning = " << SizeMeaningToStr(getSizeMeaning());
   str << "\n size = " << size;
+  str << "\n memory_meaning = " << MemoryMeaningToStr(getMemoryMeaning());
+  str << "\n memory = " << memory;
+  str << "\n min_size = " << min_size;
   str << "\n size_factor = " << size_factor;
   str << "\n data_alignment = " << data_alignment;
 
@@ -435,21 +442,12 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Direct) {
+        size_factor = ::atof( argv[i] );
+        if ( size_factor < 0.0 ) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
-                    << std::endl;
+                << " must give --sizefact a POSITIVE value (double)"
+                << std::endl;
           input_state = BadInput;
-        } else {
-          size_factor = ::atof( argv[i] );
-          if ( size_factor >= 0.0 ) {
-            size_meaning = SizeMeaning::Factor;
-          } else {
-            getCout() << "\nBad input:"
-                  << " must give --sizefact a POSITIVE value (double)"
-                  << std::endl;
-            input_state = BadInput;
-          }
         }
       } else {
         getCout() << "\nBad input:"
@@ -462,9 +460,9 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
       i++;
       if ( i < argc ) {
-        if (size_meaning == SizeMeaning::Factor) {
+        if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size and --sizefact"
+                    << " may only set one of --size or --memory* once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -481,6 +479,67 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       } else {
         getCout() << "\nBad input:"
                   << " must give --size a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--memory-moved") ||
+                opt == std::string("--memory-touched") ||
+                opt == std::string("--memory-allocated") ) {
+
+      i++;
+      if ( i < argc ) {
+        if (size_meaning != SizeMeaning::Unset) {
+          getCout() << "\nBad input:"
+                    << " may only set one of --size or --memory* once"
+                    << std::endl;
+          input_state = BadInput;
+        } else {
+          memory = ::atof( argv[i] );
+          if ( memory >= 0.0 ) {
+            if ( opt == std::string("--memory-moved") ) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Moved;
+            } else if ( opt == std::string("--memory-touched") ) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Touched;
+            } else if (opt == std::string("--memory-allocated")) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Allocated;
+            } else {
+              getCout() << "\nBad input:"
+                    << " " << opt << " is not a known --memory* option"
+                    << std::endl;
+              input_state = BadInput;
+            }
+          } else {
+            getCout() << "\nBad input:"
+                  << " must give " << opt << " a POSITIVE value (double)"
+                  << std::endl;
+            input_state = BadInput;
+          }
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--min-size") ) {
+
+      i++;
+      if ( i < argc ) {
+        min_size = ::atof( argv[i] );
+        if ( min_size < 0.0 ) {
+          getCout() << "\nBad input:"
+                << " must give --min-size a POSITIVE value (double)"
+                << std::endl;
+          input_state = BadInput;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give --min-size a value (int)"
                   << std::endl;
         input_state = BadInput;
       }
@@ -1233,8 +1292,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
 
   // Default size and size_meaning if unset
   if (size_meaning == SizeMeaning::Unset) {
-    size_meaning = SizeMeaning::Factor;
-    size_factor = 1.0;
+    size_meaning = SizeMeaning::Default;
   }
 
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -1352,7 +1410,8 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --dryrun (print summary of how Suite will run without running it)\n\n";
 
   str << "\t --refvar, -rv <string> [Default is none]\n"
-      << "\t      (reference variant for speedup calculation)\n\n";
+      << "\t      (reference variant used for speedup calculation and checksum difference;\n"
+      << "\t       same reference variant will be used for all kernels run)\n\n";
   str << "\t\t Example...\n"
       << "\t\t --refvar Base_Seq (speedups reported relative to Base_Seq variants)\n\n";
 
@@ -1362,10 +1421,10 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -pftol 0.2 (RAJA kernel variants that run 20% or more slower than Base variants will be reported as OVER_TOL in FOM report)\n\n";
 
   str << "\t --npasses-combiners <space-separated strings> [Default is 'Average']\n"
-      << "\t      (Specify combining npasses timing data into timing files)\n";
+      << "\t      (Specify how npasses timing data is combined into timing files)\n";
   str << "\t\t Example...\n"
       << "\t\t --npasses-combiners Average Minimum Maximum (produce average, min, and\n"
-      << "\t\t   max timing .csv files)\n\n";
+      << "\t\t   max timing in .csv files)\n\n";
 
   str << "\t --outdir, -od <string> [Default is current directory]\n"
       << "\t      (directory path for output data files)\n";
@@ -1376,18 +1435,18 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t --outfile, -of <string> [Default is RAJAPerf]\n"
       << "\t      (file name prefix for output files)\n";
   str << "\t\t Examples...\n"
-      << "\t\t --outfile mydata (output data will be in files 'mydata*')\n"
-      << "\t\t -of dat (output data will be in files 'dat*')\n\n";
+      << "\t\t --outfile mydata (output data will be in files named 'mydata*')\n"
+      << "\t\t -of dat (output data will be in files named 'dat*')\n\n";
 
-  str << "\t Options for selecting kernels to run....\n"
+  str << "\t Options for selecting which kernels to run....\n"
       << "\t ========================================\n\n";
 
-  str << "\t For warmup kernels, the default (no option specified) will run a minimal set of warmup kernels based on\n"
-      << "\t RAJA features exercised in kernels specified for perf run. Other options are:\n\n";
+  str << "\t For warmup kernels, the default case (no option given) will run a minimal set of warmup kernels based on\n"
+      << "\t RAJA features exercised in kernels selected to run. Other options are:\n\n";
 
   str << "\t --warmup-disable (do not run any warmup kernels)\n\n";
 
-  str << "\t --warmup-perfrun-same (run same set of kernels for warmup as specified for perf run)\n\n";
+  str << "\t --warmup-perfrun-same (run same set of kernels for warmup as selected to run)\n\n";
 
   str << "\t --warmup-kernels, -wk <space-separated strings> [if no kernel names specified, none will be run for warmup]\n"
       << "\t      (names of individual kernels and/or groups of kernels to warmup)\n"
@@ -1398,7 +1457,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -wk INIT3 MULADDSUB (warmup INIT3 and MULADDSUB kernels)\n"
       << "\t\t -wk INIT3 Apps (warmup INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --kernels, -k <space-separated strings> [Default is run all]\n"
+  str << "\t --kernels, -k <space-separated strings> [Default is to run all kernels]\n"
       << "\t      (names of individual kernels and/or groups of kernels to run)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
@@ -1407,8 +1466,8 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -k INIT3 MULADDSUB (run INIT3 and MULADDSUB kernels)\n"
       << "\t\t -k INIT3 Apps (run INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --exclude-kernels, -ek <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of individual kernels and/or groups of kernels to exclude)\n"
+  str << "\t --exclude-kernels, -ek <space-separated strings> [Default is to exclude none]\n"
+      << "\t      (names of individual kernels and/or groups of kernels to exclude from run)\n"
       << "\t      See '--print-kernels'/'-pk' option for list of valid kernel and group names.\n"
       << "\t      Kernel names are listed as <group name>_<kernel name>.\n";
   str << "\t\t Examples...\n"
@@ -1416,7 +1475,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ek INIT3 MULADDSUB (exclude INIT3 and MULADDSUB kernels)\n"
       << "\t\t -ek INIT3 Apps (exclude INIT3 kernel and all kernels in Apps group)\n\n";
 
-  str << "\t --variants, -v <space-separated strings> [Default is run all]\n"
+  str << "\t --variants, -v <space-separated strings> [Default is to run all available variants]\n"
       << "\t      (names of variants and/or sets of variants to run)\n"
       << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
@@ -1424,7 +1483,7 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -v Base_Seq RAJA_CUDA (run Base_Seq and RAJA_CUDA variants)\n"
       << "\t\t -v Base_Seq RAJA (run Base_Seq and RAJA variants)\n\n";
 
-  str << "\t --exclude-variants, -ev <space-separated strings> [Default is exclude none]\n"
+  str << "\t --exclude-variants, -ev <space-separated strings> [Default is to exclude none]\n"
       << "\t      (names of variants and/or sets of variants to exclude)\n"
       << "\t      See '--print-variants'/'-pv' option for list of valid variant and set names.\n";
   str << "\t\t Examples...\n"
@@ -1432,14 +1491,29 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ev Base_Seq RAJA_CUDA (exclude Base_Seq and RAJA_CUDA variants)\n"
       << "\t\t -ev Base_Seq RAJA (exclude Base_Seq and RAJA variants)\n\n";
 
-  str << "\t --features, -f <space-separated strings> [Default is run all]\n"
+  str << "\t --tunings, -t <space-separated strings> [Default is run all]\n"
+      << "\t      (names of tunings to run)\n"
+      << "\t      Note: knowing which tunings are available requires knowledge about the variants,\n"
+      << "\t      since available tunings depend on the given variant (and potentially other args).\n";
+  str << "\t\t Examples...\n"
+      << "\t\t --tunings default (run all default tunings)\n"
+      << "\t\t -t default block_128 (run default and block_128 tunings)\n\n";
+
+  str << "\t --exclude-tunings, -et <space-separated strings> [Default is exclude none]\n"
+      << "\t      (names of tunings to exclude)\n"
+      << "\t      See --tunings option for more information.\n";
+  str << "\t\t Examples...\n"
+      << "\t\t --exclude-tunings library (exclude all library tunings)\n"
+      << "\t\t -et default library (exclude default and library tunings)\n\n";
+
+  str << "\t --features, -f <space-separated strings> [Default is to run all]\n"
       << "\t      (names of features to run)\n"
       << "\t      See '--print-kernel-features'/'-pkf' option for list of RAJA features used by kernels.\n";
   str << "\t\t Examples...\n"
       << "\t\t --features Forall (run all kernels that use RAJA forall)\n"
       << "\t\t -f Forall Reduction (run all kernels that use RAJA forall or RAJA reductions)\n\n";
 
-  str << "\t --exclude-features, -ef <space-separated strings> [Default is exclude none]\n"
+  str << "\t --exclude-features, -ef <space-separated strings> [Default is to exclude none]\n"
       << "\t      (names of features to exclude)\n"
       << "\t      See '--print-kernel-features'/'-pkf' option for list of RAJA features used by kernels.\n";
   str << "\t\t Examples...\n"
@@ -1447,12 +1521,12 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t -ef Forall Reduction (exclude all kernels that use RAJA forall or RAJA reductions)\n\n";
 
   str << "\t --enable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
-      << "\t      (when this option is given, enable custom scan tunings HIP and CUDA kernel variants)\n\n";
+      << "\t      (when this option is given, enable custom scan tunings for HIP and CUDA kernel variants)\n\n";
   str << "\t --disable_custom_scan [default is to enable tunings with RAJAPerf custom scan]\n"
-      << "\t      (when this option is given, disable custom scan tunings HIP and CUDA kernel variants)\n\n";
+      << "\t      (when this option is given, disable custom scan tunings for HIP and CUDA kernel variants)\n\n";
 
-  str << "\t Options for selecting run size....\n"
-      << "\t ==================================\n\n";;
+  str << "\t Options for selecting problem/run size parameters....\n"
+      << "\t ======================================================\n\n";
 
   str << "\t --checkrun <int> [default is 1]\n"
       << "\t      (run each kernel a given number of times)\n"
@@ -1471,17 +1545,112 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --repfact 0.5 (run each kernels 1/2 as many times as its default reps)\n\n";
 
-  str << "\t --sizefact <double> [default is 1.0]\n"
-      << "\t      (fraction of default kernel sizes to run)\n"
-      << "\t      May not be set if '--size' is set.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --sizefact 2.0 (run each kernel with size twice its default size)\n\n";
-
   str << "\t --size <int> [no default]\n"
-      << "\t      (kernel size to run for all kernels)\n"
-      << "\t      May not be set if --sizefact is set.\n";
+      << "\t      (problem size to run each kernel)\n"
+      << "\t      May not be set if any --memory* option is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
+
+  str << "\t --memory-moved <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will move per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesMoved/rep will match the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size or other --memory* option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-moved 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --memory-touched <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will touch per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesTouched/rep will match the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size or other --memory* option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-touched 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --memory-allocated <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will allocate per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesAllocated/rep will match the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size or other --memory* option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-allocated 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --min-size <int> [default is 0]\n"
+      << "\t      (minimum problem size to run for all kernels)\n"
+      << "\t      (intended for use with --memory to avoid small problem sizes)\n"
+      << "\t      Applied before the --sizefact multiplier.\n"
+      << "\t      Approximate for kernels where size is approximate.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --min-size 1000000 (runs each kernel with at least size ~1,000,000)\n\n";
+
+  str << "\t --sizefact <double> [default is 1.0]\n"
+      << "\t      (multiplier to apply to the problem size of each kernel)\n"
+      << "\t      (intended to simplify input for scaling studies)\n"
+      << "\t      Applied after the --min-size limiter.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --sizefact 0.5 (run each kernel with size half its calculated size)\n"
+      << "\t\t --sizefact 2.0 (run each kernel with size twice its calculated size)\n\n";
+
+  str << "\t --ltimes_num_d <int> [default is 64]\n"
+      << "\t      (For LTIMES kernels only: num_d used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_d 32\n\n";
+
+  str << "\t --ltimes_num_g <int> [default is 32]\n"
+      << "\t      (For LTIMES kernels only: num_g used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_g 64\n\n";
+
+  str << "\t --ltimes_num_m <int> [default is 25]\n"
+      << "\t      (For LTIMES kernels only: num_m used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --ltimes_num_m 100\n\n";
+
+  str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
+      << "\t      (For ARRAY_OF_PTRS only: array size used in kernel)\n"
+      << "\t      Must be greater than 0.\n"
+      << "\t      Must be less than or equal to " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << ".\n";
+  str << "\t\t Example...\n"
+      << "\t\t --array_of_ptrs_array_size 4\n\n";
+
+  str << "\t --halo_width <int> [default is 1]\n"
+      << "\t      (For HALO kernels only: halo width used in kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --halo_width 2\n\n";
+
+  str << "\t --halo_num_vars <int> [default is 3]\n"
+      << "\t      (For HALO kernels only: num vars used in halo kernels)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --halo_num_vars 10\n\n";
+
+  str << "\t --multi_reduce_num_bins <int> [default is 10]\n"
+      << "\t      (For MULTI_REDUCE kernel only: number of bins used)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --multi_reduce_num_bins 100\n\n";
+
+  str << "\t --multi_reduce_bin_assignment_algorithm <string> [default is RunsRandomSizes]\n"
+      << "\t      (For MULTI_REDUCE kernel only: algorithm used to assign bins to iterates)\n"
+      << "\t      Valid assignment algorithm names are 'Random', 'RunsRandomSizes', 'RunsEvenSizes', or 'Single'\n";
+  str << "\t\t Example...\n"
+      << "\t\t --multi_reduce_bin_assignment_algorithm Random\n\n";
+
+  str << "\t Options for selecting MPI execution details....\n"
+      << "\t ===============================================\n\n";;
+
+  str << "\t --mpi_3d_division <space-separated ints> [no default]\n"
+      << "\t      (number of mpi ranks in each dimension in a 3d grid)\n"
+      << "\t      (3D MPI kernels will be skipped if the product of mpi_3d_division is not equal to the number of ranks)\n";
+  str << "\t\t Example...\n"
+      << "\t\t --mpi_3d_division 2 3 5 (runs 3d MPI kernels on a 2 by 3 by 5 grid)\n\n";
 
   str << "\t Options for selecting GPU execution details....\n"
       << "\t ===============================================\n\n";;
@@ -1515,84 +1684,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --items_per_thread 128 256 512 (runs kernels with items_per_thread 128, 256, and 512)\n\n";
 
-  str << "\t --mpi_3d_division <space-separated ints> [no default]\n"
-      << "\t      (number of mpi ranks in each dimension in a 3d grid)\n"
-      << "\t      (3D MPI kernels will be skipped if the product of mpi_3d_division is not equal to the number of ranks)\n";
-  str << "\t\t Example...\n"
-      << "\t\t --mpi_3d_division 2 3 5 (runs 3d MPI kernels on a 2 by 3 by 5 grid)\n\n";
-
-  str << "\t --tunings, -t <space-separated strings> [Default is run all]\n"
-      << "\t      (names of tunings to run)\n"
-      << "\t      Note: knowing which tunings are available requires knowledge about the variants,\n"
-      << "\t      since available tunings depend on the given variant (and potentially other args).\n";
-  str << "\t\t Examples...\n"
-      << "\t\t --tunings default (run all default tunings)\n"
-      << "\t\t -t default block_128 (run default and block_128 tunings)\n\n";
-
-  str << "\t --exclude-tunings, -et <space-separated strings> [Default is exclude none]\n"
-      << "\t      (names of tunings to exclude)\n"
-      << "\t      See --tunings option for more information.\n";
-  str << "\t\t Examples...\n"
-      << "\t\t --exclude-tunings library (exclude all library tunings)\n"
-      << "\t\t -et default library (exclude default and library tunings)\n\n";
-
-  str << "\t Options for selecting kernel data used in kernels....\n"
-      << "\t ======================================================\n\n";
+  str << "\t Options for selecting data used in kernels....\n"
+      << "\t ===============================================\n\n";
 
   str << "\t --data_alignment, -align <int> [default is RAJA::DATA_ALIGN]\n"
       << "\t      (minimum memory alignment for host allocations)\n"
       << "\t      Must be a power of 2 at least as large as default alignment.\n";
   str << "\t\t Example...\n"
       << "\t\t -align 4096 (allocates memory aligned to 4KiB boundaries)\n\n";
-
-  str << "\t --multi_reduce_num_bins <int> [default is 10]\n"
-      << "\t      (number of bins used in multi-reduce kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --multi_reduce_num_bins 100\n\n";
-
-  str << "\t --multi_reduce_bin_assignment_algorithm <string> [default is RunsRandomSizes]\n"
-      << "\t      (algorithm used to assign bins to iterates in multi-reduce kernels)\n"
-      << "\t      Valid assignment algorithm names are 'Random', 'RunsRandomSizes', 'RunsEvenSizes', or 'Single'\n";
-  str << "\t\t Example...\n"
-      << "\t\t --multi_reduce_bin_assignment_algorithm Random\n\n";
-
-  str << "\t --ltimes_num_d <int> [default is 64]\n"
-      << "\t      (num_d used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_d 32\n\n";
-
-  str << "\t --ltimes_num_g <int> [default is 32]\n"
-      << "\t      (num_g used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_g 64\n\n";
-
-  str << "\t --ltimes_num_m <int> [default is 25]\n"
-      << "\t      (num_m used in ltimes kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --ltimes_num_m 100\n\n";
-
-  str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
-      << "\t      (array size used in ARRAY_OF_PTRS kernel)\n"
-      << "\t      Must be greater than 0.\n"
-      << "\t      Must be less than or equal to " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << ".\n";
-  str << "\t\t Example...\n"
-      << "\t\t --array_of_ptrs_array_size 4\n\n";
-
-  str << "\t --halo_width <int> [default is 1]\n"
-      << "\t      (halo width used in halo kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --halo_width 2\n\n";
-
-  str << "\t --halo_num_vars <int> [default is 3]\n"
-      << "\t      (num vars used in halo kernels)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --halo_num_vars 10\n\n";
 
   str << "\t --seq-data-space, -sds <string> [Default is Host]\n"
       << "\t      (name of data space to use for sequential variants)\n"

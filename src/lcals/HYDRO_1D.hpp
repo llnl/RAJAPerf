@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -21,7 +22,7 @@
 #define HYDRO_1D_DATA_SETUP \
   Real_ptr x = m_x; \
   Real_ptr y = m_y; \
-  Real_ptr z = m_z; \
+  Real_ptr z = m_z - 10; \
 \
   const Real_type q = m_q; \
   const Real_type r = m_r; \
@@ -48,6 +49,7 @@ public:
 
   ~HYDRO_1D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
@@ -83,8 +85,6 @@ private:
   Real_type m_q;
   Real_type m_r;
   Real_type m_t;
-
-  Index_type m_array_length;
 };
 
 } // end namespace lcals

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -115,8 +116,10 @@ public:
   void setDefaultProblemSize(Index_type size) { default_prob_size = size; }
   void setActualProblemSize(Index_type size) { actual_prob_size = size; }
   void setDefaultReps(Index_type reps) { default_reps = reps; }
+  void setRunReps(Index_type reps) { actual_reps = reps; }
   void setItsPerRep(Index_type its) { its_per_rep = its; };
   void setKernelsPerRep(Index_type nkerns) { kernels_per_rep = nkerns; };
+  void setBytesAllocatedPerRep(Index_type bytes) { bytes_allocated_per_rep = bytes;}
   void setBytesReadPerRep(Index_type bytes) { bytes_read_per_rep = bytes;}
   void setBytesWrittenPerRep(Index_type bytes) { bytes_written_per_rep = bytes;}
   void setBytesModifyWrittenPerRep(Index_type bytes) { bytes_modify_written_per_rep = bytes;}
@@ -126,6 +129,8 @@ public:
   void setChecksumConsistency(ChecksumConsistency cc) { checksum_consistency = cc; }
   void setChecksumTolerance(Checksum_type ct) { checksum_tolerance = ct; }
   void setComplexity(Complexity ac) { complexity = ac; }
+  void setMaxPerfectLoopDimensions(Index_type nploops) { num_nested_perfect_loops = nploops; }
+  void setProblemDimensionality(Index_type pdim) { problem_dimensionality = pdim; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -156,9 +161,10 @@ public:
 #endif
 
   template < auto method >
-  void addVariantTuning(VariantID vid, std::string name)
+  void addVariantTuning(VariantID vid, std::string name,
+                        TuningAttribute attrs = TuningAttribute::none)
   {
-    addVariantTuning(vid, std::move(name),
+    addVariantTuning(vid, std::move(name), attrs,
         &KernelBase::wrapDerivedVariantTuningMethod<
             class_of_member_function_pointer_t<decltype(method)>, method>);
   }
@@ -201,9 +207,11 @@ public:
   Index_type getDefaultProblemSize() const { return default_prob_size; }
   Index_type getActualProblemSize() const { return actual_prob_size; }
   Index_type getDefaultReps() const { return default_reps; }
-  Index_type getItsPerRep() const { return its_per_rep; };
-  Index_type getKernelsPerRep() const { return kernels_per_rep; };
-  Index_type getBytesPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count modify_write operations twice to get the memory traffic
+  Index_type getRunReps() const { return s_warmup_run ? 1 : actual_reps; }
+  Index_type getItsPerRep() const { return its_per_rep; }
+  Index_type getKernelsPerRep() const { return kernels_per_rep; }
+  Index_type getBytesAllocatedPerRep() const { return bytes_allocated_per_rep; }
+  Index_type getBytesMovedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count modify_write operations twice to get the memory traffic
   Index_type getBytesTouchedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + bytes_modify_written_per_rep + bytes_atomic_modify_written_per_rep; } // count modify_write operations once to get the data size only
   Index_type getBytesReadPerRep() const { return bytes_read_per_rep + bytes_modify_written_per_rep; }
   Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep + bytes_modify_written_per_rep; }
@@ -214,9 +222,9 @@ public:
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
+  Index_type getMaxPerfectLoopDimensions() const { return num_nested_perfect_loops; };
+  Index_type getProblemDimensionality() const { return problem_dimensionality; };
 
-  Index_type getTargetProblemSize() const;
-  Index_type getRunReps() const;
 
   bool usesFeature(FeatureID fid) const { return uses_feature[fid]; };
 
@@ -256,6 +264,9 @@ public:
   { return getVariantTuningNames(vid).at(tune_idx); }
   std::vector<std::string> const& getVariantTuningNames(VariantID vid) const
   { return variant_tuning_names[vid]; }
+
+  TuningAttribute getTuningAttributes(VariantID vid, size_t tune_idx) const
+  { return variant_tuning_attrs[vid].at(tune_idx); }
 
   //
   // Methods to get information about kernel execution for reports
@@ -620,6 +631,7 @@ public:
   // by concrete kernel subclass.
   //
 
+  virtual void setSize(Index_type target_size, Index_type target_reps) = 0;
   virtual void setUp(VariantID vid, size_t tune_idx) = 0;
   virtual void updateChecksum(VariantID vid, size_t tune_idx) = 0;
   virtual void tearDown(VariantID vid, size_t tune_idx) = 0;
@@ -694,7 +706,7 @@ private:
     (self.*method)(vid);
   }
 
-  void addVariantTuning(VariantID vid, std::string name,
+  void addVariantTuning(VariantID vid, std::string name, TuningAttribute attrs,
                         variant_tuning_method_pointer method);
 
   //
@@ -713,6 +725,7 @@ private:
   Index_type default_reps;
 
   Index_type actual_prob_size;
+  Index_type actual_reps;
 
   bool uses_feature[NumFeatures];
 
@@ -726,7 +739,11 @@ private:
 
   Complexity complexity;
 
+  Index_type num_nested_perfect_loops = -1;
+  Index_type problem_dimensionality = -1;
+
   std::vector<std::string> variant_tuning_names[NumVariants];
+  std::vector<TuningAttribute> variant_tuning_attrs[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
   //
@@ -734,6 +751,7 @@ private:
   //
   Index_type its_per_rep;
   Index_type kernels_per_rep;
+  Index_type bytes_allocated_per_rep;
   Index_type bytes_read_per_rep;
   Index_type bytes_written_per_rep;
   Index_type bytes_modify_written_per_rep;
@@ -747,6 +765,7 @@ private:
   Checksum_type checksum_reference;
   VariantID checksum_reference_variant;
   size_t checksum_reference_tuning;
+  TuningAttribute checksum_reference_tuning_attributes;
 
   std::vector<int> num_exec[NumVariants];
 
@@ -759,7 +778,8 @@ private:
   cali_id_t Reps_attr;
   cali_id_t Iters_Rep_attr;
   cali_id_t Kernels_Rep_attr;
-  cali_id_t Bytes_Rep_attr;
+  cali_id_t Bytes_Allocated_Rep_attr;
+  cali_id_t Bytes_Moved_Rep_attr;
   cali_id_t Bytes_Touched_Rep_attr;
   cali_id_t Bytes_Read_Rep_attr;
   cali_id_t Bytes_Written_Rep_attr;
@@ -770,6 +790,8 @@ private:
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
+  cali_id_t MaxPerfectLoopDimensions_attr;
+  cali_id_t ProblemDimensionality_attr;
 
 
   // we need a Caliper Manager object per variant

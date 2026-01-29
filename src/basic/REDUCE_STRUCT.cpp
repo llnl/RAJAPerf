@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,25 +30,37 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
 // reduction performance issues
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * getActualProblemSize() + 2);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
   addVariantTunings();
+}
+
+void REDUCE_STRUCT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * getActualProblemSize() + 2);
 }
 
 REDUCE_STRUCT::~REDUCE_STRUCT()

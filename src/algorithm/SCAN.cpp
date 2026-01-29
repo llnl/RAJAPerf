@@ -24,24 +24,35 @@ SCAN::SCAN(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(100);
 
-  setActualProblemSize( getTargetProblemSize() );
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize());
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Scan);
 
   addVariantTunings( );
+}
+
+void SCAN::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(1 * getActualProblemSize());
 }
 
 SCAN::~SCAN()

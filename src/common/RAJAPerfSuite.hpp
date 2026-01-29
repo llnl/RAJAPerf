@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -356,6 +357,28 @@ enum struct Complexity {
 /*!
  *******************************************************************************
  *
+ * \brief Enumeration defining attributes for tunings used in suite. These
+ *
+ * IMPORTANT: This is only modified when a new memory space is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE getTuningAttributeName function IN IMPLEMENTATION
+ *            FILE!!!
+ *
+ *******************************************************************************
+ */
+enum struct TuningAttribute : size_t {
+
+  none = 0,
+
+  preferred_checksum = 0b1
+
+};
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Enumeration defining unique id for each Data memory space
  * used in suite.
  *
@@ -506,7 +529,25 @@ const std::string& getComplexityName(Complexity ac);
 /*!
  *******************************************************************************
  *
- * \brief Return memory space name associated with CudaDataSpace enum value.
+ * \brief Return tuning attribute name associated with TuningAttribute enum value.
+ *
+ *******************************************************************************
+ */
+std::string getTuningAttributeName(TuningAttribute ta);
+
+/*!
+ *******************************************************************************
+ *
+ * \brief check if a tuning attribute has a certain attribute set.
+ *
+ *******************************************************************************
+ */
+bool hasTuningAttribute(TuningAttribute ta, TuningAttribute test);
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Return memory space name associated with DataSpace enum value.
  *
  *******************************************************************************
  */
