@@ -1,7 +1,8 @@
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA Performance Suite project contributors.
-# See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
@@ -9,11 +10,7 @@
 # C is required for googletest to find Threads
 project(RAJAPerfSuite LANGUAGES CXX C)
 
-if (ENABLE_HIP)
-  cmake_minimum_required(VERSION 3.23)
-else()
-  cmake_minimum_required(VERSION 3.20)
-endif()
+cmake_minimum_required(VERSION 3.24)
 
 # Detect C++ standard and add appropriate flag _before_ loading BLT
 set(COMPILERS_KNOWN_TO_CMAKE33 AppleClang Clang GNU MSVC)

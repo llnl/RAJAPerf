@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,8 +28,23 @@ COUPLE::COUPLE(const RunParams& params)
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(50);
 
-  Index_type rzmax = std::cbrt(getTargetProblemSize())+1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void COUPLE::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size)+1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
 
   m_imin = m_domain->imin;
   m_imax = m_domain->imax;
@@ -38,20 +54,16 @@ COUPLE::COUPLE(const RunParams& params)
   m_kmax = m_domain->kmax;
 
   setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
   setBytesPerRep( (3*sizeof(Complex_type) + 5*sizeof(Complex_type)) * m_domain->n_real_zones );
   setFLOPsPerRep(0);
-
-  setUsesFeature(Forall);
-
-  addVariantTunings();
 }
 
 COUPLE::~COUPLE()
 {
-  delete m_domain;
 }
 
 void COUPLE::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -177,19 +189,17 @@ void COUPLE::runOpenMPVariant(VariantID vid)
 RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(COUPLE, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 
-void COUPLE::updateChecksum(VariantID vid, size_t tune_idx)
+void COUPLE::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   Index_type max_loop_index = m_domain->lrn;
 
-  checksum[vid][tune_idx] += calcChecksum(m_t0, max_loop_index, vid);
-  checksum[vid][tune_idx] += calcChecksum(m_t1, max_loop_index, vid);
-  checksum[vid][tune_idx] += calcChecksum(m_t2, max_loop_index, vid);
+  addToChecksum(m_t0, max_loop_index, vid);
+  addToChecksum(m_t1, max_loop_index, vid);
+  addToChecksum(m_t2, max_loop_index, vid);
 }
 
 void COUPLE::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_t0, vid);
   deallocData(m_t1, vid);
   deallocData(m_t2, vid);

@@ -1,25 +1,30 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.24.2
+
 if [[ $# -lt 5 ]]; then
   echo
-  echo "You must pass 2 or more arguments to the script (in this order): "
-  echo "   1) cray-mpich compiler version number"
+  echo "You must pass 5 or more arguments to the script (in this order): "
+  echo "   1) cray-mpich version number"
   echo "   2) HIP compiler version number"
   echo "   3) HIP compute architecture"
   echo "   4) path to caliper cmake directory"
   echo "   5) path to adiak cmake directory"
-  echo "   6...) optional arguments to cmake"
+  echo "   6) optional CMake version to load."
   echo
   echo "For example: "
-  echo "    toss4_cray-mpich_amdclang.sh 8.1.14 4.1.0 gfx906 /usr/workspace/wsb/asde/caliper-quartz/share/cmake/caliper /usr/workspace/wsb/asde/caliper-quartz/lib/cmake/adiak"
-  exit
+  echo "    toss4_cray-mpich_amdclang.sh 8.1.14 4.1.0 gfx906 /usr/workspace/wsb/asde/caliper-quartz/share/cmake/caliper /usr/workspace/wsb/asde/caliper-quartz/lib/cmake/adiak [3.27.4]"
+  exit 1
 fi
 
 MPI_VER=$1
@@ -27,7 +32,16 @@ COMP_VER=$2
 COMP_ARCH=$3
 CALI_DIR=$4
 ADIAK_DIR=$5
-shift 5
+
+# Detect optional sixth positional argument as a CMake version if it looks like N.M or N.M.P
+# Otherwise, treat it as a normal CMake argument.
+if [ -n "$6" ] && [[ "$6" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$6
+  shift 6
+else
+  CMAKE_VER=$DEFAULT_CMAKE_VER
+  shift 5
+fi
 
 HOSTCONFIG="hip_3_X"
 
@@ -53,6 +67,7 @@ RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/${HOSTCONFIG}.cmake
 
 echo
 echo "Creating build directory ${BUILD_SUFFIX} and generating configuration in it"
+echo "Using CMake version: ${CMAKE_VER}"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -80,7 +95,7 @@ rm -rf build_${BUILD_SUFFIX} >/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
 
-module load cmake/3.23.1
+module load cmake/${CMAKE_VER}
 
 # unload rocm to avoid configuration problems where the loaded rocm and COMP_VER
 # are inconsistent causing the rocprim from the module to be used unexpectedly

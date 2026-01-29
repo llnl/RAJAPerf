@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -33,20 +34,58 @@ void DOT::runSeqVariant(VariantID vid)
 
     case Base_Seq : {
 
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+      if constexpr (tune_idx == 0) {
 
-        Real_type dot = m_dot_init;
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type i = ibegin; i < iend; ++i ) {
-          DOT_BODY;
+          Real_type dot = m_dot_init;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot;
+
         }
+        stopTimer();
 
-         m_dot += dot;
+      } else if constexpr (tune_idx == 1) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::KahanSum<Real_type> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
+
+      } else if constexpr (tune_idx == 2) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -144,6 +183,16 @@ void DOT::defineSeqVariantTunings()
 
     addVariantTuning<&DOT::runSeqVariant<0>>(
         vid, "default");
+
+    if (vid == Base_Seq) {
+
+      addVariantTuning<&DOT::runSeqVariant<1>>(
+          vid, "kahan", TuningAttribute::preferred_checksum);
+
+      addVariantTuning<&DOT::runSeqVariant<2>>(
+          vid, "cascade", TuningAttribute::preferred_checksum);
+
+    }
 
     if (vid == RAJA_Seq) {
 

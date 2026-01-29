@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,26 +28,39 @@ FIRST_MIN::FIRST_MIN(const RunParams& params)
 // reduction performance issues
   setDefaultReps(100);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  m_N = getActualProblemSize();
-
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) +
-                      1*sizeof(Real_type ) +
-                      1*sizeof(Real_type ) * m_N );
-  setBytesWrittenPerRep( 1*sizeof(Index_type) +
-                         1*sizeof(Real_type ) );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setChecksumConsistency(ChecksumConsistency::Consistent); // The loc returned is always the first of equivalent mins
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
   addVariantTunings();
+}
+
+void FIRST_MIN::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  m_N = getActualProblemSize();
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_N ); // x
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N ); // x
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 FIRST_MIN::~FIRST_MIN()
@@ -64,14 +78,13 @@ void FIRST_MIN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_minloc = -1;
 }
 
-void FIRST_MIN::updateChecksum(VariantID vid, size_t tune_idx)
+void FIRST_MIN::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += static_cast<long double>(m_minloc);
+  addToChecksum(m_minloc);
 }
 
 void FIRST_MIN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
 }
 
