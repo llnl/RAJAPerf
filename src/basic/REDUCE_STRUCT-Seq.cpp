@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,8 +19,8 @@ namespace rajaperf
 namespace basic
 {
 
-
-void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void REDUCE_STRUCT::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -34,26 +35,88 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
 
     case Base_Seq : {
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
- 
-        Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
-        Real_type xmin = m_init_min; Real_type ymin = m_init_min;
-        Real_type xmax = m_init_max; Real_type ymax = m_init_max;
+      if constexpr (tune_idx == 0) {
 
-        for (Index_type i = ibegin; i < iend; ++i ) {
-          REDUCE_STRUCT_BODY;
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          Real_type xsum = m_init_sum;
+          Real_type ysum = m_init_sum;
+          Real_type xmin = m_init_min;
+          Real_type ymin = m_init_min;
+          Real_type xmax = m_init_max;
+          Real_type ymax = m_init_max;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_STRUCT_BODY;
+          }
+
+          points.SetCenter(xsum/(points.N), ysum/(points.N));
+          points.SetXMin(xmin);
+          points.SetXMax(xmax);
+          points.SetYMin(ymin);
+          points.SetYMax(ymax);
+          m_points = points;
+
         }
+        stopTimer();
 
-        points.SetCenter(xsum/(points.N), ysum/(points.N));
-        points.SetXMin(xmin); 
-        points.SetXMax(xmax);
-        points.SetYMin(ymin);
-        points.SetYMax(ymax);
-        m_points = points;
+      } else if constexpr (tune_idx == 1) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::KahanSum<Real_type> xsum(m_init_sum);
+          RAJA::KahanSum<Real_type> ysum(m_init_sum);
+          Real_type xmin = m_init_min;
+          Real_type ymin = m_init_min;
+          Real_type xmax = m_init_max;
+          Real_type ymax = m_init_max;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_STRUCT_BODY;
+          }
+
+          points.SetCenter(xsum.get()/(points.N), ysum.get()/(points.N));
+          points.SetXMin(xmin);
+          points.SetXMax(xmax);
+          points.SetYMin(ymin);
+          points.SetYMax(ymax);
+          m_points = points;
+
+        }
+        stopTimer();
+
+      } else if constexpr (tune_idx == 2) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> xsum(m_init_sum);
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> ysum(m_init_sum);
+          Real_type xmin = m_init_min;
+          Real_type ymin = m_init_min;
+          Real_type xmax = m_init_max;
+          Real_type ymax = m_init_max;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            REDUCE_STRUCT_BODY;
+          }
+
+          points.SetCenter(xsum.get()/(points.N), ysum.get()/(points.N));
+          points.SetXMin(xmin);
+          points.SetXMax(xmax);
+          points.SetYMin(ymin);
+          points.SetYMax(ymax);
+          m_points = points;
+
+        }
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -70,11 +133,15 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
                                  };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
-        Real_type xmin = m_init_min; Real_type ymin = m_init_min;
-        Real_type xmax = m_init_max; Real_type ymax = m_init_max; 
+        Real_type xsum = m_init_sum;
+        Real_type ysum = m_init_sum;
+        Real_type xmin = m_init_min;
+        Real_type ymin = m_init_min;
+        Real_type xmax = m_init_max;
+        Real_type ymax = m_init_max;
 
         for (Index_type i = ibegin; i < iend; ++i ) {
           xsum += reduce_struct_x_base_lam(i);
@@ -102,10 +169,11 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
   
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> xsum(m_init_sum);
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> ysum(m_init_sum);
@@ -130,17 +198,18 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-          Real_type txsum = m_init_sum; 
-          Real_type tysum = m_init_sum; 
-          Real_type txmin = m_init_min; 
-          Real_type tymin = m_init_min; 
-          Real_type txmax = m_init_max; 
-          Real_type tymax = m_init_max; 
+          Real_type txsum = m_init_sum;
+          Real_type tysum = m_init_sum;
+          Real_type txmin = m_init_min;
+          Real_type tymin = m_init_min;
+          Real_type txmax = m_init_max;
+          Real_type tymax = m_init_max;
  
           RAJA::forall<RAJA::seq_exec>( res,
             RAJA::RangeSegment(ibegin, iend),
@@ -187,12 +256,33 @@ void REDUCE_STRUCT::runSeqVariant(VariantID vid, size_t tune_idx)
   }
 }
 
-void REDUCE_STRUCT::setSeqTuningDefinitions(VariantID vid)
+void REDUCE_STRUCT::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&REDUCE_STRUCT::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == Base_Seq) {
+
+      addVariantTuning<&REDUCE_STRUCT::runSeqVariant<1>>(
+          vid, "kahan", TuningAttribute::preferred_checksum);
+
+      addVariantTuning<&REDUCE_STRUCT::runSeqVariant<2>>(
+          vid, "cascade", TuningAttribute::preferred_checksum);
+
+    }
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&REDUCE_STRUCT::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace basic

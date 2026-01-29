@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -34,6 +35,8 @@ struct reduce_pair {
 template <size_t work_group_size >
 void FIRST_MIN::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -50,7 +53,8 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
     auto result = sycl::malloc_shared< result_type >(1, *qu); 
  
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
@@ -85,7 +89,8 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
        RAJA::expt::ValLoc<Real_type, Index_type> tminloc(m_xmin_init,
                                                          m_initloc);
@@ -111,7 +116,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_MIN, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FIRST_MIN, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace lcals
 } // end namespace rajaperf

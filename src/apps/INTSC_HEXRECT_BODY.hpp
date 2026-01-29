@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -592,13 +593,12 @@ RAJA_INLINE Int_type intsc24_hex
       Real_const_ptr xplane ; \
       Int_type jz, jy, jx ; \
       { \
-        Int_ptr ncord = (Int_ptr) ncord_gpu ; \
-        Real_const_ptr_ptr planes = ( Real_const_ptr_ptr ) ( ncord + 4 ) ; \
-        zplane = ( Real_const_ptr ) ( planes + 3 ) ; \
-        yplane = zplane + ncord[0] + 1 ; \
-        xplane = yplane + ncord[1] + 1 ; \
-        Int_type const nyzones = ncord[1] ; \
-        Int_type const nxzones = ncord[2] ; \
+        auto plane = reinterpret_cast<typename INTSC_HEXRECT::Plane*>(ncord_gpu) ; \
+        zplane = plane->planes[0] ; \
+        yplane = plane->planes[1] ; \
+        xplane = plane->planes[2] ; \
+        Int_type const nyzones = plane->ncord[1] ; \
+        Int_type const nxzones = plane->ncord[2] ; \
         Int_type tz = intsc_t[irec] ; \
         jz = tz / ( nxzones * nyzones ) ; \
         jy = ( tz / nxzones ) % nyzones ; \

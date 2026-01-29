@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -23,15 +24,13 @@ namespace apps
 
 
 
-void INTSC_HEXHEX::runSeqVariant(VariantID vid,
-                                 Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
   const Index_type iend = m_nthreads ;
 
-  const Index_type n_subz_intsc= npairs_per_std_intsc * getActualProblemSize();
-  const Index_type n_szpairs   = n_subz_intsc ;
+  const Index_type n_szpairs   = m_n_subz_intsc ;
 
   INTSC_HEXHEX_DATA_SETUP ;
 
@@ -49,7 +48,8 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin ; i < iend ; ++i ) {
           INTSC_HEXHEX_SEQ ( i, iend ) ;
@@ -68,7 +68,8 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
     case Lambda_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = ibegin ; i < iend; ++i ) {
           intsc_hexhex_lam( i );
@@ -88,7 +89,8 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexhex_lam);
@@ -109,6 +111,8 @@ void INTSC_HEXHEX::runSeqVariant(VariantID vid,
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

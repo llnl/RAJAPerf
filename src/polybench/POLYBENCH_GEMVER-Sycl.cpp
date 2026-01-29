@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -31,6 +32,8 @@ namespace polybench
 template < size_t work_group_size >
 void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -48,7 +51,8 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
     const size_t global_size234 = work_group_size * RAJA_DIVIDE_CEILING_INT(n, work_group_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim1, wkgroup_dim1),
@@ -142,7 +146,8 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
     using EXEC_POL3 = RAJA::sycl_exec<work_group_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL1>(
         RAJA::make_tuple(RAJA::RangeSegment{0, n},
@@ -201,7 +206,7 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMVER, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GEMVER, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace polybench
 } // end namespace rajaperf

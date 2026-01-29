@@ -24,41 +24,35 @@ SCAN::SCAN(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(100);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize());
-
-  checksum_scale_factor = 1e-2 *
-                 ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                              getActualProblemSize() ) /
-                 getActualProblemSize();
+  setChecksumConsistency(ChecksumConsistency::Inconsistent); // could depend on scheduling, this may be overly conservative
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
   setUsesFeature(Scan);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
+  addVariantTunings( );
+}
 
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
+void SCAN::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
-#if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
-  setVariantDefined( Base_OpenMPTarget );
-#endif
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // y
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(1 * getActualProblemSize());
 }
 
 SCAN::~SCAN()
@@ -71,14 +65,13 @@ void SCAN::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_y, getActualProblemSize(), 0.0, vid);
 }
 
-void SCAN::updateChecksum(VariantID vid, size_t tune_idx)
+void SCAN::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_y, getActualProblemSize(), checksum_scale_factor, vid);
+  addToChecksum(m_y, getActualProblemSize(), vid);
 }
 
 void SCAN::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -23,7 +24,7 @@ struct DaxpyFunctor {
   void operator()(Index_type i) const { DAXPY_BODY; }
 };
 
-void DAXPY::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void DAXPY::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -40,7 +41,8 @@ void DAXPY::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
       Kokkos::parallel_for(
           "DAXPY-Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
@@ -63,6 +65,8 @@ void DAXPY::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   moveDataToHostFromKokkosView(x, x_view, iend);
   moveDataToHostFromKokkosView(y, y_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

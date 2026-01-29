@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -149,35 +150,33 @@ public:
 
   ~INTSC_HEXHEX();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t)
-  {
-    getCout() << "\n INTSC_HEXHEX : Unknown OMP Target variant id = " << vid << std::endl;
-  }
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
   template < size_t block_size >
   void runHipVariantImpl(VariantID vid);
-  template < size_t work_group_size >
-  void runSyclVariantImpl(VariantID vid);
 
 private:
-  void check_intsc_volume_moments
-      ( Index_type const n_intsc, Real_const_ptr vv, VariantID vid ) ;
+  void check_intsc_volume_moments(Real_const_ptr vv, VariantID vid);
 
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
+
+  Size_type m_n_std_intsc; // number of standard intersections
+  Index_type m_n_subz_intsc; // number of subzone intersections
+  Index_type m_gsize;
 
   Real_ptr m_dsubz ;    // donor subzone coordinates
   Real_ptr m_tsubz ;    // target subzone coordinates

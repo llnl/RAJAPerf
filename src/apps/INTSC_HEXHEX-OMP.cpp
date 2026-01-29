@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -19,8 +20,7 @@ namespace rajaperf
 namespace apps
 {
 
-void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
-                                    Size_type RAJAPERF_UNUSED_ARG(tune_idx))
+void INTSC_HEXHEX::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -29,14 +29,12 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
   //  standard intersections among threads, iend is getActualProblemSize.
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0 ;
-  const Index_type n_std_intsc = getActualProblemSize() ;
 
-  const Index_type n_subz_intsc= npairs_per_std_intsc * n_std_intsc ;
-  const Index_type n_szpairs   = n_subz_intsc ;
+  const Index_type n_subz_intsc= m_n_subz_intsc ;
+  const Index_type n_szpairs   = m_n_subz_intsc;
 
   //  Thread loop is over grouped intersections between subzone pairs.
-  const Index_type iend = RAJA_DIVIDE_CEILING_INT
-      ( n_subz_intsc, fixup_groupsize ) ;
+  const Index_type iend = RAJA_DIVIDE_CEILING_INT(n_subz_intsc, fixup_groupsize);
 
   INTSC_HEXHEX_DATA_SETUP ;
 
@@ -66,7 +64,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
@@ -86,7 +85,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin ; i < iend ; ++i ) {
@@ -108,7 +108,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), intsc_hexhex_lam);
@@ -131,6 +132,8 @@ void INTSC_HEXHEX::runOpenMPVariant(VariantID vid,
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INTSC_HEXHEX, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

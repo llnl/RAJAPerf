@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace apps
 {
 
 
-void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -31,7 +32,8 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
          #pragma omp parallel for
          for (int ag = 0; ag < na * ng; ++ag)
@@ -56,7 +58,8 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
           RAJA::LoopPolicy<RAJA::omp_for_exec>;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
          RAJA::launch<launch_policy>( res,
              RAJA::LaunchParams(),
@@ -84,6 +87,8 @@ void FEMSWEEP::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_i
 #endif
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, OpenMP, Base_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

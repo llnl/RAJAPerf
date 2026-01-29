@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,21 +28,43 @@ EDGE3D::EDGE3D(const RunParams& params)
 {
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(10);
-  Index_type rzmax = std::cbrt(getTargetProblemSize()) + 1 + std::cbrt(3)-1;
-  m_domain = new ADomain(rzmax, /* ndims = */ 3);
+
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(3);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
+{
+  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
 
   m_array_length = m_domain->nnalls;
   size_t number_of_elements = m_domain->lpz+1 - m_domain->fpz;
 
   setActualProblemSize( m_domain->n_real_zones );
+  setRunReps( target_reps );
 
   setItsPerRep( number_of_elements );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_array_length ); // x, y, z, sum
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
-  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() );
+  setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // sum
+  setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   constexpr size_t flops_k_loop = 15
@@ -57,41 +80,10 @@ EDGE3D::EDGE3D(const RunParams& params)
   constexpr size_t flops_per_element = flops_i_loop*NQ_1D + 9*flops_Jxx() + flops_compute_detj();
 
   setFLOPsPerRep(number_of_elements * flops_per_element);
-
-  m_checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
 }
 
 EDGE3D::~EDGE3D()
 {
-  delete m_domain;
 }
 
 void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -108,9 +100,9 @@ void EDGE3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataConst(m_sum, m_array_length, Real_type(0.0), vid);
 }
 
-void EDGE3D::updateChecksum(VariantID vid, size_t tune_idx)
+void EDGE3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_sum, m_array_length, m_checksum_scale_factor, vid  );
+  addToChecksum(m_sum, m_array_length, vid);
 }
 
 void EDGE3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -19,7 +20,7 @@
 #include "CudaDataUtils.hpp"
 #include "HipDataUtils.hpp"
 
-// Warmup kernels to run first to help reduce startup overheads in timings
+// Warmup kernels for default warmup mode
 #include "basic/DAXPY.hpp"
 #include "basic/REDUCE3_INT.hpp"
 #include "basic/INDEXLIST_3LOOP.hpp"
@@ -119,7 +120,119 @@ void Allreduce(const Checksum_type* send, Checksum_type* recv, int count,
 
 #endif
 
+using active_variant_tunings_type = vector<pair<VariantID, vector<string>>>;
+
+active_variant_tunings_type getActiveVariantTunings(
+    vector<KernelBase*> const& kernels,
+    vector<VariantID> const& variant_ids,
+    const vector<string> (&tuning_names)[NumVariants])
+{
+  active_variant_tunings_type active_vartuns;
+  for (VariantID vid : variant_ids) {
+    pair<VariantID, vector<string>>* active_var = nullptr;
+    for (string const& tuning_name : tuning_names[vid]) {
+      for (KernelBase* kern : kernels) {
+        if ( kern->wasVariantTuningRun(vid, tuning_name) ) {
+          if (!active_var) {
+            active_var = &active_vartuns.emplace_back(vid, 0);
+          }
+          auto& active_tuning_names = active_var->second;
+          if (find(active_tuning_names.begin(), active_tuning_names.end(), tuning_name)
+              == active_tuning_names.end()) {
+            active_tuning_names.emplace_back(tuning_name);
+          }
+          break;
+        }
+      }
+    }
+  }
+  return active_vartuns;
 }
+
+struct ChecksumData
+{
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+  std::vector<Checksum_type> checksums_avg;
+  std::vector<Checksum_type> checksums_rel_diff_max;
+  std::vector<Checksum_type> checksums_rel_diff_stddev;
+#else
+  std::vector<Checksum_type> checksums;
+  std::vector<Checksum_type> checksums_rel_diff;
+#endif
+};
+
+ChecksumData getChecksumData(KernelBase* kern, VariantID vid)
+{
+  size_t num_tunings = kern->getNumVariantTunings(vid);
+
+  // get vector of checksums and diffs
+  std::vector<Checksum_type> checksums(num_tunings, 0.0);
+  std::vector<Checksum_type> checksums_rel_diff(num_tunings, 0.0);
+  for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
+    if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
+      checksums[tune_idx] = kern->getChecksumAverage(vid, tune_idx);
+      checksums_rel_diff[tune_idx] = kern->getChecksumMaxRelativeAbsoluteDifference(vid, tune_idx);
+    }
+  }
+
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+
+  int num_ranks;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+
+  // get stats for checksums
+  std::vector<Checksum_type> checksums_sum(num_tunings, 0.0);
+  Allreduce(checksums.data(), checksums_sum.data(), num_tunings,
+            MPI_SUM, MPI_COMM_WORLD);
+
+  std::vector<Checksum_type> checksums_avg(num_tunings, 0.0);
+  for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
+    checksums_avg[tune_idx] = checksums_sum[tune_idx] / num_ranks;
+  }
+
+  std::vector<Checksum_type> checksums_rel_diff_min(num_tunings, 0.0);
+  std::vector<Checksum_type> checksums_rel_diff_max(num_tunings, 0.0);
+  std::vector<Checksum_type> checksums_rel_diff_sum(num_tunings, 0.0);
+  Allreduce(checksums_rel_diff.data(), checksums_rel_diff_min.data(), num_tunings,
+            MPI_MIN, MPI_COMM_WORLD);
+  Allreduce(checksums_rel_diff.data(), checksums_rel_diff_max.data(), num_tunings,
+            MPI_MAX, MPI_COMM_WORLD);
+  Allreduce(checksums_rel_diff.data(), checksums_rel_diff_sum.data(), num_tunings,
+            MPI_SUM, MPI_COMM_WORLD);
+
+  std::vector<Checksum_type> checksums_rel_diff_avg(num_tunings, 0.0);
+  for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
+    checksums_rel_diff_avg[tune_idx] = checksums_rel_diff_sum[tune_idx] / num_ranks;
+  }
+
+  std::vector<Checksum_type> checksums_rel_diff_diff2avg2(num_tunings, 0.0);
+  for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
+    checksums_rel_diff_diff2avg2[tune_idx] = (checksums_rel_diff[tune_idx] - checksums_rel_diff_avg[tune_idx]) *
+                                             (checksums_rel_diff[tune_idx] - checksums_rel_diff_avg[tune_idx]) ;
+  }
+
+  std::vector<Checksum_type> checksums_rel_diff_stddev(num_tunings, 0.0);
+  Allreduce(checksums_rel_diff_diff2avg2.data(), checksums_rel_diff_stddev.data(), num_tunings,
+            MPI_SUM, MPI_COMM_WORLD);
+  for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
+    checksums_rel_diff_stddev[tune_idx] = std::sqrt(checksums_rel_diff_stddev[tune_idx] / num_ranks);
+  }
+
+#endif
+
+  return ChecksumData {
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+        std::move(checksums_avg),
+        std::move(checksums_rel_diff_max),
+        std::move(checksums_rel_diff_stddev)
+#else
+        std::move(checksums),
+        std::move(checksums_rel_diff)
+#endif
+      };
+}
+
+} // end unnamed namespace
 
 Executor::Executor(int argc, char** argv)
   : run_params(argc, argv),
@@ -202,11 +315,11 @@ Executor::Executor(int argc, char** argv)
   }
 
   adiak::value("SizeMeaning",(adiak::catstring)run_params.SizeMeaningToStr(run_params.getSizeMeaning()));
-  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-    adiak::value("ProblemSizeRunParam",(uint)run_params.getSizeFactor());
-  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
-    adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
-  }
+  adiak::value("ProblemSizeRunParam",(uint)run_params.getSize());
+  adiak::value("MemoryMeaning",(adiak::catstring)run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()));
+  adiak::value("MemorySizeRunParam",(uint)run_params.getMemory());
+  adiak::value("ProblemSizeFactorRunParam",(uint)run_params.getSizeFactor());
+  adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
   // Openmp section
 #if defined(_OPENMP)
@@ -406,11 +519,15 @@ void Executor::reportRunSummary(ostream& str) const
 
     str << "\nHow suite will be run:" << endl;
     str << "\t # passes = " << run_params.getNumPasses() << endl;
-    if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-      str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
+    if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Default) {
+      str << "\t Kernel size = Default" << endl;
     } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
       str << "\t Kernel size = " << run_params.getSize() << endl;
+    } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+      str << "\t Kernel memory " << run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()) << " = " << run_params.getMemory() << endl;
     }
+    str << "\t Kernel min size = " << run_params.getMinSize() << endl;
+    str << "\t Kernel size factor = " << run_params.getSizeFactor() << endl;
     str << "\t Kernel rep factor = " << run_params.getRepFactor() << endl;
     str << "\t Output files will be named " << ofiles << endl;
 
@@ -497,8 +614,8 @@ void Executor::reportRunSummary(ostream& str) const
 
     str << endl;
 
-    bool to_file = false;
-    writeKernelInfoSummary(str, to_file);
+    constexpr bool to_file = true;
+    writeKernelInfoSummary(str, kernels, !to_file);
 
   }
 
@@ -506,7 +623,9 @@ void Executor::reportRunSummary(ostream& str) const
 }
 
 
-void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
+void Executor::writeKernelInfoSummary(ostream& str,
+                                      vector<KernelBase*> const& kernels,
+                                      bool to_file) const
 {
   if ( to_file ) {
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
@@ -521,35 +640,46 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
 //
 // Set up column headers and column widths for kernel summary output.
 //
-  string kern_head("Kernels");
-  size_t kercol_width = kern_head.size();
-
+  size_t     kernel_width = 0;
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
-  Index_type bytesrep_width = 0;
+  Index_type bytesMovedrep_width = 0;
   Index_type flopsrep_width = 0;
+  Index_type bytesTouchedrep_width = 0;
   Index_type bytesReadrep_width = 0;
   Index_type bytesWrittenrep_width = 0;
+  Index_type bytesModifyWrittenrep_width = 0;
   Index_type bytesAtomicModifyWrittenrep_width = 0;
-  Index_type dash_width = 0;
+  Index_type bytesAllocatedrep_width = 0;
+  size_t     checksumConsistency_width = 0;
+  size_t     operationalComplexity_width = 0;
+
+  size_t     dash_width = 0;
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
-    kercol_width = max(kercol_width, kernels[ik]->getName().size());
+    kernel_width = max(kernel_width, kernels[ik]->getName().size());
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
-    bytesrep_width = max(bytesrep_width, kernels[ik]->getBytesPerRep());
+    bytesMovedrep_width = max(bytesMovedrep_width, kernels[ik]->getBytesMovedPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
+    bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
     bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
     bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
+    bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
     bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
+    bytesAllocatedrep_width = max(bytesAllocatedrep_width, kernels[ik]->getBytesAllocatedPerRep());
+    checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
+    operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
   }
 
   const string sepchr(" , ");
 
-  kercol_width += 2;
-  dash_width += kercol_width;
+  string kernel_head("Kernel");
+  kernel_width = max( kernel_head.size(),
+                      kernel_width ) + 2;
+  dash_width += kernel_width;
 
   double psize = log10( static_cast<double>(psize_width) );
   string psize_head("Problem size");
@@ -575,17 +705,23 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
          static_cast<Index_type>(4) );
   dash_width += kernsrep_width + static_cast<Index_type>(sepchr.size());
 
-  double brsize = log10( static_cast<double>(bytesrep_width) );
-  string bytesrep_head("Bytes/rep");
-  bytesrep_width = max( static_cast<Index_type>(bytesrep_head.size()),
+  double brsize = log10( static_cast<double>(bytesMovedrep_width) );
+  string bytesMovedrep_head("BytesMoved/rep");
+  bytesMovedrep_width = max( static_cast<Index_type>(bytesMovedrep_head.size()),
                         static_cast<Index_type>(brsize) ) + 3;
-  dash_width += bytesrep_width + static_cast<Index_type>(sepchr.size());
+  dash_width += bytesMovedrep_width + static_cast<Index_type>(sepchr.size());
 
   double frsize = log10( static_cast<double>(flopsrep_width) );
   string flopsrep_head("FLOPS/rep");
   flopsrep_width = max( static_cast<Index_type>(flopsrep_head.size()),
                          static_cast<Index_type>(frsize) ) + 3;
   dash_width += flopsrep_width + static_cast<Index_type>(sepchr.size());
+
+  double btrsize = log10( static_cast<double>(bytesTouchedrep_width) );
+  string bytesTouchedrep_head("BytesTouched/rep");
+  bytesTouchedrep_width = max( static_cast<Index_type>(bytesTouchedrep_head.size()),
+                        static_cast<Index_type>(btrsize) ) + 3;
+  dash_width += bytesTouchedrep_width + static_cast<Index_type>(sepchr.size());
 
   double brrsize = log10( static_cast<double>(bytesReadrep_width) );
   string bytesReadrep_head("BytesRead/rep");
@@ -599,26 +735,53 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
                         static_cast<Index_type>(bwrsize) ) + 3;
   dash_width += bytesWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
+  double bmwrsize = log10( static_cast<double>(bytesModifyWrittenrep_width) );
+  string bytesModifyWrittenrep_head("BytesModifyWritten/rep");
+  bytesModifyWrittenrep_width = max( static_cast<Index_type>(bytesModifyWrittenrep_head.size()),
+                        static_cast<Index_type>(bmwrsize) ) + 3;
+  dash_width += bytesModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
+
   double bamrrsize = log10( static_cast<double>(bytesAtomicModifyWrittenrep_width) );
   string bytesAtomicModifyWrittenrep_head("BytesAtomicModifyWritten/rep");
   bytesAtomicModifyWrittenrep_width = max( static_cast<Index_type>(bytesAtomicModifyWrittenrep_head.size()),
                         static_cast<Index_type>(bamrrsize) ) + 3;
   dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
 
-  str <<left<< setw(kercol_width) << kern_head
+  double barsize = log10( static_cast<double>(bytesAllocatedrep_width) );
+  string bytesAllocatedrep_head("BytesAllocated/rep");
+  bytesAllocatedrep_width = max( static_cast<Index_type>(bytesAllocatedrep_head.size()),
+                                 static_cast<Index_type>(barsize) ) + 3;
+  dash_width += bytesAllocatedrep_width + static_cast<Index_type>(sepchr.size());
+
+  string checksumConsistency_head("ChecksumConsistency");
+  checksumConsistency_width = max( checksumConsistency_head.size(),
+                                     checksumConsistency_width ) + 2;
+  dash_width += checksumConsistency_width + static_cast<Index_type>(sepchr.size());
+
+  string operationalComplexity_head("OperationalComplexity");
+  operationalComplexity_width = max( operationalComplexity_head.size(),
+                                     operationalComplexity_width ) + 2;
+  dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
+
+  str           <<left << setw(kernel_width) << kernel_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
       << sepchr <<right<< setw(itsrep_width) << itsrep_head
       << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
-      << sepchr <<right<< setw(bytesrep_width) << bytesrep_head
+      << sepchr <<right<< setw(bytesMovedrep_width) << bytesMovedrep_head
       << sepchr <<right<< setw(flopsrep_width) << flopsrep_head
+      << sepchr <<right<< setw(bytesTouchedrep_width) << bytesTouchedrep_head
       << sepchr <<right<< setw(bytesReadrep_width) << bytesReadrep_head
       << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
+      << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
       << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
+      << sepchr <<right<< setw(bytesAllocatedrep_width) << bytesAllocatedrep_head
+      << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
+      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
       << endl;
 
   if ( !to_file ) {
-    for (Index_type i = 0; i < dash_width; ++i) {
+    for (size_t i = 0; i < dash_width; ++i) {
       str << "-";
     }
     str << endl;
@@ -626,17 +789,160 @@ void Executor::writeKernelInfoSummary(ostream& str, bool to_file) const
 
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
     KernelBase* kern = kernels[ik];
-    str <<left<< setw(kercol_width) <<  kern->getName()
+    str           <<left << setw(kernel_width) << kern->getName()
         << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
         << sepchr <<right<< setw(reps_width) << kern->getRunReps()
         << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
         << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
-        << sepchr <<right<< setw(bytesrep_width) << kern->getBytesPerRep()
+        << sepchr <<right<< setw(bytesMovedrep_width) << kern->getBytesMovedPerRep()
         << sepchr <<right<< setw(flopsrep_width) << kern->getFLOPsPerRep()
+        << sepchr <<right<< setw(bytesTouchedrep_width) << kern->getBytesTouchedPerRep()
         << sepchr <<right<< setw(bytesReadrep_width) << kern->getBytesReadPerRep()
         << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
+        << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
         << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
+        << sepchr <<right<< setw(bytesAllocatedrep_width) << kern->getBytesAllocatedPerRep()
+        << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
+        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
         << endl;
+  }
+
+  str.flush();
+}
+
+
+void Executor::writeKernelRunDataSummary(ostream& str,
+                                         vector<KernelBase*> const& kernels) const
+{
+  if (!str) {
+    return;
+  }
+
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+  int num_ranks;
+  MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+  str << "Kernels run on " << num_ranks << " MPI ranks" << endl;
+#else
+  str << "Kernels run without MPI" << endl;
+#endif
+
+  size_t prec = 6;
+
+//
+// Set up column headers and column widths for kernel summary output.
+//
+  size_t     kernel_width = 0;
+  size_t     variant_width = 0;
+  size_t     tuning_width = 0;
+  Index_type psize_width = 0;
+  size_t     checksum_width = 0;
+  size_t     timePerRep_width = prec + 2;
+  size_t     bandwidth_width = prec + 2;
+  size_t     flops_width = prec + 2;
+
+  for (size_t ik = 0; ik < kernels.size(); ++ik) {
+    kernel_width = max(kernel_width, kernels[ik]->getName().size());
+    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+      size_t iv_width = getVariantName(variant_ids[iv]).size();
+      for (std::string const& tuning_name :
+           kernels[ik]->getVariantTuningNames(variant_ids[iv])) {
+        variant_width = max(variant_width, iv_width);
+        tuning_width = max(tuning_width, tuning_name.size());
+      }
+    }
+    psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
+  }
+
+  const string sepchr(" , ");
+
+  string kernel_head("Kernel");
+  kernel_width = max( kernel_head.size(),
+                      kernel_width ) + 2;
+
+  string variant_head("Variant");
+  variant_width = max( variant_head.size(),
+                      variant_width ) + 2;
+
+  string tuning_head("Tuning");
+  tuning_width = max( tuning_head.size(),
+                      tuning_width ) + 2;
+
+  double psize = log10( static_cast<double>(psize_width) );
+  string psize_head("Problem size");
+  psize_width = max( static_cast<Index_type>(psize_head.size()),
+                     static_cast<Index_type>(psize) ) + 3;
+
+  string checksum_head("Checksum");
+  checksum_width = max( checksum_head.size(),
+                        checksum_width ) + 2;
+
+  string timePerRep_head("Mean time per rep (sec.)");
+  timePerRep_width = max( timePerRep_head.size(),
+                              timePerRep_width ) + 3;
+
+  string bandwidth_head("Mean Bandwidth (GiB per sec.)");
+  bandwidth_width = max( bandwidth_head.size(),
+                         bandwidth_width ) + 3;
+
+  string flops_head("Mean flops (gigaFLOP per sec.)");
+  flops_width = max( flops_head.size(),
+                     flops_width ) + 3;
+
+  str           <<left << setw(kernel_width) << kernel_head
+      << sepchr <<left << setw(variant_width) << variant_head
+      << sepchr <<left << setw(tuning_width) << tuning_head
+      << sepchr <<right<< setw(psize_width) << psize_head
+      << sepchr <<left << setw(checksum_width) << checksum_head
+      << sepchr <<right<< setw(timePerRep_width) << timePerRep_head
+      << sepchr <<right<< setw(bandwidth_width) << bandwidth_head
+      << sepchr <<right<< setw(flops_width) << flops_head
+     << endl;
+
+  for (size_t ik = 0; ik < kernels.size(); ++ik) {
+    KernelBase* kern = kernels[ik];
+
+    Checksum_type cksum_tol = kern->getChecksumTolerance();
+    Index_type problem_size = kern->getActualProblemSize();
+    Index_type reps = kern->getRunReps();
+    Index_type bytes_moved_per_rep = kern->getBytesMovedPerRep();
+    Index_type flops_per_rep = kern->getFLOPsPerRep();
+
+    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
+      VariantID vid = variant_ids[iv];
+      string const& variant_name = getVariantName(vid);
+
+      ChecksumData data = getChecksumData(kern, vid);
+
+      for (size_t tune_idx = 0; tune_idx < kern->getNumVariantTunings(vid); ++tune_idx) {
+        string const& tuning_name = kern->getVariantTuningName(vid, tune_idx);
+
+        const char* checksum_result = "FAILED";
+        if (
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+             data.checksums_rel_diff_max[tune_idx]
+#else
+             data.checksums_rel_diff[tune_idx]
+#endif
+             <= cksum_tol ) {
+          checksum_result = "PASSED";
+        }
+
+        auto time_per_rep = getReportDataEntry(CSVRepMode::Timing, RunParams::CombinerOpt::Average, kern, vid, tune_idx) / reps;
+        auto bandwidth = bytes_moved_per_rep / time_per_rep / (1024.0 * 1024.0 * 1024.0);
+        auto flops = flops_per_rep / time_per_rep / (1000.0 * 1000.0 * 1000.0);
+
+        str           <<left << setw(kernel_width) << kern->getName()
+            << sepchr <<left << setw(variant_width) << variant_name
+            << sepchr <<left << setw(tuning_width) << tuning_name
+            << sepchr <<right<< setw(psize_width) << problem_size
+            << sepchr <<left << setw(checksum_width) << checksum_result
+            << showpoint << setprecision(prec) << std::defaultfloat
+            << sepchr <<right<< setw(timePerRep_width) << time_per_rep
+            << sepchr <<right<< setw(bandwidth_width) << bandwidth
+            << sepchr <<right<< setw(flops_width) << flops
+            << endl;
+      }
+    }
   }
 
   str.flush();
@@ -668,13 +974,6 @@ void Executor::runSuite()
 
   } // iterate over passes through suite
 
-}
-
-template < typename Kernel >
-KernelBase* Executor::makeKernel()
-{
-  Kernel* kernel = new Kernel(run_params);
-  return kernel;
 }
 
 void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
@@ -723,23 +1022,27 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
         kernel->execute(vid, tune_idx); // Execute kernel
 
         if ( run_params.showProgress() ) {
-          getCout() << " -- " << kernel->getLastTime() / kernel->getRunReps() << " sec. x " << kernel->getRunReps() << " rep.";
-
-          size_t prec = 20;
-          const auto default_precision = getCout().precision();
-          Checksum_type checksum = kernel->getChecksum(vid, tune_idx);
+          Checksum_type cksum_tol = kernel->getChecksumTolerance();
+          Checksum_type cksum_ref = kernel->getReferenceChecksum();
+          Checksum_type cksum = kernel->getLastChecksum();
+          Checksum_type cksum_rel_diff = KernelBase::calculateChecksumRelativeAbsoluteDifference(cksum, cksum_ref);
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
           {
-            Checksum_type checksum_sum = 0;
-            Allreduce(&checksum, &checksum_sum, 1, MPI_SUM, MPI_COMM_WORLD);
-            checksum = checksum_sum / num_ranks;
+            Checksum_type cksum_rel_diff_max = cksum_tol + static_cast<Checksum_type>(1e80);
+            Allreduce(&cksum_rel_diff, &cksum_rel_diff_max, 1, MPI_MAX, MPI_COMM_WORLD);
+            cksum_rel_diff = cksum_rel_diff_max;
           }
-          getCout() << " checksum_avg ";
-#else
-          getCout() << " checksum ";
 #endif
-          getCout() << setprecision(prec) << checksum
-                    << setprecision(default_precision) << endl;
+          const char* cksum_result = "FAILED";
+          if (cksum_rel_diff <= cksum_tol) {
+            cksum_result = "PASSED";
+          }
+
+          getCout() << " -- "
+                    << kernel->getLastTime() / kernel->getRunReps() << " sec."
+                    << " x " << kernel->getRunReps() << " rep."
+                    << " " << cksum_result << " checksum"
+                    << endl;
         }
 
       } else {
@@ -754,7 +1057,9 @@ void Executor::runKernel(KernelBase* kernel, bool print_kernel_name)
 
 void Executor::runWarmupKernels()
 {
-  if ( run_params.getDisableWarmup() ) {
+  RunParams::WarmupMode warmup_mode = run_params.getWarmupMode();
+
+  if ( warmup_mode == RunParams::WarmupMode::Disable ) {
     return;
   } 
 
@@ -763,16 +1068,28 @@ void Executor::runWarmupKernels()
   //
   // Get warmup kernels to run from input
   //
-  std::set<KernelID> kernel_ids = run_params.getWarmupKernelIDsToRun();
+  std::set<KernelID> warmup_kernel_ids;
 
-  if ( kernel_ids.empty() ) {
+  if ( warmup_mode == RunParams::WarmupMode::Explicit ) {
+
+    warmup_kernel_ids = run_params.getSpecifiedWarmupKernelIDs();
+
+  } else if ( warmup_mode == RunParams::WarmupMode::PerfRunSame ) {
 
     //
-    // If no warmup kernels were given, choose a warmup kernel for each feature
+    // Warmup kernels will be same as kernels specified to run in the suite
     //
+    for (size_t ik = 0; ik < kernels.size(); ++ik) {
+      KernelBase* kernel = kernels[ik];
+      warmup_kernel_ids.insert( kernel->getKernelID() );
+    } // iterate over kernels to run
+
+  } else if ( warmup_mode == RunParams::WarmupMode::Default ) {
 
     //
-    // For kernels to be run, assemble a set of feature IDs
+    // No warmup kernel input given, choose a warmup kernel for each feature
+    //
+    // First, assemble a set of feature IDs
     //
     std::set<FeatureID> feature_ids;
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
@@ -788,7 +1105,7 @@ void Executor::runWarmupKernels()
     } // iterate over kernels
 
     //
-    // Map feature IDs to set of warmup kernel IDs
+    // Map feature IDs to rudimentary set of warmup kernel IDs
     //
     for ( auto fid = feature_ids.begin(); fid != feature_ids.end(); ++ fid ) {
 
@@ -797,29 +1114,29 @@ void Executor::runWarmupKernels()
         case Forall:
         case Kernel:
         case Launch:
-          kernel_ids.insert(Basic_DAXPY); break;
+          warmup_kernel_ids.insert(Basic_DAXPY); break;
 
         case Sort:
-          kernel_ids.insert(Algorithm_SORT); break;
+          warmup_kernel_ids.insert(Algorithm_SORT); break;
 
         case Scan:
-          kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
+          warmup_kernel_ids.insert(Basic_INDEXLIST_3LOOP); break;
 
         case Workgroup:
-          kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_PACKING_FUSED); break;
 
         case Reduction:
-          kernel_ids.insert(Basic_REDUCE3_INT); break;
+          warmup_kernel_ids.insert(Basic_REDUCE3_INT); break;
 
         case Atomic:
-          kernel_ids.insert(Basic_PI_ATOMIC); break;
+          warmup_kernel_ids.insert(Basic_PI_ATOMIC); break;
 
         case View:
           break;
 
   #ifdef RAJA_PERFSUITE_ENABLE_MPI
         case MPI:
-          kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
+          warmup_kernel_ids.insert(Comm_HALO_EXCHANGE_FUSED); break;
   #endif
 
         default:
@@ -835,7 +1152,15 @@ void Executor::runWarmupKernels()
   //
   // Run warmup kernels
   //
-  for ( auto kid = kernel_ids.begin(); kid != kernel_ids.end(); ++ kid ) {
+  bool prev_state = KernelBase::setWarmupRun(true);
+
+  for ( auto kid = warmup_kernel_ids.begin();
+             kid != warmup_kernel_ids.end(); ++ kid ) {
+    //
+    // Note that we create a new kernel object for each kernel to run
+    // in warmup so we don't pollute timing data, checksum data, etc.
+    // for kernels that will run for real later...
+    //
     KernelBase* kernel = getKernelObject(*kid, run_params);
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
     kernel->caliperOff();
@@ -846,6 +1171,8 @@ void Executor::runWarmupKernels()
 #endif
     delete kernel;
   }
+
+  KernelBase::setWarmupRun(prev_state);
 
 }
 
@@ -862,8 +1189,55 @@ void Executor::outputRunData()
   //
   // Generate output file prefix (including directory path).
   //
-  string out_fprefix;
   string outdir = recursiveMkdir(run_params.getOutputDirName());
+  if ( !outdir.empty() ) {
+#if defined(_WIN32)
+    _chdir(outdir.c_str());
+#else
+    chdir(outdir.c_str());
+#endif
+  }
+  string out_fprefix = "./" + run_params.getOutputFilePrefix();
+
+
+  vector<FOMGroup> fom_groups;
+  getFOMGroups(fom_groups);
+
+  {
+    unique_ptr<ostream> file = openOutputFile(out_fprefix + "-kernel-details.csv");
+    if ( *file ) {
+      constexpr bool to_file = true;
+      writeKernelInfoSummary(*file, kernels, to_file);
+    }
+
+    file = openOutputFile(out_fprefix + "-kernel-run-data.csv");
+    writeKernelRunDataSummary(*file, kernels);
+
+    file = openOutputFile(out_fprefix + "-checksum.txt");
+    writeChecksumReport(*file, kernels);
+
+    for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
+
+      file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+      writeCSVReport(*file, kernels, CSVRepMode::Timing, combiner, 6 /* prec */);
+
+      if ( haveReferenceVariant() ) {
+
+        file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
+        writeCSVReport(*file, kernels, CSVRepMode::Speedup, combiner, 3 /* prec */);
+      }
+    }
+
+    if (!fom_groups.empty() ) {
+      file = openOutputFile(out_fprefix + "-fom.csv");
+      writeFOMReport(*file, kernels, fom_groups);
+    }
+  }
+
+  //
+  // Generate output file prefix (including directory path).
+  //
+  outdir = recursiveMkdir(run_params.getOutputFilePrefix()+"-per-kernel");
   if ( !outdir.empty() ) {
 #if defined(_WIN32)
     _chdir(outdir.c_str());
@@ -873,35 +1247,41 @@ void Executor::outputRunData()
   }
   out_fprefix = "./" + run_params.getOutputFilePrefix();
 
-  unique_ptr<ostream> file;
+  for (size_t i = 0; i < kernels.size(); ++i) {
 
+    string kernel_out_fprefix = out_fprefix + "-" + kernels[i]->getName();
+    vector<KernelBase*> mykernel({kernels[i]});
 
-  for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
-    file = openOutputFile(out_fprefix + "-timing-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-    writeCSVReport(*file, CSVRepMode::Timing, combiner, 6 /* prec */);
+    unique_ptr<ostream> file = openOutputFile(kernel_out_fprefix + ".out");
 
-    if ( haveReferenceVariant() ) {
-      file = openOutputFile(out_fprefix + "-speedup-" + RunParams::CombinerOptToStr(combiner) + ".csv");
-      writeCSVReport(*file, CSVRepMode::Speedup, combiner, 3 /* prec */);
+    if ( *file ) {
+      constexpr bool to_file = true;
+      writeKernelInfoSummary(*file, mykernel, to_file);
     }
-  }
 
-  file = openOutputFile(out_fprefix + "-checksum.txt");
-  writeChecksumReport(*file);
+    writeSeparator(*file);
+    writeKernelRunDataSummary(*file, mykernel);
 
-  {
-    vector<FOMGroup> fom_groups;
-    getFOMGroups(fom_groups);
+    writeSeparator(*file);
+    writeChecksumReport(*file, mykernel);
+
+    for (RunParams::CombinerOpt combiner : run_params.getNpassesCombinerOpts()) {
+
+      writeSeparator(*file);
+      writeCSVReport(*file, mykernel, CSVRepMode::Timing, combiner, 6 /* prec */);
+
+      if ( haveReferenceVariant() ) {
+
+        writeSeparator(*file);
+        writeCSVReport(*file, mykernel, CSVRepMode::Speedup, combiner, 3 /* prec */);
+      }
+    }
+
     if (!fom_groups.empty() ) {
-      file = openOutputFile(out_fprefix + "-fom.csv");
-      writeFOMReport(*file, fom_groups);
+      writeSeparator(*file);
+      writeFOMReport(*file, mykernel, fom_groups);
     }
-  }
 
-  file = openOutputFile(out_fprefix + "-kernels.csv");
-  if ( *file ) {
-    bool to_file = true;
-    writeKernelInfoSummary(*file, to_file);
   }
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
@@ -925,28 +1305,37 @@ unique_ptr<ostream> Executor::openOutputFile(const string& filename) const
   return unique_ptr<ostream>(makeNullStream());
 }
 
-void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
-                              RunParams::CombinerOpt combiner, size_t prec)
+void Executor::writeCSVReport(ostream& file,
+                              vector<KernelBase*> const& kernels,
+                              CSVRepMode mode,
+                              RunParams::CombinerOpt combiner,
+                              size_t prec)
 {
   if ( file ) {
 
     //
     // Set basic table formatting parameters.
     //
-    const string kernel_col_name("Kernel  ");
+    const string kernel_name_col_header_variant("Variant  ");
+    const string kernel_name_col_header_tuning("Tuning  ");
     const string sepchr(" , ");
 
-    size_t kercol_width = kernel_col_name.size();
+    size_t kercol_width = max(kernel_name_col_header_variant.size(),
+                              kernel_name_col_header_tuning.size());
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       kercol_width = max(kercol_width, kernels[ik]->getName().size());
     }
     kercol_width++;
 
-    vector<std::vector<size_t>> vartuncol_width(variant_ids.size());
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      size_t var_width = max(prec+2, getVariantName(variant_ids[iv]).size());
-      for (std::string const& tuning_name : tuning_names[variant_ids[iv]]) {
-        vartuncol_width[iv].emplace_back(max(var_width, tuning_name.size()));
+    active_variant_tunings_type active_vartuns =
+        getActiveVariantTunings(kernels, variant_ids, tuning_names);
+
+    vector<vector<size_t>> vartuncol_width(active_vartuns.size());
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      size_t var_width = max(prec+2, getVariantName(vid).size());
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
+        vartuncol_width[iv].emplace_back(max(var_width, active_tuning_names[it].size()));
       }
     }
 
@@ -959,8 +1348,8 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     // Wrtie CSV file contents for report.
     //
 
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      for (size_t it = 0; it < active_vartuns[iv].second.size(); ++it) {
         file << sepchr;
       }
     }
@@ -969,11 +1358,12 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column variant name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    file <<left<< setw(kercol_width) << kernel_name_col_header_variant;
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
-             << getVariantName(variant_ids[iv]);
+             << getVariantName(vid);
       }
     }
     file << endl;
@@ -981,11 +1371,12 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     //
     // Print column tuning name line.
     //
-    file <<left<< setw(kercol_width) << kernel_col_name;
-    for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-      for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
+    file <<left<< setw(kercol_width) << kernel_name_col_header_tuning;
+    for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+      auto const& [vid, active_tuning_names] = active_vartuns[iv];
+      for (size_t it = 0; it < active_tuning_names.size(); ++it) {
         file << sepchr <<left<< setw(vartuncol_width[iv][it])
-             << tuning_names[variant_ids[iv]][it];
+             << active_tuning_names[it];
       }
     }
     file << endl;
@@ -996,22 +1387,23 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       KernelBase* kern = kernels[ik];
       file <<left<< setw(kercol_width) << kern->getName();
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        VariantID vid = variant_ids[iv];
-        for (size_t it = 0; it < tuning_names[variant_ids[iv]].size(); ++it) {
-          std::string const& tuning_name = tuning_names[variant_ids[iv]][it];
+
+      for (size_t iv = 0; iv < active_vartuns.size(); ++iv) {
+        auto const& [vid, active_tuning_names] = active_vartuns[iv];
+        for (size_t it = 0; it < active_tuning_names.size(); ++it) {
+
           file << sepchr <<right<< setw(vartuncol_width[iv][it]);
           if ( (mode == CSVRepMode::Speedup) &&
-               (!kern->hasVariantTuningDefined(reference_vid, reference_tune_idx) ||
-                !kern->hasVariantTuningDefined(vid, tuning_name)) ) {
+               (!kern->wasVariantTuningRun(reference_vid, reference_tune_idx) ||
+                !kern->wasVariantTuningRun(vid, active_tuning_names[it])) ) {
             file << "Not run";
           } else if ( (mode == CSVRepMode::Timing) &&
-                      !kern->hasVariantTuningDefined(vid, tuning_name) ) {
+                      !kern->wasVariantTuningRun(vid, active_tuning_names[it]) ) {
             file << "Not run";
           } else {
             file << setprecision(prec) << std::fixed
                  << getReportDataEntry(mode, combiner, kern, vid,
-                        kern->getVariantTuningIndex(vid, tuning_name));
+                        kern->getVariantTuningIndex(vid, active_tuning_names[it]));
           }
         }
       }
@@ -1024,7 +1416,9 @@ void Executor::writeCSVReport(ostream& file, CSVRepMode mode,
 }
 
 
-void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
+void Executor::writeFOMReport(ostream& file,
+                              vector<KernelBase*> const& kernels,
+                              vector<FOMGroup>& fom_groups)
 {
   if ( file ) {
 
@@ -1043,28 +1437,35 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
     size_t fom_col_width = prec+14;
 
+    std::vector<active_variant_tunings_type> fom_group_vartuns(fom_groups.size());
     std::vector<size_t> fom_group_ncols(fom_groups.size(), 0);
     for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-      const FOMGroup& group = fom_groups[ifg];
+      const FOMGroup& fom_group = fom_groups[ifg];
 
-      for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-        VariantID vid = group.variants[gv];
+      fom_group_vartuns[ifg] =
+          getActiveVariantTunings(kernels, fom_group.variants, tuning_names);
+      const active_variant_tunings_type& group = fom_group_vartuns[ifg];
+
+      for (size_t gv = 0; gv < fom_group_vartuns[ifg].size(); ++gv) {
+        auto const& [vid, fom_group_tuning_names] = group[gv];
+
         const string& variant_name = getVariantName(vid);
         // num variants and tuning
         // Includes the PM baseline and the variants and tunings to compared to it
-        fom_group_ncols[ifg] += tuning_names[vid].size();
-        for (const string& tuning_name : tuning_names[vid]) {
+
+        fom_group_ncols[ifg] += fom_group_tuning_names.size();
+        for (const string& tuning_name : fom_group_tuning_names) {
           fom_col_width = max(fom_col_width, variant_name.size()+1+tuning_name.size());
         }
       }
     }
 
-    vector< vector<int> > col_exec_count(fom_groups.size());
-    vector< vector<double> > col_min(fom_groups.size());
-    vector< vector<double> > col_max(fom_groups.size());
-    vector< vector<double> > col_avg(fom_groups.size());
-    vector< vector<double> > col_stddev(fom_groups.size());
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    vector< vector<int> > col_exec_count(fom_group_vartuns.size());
+    vector< vector<double> > col_min(fom_group_vartuns.size());
+    vector< vector<double> > col_max(fom_group_vartuns.size());
+    vector< vector<double> > col_avg(fom_group_vartuns.size());
+    vector< vector<double> > col_stddev(fom_group_vartuns.size());
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       col_exec_count[ifg].resize(fom_group_ncols[ifg], 0);
       col_min[ifg].resize(fom_group_ncols[ifg], numeric_limits<double>::max());
       col_max[ifg].resize(fom_group_ncols[ifg], -numeric_limits<double>::max());
@@ -1073,8 +1474,8 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     }
     vector< vector< vector<double> > > pct_diff(kernels.size());
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
-      pct_diff[ik].resize(fom_groups.size());
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+      pct_diff[ik].resize(fom_group_vartuns.size());
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
         pct_diff[ik][ifg].resize(fom_group_ncols[ifg], 0.0);
       }
     }
@@ -1083,7 +1484,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print title line.
     //
     file << "FOM Report : signed speedup(-)/slowdown(+) for each PM (base vs. RAJA) -> (T_RAJA - T_base) / T_base )";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t iv = 0; iv < fom_group_ncols[ifg]*2; ++iv) {
         file << sepchr;
       }
@@ -1091,12 +1492,14 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     file << endl;
 
     file << "'OVER_TOL' in column to right if RAJA speedup is over tolerance";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t iv = 0; iv < fom_group_ncols[ifg]*2; ++iv) {
         file << sepchr;
       }
     }
     file << endl;
+
+    string not_run("Not run");
 
     string pass(",        ");
     string fail(",OVER_TOL");
@@ -1106,12 +1509,12 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print column title line.
     //
     file <<left<< setw(kercol_width) << kernel_col_name;
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-      const FOMGroup& group = fom_groups[ifg];
-      for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-        VariantID vid = group.variants[gv];
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+      const active_variant_tunings_type& group = fom_group_vartuns[ifg];
+      for (size_t gv = 0; gv < group.size(); ++gv) {
+        auto const& [vid, fom_group_tuning_names] = group[gv];
         string variant_name = getVariantName(vid);
-        for (const string& tuning_name : tuning_names[vid]) {
+        for (const string& tuning_name : fom_group_tuning_names) {
           file << sepchr <<left<< setw(fom_col_width)
                << (variant_name+"-"+tuning_name) << pass;
         }
@@ -1132,17 +1535,17 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
       file <<left<< setw(kercol_width) << kern->getName();
 
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-        const FOMGroup& group = fom_groups[ifg];
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+        const active_variant_tunings_type& group = fom_group_vartuns[ifg];
 
         constexpr double unknown_totTime = -1.0;
         double base_totTime = unknown_totTime;
 
         size_t col = 0;
-        for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-          VariantID vid = group.variants[gv];
+        for (size_t gv = 0; gv < group.size(); ++gv) {
+          auto const& [vid, fom_group_tuning_names] = group[gv];
 
-          for (const string& tuning_name : tuning_names[vid]) {
+          for (const string& tuning_name : fom_group_tuning_names) {
 
             size_t tune_idx = kern->getVariantTuningIndex(vid, tuning_name);
 
@@ -1181,8 +1584,8 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
             } else {  // variant was not run, print a big fat goose egg...
 
-              file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-                   << 0.0 << pass;
+              file << sepchr <<left<< setw(fom_col_width)
+                   << not_run << pass;
 
             }
 
@@ -1191,7 +1594,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
         }  // iterate over group variants
 
-      }  // iterate over fom_groups (i.e., columns)
+      }  // iterate over fom_group_vartuns (i.e., columns)
 
       file << endl;
 
@@ -1203,12 +1606,10 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     //
 
     // Column average...
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         if ( col_exec_count[ifg][col] > 0 ) {
           col_avg[ifg][col] /= col_exec_count[ifg][col];
-        } else {
-          col_avg[ifg][col] = 0.0;
         }
       }
     }
@@ -1217,14 +1618,14 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     for (size_t ik = 0; ik < kernels.size(); ++ik) {
       KernelBase* kern = kernels[ik];
 
-      for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
-        const FOMGroup& group = fom_groups[ifg];
+      for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
+        const active_variant_tunings_type& group = fom_group_vartuns[ifg];
 
         int col = 0;
-        for (size_t gv = 0; gv < group.variants.size(); ++gv) {
-          VariantID vid = group.variants[gv];
+        for (size_t gv = 0; gv < group.size(); ++gv) {
+          auto const& [vid, fom_group_tuning_names] = group[gv];
 
-          for (const string& tuning_name : tuning_names[vid]) {
+          for (const string& tuning_name : fom_group_tuning_names) {
 
             size_t tune_idx = kern->getVariantTuningIndex(vid, tuning_name);
 
@@ -1242,12 +1643,10 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 
     }  // iterate over kernels
 
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         if ( col_exec_count[ifg][col] > 0 ) {
           col_stddev[ifg][col] /= col_exec_count[ifg][col];
-        } else {
-          col_stddev[ifg][col] = 0.0;
         }
       }
     }
@@ -1256,7 +1655,7 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     // Print column summaries.
     //
     file <<left<< setw(kercol_width) << " ";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
         file << sepchr << setw(fom_col_width) <<left<< "  " <<right<< pass;
       }
@@ -1264,37 +1663,57 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Min";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_min[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_min[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Max";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_max[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_max[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Avg";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_avg[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_avg[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
 
     file <<left<< setw(kercol_width) << "Col Std Dev";
-    for (size_t ifg = 0; ifg < fom_groups.size(); ++ifg) {
+    for (size_t ifg = 0; ifg < fom_group_vartuns.size(); ++ifg) {
       for (size_t col = 0; col < fom_group_ncols[ifg]; ++col) {
-        file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
-             << col_stddev[ifg][col] << pass;
+        if ( col_exec_count[ifg][col] > 0 ) {
+          file << sepchr <<left<< setw(fom_col_width) << setprecision(prec)
+               << col_stddev[ifg][col] << pass;
+        } else {
+          file << sepchr <<left<< setw(fom_col_width)
+               << not_run << pass;
+        }
       }
     }
     file << endl;
@@ -1305,7 +1724,15 @@ void Executor::writeFOMReport(ostream& file, vector<FOMGroup>& fom_groups)
 }
 
 
-void Executor::writeChecksumReport(ostream& file)
+void Executor::writeSeparator(std::ostream& file)
+{
+  if ( file ) {
+    file << endl << endl;
+  }
+}
+
+void Executor::writeChecksumReport(ostream& file,
+                                   std::vector<KernelBase*> const& kernels)
 {
   if ( file ) {
 
@@ -1320,7 +1747,7 @@ void Executor::writeChecksumReport(ostream& file)
     const string equal_line("===================================================================================================");
     const string dash_line("----------------------------------------------------------------------------------------");
     const string dash_line_short("-------------------------------------------------------");
-    string dot_line("........................................................");
+    const string dot_line("........................................................");
 
     size_t prec = 20;
     size_t checksum_width = prec + 8;
@@ -1338,6 +1765,7 @@ void Executor::writeChecksumReport(ostream& file)
     }
     namecol_width++;
 
+    size_t resultcol_width = 6+2;
 
     //
     // Print title.
@@ -1351,27 +1779,35 @@ void Executor::writeChecksumReport(ostream& file)
     file << equal_line << endl;
 
     //
-    // Print column title line.
+    // Print column title lines.
     //
     file <<left<< setw(namecol_width) << "Kernel  " << endl;
+
     file << dot_line << endl;
+
     file <<left<< setw(namecol_width) << "Variants  "
+         <<left<< setw(resultcol_width) << "Result  "
+         <<left<< setw(checksum_width) << "Tolerance  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << "Average Checksum  "
-         <<left<< setw(checksum_width) << "Max Checksum Diff  "
-         <<left<< setw(checksum_width) << "Checksum Diff StdDev"
+         <<left<< setw(checksum_width) << "Max Checksum Rel Diff  "
+         <<left<< setw(checksum_width) << "Checksum Rel Diff StdDev"
 #else
          <<left<< setw(checksum_width) << "Checksum  "
-         <<left<< setw(checksum_width) << "Checksum Diff  "
+         <<left<< setw(checksum_width) << "Checksum Rel Diff  "
 #endif
          << endl;
+
     file <<left<< setw(namecol_width) << "  "
+         <<left<< setw(resultcol_width) << "  "
+         <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "  "
          <<left<< setw(checksum_width) << "(vs. first variant listed)  "
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
          <<left<< setw(checksum_width) << ""
 #endif
          << endl;
+
     file << dash_line << endl;
 
     //
@@ -1381,141 +1817,48 @@ void Executor::writeChecksumReport(ostream& file)
       KernelBase* kern = kernels[ik];
 
       file <<left<< setw(namecol_width) << kern->getName() << endl;
+
       file << dot_line << endl;
 
-      Checksum_type cksum_ref = 0.0;
-      size_t ivck = 0;
-      bool found_ref = false;
-      while ( ivck < variant_ids.size() && !found_ref ) {
-        VariantID vid = variant_ids[ivck];
-        size_t num_tunings = kern->getNumVariantTunings(vid);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            cksum_ref = kern->getChecksum(vid, tune_idx);
-            found_ref = true;
-            break;
-          }
-        }
-        ++ivck;
-      }
-
-      // get vector of checksums and diffs
-      std::vector<std::vector<Checksum_type>> checksums(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_diff(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        VariantID vid = variant_ids[iv];
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-
-        checksums[iv].resize(num_tunings, 0.0);
-        checksums_diff[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            checksums[iv][tune_idx] = kern->getChecksum(vid, tune_idx);
-            checksums_diff[iv][tune_idx] = cksum_ref - kern->getChecksum(vid, tune_idx);
-          }
-        }
-      }
-
-#if defined(RAJA_PERFSUITE_ENABLE_MPI)
-
-      // get stats for checksums
-      std::vector<std::vector<Checksum_type>> checksums_sum(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_sum[iv].resize(num_tunings, 0.0);
-        Allreduce(checksums[iv].data(), checksums_sum[iv].data(), num_tunings,
-                  MPI_SUM, MPI_COMM_WORLD);
-      }
-
-      std::vector<std::vector<Checksum_type>> checksums_avg(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_avg[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_avg[iv][tune_idx] = checksums_sum[iv][tune_idx] / num_ranks;
-        }
-      }
-
-      // get stats for checksums_abs_diff
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff[iv][tune_idx] = std::abs(checksums_diff[iv][tune_idx]);
-        }
-      }
-
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_min(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_max(variant_ids.size());
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_sum(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_min[iv].resize(num_tunings, 0.0);
-        checksums_abs_diff_max[iv].resize(num_tunings, 0.0);
-        checksums_abs_diff_sum[iv].resize(num_tunings, 0.0);
-
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_min[iv].data(), num_tunings,
-                  MPI_MIN, MPI_COMM_WORLD);
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_max[iv].data(), num_tunings,
-                  MPI_MAX, MPI_COMM_WORLD);
-        Allreduce(checksums_abs_diff[iv].data(), checksums_abs_diff_sum[iv].data(), num_tunings,
-                  MPI_SUM, MPI_COMM_WORLD);
-      }
-
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_avg(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_avg[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_avg[iv][tune_idx] = checksums_abs_diff_sum[iv][tune_idx] / num_ranks;
-        }
-      }
-
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_diff2avg2(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_diff2avg2[iv].resize(num_tunings, 0.0);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_diff2avg2[iv][tune_idx] = (checksums_abs_diff[iv][tune_idx] - checksums_abs_diff_avg[iv][tune_idx]) *
-                                                  (checksums_abs_diff[iv][tune_idx] - checksums_abs_diff_avg[iv][tune_idx]) ;
-        }
-      }
-
-      std::vector<std::vector<Checksum_type>> checksums_abs_diff_stddev(variant_ids.size());
-      for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
-        checksums_abs_diff_stddev[iv].resize(num_tunings, 0.0);
-        Allreduce(checksums_abs_diff_diff2avg2[iv].data(), checksums_abs_diff_stddev[iv].data(), num_tunings,
-                  MPI_SUM, MPI_COMM_WORLD);
-        for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
-          checksums_abs_diff_stddev[iv][tune_idx] = std::sqrt(checksums_abs_diff_stddev[iv][tune_idx] / num_ranks);
-        }
-      }
-
-#endif
+      Checksum_type cksum_tol = kern->getChecksumTolerance();
 
       for (size_t iv = 0; iv < variant_ids.size(); ++iv) {
         VariantID vid = variant_ids[iv];
         const string& variant_name = getVariantName(vid);
 
-        size_t num_tunings = kernels[ik]->getNumVariantTunings(variant_ids[iv]);
+        ChecksumData data = getChecksumData(kern, vid);
+
+        size_t num_tunings = kern->getNumVariantTunings(vid);
         for (size_t tune_idx = 0; tune_idx < num_tunings; ++tune_idx) {
           const string& tuning_name = kern->getVariantTuningName(vid, tune_idx);
 
           if ( kern->wasVariantTuningRun(vid, tune_idx) ) {
-            file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
-                 << showpoint << setprecision(prec)
+            const char* result = "FAILED";
+            if (
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
-                 <<left<< setw(checksum_width) << checksums_avg[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_abs_diff_max[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_abs_diff_stddev[iv][tune_idx] << endl;
+              data.checksums_rel_diff_max[tune_idx]
 #else
-                 <<left<< setw(checksum_width) << checksums[iv][tune_idx]
-                 <<left<< setw(checksum_width) << checksums_diff[iv][tune_idx] << endl;
+              data.checksums_rel_diff[tune_idx]
+#endif
+               <= cksum_tol ) {
+              result = "PASSED";
+            }
+            file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
+                 <<left<< setw(resultcol_width) << result
+                 << showpoint << setprecision(prec) << std::defaultfloat
+                 <<left<< setw(checksum_width) << cksum_tol
+#if defined(RAJA_PERFSUITE_ENABLE_MPI)
+                 <<left<< setw(checksum_width) << data.checksums_avg[tune_idx]
+                 <<left<< setw(checksum_width) << data.checksums_rel_diff_max[tune_idx]
+                 <<left<< setw(checksum_width) << data.checksums_rel_diff_stddev[tune_idx] << endl;
+#else
+                 <<left<< setw(checksum_width) << data.checksums[tune_idx]
+                 <<left<< setw(checksum_width) << data.checksums_rel_diff[tune_idx] << endl;
 #endif
           } else {
             file <<left<< setw(namecol_width) << (variant_name+"-"+tuning_name)
+                 <<left<< setw(resultcol_width) << "Not Run"
+                 <<left<< setw(checksum_width) << "Not Run"
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
                  <<left<< setw(checksum_width) << "Not Run"
                  <<left<< setw(checksum_width) << "Not Run"
@@ -1530,6 +1873,7 @@ void Executor::writeChecksumReport(ostream& file)
       }
 
       file << endl;
+
       file << dash_line_short << endl;
     }
 
@@ -1579,7 +1923,7 @@ long double Executor::getReportDataEntry(CSVRepMode mode,
                                          RunParams::CombinerOpt combiner,
                                          KernelBase* kern,
                                          VariantID vid,
-                                         size_t tune_idx)
+                                         size_t tune_idx) const
 {
   long double retval = 0.0;
   switch ( mode ) {
