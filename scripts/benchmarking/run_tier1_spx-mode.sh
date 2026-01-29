@@ -41,7 +41,7 @@ for KERNEL_NAME in "${KERNELS[@]}"; do
             --npasses-combiners Average Minimum Maximum \
             --outdir ${OUTDIR} \
             --outfile "${KERNEL_NAME}_factor_${factor}" \
-            --memory "$mem" \
+            --memory-allocated "$mem" \
             --warmup-perfrun-same \
             -ev Seq Lambda
     done
