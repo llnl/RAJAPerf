@@ -53,6 +53,8 @@ void POLYBENCH_MVT::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
 
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_N +      // y1, y2, x1, x2
+                           1*sizeof(Real_type) * m_N*m_N ); // A
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N +      // y1
                       1*sizeof(Real_type) * m_N*m_N +  // A
 

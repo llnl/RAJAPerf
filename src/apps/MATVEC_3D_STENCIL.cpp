@@ -58,6 +58,11 @@ void MATVEC_3D_STENCIL::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_zonal_array_length + // b
+                           1*sizeof(Real_type) * m_zonal_array_length + // x
+                          14*sizeof(Real_type) * m_zonal_array_length + // m
+                           1*sizeof(Index_type) * m_domain->n_real_zones ); // real_zones
+
   // touched data size, not actual number of stores and loads
   const size_t ilen = m_domain->imax - m_domain->imin;
   const size_t jlen = m_domain->jmax - m_domain->jmin;

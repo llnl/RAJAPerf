@@ -49,6 +49,8 @@ void DOT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // a, b
   setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // a, b
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );

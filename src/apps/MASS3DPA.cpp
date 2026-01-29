@@ -54,6 +54,9 @@ void MASS3DPA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_NE*mpa::D1D*mpa::D1D );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * mpa::Q1D*mpa::D1D + // B, Bt
+                           1*sizeof(Real_type) * mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE + // D
+                           2*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE ); // X, Y
   setBytesReadPerRep( 2*sizeof(Real_type) * mpa::Q1D*mpa::D1D + // B, Bt
                       1*sizeof(Real_type) * mpa::D1D*mpa::D1D*mpa::D1D*m_NE + // X
                       1*sizeof(Real_type) * mpa::Q1D*mpa::Q1D*mpa::Q1D*m_NE ); // D

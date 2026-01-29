@@ -53,6 +53,7 @@ void POLYBENCH_JACOBI_2D::setSize(Index_type target_size, Index_type target_reps
   setItsPerRep( 2 * (m_N-2)*(m_N-2) );
   setKernelsPerRep(2);
 
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N*m_N ); // A, B
   setBytesReadPerRep( 1*sizeof(Real_type) * (m_N*m_N - 4) + // A (5 point stencil)
 
                       1*sizeof(Real_type) * (m_N*m_N - 4) ); // B (5 point stencil)

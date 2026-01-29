@@ -57,6 +57,8 @@ void VOL3D::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_domain->lpz+1 - m_domain->fpz );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_array_length ); // x, y, z, vol
   // touched data size, not actual number of stores and loads
   setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getItsPerRep() ); // vol

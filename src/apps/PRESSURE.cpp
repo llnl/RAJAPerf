@@ -48,6 +48,8 @@ void PRESSURE::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep(2);
+
+  setBytesAllocatedPerRep( 5*sizeof(Real_type) * getActualProblemSize() ); // compression, bvc, p_new, e_old, vnewc
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // bvc
                       3*sizeof(Real_type) * getActualProblemSize() ); // bvc, e_old, vnewc
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // compression
