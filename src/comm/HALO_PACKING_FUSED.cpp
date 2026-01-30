@@ -76,28 +76,6 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
   int my_mpi_rank = 0;
   const int mpi_dims[3] = {1,1,1};
   setUp_base(my_mpi_rank, mpi_dims, m_num_vars, vid, tune_idx);
-  // if (do_extra_prints()) {
-  //   for (Index_type l = 0; l < s_num_neighbors; ++l) {
-  //     Index_type pack_buffer_len = m_num_vars * m_pack_index_list_lengths[l];
-  //     getCout() << "  m_pack_buffers " << l << " (" << pack_buffer_len << ") " << m_pack_buffers[l] << std::endl ;
-  //     for (Index_type i = 0; i < pack_buffer_len; ++i) {
-  //       getCout() << "    " << m_pack_buffers[l][i] << std::endl ;
-  //     }
-  //     getCout() << "  m_send_buffers " << l << " (" << pack_buffer_len << ") " << m_send_buffers[l] << std::endl ;
-  //     for (Index_type i = 0; i < pack_buffer_len; ++i) {
-  //       getCout() << "    " << m_send_buffers[l][i] << std::endl ;
-  //     }
-  //     Index_type unpack_buffer_len = m_num_vars * m_unpack_index_list_lengths[l];
-  //     getCout() << "  m_unpack_buffers " << l << " (" << unpack_buffer_len << ") " << m_unpack_buffers[l] << std::endl ;
-  //     for (Index_type i = 0; i < unpack_buffer_len; ++i) {
-  //       getCout() << "    " << m_unpack_buffers[l][i] << std::endl ;
-  //     }
-  //     getCout() << "  m_recv_buffers " << l << " (" << unpack_buffer_len << ") " << m_recv_buffers[l] << std::endl ;
-  //     for (Index_type i = 0; i < unpack_buffer_len; ++i) {
-  //       getCout() << "    " << m_recv_buffers[l][i] << std::endl ;
-  //     }
-  //   }
-  // }
 
   allocAndInitDataConst(DataSpace::Host, m_vars, m_num_vars, nullptr);
   for (Index_type v = 0; v < m_num_vars; ++v) {
@@ -111,18 +89,12 @@ void HALO_PACKING_FUSED::setUp(VariantID vid, size_t tune_idx)
     }
 
     if (do_extra_prints()) {
-      getCout() << "  var " << v << " (" << m_var_size << ") " << m_vars[v] << std::endl ;
-      for (Index_type i = 0; i < m_var_size; ++i) {
-        getCout() << "    " << m_vars[v][i] << std::endl ;
-      }
+      print_array("  m_vars[v]", m_vars[v], m_var_size);
     }
     }
 
     if (do_extra_prints()) {
-      getCout() << "  var " << v << " " << m_vars[v] << std::endl ;
-      for (Index_type i = 0; i < m_var_size; ++i) {
-        getCout() << "    " << m_vars[v][i] << std::endl ;
-      }
+      print_array("  m_vars[v]", m_vars[v], m_var_size);
     }
   }
 }
@@ -149,18 +121,11 @@ void HALO_PACKING_FUSED::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_AR
   if (do_extra_prints()) {
     getCout() << "\nHALO_PACKING_FUSED::updateChecksum " << getLastChecksum() << std::endl ;
     for (Index_type v = 0; v < m_num_vars; ++v) {
-      getCout() << "  var " << v << " " << m_vars[v] << std::endl ;
-      for (Index_type i = 0; i < m_var_size; ++i) {
-        getCout() << "    " << m_vars[v][i] << std::endl ;
-      }
+      print_array("  m_vars[v]", m_vars[v], m_var_size);
     }
 
     for (Index_type l = 0; l < s_num_neighbors; ++l) {
-      Index_type buffer_len = m_num_vars * m_pack_index_list_lengths[l];
-      getCout() << "  m_send_buffers " << l << " " << m_send_buffers[l] << std::endl ;
-      for (Index_type i = 0; i < buffer_len; ++i) {
-        getCout() << "    " << m_send_buffers[l][i] << std::endl ;
-      }
+      print_array("  m_send_buffers[l]", m_send_buffers[l], m_num_vars * m_pack_index_list_lengths[l]);
     }
   }
 }

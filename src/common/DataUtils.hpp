@@ -37,13 +37,26 @@
 namespace rajaperf
 {
 
-inline bool do_extra_prints()
+inline long long do_extra_prints()
 {
-  static bool s_do_it = [](){
+  static long long s_do_it = [](){
         const char* env = std::getenv("RAJAPERF_EXTRA_PRINTS");
-        return env ? env == std::string_view("1") : false;
+        long long val = 0;
+        if (env) {
+          val = atoll(env);
+        }
+        return val;
       }();
   return s_do_it;
+}
+
+template < typename T >
+inline void print_array(const char* name, const T* data, size_t n)
+{
+  getCout() << name << " (" << n << ") " << data << std::endl ;
+  for (size_t i = 0; i < std::min(n, static_cast<size_t>(do_extra_prints())); ++i) {
+    getCout() << name << "  " << data[i] << std::endl ;
+  }
 }
 
 namespace detail

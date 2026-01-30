@@ -278,18 +278,12 @@ void HALO_base::create_lists(
       }
 
       if (do_extra_prints()) {
-        getCout() << "  m_pack_index_lists " << l << " (" << m_pack_index_list_lengths[l] << ", " << list_idx << ") " << m_pack_index_lists[l] << std::endl ;
-        for (Index_type i = 0; i < m_pack_index_list_lengths[l]; ++i) {
-          getCout() << "    " << m_pack_index_lists[l][i] << std::endl ;
-        }
+        print_array("  m_pack_index_lists[l]", m_pack_index_lists[l], m_pack_index_list_lengths[l]);
       }
     }
 
     if (do_extra_prints()) {
-      getCout() << "  m_pack_index_lists " << l << " (" << m_pack_index_list_lengths[l] << ") " << m_pack_index_lists[l] << std::endl ;
-      for (Index_type i = 0; i < m_pack_index_list_lengths[l]; ++i) {
-        getCout() << "    " << m_pack_index_lists[l][i] << std::endl ;
-      }
+      print_array("  m_pack_index_lists[l]", m_pack_index_lists[l], m_pack_index_list_lengths[l]);
     }
 
     {
@@ -316,17 +310,11 @@ void HALO_base::create_lists(
         }
       }
       if (do_extra_prints()) {
-        getCout() << "  m_unpack_index_lists " << l << " (" << m_unpack_index_list_lengths[l] << ", " << list_idx << ") " << m_unpack_index_lists[l] << std::endl ;
-        for (Index_type i = 0; i < m_unpack_index_list_lengths[l]; ++i) {
-          getCout() << "    " << m_unpack_index_lists[l][i] << std::endl ;
-        }
+        print_array("  m_unpack_index_lists[l]", m_unpack_index_lists[l], m_unpack_index_list_lengths[l]);
       }
     }
     if (do_extra_prints()) {
-      getCout() << "  m_unpack_index_lists " << l << " (" << m_unpack_index_list_lengths[l] << ") " << m_unpack_index_lists[l] << std::endl ;
-      for (Index_type i = 0; i < m_unpack_index_list_lengths[l]; ++i) {
-        getCout() << "    " << m_unpack_index_lists[l][i] << std::endl ;
-      }
+      print_array("  m_unpack_index_lists[l]", m_unpack_index_lists[l], m_unpack_index_list_lengths[l]);
     }
   }
 }
@@ -375,17 +363,11 @@ void HALO_base::create_buffers(Index_ptr index_list_lengths,
             our_buffers[0], len);
 
         if (do_extra_prints()) {
-          getCout() << "  our_buffers[0] " << " (" << len << ", " << num_vars * index_list_lengths[0] << ") " << our_buffers[0] << std::endl ;
-          for (Index_type i = 0; i < len; ++i) {
-            getCout() << "    " << our_buffers[0][i] << std::endl ;
-          }
+          print_array("  our_buffers[0]", our_buffers[0], len);
         }
       }
       if (do_extra_prints()) {
-        getCout() << "  our_buffers[0] " << " (" << len << ") " << our_buffers[0] << std::endl ;
-        for (Index_type i = 0; i < len; ++i) {
-          getCout() << "    " << our_buffers[0][i] << std::endl ;
-        }
+        print_array("  our_buffers[0]", our_buffers[0], len);
       }
       // allocAndInitData(getMPIDataSpace(vid), our_buffers[0], RAJA_DIVIDE_CEILING_INT(combined_buffer_nbytes, sizeof(Real_type)));
       mpi_buffers[0] = our_buffers[0];
