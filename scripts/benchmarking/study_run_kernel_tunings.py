@@ -2,6 +2,7 @@ import os
 import glob
 import numpy as np
 import pandas as pd
+import argparse
 
 # ============= Configuration =============
 
@@ -28,10 +29,7 @@ DERIV_MIN_FRAC_OF_MAX_Y = 0.9 # only search after reaching this fraction of max(
 DERIV_REPORT_MAX_POINTS = 8   # limit how many points to print per series
 DERIV_REPORT_ABS = True       # print |dy/dx| if True, else print signed dy/dx
 
-# Output and plotting configuration
-OUTPUT_DIR = "./results"
-FIG_DIR = os.path.join(OUTPUT_DIR, "figures")
-COMBINED_CSV_PATH = os.path.join(OUTPUT_DIR, "combined_table.csv")
+
 FIG_DPI = 300
 SHOW_PLOTS = True  # show interactive windows while also saving PNGs
 
@@ -429,6 +427,13 @@ def plot_backend(df_backend, backend_label, fig_dir, show_plots, fig_dpi):
 # ============= Main logic =============
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output-dir", required=True, help="Output directory")
+    args = parser.parse_args()
+    # Output and plotting configuration
+    OUTPUT_DIR = args.output_dir
+    FIG_DIR = os.path.join(OUTPUT_DIR, "figures")
+    COMBINED_CSV_PATH = os.path.join(OUTPUT_DIR, "combined_table.csv")
     ensure_dir(OUTPUT_DIR)
     ensure_dir(FIG_DIR)
 

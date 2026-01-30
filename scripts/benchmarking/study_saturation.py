@@ -1,6 +1,17 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 import statistics
+import os
+import argparse
+
+
+SMOOTH_FLOPS_COL_NAME="Smoothed Mean flops (gigaFLOP per sec.)"
+RAW_FLOPS_COL = 'Mean flops (gigaFLOP per sec.)'
+SMOOTH_FLOPS_COL = 'Smoothed Mean flops (gigaFLOP per sec.)'
+PROBLEM_SIZE_COL = 'Problem size'
+VARIANT_TUNING_COL = 'Variant_Tuning'
+KERNEL_COL = 'Kernel'
 
 def moving_median_smooth(y, k=5):
     """
@@ -55,6 +66,8 @@ def plot_kernel(df, kernel, k=5, eps=0.1, w=3, save_dir=None):
         x = subdf['Problem size'].astype(float).values
         y = subdf['Mean flops (gigaFLOP per sec.)'].astype(float).values
         y_smooth = moving_median_smooth(list(y), k=k)
+        for xi, yi in zip(x, y_smooth):
+            df.loc[(df['Variant_Tuning'] == variant) & (df['Problem size'] == xi), SMOOTH_FLOPS_COL_NAME] = yi
         # Raw data points: solid dots
         plt.plot(
             x, y, '-o', 
@@ -103,35 +116,76 @@ def plot_kernel(df, kernel, k=5, eps=0.1, w=3, save_dir=None):
         sat_str = f"{r['saturation_x']:.2f}" if r['saturation_x'] is not None else "None"
         print(f"{r['Variant_Tuning']:16} | {r['y_max']:.6g} | {sat_str}")
 
-def plot_all_kernels(filepath, k=5, eps=0.1, w=3, save_dir=None):
+def smooth_and_plot_all_kernels(df, k=5, eps=0.1, w=3, save_dir=None):
     """
     Load data and plot all kernels.
     """
-    # Try both tab and comma delimiters for robustness
-    try:
-        df = pd.read_csv(filepath, delimiter=",", engine="python")
-    except Exception:
-        df = pd.read_csv(filepath)
     # Drop rows missing key columns
     df = df.dropna(subset=['Kernel', 'Problem size', 'Mean flops (gigaFLOP per sec.)', 'Variant_Tuning'])
+    df[SMOOTH_FLOPS_COL_NAME] = np.nan
     kernels = df['Kernel'].unique()
     print(f"Found {len(kernels)} kernels.")
     for kernel in kernels:
-        plot_kernel(df[df['Kernel'] == kernel], kernel, k=k, eps=eps, w=w, save_dir=save_dir)
+        tmp = df[df['Kernel'] == kernel]
+        plot_kernel(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
+        df.loc[df['Kernel'] == kernel, SMOOTH_FLOPS_COL_NAME] = tmp[SMOOTH_FLOPS_COL_NAME]
+        
+    return df
+    
+def save_kernel_tables(df, outdir='kernel_tables'):
+    os.makedirs(outdir, exist_ok=True)
+    kernels = df[KERNEL_COL].unique()
+    for kernel in kernels:
+        df_kernel = df[df[KERNEL_COL] == kernel]
+        
+        # Pivot for raw FLOP/s
+        raw_table = df_kernel.pivot_table(
+            index=PROBLEM_SIZE_COL,
+            columns=VARIANT_TUNING_COL,
+            values=RAW_FLOPS_COL
+        )
+        raw_table = raw_table.sort_index()
+        raw_csv_path = os.path.join(outdir, f"{kernel}_raw.csv")
+        raw_table.to_csv(raw_csv_path)
+        
+        # Pivot for smoothed FLOP/s
+        smooth_table = df_kernel.pivot_table(
+            index=PROBLEM_SIZE_COL,
+            columns=VARIANT_TUNING_COL,
+            values=SMOOTH_FLOPS_COL
+        )
+        smooth_table = smooth_table.sort_index()
+        smooth_csv_path = os.path.join(outdir, f"{kernel}_smoothed.csv")
+        smooth_table.to_csv(smooth_csv_path)
+        
+        print(f"Saved: {raw_csv_path}, {smooth_csv_path}")
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--output-dir", required=True, help="Output directory")
+args = parser.parse_args()
+
+OUTPUT_DIR = args.output_dir
+FOM_DIR = os.path.join(OUTPUT_DIR )
+FIG_DIR = os.path.join(OUTPUT_DIR, "figures")
+COMBINED_CSV_PATH = os.path.join(OUTPUT_DIR, "combined_table.csv")
+OUTPUT_VARIANT_TUNING = os.path.join(OUTPUT_DIR, "output_with_variant_tuning.csv")
 
 # Assume 'df' is your DataFrame loaded from the text file
 # For example:
-df = pd.read_csv('combined_table.csv', delimiter=',')  # Adjust delimiter as needed
+df = pd.read_csv(COMBINED_CSV_PATH, delimiter=',')  # Adjust delimiter as needed
 
 # Create the new column
 df['Variant_Tuning'] = df['Variant'] + '-' + df['Tuning']
 
 # Example: Show the first few rows
-print(df[['Variant', 'Tuning', 'Variant_Tuning']].head())
-df.to_csv('output_with_variant_tuning.csv', index=False)
+# print(df[['Variant', 'Tuning', 'Variant_Tuning']].head())
 
-# Usage example:
-# plot_all_kernels("pasted_text.txt", k=5, eps=0.1, w=3)
-# Uncomment the line below and adjust the filename if needed
-plot_all_kernels("output_with_variant_tuning.csv", k=5, eps=0.1, w=3)
+# Calculate smoothed values, and plot them alongside raw values. 
+df = smooth_and_plot_all_kernels(df, k=5, eps=0.1, w=3, save_dir=FIG_DIR)
+df.to_csv(OUTPUT_VARIANT_TUNING, index=False)
+
+save_kernel_tables(df,outdir=OUTPUT_DIR)
+
+# Usage:
+# save_kernel_tables(df, outdir='my_output_dir')
