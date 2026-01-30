@@ -274,7 +274,8 @@ public:
   //
   bool wasVariantTuningRun(VariantID vid, size_t tune_idx) const
   {
-    if (tune_idx != getUnknownTuningIdx()) {
+    // Check if unknown or no variant/tunings were run
+    if (tune_idx != getUnknownTuningIdx() && !num_exec[vid].empty()) {
       return num_exec[vid].at(tune_idx) > 0;
     }
     return false;
