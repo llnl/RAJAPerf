@@ -313,6 +313,10 @@ void* allocData(DataSpace dataSpace, Size_type nbytes, Size_type align)
     } break;
   }
 
+  if (do_extra_prints()) {
+    getCout() << "allocData " << getDataSpaceName(dataSpace) << " " << ptr << " " << nbytes << " ^" <<  align << std::endl;
+  }
+
   return ptr;
 }
 
@@ -372,6 +376,10 @@ void copyData(DataSpace dst_dataSpace, void* dst_ptr,
  */
 void deallocData(DataSpace dataSpace, void* ptr)
 {
+  if (do_extra_prints()) {
+    getCout() << "deallocData " << getDataSpaceName(dataSpace) << " " << ptr << std::endl;
+  }
+
   switch (dataSpace) {
     case DataSpace::Host:
     case DataSpace::Omp:
