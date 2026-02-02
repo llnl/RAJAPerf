@@ -39,6 +39,11 @@ Tasks to do
      and CPX mode).
 
 2) Data processing script
+
+   -- Script should take two args:
+      - arg1 input data directory (where date files from run live)
+      - arg2 output directory (where to put processed data files)
+
    2a) The script 'study_run_kernel_tunings.py' can generate what we want for 
        2a above (combined_table.csv file) 
    2b) The script 'study_saturation.py' generates something close to what we
