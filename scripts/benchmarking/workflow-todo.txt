@@ -1,0 +1,106 @@
+Desired Workflow and TODO List for Generating Baselines:
+Also a Description of What We Did and an Example for Vendors
+=================================================================
+
+Desired Workflow
+----------------
+
+1) Execute script to run kernels over pre-defined problem sizes
+   (a la throughput study) and generate data for execution timings, 
+   FLOP rates, mem B/W, etc.
+
+2) Execute script to process data and generate result files and plots:
+   a) File containing CSV table of relevant run data for all kernels run
+   b) Per-kernel file containing a CSV table of raw and smoothed throughput
+     curve data points (FLOP/s as a function of problem size)
+   c) FOM file containing a CSV table with a row for each kernel, variant, and
+     tuning run. Columns:
+     -- Kernel name (kernel-variant-tuning)
+     -- Saturation Problem Size (computed from smoothed throughput curve)
+     -- Saturation FLOP/s (raw FLOP/s at saturation problem size)
+     -- Saturation Mem B/W (mem B/W at saturation problem size)
+
+   
+
+Tasks to do
+-----------
+
+0a) We don't want a single script to run AND process data
+0b) We want one data processing script that generates all the files described
+    in 2 above.
+
+1) Run scripts
+   - These are easy. Via command-line args, we can generate per-kernel and
+     aggregated files containing all necessary data for the analyses we want.
+
+   - One script per architecture?
+   - Each script will take command line args for kernel subset to run
+     (tier1 or tier2) and run mode, if relevant (e.g., on ATS-4: SPX mode
+     and CPX mode).
+
+2) Data processing script
+   2a) The script 'study_run_kernel_tunings.py' can generate what we want for 
+       2a above (combined_table.csv file) 
+   2b) The script 'study_saturation.py' generates something close to what we
+       want for 2b above. It makes two files for each kernel: one with a CVS
+       table of raw throughput data points and one for smoothed curve data.
+
+       Script needs to be modified to put data for both curves in one file:
+
+       For example, KernelName-saturation-curve-data.csv contains
+ 
+       Problem Size, Variant1-Tuning1 (raw), Variant1-Tuning1 (smoothed), ...
+       <size 1>    , <FLOP/s>              , <FLOP/s>                   , ...
+       <size 2>    , <FLOP/s>              , <FLOP/s>                   , ...
+       <size 3>    , <FLOP/s>              , <FLOP/s>                   , ...
+       .....
+
+    2c) We need a script to generate a FOM file that contains a CSV table like
+        this:
+
+        Kernel               , Sat Problem Size, Sat FLOP/s   ,   Sat B/W
+        Name-Variant1-Tuning1, <sat size>      , <sat flop/s> ,   <sat b/w>
+        Name-Variant2-Tuning1, <sat size>      , <sat flop/s> ,   <sat b/w>
+        ......
+        Name-VariantN-TuningM, <sat size>      , <sat flop/s> ,   <sat b/w>
+        .....
+        Etc. for each kernel, variant, and tuning run.
+
+        Notes:
+          - Saturation problem size is determined from smoothed data 
+            (see algorithm above)
+          - Saturation FLOP/s and B/W are raw data values at the saturation
+            problem size
+
+
+Smoothed Throughput Curves
+--------------------------
+A method to approximate sauration point for noisy or non-monotonic
+throughput curves....
+
+Assume we have a set of x and y values:
+
+x0, x1, x2, ..., xN  (e.g. problem size)
+y0, y1, y2, ..., yN  (e.g. FLOP / sec)
+
+Step 1: Smooth curve via moving median method (robust to outliers,
+        a few extreme values do not affect the result much)
+
+Choose window size k (odd integer such as 3, 5, or 7)
+Define m = (k - 1) / 2
+
+Define smooth curve with same x values as above, but with
+y values y_smooth_i defined as:
+For i in 0..N:
+  window indices = { max(0, i-m), ..., min(N, i+m) }
+  window values = x[window indices]
+  y_smooth[i] = median(window_values)
+
+Step 2: Find global max of smoothed curve
+
+y_max = max(y_smooth[i]) i = 0..N
+
+Step 3: Approximate saturation point
+
+smallest x_i value where y_smooth[i] >= (1 - eps) * y_max
+for w consecutive i values; e.g., eps = 0.1 and w = 3
