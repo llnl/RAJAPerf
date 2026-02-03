@@ -9,11 +9,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# For notebook display
+# Try to import IPython display for notebook detection
 try:
     from IPython.display import display
-except ImportError:
+    from IPython import get_ipython
+    IN_NOTEBOOK = get_ipython() is not None
+except Exception:
     display = None
+    IN_NOTEBOOK = False
 
 # =========================
 # Global constants
@@ -351,7 +354,10 @@ def plot_kernel(
         fname = os.path.join(save_dir, "{}.png".format(sanitize_filename(kernel)))
         plt.savefig(fname, dpi=200)
         print("Saved plot to {}".format(fname))
-    plt.show()
+    if IN_NOTEBOOK:
+        plt.show()
+    else:
+        plt.close()
 
     # FOM-style output as DataFrame
     fom_rows = []
@@ -403,8 +409,7 @@ def plot_kernel(
         })
 
     fom_df = pd.DataFrame(fom_rows)
-    # Display as a pretty table in notebook, else print as text
-    if display is not None:
+    if IN_NOTEBOOK and display is not None:
         display(fom_df)
     else:
         print(fom_df.to_string(index=False))
@@ -483,7 +488,10 @@ def plot_kernel_bandwidth(
         fname = os.path.join(save_dir, "{}_bandwidth.png".format(sanitize_filename(kernel)))
         plt.savefig(fname, dpi=200)
         print(f"Saved bandwidth plot to {fname}")
-    plt.show()
+    if IN_NOTEBOOK:
+        plt.show()
+    else:
+        plt.close()
 
 # =========================
 # Smooth and plot all kernels (FLOPs and Bandwidth)
@@ -811,12 +819,5 @@ def main_notebook(
     )
 
 if __name__ == "__main__":
-    in_ipython = False
-    try:
-        from IPython import get_ipython
-        in_ipython = get_ipython() is not None
-    except Exception:
-        in_ipython = False
-
-    if not in_ipython:
+    if not IN_NOTEBOOK:
         main_cli()
