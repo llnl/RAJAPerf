@@ -54,6 +54,9 @@ void POLYBENCH_GESUMMV::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_N );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N +      // x, y
+                           2*sizeof(Real_type) * m_N*m_N ); // A, B
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N +      // x
                       2*sizeof(Real_type) * m_N*m_N ); // A, B
   setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N ); // y

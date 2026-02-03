@@ -52,6 +52,9 @@ void INDEXLIST::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
+                           1*sizeof(Int_type) * getActualProblemSize() ); // list
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesWrittenPerRep( 1*sizeof(Int_type) * getActualProblemSize() / 2 ); // list (about 50% output)
   setBytesModifyWrittenPerRep( 0 );

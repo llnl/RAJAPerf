@@ -49,6 +49,7 @@ void ATOMIC::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // atomic (assumes replication == problem size)
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );

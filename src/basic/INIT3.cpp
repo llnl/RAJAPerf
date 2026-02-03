@@ -48,6 +48,8 @@ void INIT3::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 5*sizeof(Real_type) * getActualProblemSize()  ); // out1, out2, out3, in1, in2
   setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // in1, in2
   setBytesWrittenPerRep( 3*sizeof(Real_type) * getActualProblemSize()  ); // out3, out2, out1
   setBytesModifyWrittenPerRep( 0 );

@@ -55,6 +55,9 @@ void CONVECTION3DPA::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_NE*conv::D1D*conv::D1D*conv::D1D );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * (conv::Q1D*conv::D1D) + // b, bt, g
+                  conv::VDIM*sizeof(Real_type) * (conv::Q1D*conv::Q1D*conv::Q1D*m_NE) + // d
+                           2*sizeof(Real_type) * (conv::D1D*conv::D1D*conv::D1D*m_NE) ); // x, y
   setBytesReadPerRep( 3*sizeof(Real_type) * conv::Q1D*conv::D1D + // b, bt, g
                       1*sizeof(Real_type) * conv::D1D*conv::D1D*conv::D1D*m_NE + // x
                conv::VDIM*sizeof(Real_type) * conv::Q1D*conv::Q1D*conv::Q1D*m_NE ); // d

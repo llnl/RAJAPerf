@@ -78,6 +78,12 @@ void INTSC_HEXHEX::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( m_n_std_intsc );
   setKernelsPerRep(2);   // main intersection kernel and final fixup.
 
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * 24L*m_n_subz_intsc + // dsubz
+                           1*sizeof(Real_type) * 24L*m_n_subz_intsc + // tsubz
+                           1*sizeof(Real_type) * n_vvint_per_block * m_gsize + // vv_int
+                           1*sizeof(Real_type) * nvals_per_pair * m_n_subz_intsc + // vv_out
+                           1*sizeof(Real_type) * nvals_per_pair * m_n_subz_intsc ); // vv
+
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
 

@@ -38,6 +38,7 @@ RunParams::RunParams(int argc, char** argv)
    size_meaning(SizeMeaning::Unset),
    size_factor(1.0),
    size(0.0),
+   memory_meaning(MemoryMeaning::Unset),
    memory(0.0),
    min_size(0.0),
    data_alignment(RAJA::DATA_ALIGN),
@@ -133,6 +134,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n rep_fact = " << rep_fact;
   str << "\n size_meaning = " << SizeMeaningToStr(getSizeMeaning());
   str << "\n size = " << size;
+  str << "\n memory_meaning = " << MemoryMeaningToStr(getMemoryMeaning());
   str << "\n memory = " << memory;
   str << "\n min_size = " << min_size;
   str << "\n size_factor = " << size_factor;
@@ -463,7 +465,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       if ( i < argc ) {
         if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size or --memory once"
+                    << " may only set one of --size or --memory* once"
                     << std::endl;
           input_state = BadInput;
         } else {
@@ -484,29 +486,45 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--memory") ) {
+    } else if ( opt == std::string("--memory-moved") ||
+                opt == std::string("--memory-touched") ||
+                opt == std::string("--memory-allocated") ) {
 
       i++;
       if ( i < argc ) {
         if (size_meaning != SizeMeaning::Unset) {
           getCout() << "\nBad input:"
-                    << " may only set one of --size or --memory once"
+                    << " may only set one of --size or --memory* once"
                     << std::endl;
           input_state = BadInput;
         } else {
           memory = ::atof( argv[i] );
           if ( memory >= 0.0 ) {
-            size_meaning = SizeMeaning::Memory;
+            if ( opt == std::string("--memory-moved") ) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Moved;
+            } else if ( opt == std::string("--memory-touched") ) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Touched;
+            } else if (opt == std::string("--memory-allocated")) {
+              size_meaning = SizeMeaning::Memory;
+              memory_meaning = MemoryMeaning::Allocated;
+            } else {
+              getCout() << "\nBad input:"
+                    << " " << opt << " is not a known --memory* option"
+                    << std::endl;
+              input_state = BadInput;
+            }
           } else {
             getCout() << "\nBad input:"
-                  << " must give --memory a POSITIVE value (double)"
+                  << " must give " << opt << " a POSITIVE value (double)"
                   << std::endl;
             input_state = BadInput;
           }
         }
       } else {
         getCout() << "\nBad input:"
-                  << " must give --memory a value (int)"
+                  << " must give " << opt << " a value (int)"
                   << std::endl;
         input_state = BadInput;
       }
@@ -1545,17 +1563,36 @@ void RunParams::printHelpMessage(std::ostream& str) const
 
   str << "\t --size <int> [no default]\n"
       << "\t      (problem size to run each kernel)\n"
-      << "\t      May not be set if --memory option is set.\n";
+      << "\t      May not be set if any --memory* option is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --size 1000000 (runs each kernel with size ~1,000,000)\n\n";
 
-  str << "\t --memory <int> [no default]\n"
-      << "\t      (# of bytes of memory each kernel will touch per rep; note that each kernel calculates a problem size so that it will\n"
-      << "\t        touch the given # of bytes of memory per rep)\n"
+  str << "\t --memory-moved <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will move per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesMoved/rep will match the given # of bytes of memory per rep)\n"
       << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
-      << "\t      May not be set if --size option is set.\n";
+      << "\t      May not be set if --size or other --memory* option is set.\n";
   str << "\t\t Example...\n"
-      << "\t\t --memory 1000000 (runs each kernel such that it touches ~1,000,000 bytes per rep)\n\n";
+      << "\t\t --memory-moved 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --memory-touched <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will touch per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesTouched/rep will match the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size or other --memory* option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-touched 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --memory-allocated <int> [no default]\n"
+      << "\t      (# of bytes of memory each kernel will allocate per rep; note that\n"
+      << "\t        each kernel calculates a problem size so that its\n"
+      << "\t        BytesAllocated/rep will match the given # of bytes of memory per rep)\n"
+      << "\t      (kernels with fixed memory usage treat this the same as --size)\n"
+      << "\t      May not be set if --size or other --memory* option is set.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-allocated 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
 
   str << "\t --min-size <int> [default is 0]\n"
       << "\t      (minimum problem size to run for all kernels)\n"

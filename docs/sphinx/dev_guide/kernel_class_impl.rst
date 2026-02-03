@@ -51,6 +51,7 @@ The methods in the source file are:
         is the problem size and the number of loop kernels is one. Other kernels
         in the Suite may execute multiple loop kernels with different sizes,
         so these methods are used to describe this.
+      * The number of bytes allocated for each kernel execution.
       * The number of bytes read for each kernel execution.
       * The number of bytes written for each kernel execution.
       * The number of bytes read, modified, and written for each kernel execution.

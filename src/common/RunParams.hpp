@@ -77,13 +77,14 @@ public:
   }
 
   /*!
-   * \brief Enumeration indicating how to interpret size input
+   * \brief Enumeration indicating how to use input variables to generate
+   *        problem size(s)
    */
   enum struct SizeMeaning {
     Unset,    /*!< indicates value is unset */
     Default,  /*!< Use default kernel iteration space */
-    Direct,   /*!< directly use as kernel iteration space */
-    Memory,   /*!< directly use as kernel memory touched size */
+    Direct,   /*!< directly use size as kernel iteration space */
+    Memory    /*!< directly use memory based on memory_meaning */
   };
 
   /*!
@@ -100,6 +101,35 @@ public:
         return "Direct";
       case SizeMeaning::Memory:
         return "Memory";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
+   * \brief Enumeration indicating how to interpret memory input
+   */
+  enum struct MemoryMeaning {
+    Unset,    /*!< indicates value is unset */
+    Moved,    /*!< Find problem size that matches bytesMoved/rep */
+    Touched,  /*!< Find problem size that matches bytesTouched/rep */
+    Allocated /*!< Find problem size that matches bytesAllocated/rep */
+  };
+
+  /*!
+   * \brief Translate MemoryMeaning enum value to string
+   */
+  static std::string MemoryMeaningToStr(MemoryMeaning sm)
+  {
+    switch (sm) {
+      case MemoryMeaning::Unset:
+        return "Unset";
+      case MemoryMeaning::Moved:
+        return "Moved";
+      case MemoryMeaning::Touched:
+        return "Touched";
+      case MemoryMeaning::Allocated:
+        return "Allocated";
       default:
         return "Unknown";
     }
@@ -188,6 +218,8 @@ public:
   double getSizeFactor() const { return size_factor; }
 
   double getSize() const { return size; }
+
+  MemoryMeaning getMemoryMeaning() const { return memory_meaning; }
 
   double getMemory() const { return memory; }
 
@@ -379,6 +411,7 @@ private:
   SizeMeaning size_meaning; /*!< meaning of size value */
   double size_factor;    /*!< default kernel size multipier (input option) */
   double size;           /*!< kernel size to run (input option) */
+  MemoryMeaning memory_meaning; /*!< meaning of memory value */
   double memory;           /*!< memory size to run (input option) */
   double min_size;           /*!< minimum kernel size to run (input option) */
   Size_type data_alignment;
