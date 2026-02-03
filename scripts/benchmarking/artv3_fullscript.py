@@ -22,7 +22,7 @@ except Exception:
 # Global constants
 # =========================
 
-RAW_FLOPS_COL = "Mean flops (gigaFLOP per sec.)"
+RAW_FLOPS_COL = "Mean gFlops (gigaFLOP per sec.)"
 SMOOTH_FLOPS_COL = "Smoothed Mean flops (gigaFLOP per sec.)"
 PROBLEM_SIZE_COL = "Problem size"
 VARIANT_TUNING_COL = "Variant_Tuning"
@@ -267,6 +267,11 @@ def moving_median_smooth(y, k: int = 5):
     return y_smooth
 
 def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
+    """
+    Returns the x value of the first saturation point, or None if none is found.
+    Saturation is defined as the first run of length >= w where y_smooth
+    stays within (1 - eps) of the maximum value.
+    """
     if not y_smooth:
         return None
 
@@ -369,12 +374,15 @@ def plot_kernel(
         sat_size = ""
         sat_flops_raw = ""
         sat_bw = ""
+
+        # === MODIFIED/ADDED FOR SATURATION REPORTING ===
         if len(x) > 0 and len(y_smooth) > 0:
             sat_idx = None
             y_max = max(y_smooth)
             threshold = (1.0 - eps) * y_max
             run_length = 0
             run_start_idx = None
+
             for i in range(len(y_smooth)):
                 if y_smooth[i] >= threshold:
                     if run_length == 0:
@@ -386,12 +394,14 @@ def plot_kernel(
                 else:
                     run_length = 0
                     run_start_idx = None
+
             if sat_idx is not None:
                 sat_size = x[sat_idx]
                 mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
                 raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
                 if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
                     sat_flops_raw = raw_at_sat.iloc[0]
+
                 if BANDWIDTH_COL in subdf.columns:
                     bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
                     bw_non_nan = bw_at_sat.dropna()
@@ -401,11 +411,23 @@ def plot_kernel(
                         sat_bw = ""
                 else:
                     sat_bw = ""
+            else:
+                print(
+                    "[INFO] No saturation point found for kernel '{}' "
+                    "variant '{}' (eps={}, w={})".format(kernel, variant, eps, w)
+                )
+        else:
+            print(
+                "[INFO] Not enough data to compute saturation for "
+                "kernel '{}' variant '{}'".format(kernel, variant)
+            )
+        # === END MODIFIED ===
+
         fom_rows.append({
             "Kernel": f"{kernel}-{variant}",
-            "Sat Problem Size": sat_size,
-            "Sat FLOP/s (gigaFLOP per sec.)": sat_flops_raw,
-            "Sat B/W (GiB per sec.)": sat_bw,
+            "Sat Problem Size": sat_size if sat_size != "" else "N/A",
+            "Sat GFLOP/s": sat_flops_raw if sat_flops_raw != "" else "N/A",
+            "Sat B/W (GiB per sec.)": sat_bw if sat_bw != "" else "N/A",
         })
 
     fom_df = pd.DataFrame(fom_rows)
@@ -659,6 +681,7 @@ def save_fom_tables(
             sat_size = None
             sat_flops_raw = ""
             sat_bw = ""
+            # === MODIFIED/ADDED FOR SATURATION REPORTING ===
             if len(x) > 0 and len(y_smooth) > 0:
                 sat_idx = None
                 y_max = max(y_smooth)
@@ -666,6 +689,7 @@ def save_fom_tables(
                 w = 3
                 run_length = 0
                 run_start_idx = None
+
                 for i in range(len(y_smooth)):
                     if y_smooth[i] >= threshold:
                         if run_length == 0:
@@ -677,6 +701,7 @@ def save_fom_tables(
                     else:
                         run_length = 0
                         run_start_idx = None
+
                 if sat_idx is not None:
                     sat_size = x[sat_idx]
                     mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
@@ -691,13 +716,31 @@ def save_fom_tables(
                         else:
                             sat_bw = ""
                     else:
-                        print(f"[WARN] Bandwidth column missing for kernel '{kernel}', variant '{vt}'")
+                        print(
+                            "[WARN] Bandwidth column missing for kernel '{}' variant '{}' "
+                            "while computing saturation".format(kernel, vt)
+                        )
                         sat_bw = ""
+                else:
+                    print(
+                        "[INFO] No saturation point found for kernel '{}' variant '{}' "
+                        "when building FOM table".format(kernel, vt)
+                    )
+            else:
+                print(
+                    "[INFO] Not enough data to compute saturation for "
+                    "kernel '{}' variant '{}' when building FOM table".format(kernel, vt)
+                )
+            # === END MODIFIED ===
+
+            def na_if_empty(value):
+                return value if value not in [None, ""] else "N/A"
+
             rows.append({
                 "Kernel": f"{kernel}-{vt}",
-                "Sat Problem Size": sat_size if sat_size is not None else "",
-                "Sat FLOP/s (gigaFLOP per sec.)": sat_flops_raw if sat_flops_raw not in [None, ""] else "",
-                "Sat B/W (GiB per sec.)": sat_bw if sat_bw not in [None, ""] else "",
+                "Sat Problem Size": na_if_empty(sat_size),
+                "Sat GFLOP/s": na_if_empty(sat_flops_raw),
+                "Sat B/W (GiB per sec.)": na_if_empty(sat_bw),
             })
         out_path = os.path.join(outdir, f"{sanitize_filename(kernel)}.csv")
         pd.DataFrame(rows).to_csv(out_path, index=False)
