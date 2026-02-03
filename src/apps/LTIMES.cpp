@@ -32,9 +32,9 @@ LTIMES::LTIMES(const RunParams& params)
   setDefaultProblemSize(m_num_d * m_num_g * num_z_default);
   setDefaultReps(50);
 
-  //m_num_z = (getTargetProblemSize()/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g) ;//256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+  //m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g) ;//256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
 
-  m_num_z = (getTargetProblemSize()/m_num_d/m_num_g);
+  m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g);
 
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
@@ -59,9 +59,9 @@ LTIMES::LTIMES(const RunParams& params)
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
 
-  checksum_scale_factor = 0.001 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
+  // checksum_scale_factor = 0.001 *
+  //             ( static_cast<Checksum_type>(getDefaultProblemSize()) /
+  //                                          getActualProblemSize() );
   setSize(params.getTargetSize(getDefaultProblemSize()),
           params.getReps(getDefaultReps()));
 
