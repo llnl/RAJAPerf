@@ -9,6 +9,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# For notebook display
+try:
+    from IPython.display import display
+except ImportError:
+    display = None
+
 # =========================
 # Global constants
 # =========================
@@ -19,6 +25,7 @@ PROBLEM_SIZE_COL = "Problem size"
 VARIANT_TUNING_COL = "Variant_Tuning"
 KERNEL_COL = "Kernel"
 BANDWIDTH_COL = "Bandwidth (GiB per sec.)"
+SMOOTH_BW_COL = "Smoothed Bandwidth (GiB per sec.)"
 
 # =========================
 # General utilities
@@ -279,7 +286,7 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
     return None
 
 # =========================
-# Plotting for a single kernel
+# Plotting for a single kernel (FLOPs) with FOM output as DataFrame
 # =========================
 
 def plot_kernel(
@@ -292,7 +299,6 @@ def plot_kernel(
 ):
     plt.figure(figsize=(18, 7))
     variants = df[VARIANT_TUNING_COL].unique()
-    report = []
     colors = plt.cm.tab10.colors
 
     if SMOOTH_FLOPS_COL not in df.columns:
@@ -331,14 +337,6 @@ def plot_kernel(
             color=colors[idx % len(colors)],
         )
 
-        y_max = max(y_smooth)
-        sat_x = find_saturation_point(x, y_smooth, eps=eps, w=w)
-        report.append({
-            "Variant_Tuning": variant,
-            "y_max": y_max,
-            "saturation_x": sat_x,
-        })
-
     plt.title("Kernel: {}".format(kernel), fontsize=22)
     plt.xlabel("Problem size", fontsize=18)
     plt.ylabel("Mean flops (gigaFLOP per sec.)", fontsize=18)
@@ -355,15 +353,140 @@ def plot_kernel(
         print("Saved plot to {}".format(fname))
     plt.show()
 
-    print("Kernel: {}".format(kernel))
-    print("eps: {}, w: {}".format(eps, w))
-    print("Variant_Tuning | Global max of smoothed curve (y_max) | Saturation point (x)")
-    for r in report:
-        sat_str = "{:.2f}".format(r["saturation_x"]) if r["saturation_x"] is not None else "None"
-        print("{:30} | {: .6g} | {}".format(r["Variant_Tuning"], r["y_max"], sat_str))
+    # FOM-style output as DataFrame
+    fom_rows = []
+    for variant in variants:
+        subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
+        subdf = subdf.sort_values(PROBLEM_SIZE_COL)
+        x = subdf[PROBLEM_SIZE_COL].astype(float).values
+        y_smooth = subdf[SMOOTH_FLOPS_COL].astype(float).values
+        sat_size = ""
+        sat_flops_raw = ""
+        sat_bw = ""
+        if len(x) > 0 and len(y_smooth) > 0:
+            sat_idx = None
+            y_max = max(y_smooth)
+            threshold = (1.0 - eps) * y_max
+            run_length = 0
+            run_start_idx = None
+            for i in range(len(y_smooth)):
+                if y_smooth[i] >= threshold:
+                    if run_length == 0:
+                        run_start_idx = i
+                    run_length += 1
+                    if run_length >= w:
+                        sat_idx = run_start_idx
+                        break
+                else:
+                    run_length = 0
+                    run_start_idx = None
+            if sat_idx is not None:
+                sat_size = x[sat_idx]
+                mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
+                raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
+                if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
+                    sat_flops_raw = raw_at_sat.iloc[0]
+                if BANDWIDTH_COL in subdf.columns:
+                    bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
+                    bw_non_nan = bw_at_sat.dropna()
+                    if not bw_non_nan.empty:
+                        sat_bw = bw_non_nan.iloc[0]
+                    else:
+                        sat_bw = ""
+                else:
+                    sat_bw = ""
+        fom_rows.append({
+            "Kernel": f"{kernel}-{variant}",
+            "Sat Problem Size": sat_size,
+            "Sat FLOP/s (gigaFLOP per sec.)": sat_flops_raw,
+            "Sat B/W (GiB per sec.)": sat_bw,
+        })
+
+    fom_df = pd.DataFrame(fom_rows)
+    # Display as a pretty table in notebook, else print as text
+    if display is not None:
+        display(fom_df)
+    else:
+        print(fom_df.to_string(index=False))
 
 # =========================
-# Smooth and plot all kernels
+# Plotting for a single kernel (Bandwidth)
+# =========================
+
+def plot_kernel_bandwidth(
+    df: pd.DataFrame,
+    kernel: str,
+    k: int = 5,
+    eps: float = 0.1,
+    w: int = 3,
+    save_dir: Optional[str] = None,
+):
+    if BANDWIDTH_COL not in df.columns:
+        print(f"[INFO] No '{BANDWIDTH_COL}' column for kernel '{kernel}', skipping bandwidth plot.")
+        return
+
+    plt.figure(figsize=(18, 7))
+    variants = df[VARIANT_TUNING_COL].unique()
+    colors = plt.cm.tab10.colors
+
+    if SMOOTH_BW_COL not in df.columns:
+        df[SMOOTH_BW_COL] = np.nan
+
+    for idx, variant in enumerate(variants):
+        subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
+        subdf = subdf.sort_values(PROBLEM_SIZE_COL)
+
+        x = subdf[PROBLEM_SIZE_COL].astype(float).values
+        y_bw = subdf[BANDWIDTH_COL].astype(float).values
+
+        if len(x) == 0:
+            continue
+
+        y_bw_smooth = moving_median_smooth(list(y_bw), k=k)
+
+        for xi, yi in zip(x, y_bw_smooth):
+            mask = (
+                (df[VARIANT_TUNING_COL] == variant)
+                & (df[PROBLEM_SIZE_COL] == xi)
+            )
+            df.loc[mask, SMOOTH_BW_COL] = yi
+
+        color = colors[idx % len(colors)]
+
+        plt.plot(
+            x, y_bw, "-o",
+            label=f"{variant} (raw B/W)",
+            markersize=8,
+            color=color,
+            markerfacecolor=color,
+            markeredgewidth=0,
+        )
+
+        plt.plot(
+            x, y_bw_smooth, "--",
+            label=f"{variant} (smoothed B/W)",
+            linewidth=3,
+            color=color,
+        )
+
+    plt.title(f"Kernel: {kernel} - Bandwidth", fontsize=22)
+    plt.xlabel("Problem size", fontsize=18)
+    plt.ylabel("Bandwidth (GiB per sec.)", fontsize=18)
+    plt.grid(True, which="both", linestyle="--", linewidth=1)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=16, frameon=False)
+    plt.tight_layout(rect=[0, 0, 0.75, 1])
+
+    if save_dir is not None:
+        ensure_dir(save_dir)
+        fname = os.path.join(save_dir, "{}_bandwidth.png".format(sanitize_filename(kernel)))
+        plt.savefig(fname, dpi=200)
+        print(f"Saved bandwidth plot to {fname}")
+    plt.show()
+
+# =========================
+# Smooth and plot all kernels (FLOPs and Bandwidth)
 # =========================
 
 def smooth_and_plot_all_kernels(
@@ -375,12 +498,24 @@ def smooth_and_plot_all_kernels(
 ) -> pd.DataFrame:
     df = df.dropna(subset=[KERNEL_COL, PROBLEM_SIZE_COL, RAW_FLOPS_COL, VARIANT_TUNING_COL]).copy()
     df[SMOOTH_FLOPS_COL] = np.nan
+
+    if BANDWIDTH_COL in df.columns:
+        df[SMOOTH_BW_COL] = np.nan
+
     kernels = df[KERNEL_COL].unique()
     print("Found {} kernels.".format(len(kernels)))
+
     for kernel in kernels:
         tmp = df[df[KERNEL_COL] == kernel].copy()
+
         plot_kernel(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
         df.loc[df[KERNEL_COL] == kernel, SMOOTH_FLOPS_COL] = tmp[SMOOTH_FLOPS_COL]
+
+        if BANDWIDTH_COL in df.columns:
+            plot_kernel_bandwidth(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
+            if SMOOTH_BW_COL in tmp.columns:
+                df.loc[df[KERNEL_COL] == kernel, SMOOTH_BW_COL] = tmp[SMOOTH_BW_COL]
+
     return df
 
 # =========================
@@ -411,7 +546,28 @@ def save_kernel_tables(
         smooth_table = smooth_table.sort_index()
         smooth_csv_path = os.path.join(outdir, "{}_smoothed.csv".format(sanitize_filename(kernel)))
         smooth_table.to_csv(smooth_csv_path)
-        print("Saved: {}, {}".format(raw_csv_path, smooth_csv_path))
+
+        if BANDWIDTH_COL in df_kernel.columns and SMOOTH_BW_COL in df_kernel.columns:
+            bw_raw_table = df_kernel.pivot_table(
+                index=PROBLEM_SIZE_COL,
+                columns=VARIANT_TUNING_COL,
+                values=BANDWIDTH_COL,
+            ).sort_index()
+            bw_raw_csv_path = os.path.join(outdir, "{}_bandwidth_raw.csv".format(sanitize_filename(kernel)))
+            bw_raw_table.to_csv(bw_raw_csv_path)
+
+            bw_smooth_table = df_kernel.pivot_table(
+                index=PROBLEM_SIZE_COL,
+                columns=VARIANT_TUNING_COL,
+                values=SMOOTH_BW_COL,
+            ).sort_index()
+            bw_smooth_csv_path = os.path.join(outdir, "{}_bandwidth_smoothed.csv".format(sanitize_filename(kernel)))
+            bw_smooth_table.to_csv(bw_smooth_csv_path)
+
+            print("Saved: {}, {}, {}, {}".format(
+                raw_csv_path, smooth_csv_path, bw_raw_csv_path, bw_smooth_csv_path))
+        else:
+            print("Saved: {}, {}".format(raw_csv_path, smooth_csv_path))
 
 # =========================
 # Per-kernel saturation curve data (raw + smoothed in one file)
@@ -446,13 +602,35 @@ def save_saturation_curve_data(
             smooth_col_name = f"{vt} (smoothed)"
             combined[raw_col_name] = raw_table[vt]
             combined[smooth_col_name] = smooth_table[vt]
+
+        if BANDWIDTH_COL in df_kernel.columns and SMOOTH_BW_COL in df_kernel.columns:
+            bw_raw_table = df_kernel.pivot_table(
+                index=PROBLEM_SIZE_COL,
+                columns=VARIANT_TUNING_COL,
+                values=BANDWIDTH_COL,
+            ).sort_index()
+            bw_smooth_table = df_kernel.pivot_table(
+                index=PROBLEM_SIZE_COL,
+                columns=VARIANT_TUNING_COL,
+                values=SMOOTH_BW_COL,
+            ).sort_index()
+            bw_smooth_table = bw_smooth_table.reindex(
+                index=bw_raw_table.index,
+                columns=bw_raw_table.columns,
+            )
+            for vt in bw_raw_table.columns:
+                bw_raw_col_name = f"{vt} (raw B/W)"
+                bw_smooth_col_name = f"{vt} (smoothed B/W)"
+                combined[bw_raw_col_name] = bw_raw_table[vt]
+                combined[bw_smooth_col_name] = bw_smooth_table[vt]
+
         combined = combined.reset_index().rename(columns={PROBLEM_SIZE_COL: "Problem size"})
         out_path = os.path.join(outdir, f"{sanitize_filename(kernel)}.csv")
         combined.to_csv(out_path, index=False)
         print(f"Saved saturation curve data: {out_path}")
 
 # =========================
-# Per-kernel FOM tables (saturation points)
+# Per-kernel FOM tables (saturation points, with units, NO Sat Smoothed B/W)
 # =========================
 
 def save_fom_tables(
@@ -510,8 +688,8 @@ def save_fom_tables(
             rows.append({
                 "Kernel": f"{kernel}-{vt}",
                 "Sat Problem Size": sat_size if sat_size is not None else "",
-                "Sat FLOP/s": sat_flops_raw if sat_flops_raw not in [None, ""] else "",
-                "Sat B/W": sat_bw if sat_bw not in [None, ""] else "",
+                "Sat FLOP/s (gigaFLOP per sec.)": sat_flops_raw if sat_flops_raw not in [None, ""] else "",
+                "Sat B/W (GiB per sec.)": sat_bw if sat_bw not in [None, ""] else "",
             })
         out_path = os.path.join(outdir, f"{sanitize_filename(kernel)}.csv")
         pd.DataFrame(rows).to_csv(out_path, index=False)
@@ -577,7 +755,7 @@ def run_pipeline(
 
 def main_cli():
     parser = argparse.ArgumentParser(
-        description="Combine benchmark CSVs, smooth FLOPs and generate plots/tables."
+        description="Combine benchmark CSVs, smooth FLOPs/Bandwidth and generate plots/tables."
     )
     parser.add_argument("--root-dir", default=".", help="Root directory to search for CSV files")
     parser.add_argument("--output-dir", default="./output", help="Directory to write outputs")
