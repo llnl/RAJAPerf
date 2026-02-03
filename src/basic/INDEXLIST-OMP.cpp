@@ -17,7 +17,7 @@ namespace rajaperf
 namespace basic
 {
 
-void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void INDEXLIST::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -40,7 +40,8 @@ void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Index_type count = 0;
 
@@ -134,7 +135,8 @@ void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 #endif
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Index_type count = 0;
 
@@ -202,6 +204,8 @@ void INDEXLIST::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(INDEXLIST, OpenMP, Base_OpenMP, Lambda_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

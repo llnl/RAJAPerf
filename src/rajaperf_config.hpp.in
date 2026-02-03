@@ -9,9 +9,10 @@
  */
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -159,6 +160,22 @@ inline void seq_for(camp::list<Ts...> const&, Func&& func)
   int seq_unused_array[] = {0, (func(Ts{}), 0)...};
   RAJAPERF_UNUSED_VAR(seq_unused_array);
 }
+
+// class to get information about member function pointers
+template < typename T >
+struct member_function_pointer_type_info;
+
+template < typename Ret, typename Class, typename... Args >
+struct member_function_pointer_type_info<Ret(Class::*)(Args...)>
+{
+  using class_type = Class;
+  using return_type = Ret;
+  using argument_types = camp::list<Args...>;
+};
+
+// alias for the class of the given member function pointer type
+template < typename T >
+using class_of_member_function_pointer_t = typename member_function_pointer_type_info<T>::class_type;
 
 } // closing brace for rajaperf namespace
 

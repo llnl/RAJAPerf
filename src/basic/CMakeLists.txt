@@ -1,7 +1,8 @@
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA Performance Suite project contributors.
-# See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
@@ -87,7 +88,6 @@ blt_add_library(
           MAT_MAT_SHARED-Hip.cpp
           MAT_MAT_SHARED-Cuda.cpp
           MAT_MAT_SHARED-OMP.cpp
-          MAT_MAT_SHARED-OMPTarget.cpp
           MAT_MAT_SHARED-Sycl.cpp
           MULADDSUB.cpp
           MULADDSUB-Seq.cpp

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,49 +25,42 @@ GEN_LIN_RECUR::GEN_LIN_RECUR(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(500);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
+
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
+
+  setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
+
+  setUsesFeature(Forall);
+
+  addVariantTunings();
+}
+
+void GEN_LIN_RECUR::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
   m_N = getActualProblemSize();
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * m_N +
-                      3*sizeof(Real_type ) * m_N );
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * m_N +
-                         2*sizeof(Real_type ) * m_N );
+
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_N ); // b5, stb5, sa, sb
+  setBytesReadPerRep( 2*sizeof(Real_type) * m_N + // sa, sb
+                      2*sizeof(Real_type) * m_N ); // sa, sb
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N + // b5
+                         1*sizeof(Real_type) * m_N ); // b5
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_N + // stb5
+                               1*sizeof(Real_type) * m_N ); // stb5
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep((3 +
                   3 ) * m_N);
-
-  checksum_scale_factor = 0.01 *
-              ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-                                           getActualProblemSize() );
-
-  setComplexity(Complexity::N);
-
-  setUsesFeature(Forall);
-
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
-
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
-
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
 }
 
 GEN_LIN_RECUR::~GEN_LIN_RECUR()
@@ -83,14 +77,13 @@ void GEN_LIN_RECUR::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitData(m_sb, m_N, vid);
 }
 
-void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t tune_idx)
+void GEN_LIN_RECUR::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_b5, getActualProblemSize(), checksum_scale_factor , vid);
+  addToChecksum(m_b5, getActualProblemSize(), vid);
 }
 
 void GEN_LIN_RECUR::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_b5, vid);
   deallocData(m_stb5, vid);
   deallocData(m_sa, vid);

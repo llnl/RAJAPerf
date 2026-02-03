@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -89,10 +90,14 @@
 #include "apps/ENERGY.hpp"
 #include "apps/FEMSWEEP.hpp"
 #include "apps/FIR.hpp"
+#include "apps/INTSC_HEXHEX.hpp"
+#include "apps/INTSC_HEXRECT.hpp"
 #include "apps/LTIMES.hpp"
 #include "apps/LTIMES_NOVIEW.hpp"
 #include "apps/MASS3DEA.hpp"
 #include "apps/MASS3DPA.hpp"
+#include "apps/MASS3DPA_ATOMIC.hpp"
+#include "apps/MASSVEC3DPA.hpp"
 #include "apps/MATVEC_3D_STENCIL.hpp"
 #include "apps/NODAL_ACCUMULATION_3D.hpp"
 #include "apps/PRESSURE.hpp"
@@ -131,16 +136,16 @@ namespace rajaperf
 /*!
  *******************************************************************************
  *
- * \brief Array of names for each GROUP in suite.
+ * \brief Array of names for each kernel GROUP in suite.
  *
- * IMPORTANT: This is only modified when a group is added or removed.
+ * IMPORTANT: This is only modified when a kernel group is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE GroupID enum IN HEADER FILE!!!
+ *            ITEMS IN THE KernelGroupID enum IN HEADER FILE!!!
  *
  *******************************************************************************
  */
-static const std::string GroupNames [] =
+static const std::string KernelGroupNames [] =
 {
   std::string("Basic"),
   std::string("Lcals"),
@@ -150,9 +155,9 @@ static const std::string GroupNames [] =
   std::string("Algorithm"),
   std::string("Comm"),
 
-  std::string("Unknown Group")  // Keep this at the end and DO NOT remove....
+  std::string("Unknown Kernel Group")  // Keep this at the end and DO NOT remove....
 
-}; // END GroupNames
+}; // END KernelGroupNames
 
 
 /*!
@@ -163,7 +168,7 @@ static const std::string GroupNames [] =
  * IMPORTANT: This is only modified when a kernel is added or removed.
  *
  *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
- *            ITEMS IN THE KernelID enum IN HEADER FILE!!! 
+ *            ITEMS IN THE KernelID enum IN HEADER FILE!!!
  *
  *******************************************************************************
  */
@@ -245,10 +250,14 @@ static const std::string KernelNames [] =
   std::string("Apps_ENERGY"),
   std::string("Apps_FEMSWEEP"),
   std::string("Apps_FIR"),
+  std::string("Apps_INTSC_HEXHEX"),
+  std::string("Apps_INTSC_HEXRECT"),
   std::string("Apps_LTIMES"),
   std::string("Apps_LTIMES_NOVIEW"),
   std::string("Apps_MASS3DEA"),
   std::string("Apps_MASS3DPA"),
+  std::string("Apps_MASS3DPA_ATOMIC"),
+  std::string("Apps_MASSVEC3DPA"),
   std::string("Apps_MATVEC_3D_STENCIL"),
   std::string("Apps_NODAL_ACCUMULATION_3D"),
   std::string("Apps_PRESSURE"),
@@ -281,6 +290,37 @@ static const std::string KernelNames [] =
   std::string("Unknown Kernel")  // Keep this at the end and DO NOT remove....
 
 }; // END KernelNames
+
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Array of names for each Variant GROUP in suite.
+ *
+ * IMPORTANT: This is only modified when a variant set is added or removed.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE VariantSetID enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string VariantSetNames [] =
+{
+  std::string("Base"),
+  std::string("Lambda"),
+  std::string("RAJA"),
+  std::string("Kokkos"),
+
+  std::string("Seq"),
+  std::string("OpenMP"),
+  std::string("OpenMPTarget"),
+  std::string("CUDA"),
+  std::string("HIP"),
+  std::string("SYCL"),
+
+  std::string("Unknown Variant Set")  // Keep this at the end and DO NOT remove....
+
+}; // END VariantSetNames
 
 
 /*!
@@ -367,6 +407,31 @@ static const std::string FeatureNames [] =
 /*!
  *******************************************************************************
  *
+ * \brief Array of names for each CHECKSUMCONSISTENCY class used in suite.
+ *
+ * IMPORTANT: This is only modified when a new checksum consistency class is used in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ChecksumConsistency enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string ChecksumConsistencyNames [] =
+{
+  std::string("Consistent"),
+
+  std::string("ConsistentPerVariantTuning"),
+
+  std::string("Inconsistent"),
+
+  std::string("Unknown ChecksumConsistency")  // Keep this at the end and DO NOT remove....
+
+}; // END ChecksumConsistencyNames
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Array of names for each COMPLEXITY used in suite.
  *
  * IMPORTANT: This is only modified when a new complexity is used in suite.
@@ -446,13 +511,13 @@ static const std::string DataSpaceNames [] =
 /*
  *******************************************************************************
  *
- * Return group name associated with GroupID enum value.
+ * Return group name associated with KernelGroupID enum value.
  *
  *******************************************************************************
  */
-const std::string& getGroupName(GroupID gid)
+const std::string& getKernelGroupName(KernelGroupID kgid)
 {
-  return GroupNames[gid];
+  return KernelGroupNames[static_cast<int>(kgid)];
 }
 
 
@@ -481,6 +546,19 @@ std::string getKernelName(KernelID kid)
 const std::string& getFullKernelName(KernelID kid)
 {
   return KernelNames[kid];
+}
+
+
+/*
+ *******************************************************************************
+ *
+ * Return set name associated with VariantSetID enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getVariantSetName(VariantSetID vgid)
+{
+  return VariantSetNames[static_cast<int>(vgid)];
 }
 
 
@@ -649,6 +727,19 @@ const std::string& getFeatureName(FeatureID fid)
 /*
  *******************************************************************************
  *
+ * Return checksum consistency name associated with ChecksumConsistency enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getChecksumConsistencyName(ChecksumConsistency cc)
+{
+  return ChecksumConsistencyNames[static_cast<int>(cc)];
+}
+
+
+/*
+ *******************************************************************************
+ *
  * Return complexity name associated with Complexity enum value.
  *
  *******************************************************************************
@@ -656,6 +747,62 @@ const std::string& getFeatureName(FeatureID fid)
 const std::string& getComplexityName(Complexity ac)
 {
   return ComplexityNames[static_cast<int>(ac)];
+}
+
+
+/*
+ *******************************************************************************
+ *
+ * Return tuning attribute name associated with TuningAttribute enum value.
+ *
+ * NOTE: TuningAttributes may be bitwise or'd together so constructing a
+ *       string for a
+ *
+ *******************************************************************************
+ */
+std::string getTuningAttributeName(TuningAttribute ta)
+{
+  std::string name;
+  if (ta == TuningAttribute::none) {
+    name = "none";
+  } else {
+    // add names of attributes and removing them from ta as they are found
+    for (TuningAttribute test : { // list all tuning attributes besides none
+              TuningAttribute::preferred_checksum
+            }) {
+      if (hasTuningAttribute(ta, test)) {
+        if (!name.empty()) {
+          name += '|';
+        }
+        switch(test) {
+          case TuningAttribute::none: // add to silence compiler warning
+            name += "none"; break; // should never be used
+          case TuningAttribute::preferred_checksum:
+            name += "preferred_checksum"; break;
+        }
+        ta = static_cast<TuningAttribute>(static_cast<size_t>(ta) ^ static_cast<size_t>(test));
+      }
+    }
+    if (ta != TuningAttribute::none) {
+      if (!name.empty()) {
+        name += '|';
+      }
+      name += "Unknown TuningAttribute";
+    }
+  }
+  return name;
+}
+
+/*!
+ *******************************************************************************
+ *
+ * Return whether tuning attribute ta has the attribute test set.
+ *
+ *******************************************************************************
+ */
+bool hasTuningAttribute(TuningAttribute ta, TuningAttribute test)
+{
+  return (static_cast<size_t>(ta) & static_cast<size_t>(test)) != static_cast<size_t>(0);
 }
 
 
@@ -733,7 +880,7 @@ bool isDataSpaceAvailable(DataSpace dataSpace)
     case DataSpace::HipDeviceFine: {
       ret_val = true;
       break;
-    } 
+    }
 #endif
 
 #if defined(RAJA_ENABLE_SYCL)
@@ -867,10 +1014,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new basic::REDUCE3_INT(run_params);
        break;
     }
-    case Basic_REDUCE_STRUCT : { 
+    case Basic_REDUCE_STRUCT : {
         kernel = new basic::REDUCE_STRUCT(run_params);
         break;
-    } 	
+    }
     case Basic_TRAP_INT : {
        kernel = new basic::TRAP_INT(run_params);
        break;
@@ -1040,6 +1187,14 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new apps::FIR(run_params);
        break;
     }
+    case Apps_INTSC_HEXHEX : {
+       kernel = new apps::INTSC_HEXHEX(run_params);
+       break;
+    }
+    case Apps_INTSC_HEXRECT : {
+       kernel = new apps::INTSC_HEXRECT(run_params);
+       break;
+    }
     case Apps_LTIMES : {
        kernel = new apps::LTIMES(run_params);
        break;
@@ -1051,9 +1206,17 @@ KernelBase* getKernelObject(KernelID kid,
     case Apps_MASS3DEA : {
        kernel = new apps::MASS3DEA(run_params);
        break;
-    }      
+    }
     case Apps_MASS3DPA : {
        kernel = new apps::MASS3DPA(run_params);
+       break;
+    }
+    case Apps_MASS3DPA_ATOMIC : {
+       kernel = new apps::MASS3DPA_ATOMIC(run_params);
+       break;
+    }    
+    case Apps_MASSVEC3DPA : {
+       kernel = new apps::MASSVEC3DPA(run_params);
        break;
     }
     case Apps_MATVEC_3D_STENCIL : {
@@ -1144,6 +1307,105 @@ KernelBase* getKernelObject(KernelID kid,
     }
 
   } // end switch on kernel id
+
+  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory) {
+
+    // find the first problem size that uses memory >= target_memory
+    // or if the kernel uses no memory use target_memory as the problem size
+
+    const Index_type target_memory = run_params.getMemory();
+    const Index_type target_reps = run_params.getReps(kernel->getDefaultReps());
+
+    Index_type (KernelBase::* getMemory)() const = nullptr;
+    switch (run_params.getMemoryMeaning()) {
+      case RunParams::MemoryMeaning::Moved:
+        getMemory = &KernelBase::getBytesMovedPerRep; break;
+      case RunParams::MemoryMeaning::Touched:
+        getMemory = &KernelBase::getBytesTouchedPerRep; break;
+      case RunParams::MemoryMeaning::Allocated:
+        getMemory = &KernelBase::getBytesAllocatedPerRep; break;
+      default:
+        getCout() << "Invalid value of memory meaning " << run_params.MemoryMeaningToStr(run_params.getMemoryMeaning()); break;
+    }
+
+
+    Index_type target_size = target_memory;
+
+    if ((kernel->*getMemory)() != 0) {
+
+      Index_type target_upper_bound = target_memory;
+      Index_type target_lower_bound = target_upper_bound;
+
+      // find initial bounds
+      // search down (assume memory usage is greater than problem size)
+      while ((kernel->*getMemory)() > target_memory &&
+             target_lower_bound > 1) {
+
+        target_upper_bound = target_lower_bound;
+        target_lower_bound /= 2;
+
+        kernel->setSize(target_lower_bound, target_reps);
+
+      }
+
+      // find the first problem size that uses memory >= target_memory
+      // bisect the upper and lower bounds
+      while (target_upper_bound != target_lower_bound) {
+
+        // note this will be target_lower_bound when (target_lower_bound == target_upper_bound-1)
+        const Index_type target_next_bound = (target_upper_bound + target_lower_bound) / 2;
+
+        kernel->setSize(target_next_bound, target_reps);
+
+        if ((kernel->*getMemory)() > target_memory) {
+
+          target_upper_bound = target_next_bound;
+
+        } else {
+
+          if (target_lower_bound != target_next_bound) {
+
+            target_lower_bound = target_next_bound;
+
+          } else {
+
+            // end of loop
+            // pick a final problem size that produces memory usage greater than
+            // or equal to target_memory
+            if ((kernel->*getMemory)() == target_memory) {
+
+              target_upper_bound = target_lower_bound;
+
+            } else {
+
+              target_lower_bound = target_upper_bound;
+
+            }
+
+          }
+
+        }
+
+      }
+
+      target_size = target_upper_bound;
+
+    }
+
+    if (target_size < run_params.getMinSize()) {
+
+      target_size = run_params.getMinSize();
+
+    }
+
+    kernel->setSize(target_size, target_reps);
+
+    // scaling the actual size tends to give smoother scaling
+    target_size = static_cast<Index_type>(kernel->getActualProblemSize()*run_params.getSizeFactor());
+
+    kernel->setSize(target_size, target_reps);
+
+  }
 
   return kernel;
 }

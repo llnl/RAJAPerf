@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -83,8 +84,27 @@ using Size_type = size_t;
 using Int_type = int;
 ///
 using Int_ptr = Int_type*;
+using Int_const_ptr = Int_type const*;
 ///
 using Int_ptr_ptr = Int_type**;
+
+using Char_type = char;
+///
+using Char_ptr = Char_type*;
+using Char_const_ptr = Char_type const*;
+
+using Uchar_type = unsigned char;
+///
+using Uchar_ptr = Uchar_type*;
+
+/*!
+ ******************************************************************************
+ *
+ * \brief Boolean types used in kernels.
+ *
+ ******************************************************************************
+ */
+using Bool_type = bool;
 
 
 /*!
@@ -124,8 +144,10 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
+using Real_const_ptr = Real_type const *;
 ///
 using Real_ptr_ptr = Real_type**;
+using Real_const_ptr_ptr = Real_type const **;
 
 #if defined(RP_USE_COMPLEX)
 ///
@@ -173,6 +195,13 @@ using Complex_ptr = Complex_type*;
 #define RAJAPERF_ATOMIC_MAX_HIP(lhs, rhs) \
       ::atomicMax(&(lhs), (rhs))
 
+#define RAJAPERF_ATOMIC_ADD_SYCL(lhs, rhs)      \
+      sycl::atomic_ref<std::remove_reference_t<decltype(lhs)>,           \
+      sycl::memory_order::relaxed,              \
+      sycl::memory_scope::device,               \
+      sycl::access::address_space::global_space \
+      > atomic_y(lhs);                          \
+      atomic_y.fetch_add(rhs);
 
 #define RAJAPERF_ATOMIC_ADD_RAJA_SEQ(lhs, rhs) \
       RAJA::atomicAdd<RAJA::seq_atomic>(&(lhs), (rhs))
@@ -193,6 +222,9 @@ using Complex_ptr = Complex_type*;
       RAJA::atomicMin<RAJA::hip_atomic>(&(lhs), (rhs))
 #define RAJAPERF_ATOMIC_MAX_RAJA_HIP(lhs, rhs) \
       RAJA::atomicMax<RAJA::hip_atomic>(&(lhs), (rhs))
+
+#define RAJAPERF_ATOMIC_ADD_RAJA_SYCL(lhs, rhs) \
+      RAJA::atomicAdd<RAJA::sycl_atomic>(&(lhs), (rhs))
 
 }  // closing brace for rajaperf namespace
 

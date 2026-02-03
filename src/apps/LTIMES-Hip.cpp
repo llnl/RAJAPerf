@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -73,9 +74,11 @@ __global__ void ltimes_lam(IM num_m, IG num_g, IZ num_z,
 }
 
 
-template < size_t block_size >
-void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
+template < size_t block_size, size_t tune_idx >
+void LTIMES::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -85,7 +88,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       LTIMES_THREADS_PER_BLOCK_HIP;
       LTIMES_NBLOCKS_HIP;
@@ -104,7 +108,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
   } else if ( vid == Lambda_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto ltimes_lambda = [=] __device__ (IZ z, IG g, IM m) {
        for (ID d(0); d < num_d; ++d ) {
@@ -128,8 +133,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
     stopTimer();
 
   } else if ( vid == RAJA_HIP ) {
+    if constexpr (tune_idx == 0) {
 
-    if (tune_idx == 0) {
       getCout() << "\n LTIMES : Using custom exec policy " << z_block_sz << " " << g_block_sz << " " << m_block_sz << " " << std::endl;
       using EXEC_POL =
         RAJA::KernelPolicy<
@@ -147,7 +152,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(IDRange(0, *num_d),
@@ -163,7 +169,7 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
       }
       stopTimer();
 
-    } else if (tune_idx == 1) {
+    } else if constexpr (tune_idx == 1) {
 
       constexpr bool async = true;
 
@@ -184,7 +190,8 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz);
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; irep = irep + 1) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
@@ -221,67 +228,32 @@ void LTIMES::runHipVariantImpl(VariantID vid, size_t tune_idx)
   }
 }
 
-void LTIMES::runHipVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      if (vid == RAJA_HIP) {
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 0);
-
-        }
-
-        t += 1;
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 1);
-
-        }
-
-        t += 1;
-
-      } else {
-
-        if (tune_idx == t) {
-          setBlockSize(block_size);
-          runHipVariantImpl<block_size>(vid, 0);
-
-        }
-
-        t += 1;
-      }
-
-    }
-
-  });
-}
-
-void LTIMES::setHipTuningDefinitions(VariantID vid)
+void LTIMES::defineHipVariantTunings()
 {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+  for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-      if (vid == RAJA_HIP) {
-        addVariantTuningName(vid, "kernel_"+std::to_string(block_size));
-        addVariantTuningName(vid, "launch_"+std::to_string(block_size));
-      } else {
-        addVariantTuningName(vid, "block_"+std::to_string(block_size));
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
+
+        if (vid == RAJA_HIP) {
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+              vid, "kernel_"+std::to_string(block_size));
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 1>>(
+              vid, "launch_"+std::to_string(block_size));
+        } else {
+          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+              vid, "block_"+std::to_string(block_size));
+        }
+
       }
 
-    }
+    });
 
-  });
+  }
 
 }
 

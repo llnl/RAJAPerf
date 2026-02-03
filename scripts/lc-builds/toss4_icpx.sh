@@ -1,27 +1,44 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
-if [[ $# -lt 1 ]]; then
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.25.2
+
+if [ "$1" == "" ]; then
   echo
   echo "You must pass a compiler version number to script. For example,"
-  echo "    toss4_icpx.sh 2022.1.0"
-  exit
+  echo "    toss4_icpx.sh 2022.1.0 [3.27.4]"
+  echo "An optional second argument can be given to set the CMake version to load."
+  echo "If no CMake version is provided, version ${DEFAULT_CMAKE_VER} will be used."
+  exit 1
 fi
 
 COMP_VER=$1
-shift 1
+
+# Detect optional second positional argument as a CMake version if it looks like N.M or N.M.P
+# Otherwise, treat it as a normal CMake argument.
+if [ -n "$2" ] && [[ "$2" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$2
+  shift 2
+else
+  CMAKE_VER=$DEFAULT_CMAKE_VER
+  shift 1
+fi
 
 BUILD_SUFFIX=lc_toss4-icpx-${COMP_VER}
 RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/icpx_X.cmake
 
 echo
 echo "Creating build directory build_${BUILD_SUFFIX} and generating configuration in it"
+echo "Using CMake version: ${CMAKE_VER}"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -29,14 +46,19 @@ echo
 rm -rf build_${BUILD_SUFFIX} 2>/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
-module load cmake/3.23.1
+module load cmake/${CMAKE_VER}
 
 ##
 # CMake option -DRAJA_ENABLE_FORCEINLINE_RECURSIVE=Off used to speed up compile
 # times at a potential cost of slower 'forall' execution.
 ##
 
-source /usr/tce/packages/intel/intel-${COMP_VER}/setvars.sh
+if [[ ${COMP_VER} == 2024.2.1 ]]
+then
+  source /collab/usr/global/tools/intel/toss_4_x86_64_ib/oneapi-2024.2.1/setvars.sh
+else
+  source /usr/tce/packages/intel/intel-${COMP_VER}/setvars.sh
+fi
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \

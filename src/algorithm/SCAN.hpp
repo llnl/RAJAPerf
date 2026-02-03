@@ -53,18 +53,19 @@ public:
 
   ~SCAN();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineOpenMPTargetVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
 
   void runCudaVariantLibrary(VariantID vid);
   void runHipVariantLibrary(VariantID vid);
@@ -73,6 +74,8 @@ public:
   void runCudaVariantCustom(VariantID vid);
   template < size_t block_size, size_t items_per_thread >
   void runHipVariantCustom(VariantID vid);
+
+  void runOpenMPTargetVariant(VariantID vid);
 
 private:
   static const size_t default_gpu_block_size = 256;

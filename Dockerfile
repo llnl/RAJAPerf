@@ -1,141 +1,104 @@
 ##############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
 ##
-## Note that we build with 'make -j 16' on GitHub Actions and
-## with 'make -j 6' on Azure. This is reflected in the 'make' commands below.
-## This seems to work best for throughput.
-##
-## Also, we only check builds for GPU configurations (CUDA, HIP, SYCL) since
-## we do not have clouds resources to run tests for those.
+## Note that we build with 'make -j 16' for newer targets and 'make -j 6' 
+## for older targets on GitHub Actions. This is reflected in the 'make' 
+## commands below. This seems to work best for throughput.
 ##
 
-FROM ghcr.io/llnl/radiuss:gcc-11-ubuntu-22.04 AS gcc11
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-gcc-12 AS gcc12
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On .. && \
-    make -j 6 &&\
-    ctest -T test --output-on-failure
-
-FROM ghcr.io/llnl/radiuss:gcc-12-ubuntu-22.04 AS gcc12
-ENV GTEST_COLOR=1
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On .. && \
+RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DBLT_CXX_STD=c++17 .. && \
     make -j 16 &&\
-    ctest -T test --output-on-failure
+    ctest -T test --output-on-failure && \
+    make clean
 
-FROM ghcr.io/llnl/radiuss:gcc-12-ubuntu-22.04 AS gcc12_debug
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-gcc-12 AS gcc12_debug
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Debug -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DPERFSUITE_RUN_SHORT_TEST=On .. && \
-    make -j 6 &&\
-    ctest -T test --output-on-failure
-
-FROM ghcr.io/llnl/radiuss:gcc-12-ubuntu-22.04 AS gcc12_desul
-ENV GTEST_COLOR=1
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DRAJA_ENABLE_DESUL_ATOMICS=On .. && \
-    make -j 6 &&\
-    ctest -T test --output-on-failure
-
-FROM ghcr.io/llnl/radiuss:gcc-13-ubuntu-22.04 AS gcc13
-ENV GTEST_COLOR=1
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On .. && \
+RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Debug -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DPERFSUITE_RUN_SHORT_TEST=On -DBLT_CXX_STD=c++17 .. && \
     make -j 16 &&\
-    ctest -T test --output-on-failure
+    ctest -T test --output-on-failure && \
+    make clean
 
-FROM ghcr.io/llnl/radiuss:clang-13-ubuntu-22.04 AS clang13
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-gcc-13 AS gcc13
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On .. && \
+RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DBLT_CXX_STD=c++17 .. && \
     make -j 16 &&\
-    ctest -T test --output-on-failure
+    ctest -T test --output-on-failure && \
+    make clean
 
-FROM ghcr.io/llnl/radiuss:clang-14-ubuntu-22.04 AS clang14_debug
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-gcc-13 AS gcc13_desul
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug  -DENABLE_OPENMP=On -DPERFSUITE_RUN_SHORT_TEST=On .. && \
-    make -j 6 &&\
-    ctest -T test --output-on-failure
-
-FROM ghcr.io/llnl/radiuss:clang-15-ubuntu-22.04 AS clang15
-ENV GTEST_COLOR=1
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On .. && \
+RUN cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release -DRAJA_ENABLE_WARNINGS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=On -DENABLE_OPENMP=On -DRAJA_ENABLE_DESUL_ATOMICS=On -DBLT_CXX_STD=c++17 .. && \
     make -j 16 &&\
-    ctest -T test --output-on-failure
+    ctest -T test --output-on-failure && \
+    make clean
 
-FROM ghcr.io/llnl/radiuss:clang-15-ubuntu-22.04 AS clang15_desul
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-clang-14 AS clang14_debug
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On -DRAJA_ENABLE_DESUL_ATOMICS=On .. && \
-    make -j 6 &&\
-    ctest -T test --output-on-failure
+RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug  -DENABLE_OPENMP=On -DPERFSUITE_RUN_SHORT_TEST=On -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    ctest -T test --output-on-failure && \
+    make clean
 
-## TODO: Checksum errors with intel compiler appear to be due to optimization
-##       level. On LC, cutting back to -O1 seems to fix the issues
-##       Check compile, but don't run tests
-FROM ghcr.io/llnl/radiuss:ubuntu-20.04-intel-2024.0 AS intel2024
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-clang-14 AS clang14_desul
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 > /dev/null && \
-    cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On .. && \
-    make -j 16"
-##  make -j 16 &&\
-##  ctest -T test --output-on-failure"
+RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On -DRAJA_ENABLE_DESUL_ATOMICS=On -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    ctest -T test --output-on-failure && \
+    make clean
 
-## TODO: Checksum errors with intel compiler appear to be due to optimization
-##       level. On LC, cutting back to -O1 seems to fix the issues
-##       Check compile, but don't run tests
-FROM ghcr.io/llnl/radiuss:ubuntu-20.04-intel-2024.0 AS intel2024_debug
+## Don't run tests due to failure in RAJA launch tests with new reducer interface.
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-intel-2024.2 AS intel2024_2
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 > /dev/null && \
-    cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_BUILD_TYPE=Debug -DENABLE_OPENMP=On .. && \
-    make -j 16"
-##  make -j 16 &&\
-##  ctest -T test --output-on-failure"
+RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 && export PATH=/opt/intel/oneapi/compiler/2024.2/bin/:\$PATH && cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=On -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    make clean"
 
-##
-## Need to find a viable cuda image to test...
-##
+## Don't run tests due to failure in RAJA launch tests with new reducer interface.
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-intel-2024.2 AS intel2024_2_debug
+ENV GTEST_COLOR=1
+COPY . /home/raja/workspace
+WORKDIR /home/raja/workspace/build
+RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 && export PATH=/opt/intel/oneapi/compiler/2024.2/bin/:\$PATH && cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_BUILD_TYPE=Debug -DENABLE_OPENMP=On -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    make clean"
 
-FROM ghcr.io/llnl/radiuss:hip-6.0.2-ubuntu-20.04 AS rocm6
+## Don't run tests due to failure in RAJA launch tests with new reducer interface.
+FROM ghcr.io/llnl/radiuss:ubuntu-24.04-intel-2024.2 AS intel2024_2_sycl
+ENV GTEST_COLOR=1
+COPY . /home/raja/workspace
+WORKDIR /home/raja/workspace/build
+RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 && export PATH=/opt/intel/oneapi/compiler/2024.2/bin/:\$PATH && export LD_LIBRARY_PATH=/opt/intel/oneapi/2024.2/lib:\$LD_LIBRARY_PATH && cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_CXX_FLAGS=\"-fsycl -fsycl-unnamed-lambda\" -DCMAKE_BUILD_TYPE=RELEASE -DENABLE_OPENMP=Off -DRAJA_ENABLE_SYCL=On -DRAJA_ENABLE_DESUL_ATOMICS=On -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    make clean"
+
+FROM ghcr.io/llnl/radiuss:hip-6.4.3-ubuntu-24.04 AS rocm6_4_3_desul
 ENV GTEST_COLOR=1
 ENV HCC_AMDGPU_TARGET=gfx900
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=/opt/rocm-6.0.2/bin/amdclang++ -DROCM_PATH=/opt/rocm-6.0.2 -DCMAKE_BUILD_TYPE=Release -DENABLE_HIP=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=Off .. && \
-    make -j 16
-
-FROM ghcr.io/llnl/radiuss:hip-6.0.2-ubuntu-20.04 AS rocm6_desul
-ENV GTEST_COLOR=1
-ENV HCC_AMDGPU_TARGET=gfx900
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=/opt/rocm-6.0.2/bin/amdclang++ -DROCM_PATH=/opt/rocm-6.0.2 -DCMAKE_BUILD_TYPE=Release -DENABLE_HIP=On -DRAJA_ENABLE_DESUL_ATOMICS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=Off .. && \
-    make -j 16
-
-FROM ghcr.io/llnl/radiuss:intel-2024.0-ubuntu-20.04 AS intel2024_sycl
-ENV GTEST_COLOR=1
-COPY . /home/raja/workspace
-WORKDIR /home/raja/workspace/build
-RUN /bin/bash -c "source /opt/intel/oneapi/setvars.sh 2>&1 > /dev/null && \
-    cmake -DCMAKE_CXX_COMPILER=dpcpp -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENMP=Off -DRAJA_ENABLE_SYCL=On -DBLT_CXX_STD=c++17 -DRAJA_ENABLE_DESUL_ATOMICS=On .. && \
-    make -j 16"
+RUN cmake -DCMAKE_CXX_COMPILER=/opt/rocm-6.4.3/bin/amdclang++ -DROCM_PATH=/opt/rocm-6.4.3 -DCMAKE_BUILD_TYPE=Release -DENABLE_HIP=On -DRAJA_ENABLE_DESUL_ATOMICS=On -DRAJA_ENABLE_WARNINGS_AS_ERRORS=Off -DBLT_CXX_STD=c++17 .. && \
+    make -j 16 &&\
+    make clean
