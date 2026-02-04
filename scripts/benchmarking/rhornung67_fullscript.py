@@ -272,6 +272,8 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
     Saturation is defined as the first run of length >= w where y_smooth
     stays within (1 - eps) of the maximum value.
     """
+
+    print("Entering find_saturation_point...")
     if not y_smooth:
         return None
 
@@ -280,6 +282,9 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
     n = len(y_smooth)
     run_length = 0
     run_start_idx = None
+
+    if n < w:
+        return None
 
     for i in range(n):
         if y_smooth[i] >= threshold:
@@ -291,6 +296,34 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
         else:
             run_length = 0
             run_start_idx = None
+
+# =========================
+# At this point, no saturation point found with the approach above,
+# try to find a "smooth and flat" sequence of values close to last
+# smoothed y value
+# =========================
+
+    n = len(y_smooth)
+    y_end = y_smooth[n - 1]
+    run_length = 0
+    run_start_idx = None
+   
+    for i in range(n):
+        print(i)
+        print( abs( (y_smooth[i] - y_end) / y_end ) )
+        if abs( (y_smooth[i] - y_end) / y_end ) <= eps:
+            if run_length == 0:
+                run_start_idx = i
+            run_length += 1
+            print(run_length)
+            if run_length >= w:
+                print(run_length) 
+                print(x[run_start_idx]) 
+                return x[run_start_idx]
+        else:
+            run_length = 0
+            run_start_idx = None
+
     return None
 
 # =========================
@@ -394,6 +427,27 @@ def plot_kernel(
                 else:
                     run_length = 0
                     run_start_idx = None
+
+            # If we get here, we have not found a saturation point
+            # Try to find a run of points close to the last y_smooth entry
+
+            if sat_idx is None:
+                n = len(y_smooth)
+                y_end = y_smooth[n - 1]
+                run_length = 0
+                run_start_idx = None
+
+                for i in range(n):
+                    if abs( (y_smooth[i] - y_end) / y_end ) <= eps:
+                        if run_length == 0:
+                            run_start_idx = i
+                        run_length += 1
+                        if run_length >= w:
+                            sat_idx = run_start_idx
+                            break
+                    else:
+                        run_length = 0
+                        run_start_idx = None
 
             if sat_idx is not None:
                 sat_size = x[sat_idx]
@@ -701,6 +755,27 @@ def save_fom_tables(
                     else:
                         run_length = 0
                         run_start_idx = None
+
+                # If we get here, we have not found a saturation point
+                # Try to find a run of points close to the last y_smooth entry
+
+                if sat_idx is None:
+                    n = len(y_smooth)
+                    y_end = y_smooth[n - 1]
+                    run_length = 0
+                    run_start_idx = None
+
+                    for i in range(n):
+                        if abs( (y_smooth[i] - y_end) / y_end ) <= 0.1:
+                            if run_length == 0:
+                                run_start_idx = i
+                            run_length += 1
+                            if run_length >= w:
+                                sat_idx = run_start_idx
+                                break
+                        else:
+                            run_length = 0
+                            run_start_idx = None
 
                 if sat_idx is not None:
                     sat_size = x[sat_idx]
