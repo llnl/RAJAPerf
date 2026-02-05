@@ -250,7 +250,7 @@ def build_combined_table(
     return combined_df
 
 # =========================
-# Smoothing utilities
+# Smoothing and saturation point utilities
 # =========================
 
 def moving_median_smooth(y, k: int = 5):
@@ -268,23 +268,32 @@ def moving_median_smooth(y, k: int = 5):
 
 def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
     """
-    Returns the x value of the first saturation point, or None if none is found.
-    Saturation is defined as the first run of length >= w where y_smooth
-    stays within (1 - eps) of the maximum value.
+    Returns the index of the x value at the first saturation point,
+    or None if none is found. 
+    First, the method sets y_max = max(y_smooth) and then tries to
+    find the first run of y_smooth values of length >= w where
+    y_smooth >= (1 - eps) * y_max. If such a run is found, the 
+    function returns the index of the first y_smooth value in the run.
+    Second, if the first attempt does not find such a run, it defines
+    y_end = y_smooth[n - 1], where n is the length of y_smooth. Then,
+    it searches for the first run of y_smooth values of length >= w
+    where abs( (y_smooth[i] - y_end) / y_end ) <= eps. If such a run is
+    found, the function returns the index of the first y_smooth value
+    in the run.
     """
 
-    print("Entering find_saturation_point...")
-    if not y_smooth:
+    if len(x) < w or len(y_smooth) < w:
         return None
 
+    n = len(y_smooth)
+
+# =========================
+# First attempt to find index of saturation point
+# =========================
     y_max = max(y_smooth)
     threshold = (1.0 - eps) * y_max
-    n = len(y_smooth)
     run_length = 0
     run_start_idx = None
-
-    if n < w:
-        return None
 
     for i in range(n):
         if y_smooth[i] >= threshold:
@@ -292,34 +301,27 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
                 run_start_idx = i
             run_length += 1
             if run_length >= w:
-                return x[run_start_idx]
+                return run_start_idx
         else:
             run_length = 0
             run_start_idx = None
 
 # =========================
-# At this point, no saturation point found with the approach above,
-# try to find a "smooth and flat" sequence of values close to last
-# smoothed y value
+# Second attempt to find index of saturation point
 # =========================
 
-    n = len(y_smooth)
     y_end = y_smooth[n - 1]
+    threshold = eps
     run_length = 0
     run_start_idx = None
    
     for i in range(n):
-        print(i)
-        print( abs( (y_smooth[i] - y_end) / y_end ) )
-        if abs( (y_smooth[i] - y_end) / y_end ) <= eps:
+        if abs( (y_smooth[i] - y_end) / y_end ) <= threshold:
             if run_length == 0:
                 run_start_idx = i
             run_length += 1
-            print(run_length)
             if run_length >= w:
-                print(run_length) 
-                print(x[run_start_idx]) 
-                return x[run_start_idx]
+                return run_start_idx
         else:
             run_length = 0
             run_start_idx = None
@@ -408,74 +410,29 @@ def plot_kernel(
         sat_flops_raw = ""
         sat_bw = ""
 
-        # === MODIFIED/ADDED FOR SATURATION REPORTING ===
-        if len(x) > 0 and len(y_smooth) > 0:
-            sat_idx = None
-            y_max = max(y_smooth)
-            threshold = (1.0 - eps) * y_max
-            run_length = 0
-            run_start_idx = None
+        sat_idx = find_saturation_point(x, y_smooth, eps, w)
 
-            for i in range(len(y_smooth)):
-                if y_smooth[i] >= threshold:
-                    if run_length == 0:
-                        run_start_idx = i
-                    run_length += 1
-                    if run_length >= w:
-                        sat_idx = run_start_idx
-                        break
-                else:
-                    run_length = 0
-                    run_start_idx = None
+        if sat_idx is not None:
+            sat_size = x[sat_idx]
+            mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
+            raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
+            if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
+                sat_flops_raw = raw_at_sat.iloc[0]
 
-            # If we get here, we have not found a saturation point
-            # Try to find a run of points close to the last y_smooth entry
-
-            if sat_idx is None:
-                n = len(y_smooth)
-                y_end = y_smooth[n - 1]
-                run_length = 0
-                run_start_idx = None
-
-                for i in range(n):
-                    if abs( (y_smooth[i] - y_end) / y_end ) <= eps:
-                        if run_length == 0:
-                            run_start_idx = i
-                        run_length += 1
-                        if run_length >= w:
-                            sat_idx = run_start_idx
-                            break
-                    else:
-                        run_length = 0
-                        run_start_idx = None
-
-            if sat_idx is not None:
-                sat_size = x[sat_idx]
-                mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
-                raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
-                if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
-                    sat_flops_raw = raw_at_sat.iloc[0]
-
-                if BANDWIDTH_COL in subdf.columns:
-                    bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
-                    bw_non_nan = bw_at_sat.dropna()
-                    if not bw_non_nan.empty:
-                        sat_bw = bw_non_nan.iloc[0]
-                    else:
-                        sat_bw = ""
+            if BANDWIDTH_COL in subdf.columns:
+                bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
+                bw_non_nan = bw_at_sat.dropna()
+                if not bw_non_nan.empty:
+                    sat_bw = bw_non_nan.iloc[0]
                 else:
                     sat_bw = ""
             else:
-                print(
-                    "[INFO] No saturation point found for kernel '{}' "
-                    "variant '{}' (eps={}, w={})".format(kernel, variant, eps, w)
-                )
+                sat_bw = ""
         else:
             print(
-                "[INFO] Not enough data to compute saturation for "
-                "kernel '{}' variant '{}'".format(kernel, variant)
+                "[INFO] No saturation point found for kernel '{}' "
+                "variant '{}' (eps={}, w={})".format(kernel, variant, eps, w)
             )
-        # === END MODIFIED ===
 
         fom_rows.append({
             "Kernel": f"{kernel}-{variant}",
@@ -735,78 +692,35 @@ def save_fom_tables(
             sat_size = None
             sat_flops_raw = ""
             sat_bw = ""
-            # === MODIFIED/ADDED FOR SATURATION REPORTING ===
-            if len(x) > 0 and len(y_smooth) > 0:
-                sat_idx = None
-                y_max = max(y_smooth)
-                threshold = (1.0 - 0.1) * y_max
-                w = 3
-                run_length = 0
-                run_start_idx = None
 
-                for i in range(len(y_smooth)):
-                    if y_smooth[i] >= threshold:
-                        if run_length == 0:
-                            run_start_idx = i
-                        run_length += 1
-                        if run_length >= w:
-                            sat_idx = run_start_idx
-                            break
+            eps = 0.1
+            w = 3
+            sat_idx = find_saturation_point(x, y_smooth, eps, w)
+
+            if sat_idx is not None:
+                sat_size = x[sat_idx]
+                mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
+                raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
+                if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
+                    sat_flops_raw = raw_at_sat.iloc[0]
+                if BANDWIDTH_COL in subdf.columns:
+                    bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
+                    bw_non_nan = bw_at_sat.dropna()
+                    if not bw_non_nan.empty:
+                        sat_bw = bw_non_nan.iloc[0]
                     else:
-                        run_length = 0
-                        run_start_idx = None
-
-                # If we get here, we have not found a saturation point
-                # Try to find a run of points close to the last y_smooth entry
-
-                if sat_idx is None:
-                    n = len(y_smooth)
-                    y_end = y_smooth[n - 1]
-                    run_length = 0
-                    run_start_idx = None
-
-                    for i in range(n):
-                        if abs( (y_smooth[i] - y_end) / y_end ) <= 0.1:
-                            if run_length == 0:
-                                run_start_idx = i
-                            run_length += 1
-                            if run_length >= w:
-                                sat_idx = run_start_idx
-                                break
-                        else:
-                            run_length = 0
-                            run_start_idx = None
-
-                if sat_idx is not None:
-                    sat_size = x[sat_idx]
-                    mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
-                    raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
-                    if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
-                        sat_flops_raw = raw_at_sat.iloc[0]
-                    if BANDWIDTH_COL in subdf.columns:
-                        bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
-                        bw_non_nan = bw_at_sat.dropna()
-                        if not bw_non_nan.empty:
-                            sat_bw = bw_non_nan.iloc[0]
-                        else:
-                            sat_bw = ""
-                    else:
-                        print(
-                            "[WARN] Bandwidth column missing for kernel '{}' variant '{}' "
-                            "while computing saturation".format(kernel, vt)
-                        )
                         sat_bw = ""
                 else:
                     print(
-                        "[INFO] No saturation point found for kernel '{}' variant '{}' "
-                        "when building FOM table".format(kernel, vt)
+                        "[WARN] Bandwidth column missing for kernel '{}' variant '{}' "
+                        "while computing saturation".format(kernel, vt)
                     )
+                    sat_bw = ""
             else:
                 print(
-                    "[INFO] Not enough data to compute saturation for "
-                    "kernel '{}' variant '{}' when building FOM table".format(kernel, vt)
+                    "[INFO] No saturation point found for kernel '{}' variant '{}' "
+                    "when building FOM table".format(kernel, vt)
                 )
-            # === END MODIFIED ===
 
             def na_if_empty(value):
                 return value if value not in [None, ""] else "N/A"
