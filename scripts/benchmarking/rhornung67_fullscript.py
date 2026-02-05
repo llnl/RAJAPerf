@@ -450,6 +450,9 @@ def plot_kernel(
     plt.figure(figsize=(18, 7))
     colors = plt.cm.tab10.colors
 
+    ymin = 1e99
+    ymax = -1e99
+
     for idx, variant in enumerate(variants):
         subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
         subdf = subdf.sort_values(PROBLEM_SIZE_COL)
@@ -459,6 +462,20 @@ def plot_kernel(
 
         if len(x) == 0:
             continue
+
+        y_min = min(y)
+        if (y_min < ymin):
+            ymin = y_min
+        y_smooth_min = min(y_smooth)
+        if (y_smooth_min < ymin):
+            ymin = y_smooth_min
+
+        y_max = max(y)
+        if (y_max > ymax):
+            ymax = y_max
+        y_smooth_max = max(y_smooth)
+        if (y_smooth_max > ymax):
+            ymax = y_smooth_max
 
         plt.plot(
             x, y, "-",
@@ -494,12 +511,18 @@ def plot_kernel(
                 markersize=30
             )
 
+    if ymin > 0:
+        ymin = 0
+    yrange = ymax-ymin
+    yoverhang = yrange*0.1
+
     plt.title("Kernel: {}".format(kernel), fontsize=22)
     plt.xlabel("Problem size (bytes)", fontsize=18)
     plt.ylabel("Mean flops (GFLOP per sec.)", fontsize=18)
     plt.grid(True, which="both", linestyle="--", linewidth=1)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
+    plt.ylim((ymin-yoverhang, ymax+yoverhang))
     plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=16, frameon=False)
     plt.tight_layout(rect=[0, 0, 0.75, 1])
 
@@ -534,6 +557,9 @@ def plot_kernel_bandwidth(
     plt.figure(figsize=(18, 7))
     colors = plt.cm.tab10.colors
 
+    ymin = 1e99
+    ymax = -1e99
+
     for idx, variant in enumerate(variants):
         subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
         subdf = subdf.sort_values(PROBLEM_SIZE_COL)
@@ -543,6 +569,20 @@ def plot_kernel_bandwidth(
 
         if len(x) == 0:
             continue
+
+        y_bw_min = min(y_bw)
+        if (y_bw_min < ymin):
+            ymin = y_bw_min
+        y_bw_smooth_min = min(y_bw_smooth)
+        if (y_bw_smooth_min < ymin):
+            ymin = y_bw_smooth_min
+
+        y_bw_max = max(y_bw)
+        if (y_bw_max > ymax):
+            ymax = y_bw_max
+        y_bw_smooth_max = max(y_bw_smooth)
+        if (y_bw_smooth_max > ymax):
+            ymax = y_bw_smooth_max
 
         plt.plot(
             x, y_bw, "-",
@@ -578,12 +618,18 @@ def plot_kernel_bandwidth(
                 markersize=30
             )
 
+    if ymin > 0:
+        ymin = 0
+    yrange = ymax-ymin
+    yoverhang = yrange*0.1
+
     plt.title(f"Kernel: {kernel} - Bandwidth", fontsize=22)
     plt.xlabel("Problem size", fontsize=18)
     plt.ylabel("Bandwidth (GiB per sec.)", fontsize=18)
     plt.grid(True, which="both", linestyle="--", linewidth=1)
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
+    plt.ylim((ymin-yoverhang, ymax+yoverhang))
     plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=16, frameon=False)
     plt.tight_layout(rect=[0, 0, 0.75, 1])
 
