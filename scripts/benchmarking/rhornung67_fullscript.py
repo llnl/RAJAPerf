@@ -370,7 +370,7 @@ def plot_kernel(
             markersize=8,
             color=colors[idx % len(colors)],
             markerfacecolor=colors[idx % len(colors)],
-            markeredgewidth=0,
+            markeredgewidth=0
         )
 
         plt.plot(
@@ -378,6 +378,8 @@ def plot_kernel(
             label="{} (smoothed)".format(variant),
             linewidth=3,
             color=colors[idx % len(colors)],
+            marker="+",
+            markersize=10
         )
 
     plt.title("Kernel: {}".format(kernel), fontsize=22)
@@ -505,6 +507,8 @@ def plot_kernel_bandwidth(
             label=f"{variant} (smoothed B/W)",
             linewidth=3,
             color=color,
+            marker="+",
+            markersize=10
         )
 
     plt.title(f"Kernel: {kernel} - Bandwidth", fontsize=22)
