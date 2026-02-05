@@ -479,7 +479,7 @@ def plot_kernel(
 
         plt.plot(
             x, y, "-",
-            label="{} (raw)".format(variant),
+            label="{} (raw flops)".format(variant),
             markersize=8,
             color=colors[idx % len(colors)],
             marker="o",
@@ -489,7 +489,7 @@ def plot_kernel(
 
         plt.plot(
             x, y_smooth, "--",
-            label="{} (smoothed)".format(variant),
+            label="{} (smoothed flops)".format(variant),
             linewidth=3,
             color=colors[idx % len(colors)],
             marker="+",
