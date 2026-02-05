@@ -71,7 +71,7 @@ include:
     file: 'id_tokens.yml'
 
   # Base pipeline templates and utilities
-  - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/base-pipeline@v2025.12.0
+  - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/base-pipeline@woptim/machine-status-override
     inputs:
       github_project_name: $GITHUB_PROJECT_NAME
       github_project_org: $GITHUB_PROJECT_ORG
@@ -119,6 +119,8 @@ generate-job-lists:
 # DANE
 dane-up-check:
   extends: [.dane, .machine-check]
+  variables:
+    ASSOCIATED_CHILD_PIPELINE: "dane-build-and-test"
 
 dane-build-and-test:
   extends: [.dane, .build-and-test]
@@ -139,6 +141,8 @@ dane-build-and-test:
 # MATRIX
 matrix-up-check:
   extends: [.matrix, .machine-check]
+  variables:
+    ASSOCIATED_CHILD_PIPELINE: "matrix-build-and-test"
 
 matrix-build-and-test:
   extends: [.matrix, .build-and-test]
@@ -159,6 +163,8 @@ matrix-build-and-test:
 # CORONA
 corona-up-check:
   extends: [.corona, .machine-check]
+  variables:
+    ASSOCIATED_CHILD_PIPELINE: "corona-build-and-test"
 
 corona-build-and-test:
   extends: [.corona, .build-and-test]
@@ -179,6 +185,8 @@ corona-build-and-test:
 # TIOGA
 tioga-up-check:
   extends: [.tioga, .machine-check]
+  variables:
+    ASSOCIATED_CHILD_PIPELINE: "tioga-build-and-test"
 
 tioga-build-and-test:
   extends: [.tioga, .build-and-test]
@@ -199,6 +207,8 @@ tioga-build-and-test:
 # TUOLUMNE
 tuolumne-up-check:
   extends: [.tuolumne, .machine-check]
+  variables:
+    ASSOCIATED_CHILD_PIPELINE: "tuolumne-build-and-test"
 
 tuolumne-build-and-test:
   extends: [.tuolumne, .build-and-test]
