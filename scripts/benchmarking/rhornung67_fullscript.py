@@ -499,12 +499,12 @@ def plot_kernel(
         if SAT_IDX_COL in subdf.columns:
             sat_idx = subdf[SAT_IDX_COL].astype(int).values[0]
 
-            sat_x = [x[sat_idx]]
-            sat_y = [y[sat_idx]]
+            sat_x = x[sat_idx]
+            sat_y = y[sat_idx]
 
             plt.plot(
-                sat_x, sat_y, "-",
-                label="{} saturation ({})".format(variant, y[sat_idx]),
+                [sat_x], [sat_y], "-",
+                label="{} saturation ({}, {})".format(variant, sat_x, sat_y),
                 linewidth=0,
                 color=colors[idx % len(colors)],
                 marker="*",
@@ -606,12 +606,12 @@ def plot_kernel_bandwidth(
         if SAT_IDX_COL in subdf.columns:
             sat_idx = subdf[SAT_IDX_COL].astype(int).values[0]
 
-            sat_x = [x[sat_idx]]
-            sat_y = [y_bw[sat_idx]]
+            sat_x = x[sat_idx]
+            sat_y = y_bw[sat_idx]
 
             plt.plot(
-                sat_x, sat_y, "-",
-                label="{} saturation ({})".format(variant, y_bw[sat_idx]),
+                [sat_x], [sat_y], "-",
+                label="{} saturation ({}, {})".format(variant, sat_x, sat_y),
                 linewidth=0,
                 color=colors[idx % len(colors)],
                 marker="*",
