@@ -796,7 +796,9 @@ def save_saturation_curve_data(
 
 def save_fom_tables(
     df: pd.DataFrame,
-    outdir: str = "FOM",
+    eps: float = 0.1,
+    w: int = 3,
+    outdir: str = "FOM"
 ) -> None:
     ensure_dir(outdir)
     kernels = df[KERNEL_COL].unique()
@@ -813,8 +815,6 @@ def save_fom_tables(
             sat_flops_raw = ""
             sat_bw = ""
 
-            eps = 0.1
-            w = 3
             sat_idx = find_saturation_point(x, y_smooth, eps, w)
 
             if sat_idx is not None:
@@ -905,7 +905,7 @@ def run_pipeline(
     saturation_dir = os.path.join(output_dir, "saturation-curve-data")
     save_saturation_curve_data(df_smoothed, outdir=saturation_dir)
     fom_dir = os.path.join(output_dir, "FOM")
-    save_fom_tables(df_smoothed, outdir=fom_dir)
+    save_fom_tables(df_smoothed, saturation_eps, saturation_w, outdir=fom_dir)
 
     return df_smoothed
 
