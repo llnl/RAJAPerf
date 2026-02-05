@@ -391,7 +391,7 @@ def plot_kernel(
 
     if save_dir is not None:
         ensure_dir(save_dir)
-        fname = os.path.join(save_dir, "{}.png".format(sanitize_filename(kernel)))
+        fname = os.path.join(save_dir, "{}_flops.png".format(sanitize_filename(kernel)))
         plt.savefig(fname, dpi=200)
         print("Saved plot to {}".format(fname))
     if IN_NOTEBOOK:
@@ -577,7 +577,7 @@ def save_kernel_tables(
             values=RAW_FLOPS_COL,
         )
         raw_table = raw_table.sort_index()
-        raw_csv_path = os.path.join(outdir, "{}_raw.csv".format(sanitize_filename(kernel)))
+        raw_csv_path = os.path.join(outdir, "{}_flops_raw.csv".format(sanitize_filename(kernel)))
         raw_table.to_csv(raw_csv_path)
         smooth_table = df_kernel.pivot_table(
             index=PROBLEM_SIZE_COL,
@@ -585,7 +585,7 @@ def save_kernel_tables(
             values=SMOOTH_FLOPS_COL,
         )
         smooth_table = smooth_table.sort_index()
-        smooth_csv_path = os.path.join(outdir, "{}_smoothed.csv".format(sanitize_filename(kernel)))
+        smooth_csv_path = os.path.join(outdir, "{}_flops_smoothed.csv".format(sanitize_filename(kernel)))
         smooth_table.to_csv(smooth_csv_path)
 
         if BANDWIDTH_COL in df_kernel.columns and SMOOTH_BW_COL in df_kernel.columns:
