@@ -29,6 +29,7 @@ VARIANT_TUNING_COL = "Variant_Tuning"
 KERNEL_COL = "Kernel"
 BANDWIDTH_COL = "Bandwidth (GiB per sec.)"
 SMOOTH_BW_COL = "Smoothed Bandwidth (GiB per sec.)"
+SAT_IDX_COL = "Saturation Index"
 
 # =========================
 # General utilities
@@ -329,6 +330,106 @@ def find_saturation_point(x, y_smooth, eps: float = 0.1, w: int = 3):
     return None
 
 # =========================
+# Find the saturation point for single kernel
+# =========================
+
+def find_saturation_kernel(
+    df: pd.DataFrame,
+    kernel: str,
+    k: int = 5,
+    eps: float = 0.1,
+    w: int = 3,
+    save_dir: Optional[str] = None,
+):
+    variants = df[VARIANT_TUNING_COL].unique()
+
+    # generate smoothed data
+    if SMOOTH_FLOPS_COL not in df.columns:
+        df[SMOOTH_FLOPS_COL] = np.nan
+
+    if SMOOTH_BW_COL not in df.columns:
+        df[SMOOTH_BW_COL] = np.nan
+
+    for idx, variant in enumerate(variants):
+        subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
+        subdf = subdf.sort_values(PROBLEM_SIZE_COL)
+        x = subdf[PROBLEM_SIZE_COL].astype(float).values
+
+        if len(x) == 0:
+            continue
+
+        if RAW_FLOPS_COL in subdf.columns:
+            y = subdf[RAW_FLOPS_COL].astype(float).values
+
+            y_smooth = moving_median_smooth(list(y), k=k)
+
+            for xi, yi in zip(x, y_smooth):
+                mask = (
+                    (df[VARIANT_TUNING_COL] == variant)
+                    & (df[PROBLEM_SIZE_COL] == xi)
+                )
+                df.loc[mask, SMOOTH_FLOPS_COL] = yi
+
+        if BANDWIDTH_COL in subdf.columns:
+            y_bw = subdf[BANDWIDTH_COL].astype(float).values
+
+            y_bw_smooth = moving_median_smooth(list(y_bw), k=k)
+
+            for xi, yi in zip(x, y_bw_smooth):
+                mask = (
+                    (df[VARIANT_TUNING_COL] == variant)
+                    & (df[PROBLEM_SIZE_COL] == xi)
+                )
+                df.loc[mask, SMOOTH_BW_COL] = yi
+
+    # FOM-style output as DataFrame
+    fom_rows = []
+    for variant in variants:
+        subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
+        subdf = subdf.sort_values(PROBLEM_SIZE_COL)
+        x = subdf[PROBLEM_SIZE_COL].astype(float).values
+        y_smooth = subdf[SMOOTH_FLOPS_COL].astype(float).values
+        sat_size = ""
+        sat_flops = ""
+        sat_bw = ""
+
+        sat_idx = find_saturation_point(x, y_smooth, eps, w)
+
+        df.loc[df[VARIANT_TUNING_COL] == variant, SAT_IDX_COL] = sat_idx
+
+        if sat_idx is not None:
+            sat_size = x[sat_idx]
+            mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
+
+            raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
+            if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
+                sat_flops = raw_at_sat.iloc[0]
+
+            if BANDWIDTH_COL in subdf.columns:
+                bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
+                if not bw_at_sat.empty and pd.notna(bw_at_sat.iloc[0]):
+                    sat_bw = bw_at_sat.iloc[0]
+
+        else:
+            print(
+                "[INFO] No saturation point found for kernel '{}' "
+                "variant '{}' (eps={}, w={})".format(kernel, variant, eps, w)
+            )
+
+        fom_rows.append({
+            "Kernel": f"{kernel}-{variant}",
+            "Sat Problem Size": sat_size if sat_size != "" else "N/A",
+            "Sat GFLOP/s": sat_flops if sat_flops != "" else "N/A",
+            "Sat B/W (GiB per sec.)": sat_bw if sat_bw != "" else "N/A",
+        })
+
+    fom_df = pd.DataFrame(fom_rows)
+    if IN_NOTEBOOK and display is not None:
+        display(fom_df)
+    else:
+        print(fom_df.to_string(index=False))
+
+# =========================
 # Plotting for a single kernel (FLOPs) with FOM output as DataFrame
 # =========================
 
@@ -340,35 +441,31 @@ def plot_kernel(
     w: int = 3,
     save_dir: Optional[str] = None,
 ):
-    plt.figure(figsize=(18, 7))
-    variants = df[VARIANT_TUNING_COL].unique()
-    colors = plt.cm.tab10.colors
+    if RAW_FLOPS_COL not in df.columns:
+        print(f"[INFO] No '{RAW_FLOPS_COL}' column for kernel '{kernel}', skipping flops plot.")
+        return
 
-    if SMOOTH_FLOPS_COL not in df.columns:
-        df[SMOOTH_FLOPS_COL] = np.nan
+    variants = df[VARIANT_TUNING_COL].unique()
+
+    plt.figure(figsize=(18, 7))
+    colors = plt.cm.tab10.colors
 
     for idx, variant in enumerate(variants):
         subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
         subdf = subdf.sort_values(PROBLEM_SIZE_COL)
         x = subdf[PROBLEM_SIZE_COL].astype(float).values
         y = subdf[RAW_FLOPS_COL].astype(float).values
+        y_smooth = subdf[SMOOTH_FLOPS_COL].astype(float).values
+
         if len(x) == 0:
             continue
 
-        y_smooth = moving_median_smooth(list(y), k=k)
-
-        for xi, yi in zip(x, y_smooth):
-            mask = (
-                (df[VARIANT_TUNING_COL] == variant)
-                & (df[PROBLEM_SIZE_COL] == xi)
-            )
-            df.loc[mask, SMOOTH_FLOPS_COL] = yi
-
         plt.plot(
-            x, y, "-o",
+            x, y, "-",
             label="{} (raw)".format(variant),
             markersize=8,
             color=colors[idx % len(colors)],
+            marker="o",
             markerfacecolor=colors[idx % len(colors)],
             markeredgewidth=0
         )
@@ -381,6 +478,21 @@ def plot_kernel(
             marker="+",
             markersize=10
         )
+
+        if SAT_IDX_COL in subdf.columns:
+            sat_idx = subdf[SAT_IDX_COL].astype(int).values[0]
+
+            sat_x = [x[sat_idx]]
+            sat_y = [y[sat_idx]]
+
+            plt.plot(
+                sat_x, sat_y, "-",
+                label="{} saturation ({})".format(variant, y[sat_idx]),
+                linewidth=0,
+                color=colors[idx % len(colors)],
+                marker="*",
+                markersize=30
+            )
 
     plt.title("Kernel: {}".format(kernel), fontsize=22)
     plt.xlabel("Problem size (bytes)", fontsize=18)
@@ -401,54 +513,6 @@ def plot_kernel(
     else:
         plt.close()
 
-    # FOM-style output as DataFrame
-    fom_rows = []
-    for variant in variants:
-        subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
-        subdf = subdf.sort_values(PROBLEM_SIZE_COL)
-        x = subdf[PROBLEM_SIZE_COL].astype(float).values
-        y_smooth = subdf[SMOOTH_FLOPS_COL].astype(float).values
-        sat_size = ""
-        sat_flops_raw = ""
-        sat_bw = ""
-
-        sat_idx = find_saturation_point(x, y_smooth, eps, w)
-
-        if sat_idx is not None:
-            sat_size = x[sat_idx]
-            mask = (subdf[PROBLEM_SIZE_COL] == sat_size)
-            raw_at_sat = subdf.loc[mask, RAW_FLOPS_COL]
-            if not raw_at_sat.empty and pd.notna(raw_at_sat.iloc[0]):
-                sat_flops_raw = raw_at_sat.iloc[0]
-
-            if BANDWIDTH_COL in subdf.columns:
-                bw_at_sat = subdf.loc[mask, BANDWIDTH_COL]
-                bw_non_nan = bw_at_sat.dropna()
-                if not bw_non_nan.empty:
-                    sat_bw = bw_non_nan.iloc[0]
-                else:
-                    sat_bw = ""
-            else:
-                sat_bw = ""
-        else:
-            print(
-                "[INFO] No saturation point found for kernel '{}' "
-                "variant '{}' (eps={}, w={})".format(kernel, variant, eps, w)
-            )
-
-        fom_rows.append({
-            "Kernel": f"{kernel}-{variant}",
-            "Sat Problem Size": sat_size if sat_size != "" else "N/A",
-            "Sat GFLOP/s": sat_flops_raw if sat_flops_raw != "" else "N/A",
-            "Sat B/W (GiB per sec.)": sat_bw if sat_bw != "" else "N/A",
-        })
-
-    fom_df = pd.DataFrame(fom_rows)
-    if IN_NOTEBOOK and display is not None:
-        display(fom_df)
-    else:
-        print(fom_df.to_string(index=False))
-
 # =========================
 # Plotting for a single kernel (Bandwidth)
 # =========================
@@ -465,40 +529,28 @@ def plot_kernel_bandwidth(
         print(f"[INFO] No '{BANDWIDTH_COL}' column for kernel '{kernel}', skipping bandwidth plot.")
         return
 
-    plt.figure(figsize=(18, 7))
     variants = df[VARIANT_TUNING_COL].unique()
-    colors = plt.cm.tab10.colors
 
-    if SMOOTH_BW_COL not in df.columns:
-        df[SMOOTH_BW_COL] = np.nan
+    plt.figure(figsize=(18, 7))
+    colors = plt.cm.tab10.colors
 
     for idx, variant in enumerate(variants):
         subdf = df[df[VARIANT_TUNING_COL] == variant].copy()
         subdf = subdf.sort_values(PROBLEM_SIZE_COL)
-
         x = subdf[PROBLEM_SIZE_COL].astype(float).values
         y_bw = subdf[BANDWIDTH_COL].astype(float).values
+        y_bw_smooth = subdf[SMOOTH_BW_COL].astype(float).values
 
         if len(x) == 0:
             continue
 
-        y_bw_smooth = moving_median_smooth(list(y_bw), k=k)
-
-        for xi, yi in zip(x, y_bw_smooth):
-            mask = (
-                (df[VARIANT_TUNING_COL] == variant)
-                & (df[PROBLEM_SIZE_COL] == xi)
-            )
-            df.loc[mask, SMOOTH_BW_COL] = yi
-
-        color = colors[idx % len(colors)]
-
         plt.plot(
-            x, y_bw, "-o",
+            x, y_bw, "-",
             label=f"{variant} (raw B/W)",
             markersize=8,
-            color=color,
-            markerfacecolor=color,
+            color=colors[idx % len(colors)],
+            marker="o",
+            markerfacecolor=colors[idx % len(colors)],
             markeredgewidth=0,
         )
 
@@ -506,10 +558,25 @@ def plot_kernel_bandwidth(
             x, y_bw_smooth, "--",
             label=f"{variant} (smoothed B/W)",
             linewidth=3,
-            color=color,
+            color=colors[idx % len(colors)],
             marker="+",
             markersize=10
         )
+
+        if SAT_IDX_COL in subdf.columns:
+            sat_idx = subdf[SAT_IDX_COL].astype(int).values[0]
+
+            sat_x = [x[sat_idx]]
+            sat_y = [y_bw[sat_idx]]
+
+            plt.plot(
+                sat_x, sat_y, "-",
+                label="{} saturation ({})".format(variant, y_bw[sat_idx]),
+                linewidth=0,
+                color=colors[idx % len(colors)],
+                marker="*",
+                markersize=30
+            )
 
     plt.title(f"Kernel: {kernel} - Bandwidth", fontsize=22)
     plt.xlabel("Problem size", fontsize=18)
@@ -553,13 +620,16 @@ def smooth_and_plot_all_kernels(
     for kernel in kernels:
         tmp = df[df[KERNEL_COL] == kernel].copy()
 
+        find_saturation_kernel(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
+        if SMOOTH_FLOPS_COL in tmp.columns:
+            df.loc[df[KERNEL_COL] == kernel, SMOOTH_FLOPS_COL] = tmp[SMOOTH_FLOPS_COL]
+        if SMOOTH_BW_COL in tmp.columns:
+            df.loc[df[KERNEL_COL] == kernel, SMOOTH_BW_COL] = tmp[SMOOTH_BW_COL]
+
         plot_kernel(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
-        df.loc[df[KERNEL_COL] == kernel, SMOOTH_FLOPS_COL] = tmp[SMOOTH_FLOPS_COL]
 
         if BANDWIDTH_COL in df.columns:
             plot_kernel_bandwidth(tmp, kernel, k=k, eps=eps, w=w, save_dir=save_dir)
-            if SMOOTH_BW_COL in tmp.columns:
-                df.loc[df[KERNEL_COL] == kernel, SMOOTH_BW_COL] = tmp[SMOOTH_BW_COL]
 
     return df
 
