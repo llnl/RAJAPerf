@@ -480,9 +480,9 @@ def plot_kernel(
         plt.plot(
             x, y, "-",
             label="{} (raw flops)".format(variant),
-            markersize=8,
             color=colors[idx % len(colors)],
             marker="o",
+            markersize=8,
             markerfacecolor=colors[idx % len(colors)],
             markeredgewidth=0
         )
@@ -523,7 +523,7 @@ def plot_kernel(
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     plt.ylim((ymin-yoverhang, ymax+yoverhang))
-    plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=16, frameon=False)
+    plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=14, frameon=False)
     plt.tight_layout(rect=[0, 0, 0.75, 1])
 
     if save_dir is not None:
@@ -587,9 +587,9 @@ def plot_kernel_bandwidth(
         plt.plot(
             x, y_bw, "-",
             label=f"{variant} (raw B/W)",
-            markersize=8,
             color=colors[idx % len(colors)],
             marker="o",
+            markersize=8,
             markerfacecolor=colors[idx % len(colors)],
             markeredgewidth=0,
         )
@@ -630,7 +630,7 @@ def plot_kernel_bandwidth(
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     plt.ylim((ymin-yoverhang, ymax+yoverhang))
-    plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=16, frameon=False)
+    plt.legend(loc="upper left", bbox_to_anchor=(1.05, 1), fontsize=14, frameon=False)
     plt.tight_layout(rect=[0, 0, 0.75, 1])
 
     if save_dir is not None:
