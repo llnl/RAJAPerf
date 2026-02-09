@@ -230,7 +230,7 @@ performance-measurements:
           tuolumne_perf_alloc: $TUOLUMNE_PERF_ALLOC
           perf_processing_cmd: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
           perf_artifact_dir: "performance-results"
-          perf_results_file: "*_*-*.cali"
+          perf_results_file: "**/*_*-*.cali"
           perf_processed_file: "processed_results.json"
           github_token: $GITHUB_TOKEN
           github_project_name: $GITHUB_PROJECT_NAME
