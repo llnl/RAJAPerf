@@ -10,7 +10,6 @@ import caliperreader as cr
 from pathlib import Path
 import json
 import sys
-from pathlib import Path
 
 METRIC = 'avg#inclusive#sum#time.duration'
 REPS_METRIC = 'any#any#max#Reps'
