@@ -1234,6 +1234,10 @@ void Executor::outputRunData()
     }
   }
 
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  KernelBase::setCaliperMgrFlush();
+#endif
+
   //
   // Generate output file prefix (including directory path).
   //
@@ -1283,23 +1287,6 @@ void Executor::outputRunData()
     }
 
   }
-
-  //
-  // Generate output file prefix (including directory path).
-  //
-  outdir = recursiveMkdir(run_params.getOutputDirName());
-  if ( !outdir.empty() ) {
-#if defined(_WIN32)
-    _chdir(outdir.c_str());
-#else
-    chdir(outdir.c_str());
-#endif
-  }
-  out_fprefix = "./" + run_params.getOutputFilePrefix();
-
-#if defined(RAJA_PERFSUITE_USE_CALIPER)
-  KernelBase::setCaliperMgrFlush();
-#endif
 }
 
 unique_ptr<ostream> Executor::openOutputFile(const string& filename) const
