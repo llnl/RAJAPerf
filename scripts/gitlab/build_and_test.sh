@@ -41,9 +41,9 @@ update_spack_upstream=${UPDATE_SPACK_UPSTREAM:-false}
 # REGISTRY_TOKEN allows you to provide your own personal access token to the CI
 # registry. Be sure to set the token with at least read access to the registry.
 registry_token=${REGISTRY_TOKEN:-""}
-ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
 ci_registry_image=${CI_REGISTRY_IMAGE:-"czregistry.llnl.gov:5050/radiuss/rajaperf"}
-ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
+export ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
+export ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
 
 # Track script start time for elapsed time calculations
 script_start_time=$(date +%s)
@@ -56,6 +56,27 @@ section_id_stack=()
 section_counter=0
 section_indent=""
 
+# Helper function to print errors in red
+print_error ()
+{
+    local error_msg="${1}"
+    echo -e "\e[31m[Error]: ${error_msg}\e[0m"
+}
+
+# Helper function to print warnings in gray
+print_warning ()
+{
+    local warning_msg="${1}"
+    echo -e "\e[1;30m[Warning]: ${warning_msg}\e[0m"
+}
+
+# Helper function to print information
+print_info ()
+{
+    local info_msg="${1}"
+    echo -e "[Information]: ${info_msg}"
+}
+
 # GitLab CI collapsible section helpers with nesting support
 section_start ()
 {
@@ -66,7 +87,7 @@ section_start ()
     local collapsed="false"
     if [[ "${section_state}" == "collapsed" ]]
     then
-        local collapsed="true"
+        collapsed="true"
     fi
 
     # Generate unique section ID
@@ -128,10 +149,10 @@ section_end ()
 
 if [[ ${debug_mode} == true ]]
 then
-    echo "[Information]: Debug mode:"
-    echo "[Information]: - Spack debug mode."
-    echo "[Information]: - Deactivated shared memory."
-    echo "[Information]: - Do not push to buildcache."
+    print_info "Debug mode:"
+    print_info "- Spack debug mode."
+    print_info "- Deactivated shared memory."
+    print_info "- Do not push to buildcache."
     use_dev_shm=false
     spack_debug=true
     push_to_registry=false
@@ -166,17 +187,17 @@ then
     prefix="${prefix}-${job_unique_id}"
 else
     # We set the prefix in the parent directory so that spack dependencies are not installed inside the source tree.
-    prefix="$(pwd)/../spack-and-build-root"
+    prefix="${project_dir}/../spack-and-build-root"
 fi
 
-echo "[Information]: Creating directory ${prefix}"
-echo "[Information]: project_dir: ${project_dir}"
+print_info "Creating directory ${prefix}"
+print_info "project_dir: ${project_dir}"
 
 mkdir -p ${prefix}
 
 spack_cmd="${prefix}/spack/bin/spack"
 spack_env_path="${prefix}/spack_env"
-uberenv_cmd="$(pwd)/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=$(pwd)/.uberenv_config.json"
+uberenv_cmd="${project_dir}/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=${project_dir}/.uberenv_config.json"
 if [[ ${spack_debug} == true ]]
 then
     spack_cmd="${spack_cmd} --debug --stacktrace"
@@ -190,7 +211,8 @@ then
 
     if [[ -z ${spec} ]]
     then
-        echo "[Error]: SPEC is undefined, aborting..."
+        section_end
+        print_error "SPEC is undefined, aborting..."
         exit 1
     fi
 
@@ -218,7 +240,7 @@ then
     if [[ -n ${ci_registry_token} ]]
     then
         section_start "registry_setup" "GitLab registry as Spack Buildcache" "collapsed"
-        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username ${ci_registry_user} --oci-password ${ci_registry_token} gitlab_ci oci://${ci_registry_image}
+        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
         section_end
     fi
 
@@ -249,13 +271,13 @@ then
         hostconfig_path=${hostconfigs[0]}
     elif [[ ${#hostconfigs[@]} == 0 ]]
     then
-        echo "[Error]: No result for: ${project_dir}/*.cmake"
-        echo "[Error]: Spack generated host-config not found."
+        print_error "No result for: ${project_dir}/*.cmake"
+        print_error "Spack generated host-config not found."
         exit 1
     else
-        echo "[Error]: More than one result for: ${project_dir}/*.cmake"
-        echo "[Error]: ${hostconfigs[@]}"
-        echo "[Error]: Please specify one with HOST_CONFIG variable"
+        print_error "More than one result for: ${project_dir}/*.cmake"
+        print_error "${hostconfigs[@]}"
+        print_error "Please specify one with HOST_CONFIG variable"
         exit 1
     fi
 else
@@ -264,7 +286,7 @@ else
 fi
 
 hostconfig=$(basename ${hostconfig_path})
-echo "[Information]: Found hostconfig ${hostconfig_path}"
+print_info "Found hostconfig ${hostconfig_path}"
 
 # Build Directory
 # When using /dev/shm, we use prefix for both spack builds and source build, unless BUILD_ROOT was defined
@@ -277,9 +299,10 @@ cmake_exe=`grep 'CMake executable' ${hostconfig_path} | cut -d ':' -f 2 | xargs`
 # Build
 if [[ "${option}" != "--deps-only" && "${option}" != "--test-only" ]]
 then
-    echo "[Information]: Host-config  ${hostconfig_path}"
-    echo "[Information]: Build Dir    ${build_dir}"
-    echo "[Information]: Project Dir  ${project_dir}"
+    print_info "Prefix       ${prefix}"
+    print_info "Host-config  ${hostconfig_path}"
+    print_info "Build Dir    ${build_dir}"
+    print_info "Project Dir  ${project_dir}"
 
     section_start "clean" "Cleaning working directory" "collapsed"
     # Map CPU core allocations
@@ -288,14 +311,14 @@ then
     # If using Multi-project, set up the submodule
     if [[ -n ${raja_version} ]]
     then
-      cd tpl/RAJA
       section_start "raja_submodule_update" "Updating RAJA Submodule to develop" "collapsed"
+      cd tpl/RAJA
       git pull origin develop
       section_end
       section_start "raja_submodules" "Updating Submodules within RAJA" "collapsed"
       git submodule update --init --recursive
-      section_end
       cd -
+      section_end
     fi
 
     # If building, then delete everything first
@@ -321,30 +344,33 @@ then
       ${cmake_options} \
       ${project_dir}
       then
+        status=$?
         section_end
         echo "[Error]: CMake configuration failed, dumping output..."
-        section_start "cmake_config_verbose" "Verbose CMake Configuration"
+
         $cmake_exe \
           -C ${hostconfig_path} \
           ${cmake_options} \
           ${project_dir} --debug-output --trace-expand
-        section_end
-        exit 1
-      else
-        section_end
+
+        exit ${status}
     fi
+    section_end
 
     section_start "build" "Building RAJAPerf" "collapsed"
     if ! $cmake_exe --build . -j ${core_counts[$truehostname]}
     then
+        status=$?
         section_end
-        echo "[Error]: Compilation failed, building with verbose output..."
-        section_start "build_verbose" "Verbose Rebuild" "collapsed"
+        print_error "Compilation failed, building with verbose output..."
+
+        section_start "build_verbose" "Verbose Rebuild"
         $cmake_exe --build . --verbose -j 1
         section_end
-    else
-        section_end
+
+        exit ${status}
     fi
+    section_end
 fi
 
 # Test
@@ -353,18 +379,22 @@ then
 
     if [[ ! -d ${build_dir} ]]
     then
-        echo "[Error]: Build directory not found : ${build_dir}" && exit 1
+        print_error "Build directory not found : ${build_dir}"
+        exit 1
     fi
 
     cd ${build_dir}
 
     section_start "tests" "Running Tests" "collapsed"
     ctest --output-on-failure -T test 2>&1 | tee tests_output.txt
+    ctest_status=${PIPESTATUS[0]}
 
     no_test_str="No tests were found!!!"
     if [[ "$(tail -n 1 tests_output.txt)" == "${no_test_str}" ]]
     then
-        echo "[Error]: No tests were found" && exit 1
+        section_end
+        print_error "No tests were found"
+        exit ${ctest_status}
     fi
 
     tree Testing
@@ -373,7 +403,9 @@ then
 
     if grep -q "Errors while running CTest" ./tests_output.txt
     then
-        echo "[Error]: Failure(s) while running CTest" && exit 1
+        section_end
+        print_error "Failure(s) while running CTest"
+        exit ${ctest_status}
     fi
     section_end
 fi
