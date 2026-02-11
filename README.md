@@ -13,6 +13,7 @@ RAJA Performance Suite
 ======================
 
 [![Azure Piepline Build Status](https://dev.azure.com/llnl/RAJAPerf/_apis/build/status/LLNL.RAJAPerf?branchName=develop)](https://dev.azure.com/llnl/RAJAPerf/_build/latest?definitionId=1&branchName=develop)
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/llnl/RAJAPerf)
 [![Documentation Status](https://readthedocs.org/projects/rajaperf/badge/?version=develop)](https://raja.readthedocs.io/en/develop/?badge=develop)
 
 The RAJA Performance Suite is a companion project to the [RAJA] C++ performance
