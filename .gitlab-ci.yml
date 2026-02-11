@@ -223,7 +223,7 @@ performance-measurements:
   trigger:
     include:
       - local: '.gitlab/custom-variables.yml'
-      - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/performance-pipeline@v2025.12.0
+      - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/performance-pipeline@prefix-component-env-variables
         inputs:
           job_cmd: $JOB_CMD
           dane_perf_alloc: $DANE_PERF_ALLOC
