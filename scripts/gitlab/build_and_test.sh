@@ -234,24 +234,48 @@ then
 
     # generate cmake cache file with uberenv and radiuss spack package
     section_start "spack_setup" "Spack setup and environment" "collapsed"
-    ${uberenv_cmd} --setup-and-env-only --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    if ! ${uberenv_cmd} --setup-and-env-only --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    then
+        status=$?
+        section_end 
+        print_error "Error during Spack setup and environment generation"
+        exit ${status}
+    fi
     section_end
 
     if [[ -n ${ci_registry_token} ]]
     then
         section_start "registry_setup" "GitLab registry as Spack Buildcache" "collapsed"
-        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
+        if ! ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
+        then
+            status=$?
+            section_end 
+            print_error "Error while setting up GitLab registry as Spack buildcache"
+            exit ${status}
+        fi
         section_end
     fi
 
     section_start "spack_build" "Spack build of dependencies" "collapsed"
-    ${uberenv_cmd} --skip-setup-and-env --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    if ! ${uberenv_cmd} --skip-setup-and-env --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    then
+        status=$?
+        section_end 
+        print_error "Error during Spack build of dependencies"
+        exit ${status}
+    fi
     section_end
 
     if [[ -n ${ci_registry_token} && ${push_to_registry} == true ]]
     then
         section_start "buildcache_push" "Push dependencies to buildcache" "collapsed"
-        ${spack_cmd} -D ${spack_env_path} buildcache push --only dependencies gitlab_ci
+        if ! ${spack_cmd} -D ${spack_env_path} buildcache push --only dependencies gitlab_ci
+        then
+            status=$?
+            section_end 
+            print_error "Error while pushing dependencies to GitLab registry buildcache"
+            exit ${status}
+        fi
         section_end
     fi
 
