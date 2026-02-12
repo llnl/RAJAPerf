@@ -50,6 +50,9 @@ void FIRST_DIFF::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
+                           1*sizeof(Real_type) * m_N ); // y
   setBytesReadPerRep( 1*sizeof(Real_type) * m_N ); // y (each iterate accesses the range [i, i+1])
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesModifyWrittenPerRep( 0 );
@@ -63,7 +66,7 @@ FIRST_DIFF::~FIRST_DIFF()
 
 void FIRST_DIFF::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_x, m_N, 0.0, vid);
+  allocAndInitDataConst(m_x, getActualProblemSize(), 0.0, vid);
   allocAndInitDataRandValue(m_y, m_N, vid);
 }
 

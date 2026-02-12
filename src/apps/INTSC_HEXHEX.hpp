@@ -169,11 +169,14 @@ public:
   void runHipVariantImpl(VariantID vid);
 
 private:
-  void check_intsc_volume_moments
-      ( Index_type const n_intsc, Real_const_ptr vv, VariantID vid ) ;
+  void check_intsc_volume_moments(Real_const_ptr vv, VariantID vid);
 
   static const size_t default_gpu_block_size = 64;
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
+
+  Size_type m_n_std_intsc; // number of standard intersections
+  Index_type m_n_subz_intsc; // number of subzone intersections
+  Index_type m_gsize;
 
   Real_ptr m_dsubz ;    // donor subzone coordinates
   Real_ptr m_tsubz ;    // target subzone coordinates

@@ -48,6 +48,7 @@ void SORT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   // not useful in this case due to O(n*log(n)) algorithm
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 0 );

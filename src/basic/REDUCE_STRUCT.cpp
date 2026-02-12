@@ -54,6 +54,8 @@ void REDUCE_STRUCT::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
   setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );

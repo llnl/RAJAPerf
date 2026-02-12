@@ -47,19 +47,22 @@ void POLYBENCH_MVT::setSize(Index_type target_size, Index_type target_reps)
 {
   m_N = std::sqrt( target_size ) + std::sqrt(2)-1;
 
-  setActualProblemSize( m_N * m_N );
+  setActualProblemSize( m_N*m_N );
   setRunReps( target_reps );
 
   setItsPerRep( 2 * m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N + // y1
-                      1*sizeof(Real_type ) * m_N * m_N + // A
 
-                      1*sizeof(Real_type ) * m_N + // y2
-                      1*sizeof(Real_type ) * m_N * m_N ); // A
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * m_N + // x1
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_N +      // y1, y2, x1, x2
+                           1*sizeof(Real_type) * m_N*m_N ); // A
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N +      // y1
+                      1*sizeof(Real_type) * m_N*m_N +  // A
 
-                         1*sizeof(Real_type ) * m_N ); // x2
+                      1*sizeof(Real_type) * m_N +      // y2
+                      1*sizeof(Real_type) * m_N*m_N ); // A
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_N +  // x1
+
+                         1*sizeof(Real_type) * m_N ); // x2
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_N*m_N +
@@ -74,7 +77,7 @@ void POLYBENCH_MVT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitData(m_y1, m_N, vid);
   allocAndInitData(m_y2, m_N, vid);
-  allocAndInitData(m_A, m_N * m_N, vid);
+  allocAndInitData(m_A, m_N*m_N, vid);
   allocAndInitDataConst(m_x1, m_N, 0.0, vid);
   allocAndInitDataConst(m_x2, m_N, 0.0, vid);
 }

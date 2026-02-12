@@ -94,7 +94,7 @@ Data reported in the file for each kernel variant tuning is:
     for the kernel from the ``RAJAPerf-kernel-details.csv`` file.
   * **Mean Bandwidth (GiB per sec.)** -- the bandwidth, in giga-bytes per
     second, achieved by the benchmark averaged over all passes. This is
-    calculated by taking from the *Bytes/rep* for the kernel from the
+    calculated by taking from the *BytesMoved/rep* for the kernel from the
     ``RAJAPerf-kernel-details.csv`` file divided by the
     *Mean time per rep (sec.)*.
   * **Mean flops (gigaFLOP per sec.)** -- the
@@ -129,10 +129,10 @@ Information reported in the file for each kernel is:
     loops run in a single kernel execution.
   * **Kernels/rep** -- total number of loop structures run (or GPU kernels 
     launched) in each kernel repetition.
-  * **Bytes/rep** -- Total number of bytes read from and written to memory for 
-    each repetition of kernel. This is a best case scenario of the total traffic
-    to and from memory assuming perfect cache reuse and ignoring partial usage
-    of data in some memory transactions.
+  * **BytesMoved/rep** -- Total number of bytes read from and written to memory
+    for each repetition of kernel. This is a best case scenario of the total
+    traffic to and from memory assuming perfect cache reuse and ignoring partial
+    usage of data in some memory transactions.
   * **FLOPs/rep** -- Total number of floating point operations executed for 
     each repetition of kernel. Currently, we count arithmetic operations 
     (+, -, *, /) and functions, such as exp, sin, etc. as one FLOP. We do not 

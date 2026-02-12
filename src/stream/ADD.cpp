@@ -48,8 +48,10 @@ void ADD::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * getActualProblemSize() ); // a, b, c
   setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // a, b
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // c
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // c
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * getActualProblemSize());

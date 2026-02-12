@@ -55,6 +55,8 @@ void HISTOGRAM::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 1*sizeof(Index_type) * getActualProblemSize() + // bins
+                           1*sizeof(Data_type) * m_num_bins ); // counts
   setBytesReadPerRep( 1*sizeof(Index_type) * getActualProblemSize() ); // bins
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );
