@@ -118,7 +118,7 @@ section_end ()
 {
     # Pop section ID from stack
     if [[ ${#section_id_stack[@]} -eq 0 ]]; then
-        echo "[Warning]: section_end called with empty stack"
+        print_warning "section_end called with empty stack"
         return 1
     fi
 
@@ -160,7 +160,7 @@ fi
 
 if [[ -n ${module_list} ]]
 then
-    echo "[Information]: Loading modules: ${module_list}"
+    print_info "Loading modules: ${module_list}"
     module load ${module_list}
 fi
 
@@ -346,7 +346,7 @@ then
       then
         status=$?
         section_end
-        echo "[Error]: CMake configuration failed, dumping output..."
+        print_error "CMake configuration failed, dumping output..."
 
         $cmake_exe \
           -C ${hostconfig_path} \
