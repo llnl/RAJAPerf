@@ -7,12 +7,14 @@
 [comment]: # (# SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
 
-# <img src="/tpl/RAJA/share/raja/logo/RAJA_LOGO_Color.png?raw=true" width="128" valign="middle" alt="RAJA"/>
+# <img src="/share/raja/logo/RAJA_LOGO_Color.png?raw=true" width="128" valign="middle" alt="RAJA"/>
 
 RAJA Performance Suite
 ======================
 
-[![Documentation Status](https://readthedocs.org/projects/rajaperf/badge/?version=develop)](https://rajaperf.readthedocs.io/en/develop/?badge=develop)
+[![Build Status](https://github.com/llnl/RAJAPerf/actions/workflows/build.yml/badge.svg)](https://github.com/llnl/RAJAPerf/actions/workflows/build.yml)
+[![Documentation Status](https://readthedocs.org/projects/rajaperf/badge/?version=develop)](https://raja.readthedocs.io/en/develop/?badge=develop)
+[![GitHub release](https://img.shields.io/github/release/llnl/RAJAPerf.svg)](https://github.com/llnl/RAJAPerf/releases/latest)
 
 The RAJA Performance Suite is a companion project to the [RAJA] C++ performance
 portability abstraction library. The Performance Suite designed to explore
