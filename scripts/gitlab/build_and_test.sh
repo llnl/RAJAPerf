@@ -236,10 +236,9 @@ then
     section_start "spack_setup" "Spack setup and environment" "collapsed"
     if ! ${uberenv_cmd} --setup-and-env-only --spec="${spec}" ${prefix_opt} ${upstream_opt}
     then
-        status=$?
         section_end 
         print_error "Error during Spack setup and environment generation"
-        exit ${status}
+        exit 1
     fi
     section_end
 
@@ -248,10 +247,9 @@ then
         section_start "registry_setup" "GitLab registry as Spack Buildcache" "collapsed"
         if ! ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
         then
-            status=$?
             section_end 
             print_error "Error while setting up GitLab registry as Spack buildcache"
-            exit ${status}
+            exit 1
         fi
         section_end
     fi
@@ -259,10 +257,9 @@ then
     section_start "spack_build" "Spack build of dependencies" "collapsed"
     if ! ${uberenv_cmd} --skip-setup-and-env --spec="${spec}" ${prefix_opt} ${upstream_opt}
     then
-        status=$?
         section_end 
         print_error "Error during Spack build of dependencies"
-        exit ${status}
+        exit 1
     fi
     section_end
 
@@ -271,10 +268,9 @@ then
         section_start "buildcache_push" "Push dependencies to buildcache" "collapsed"
         if ! ${spack_cmd} -D ${spack_env_path} buildcache push --only dependencies gitlab_ci
         then
-            status=$?
             section_end 
             print_error "Error while pushing dependencies to GitLab registry buildcache"
-            exit ${status}
+            exit 1
         fi
         section_end
     fi
@@ -368,7 +364,6 @@ then
       ${cmake_options} \
       ${project_dir}
       then
-        status=$?
         section_end
         print_error "CMake configuration failed, dumping output..."
 
@@ -377,14 +372,13 @@ then
           ${cmake_options} \
           ${project_dir} --debug-output --trace-expand
 
-        exit ${status}
+        exit 1
     fi
     section_end
 
     section_start "build" "Building RAJAPerf" "collapsed"
     if ! $cmake_exe --build . -j ${core_counts[$truehostname]}
     then
-        status=$?
         section_end
         print_error "Compilation failed, building with verbose output..."
 
@@ -392,7 +386,7 @@ then
         $cmake_exe --build . --verbose -j 1
         section_end
 
-        exit ${status}
+        exit 1
     fi
     section_end
 fi
@@ -411,14 +405,13 @@ then
 
     section_start "tests" "Running Tests" "collapsed"
     ctest --output-on-failure -T test 2>&1 | tee tests_output.txt
-    ctest_status=${PIPESTATUS[0]}
 
     no_test_str="No tests were found!!!"
     if [[ "$(tail -n 1 tests_output.txt)" == "${no_test_str}" ]]
     then
         section_end
         print_error "No tests were found"
-        exit ${ctest_status}
+        exit 1
     fi
 
     tree Testing
@@ -429,7 +422,7 @@ then
     then
         section_end
         print_error "Failure(s) while running CTest"
-        exit ${ctest_status}
+        exit 1
     fi
     section_end
 fi
