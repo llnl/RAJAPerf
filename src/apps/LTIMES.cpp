@@ -32,18 +32,6 @@ LTIMES::LTIMES(const RunParams& params)
   setDefaultProblemSize(m_num_d * m_num_g * num_z_default);
   setDefaultReps(50);
 
-  //m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g) ;//256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
-
-  m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g);
-  m_philen = m_num_m * m_num_g * m_num_z;
-  m_elllen = m_num_d * m_num_m;
-  m_psilen = m_num_d * m_num_g * m_num_z;
-  //std::cout << "d=" << m_num_d << " g=" << m_num_g << " m=" << m_num_m << " z=" << m_num_z << std::endl;
-  //std::cout << "psi=" << m_psilen << " phi=" << m_philen << " ell=" << m_elllen << " zones=" << m_num_z << std::endl;
-  adiak::value("unknowns", m_psilen);
-  adiak::value("groups", m_num_g);
-  adiak::value("zones", m_num_z);
-
   setSize(params.getTargetSize(getDefaultProblemSize()),
           params.getReps(getDefaultReps()));
 
@@ -64,11 +52,18 @@ LTIMES::LTIMES(const RunParams& params)
 
 void LTIMES::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
-
+  //m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+  m_num_z = (target_size/m_num_d/m_num_g);
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
+
+  //std::cout << "d=" << m_num_d << " g=" << m_num_g << " m=" << m_num_m << " z=" << m_num_z << std::endl;
+  //std::cout << "psi=" << m_psilen << " phi=" << m_philen << " ell=" << m_elllen << " zones=" << m_num_z << std::endl;
+
+  adiak::value("unknowns", m_psilen);
+  adiak::value("groups", m_num_g);
+  adiak::value("zones", m_num_z);
 
   setActualProblemSize( m_psilen );
   setRunReps( target_reps );
