@@ -52,11 +52,13 @@ LTIMES::LTIMES(const RunParams& params)
 
 void LTIMES::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
+  m_num_z = std::max((target_size/m_num_d/m_num_g), Index_type(1));
 
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
+
+  setKernelMetadata();
 
   setActualProblemSize( m_psilen );
   setRunReps( target_reps );
@@ -97,6 +99,17 @@ void LTIMES::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_phidat, vid);
   deallocData(m_elldat, vid);
   deallocData(m_psidat, vid);
+}
+
+void LTIMES::setKernelMetadata()
+{
+  #if defined(RAJA_PERFSUITE_USE_CALIPER)
+    adiak::value("unknowns", m_psilen);
+    adiak::value("groups", m_num_g);
+    adiak::value("zones", m_num_z);
+    adiak::value("moments", m_num_m);
+    adiak::value("directions", m_num_d);
+  #endif
 }
 
 } // end namespace apps
