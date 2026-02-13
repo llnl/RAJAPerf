@@ -100,7 +100,6 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
-  void setKernelMetadata();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

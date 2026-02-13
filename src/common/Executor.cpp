@@ -321,6 +321,10 @@ Executor::Executor(int argc, char** argv)
   adiak::value("ProblemSizeFactorRunParam",(uint)run_params.getSizeFactor());
   adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
+  adiak::value("LtimesNumGroups", (uint)run_params.getLtimesNumG());
+  adiak::value("LtimesNumMoments", (uint)run_params.getLtimesNumM());
+  adiak::value("LtimesNumDirections", (uint)run_params.getLtimesNumD());
+
   // Openmp section
 #if defined(_OPENMP)
   std::string strval = "";
@@ -1234,10 +1238,6 @@ void Executor::outputRunData()
     }
   }
 
-#if defined(RAJA_PERFSUITE_USE_CALIPER)
-  KernelBase::setCaliperMgrFlush();
-#endif
-
   //
   // Generate output file prefix (including directory path).
   //
@@ -1287,6 +1287,10 @@ void Executor::outputRunData()
     }
 
   }
+
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  KernelBase::setCaliperMgrFlush();
+#endif
 }
 
 unique_ptr<ostream> Executor::openOutputFile(const string& filename) const
