@@ -41,25 +41,118 @@ update_spack_upstream=${UPDATE_SPACK_UPSTREAM:-false}
 # REGISTRY_TOKEN allows you to provide your own personal access token to the CI
 # registry. Be sure to set the token with at least read access to the registry.
 registry_token=${REGISTRY_TOKEN:-""}
-ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
 ci_registry_image=${CI_REGISTRY_IMAGE:-"czregistry.llnl.gov:5050/radiuss/rajaperf"}
-ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
+export ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
+export ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
 
-timed_message ()
+# Track script start time for elapsed time calculations
+script_start_time=$(date +%s)
+
+# Storage for section start times (supports nesting)
+declare -A section_start_times
+
+# Section stack for tracking nested sections
+section_id_stack=()
+section_counter=0
+section_indent=""
+
+# Helper function to print errors in red
+print_error ()
 {
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~ $(date --rfc-3339=seconds) ~ ${1}"
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    local error_msg="${1}"
+    echo -e "\e[31m[Error]: ${error_msg}\e[0m"
+}
+
+# Helper function to print warnings in gray
+print_warning ()
+{
+    local warning_msg="${1}"
+    echo -e "\e[1;30m[Warning]: ${warning_msg}\e[0m"
+}
+
+# Helper function to print information
+print_info ()
+{
+    local info_msg="${1}"
+    echo -e "[Information]: ${info_msg}"
+}
+
+# GitLab CI collapsible section helpers with nesting support
+section_start ()
+{
+    local section_name="${1}"
+    local section_title="${2}"
+    local section_state="${3:-""}"
+
+    local collapsed="false"
+    if [[ "${section_state}" == "collapsed" ]]
+    then
+        collapsed="true"
+    fi
+
+    # Generate unique section ID
+    section_counter=$((section_counter + 1))
+    local section_id="${section_name}_${section_counter}"
+
+    local timestamp=$(date +%s)
+    local current_time=$(date -d @${timestamp} --rfc-3339=seconds)
+    local total_elapsed=$((timestamp - script_start_time))
+    local total_elapsed_formatted=$(date -d @${total_elapsed} -u +%H:%M:%S)
+
+    # Store section start time for later calculation
+    section_start_times[${section_id}]=${timestamp}
+
+    # Push section ID onto stack
+    section_id_stack+=("${section_id}")
+
+    echo "${section_indent}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    echo "${section_indent}~ TIME                      | TOTAL    | SECTION  "
+    echo "${section_indent}~ ${current_time} | ${total_elapsed_formatted} | ${section_title}"
+    echo -e "\e[0Ksection_start:${timestamp}:${section_id}[collapsed=${collapsed}]\r\e[0K${section_indent}~ ${section_title}"
+
+    # Increase indentation for nested sections
+    section_indent="${section_indent}  "
+}
+
+section_end ()
+{
+    # Pop section ID from stack
+    if [[ ${#section_id_stack[@]} -eq 0 ]]; then
+        print_warning "section_end called with empty stack"
+        return 1
+    fi
+
+    # Decrease indentation before displaying
+    section_indent="${section_indent%  }"
+
+    local stack_index=$((${#section_id_stack[@]} - 1))
+    local section_id="${section_id_stack[$stack_index]}"
+    unset section_id_stack[$stack_index]
+
+    local timestamp=$(date +%s)
+    local current_time=$(date -d @${timestamp} --rfc-3339=seconds)
+    local total_elapsed=$((timestamp - script_start_time))
+    local total_elapsed_formatted=$(date -d @${total_elapsed} -u +%H:%M:%S)
+
+    # Calculate section elapsed time
+    local section_start=${section_start_times[${section_id}]:-${timestamp}}
+    local section_elapsed=$((timestamp - section_start))
+    local section_elapsed_formatted=$(date -d @${section_elapsed} -u +%H:%M:%S)
+
+    echo -e "\e[0Ksection_end:${timestamp}:${section_id}\r\e[0K"
+    echo "${section_indent}~ ${current_time} | ${total_elapsed_formatted} | ${section_elapsed_formatted}"
+    echo "${section_indent}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+    # Clean up stored time
+    unset section_start_times[${section_id}]
 }
 
 if [[ ${debug_mode} == true ]]
 then
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ Debug mode:"
-    echo "~~~~~ - Spack debug mode."
-    echo "~~~~~ - Deactivated shared memory."
-    echo "~~~~~ - Do not push to buildcache."
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    print_info "Debug mode:"
+    print_info "- Spack debug mode."
+    print_info "- Deactivated shared memory."
+    print_info "- Do not push to buildcache."
     use_dev_shm=false
     spack_debug=true
     push_to_registry=false
@@ -67,9 +160,7 @@ fi
 
 if [[ -n ${module_list} ]]
 then
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~~~~~ Modules to load: ${module_list}"
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    print_info "Loading modules: ${module_list}"
     module load ${module_list}
 fi
 
@@ -96,17 +187,17 @@ then
     prefix="${prefix}-${job_unique_id}"
 else
     # We set the prefix in the parent directory so that spack dependencies are not installed inside the source tree.
-    prefix="$(pwd)/../spack-and-build-root"
+    prefix="${project_dir}/../spack-and-build-root"
 fi
 
-echo "Creating directory ${prefix}"
-echo "project_dir: ${project_dir}"
+print_info "Creating directory ${prefix}"
+print_info "project_dir: ${project_dir}"
 
 mkdir -p ${prefix}
 
 spack_cmd="${prefix}/spack/bin/spack"
 spack_env_path="${prefix}/spack_env"
-uberenv_cmd="$(pwd)/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=$(pwd)/.uberenv_config.json"
+uberenv_cmd="${project_dir}/tpl/RAJA/scripts/uberenv/uberenv.py --project-json=${project_dir}/.uberenv_config.json"
 if [[ ${spack_debug} == true ]]
 then
     spack_cmd="${spack_cmd} --debug --stacktrace"
@@ -116,11 +207,12 @@ fi
 # Dependencies
 if [[ "${option}" != "--build-only" && "${option}" != "--test-only" ]]
 then
-    timed_message "Building dependencies"
+    section_start "dependencies" "Building Dependencies"
 
     if [[ -z ${spec} ]]
     then
-        echo "[Error]: SPEC is undefined, aborting..."
+        section_end
+        print_error "SPEC is undefined, aborting..."
         exit 1
     fi
 
@@ -141,28 +233,51 @@ then
     mkdir -p ${spack_user_cache}
 
     # generate cmake cache file with uberenv and radiuss spack package
-    timed_message "Spack setup and environment"
-    ${uberenv_cmd} --setup-and-env-only --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    section_start "spack_setup" "Spack setup and environment" "collapsed"
+    if ! ${uberenv_cmd} --setup-and-env-only --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    then
+        section_end 
+        print_error "Error during Spack setup and environment generation"
+        exit 1
+    fi
+    section_end
 
     if [[ -n ${ci_registry_token} ]]
     then
-        timed_message "GitLab registry as Spack Buildcache"
-        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username ${ci_registry_user} --oci-password ${ci_registry_token} gitlab_ci oci://${ci_registry_image}
+        section_start "registry_setup" "GitLab registry as Spack Buildcache" "collapsed"
+        if ! ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
+        then
+            section_end 
+            print_error "Error while setting up GitLab registry as Spack buildcache"
+            exit 1
+        fi
+        section_end
     fi
 
-    timed_message "Spack build of dependencies"
-    ${uberenv_cmd} --skip-setup-and-env --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    section_start "spack_build" "Spack build of dependencies" "collapsed"
+    if ! ${uberenv_cmd} --skip-setup-and-env --spec="${spec}" ${prefix_opt} ${upstream_opt}
+    then
+        section_end 
+        print_error "Error during Spack build of dependencies"
+        exit 1
+    fi
+    section_end
 
     if [[ -n ${ci_registry_token} && ${push_to_registry} == true ]]
     then
-        timed_message "Push dependencies to buildcache"
-        ${spack_cmd} -D ${spack_env_path} buildcache push --only dependencies gitlab_ci
+        section_start "buildcache_push" "Push dependencies to buildcache" "collapsed"
+        if ! ${spack_cmd} -D ${spack_env_path} buildcache push --only dependencies gitlab_ci
+        then
+            section_end 
+            print_error "Error while pushing dependencies to GitLab registry buildcache"
+            exit 1
+        fi
+        section_end
     fi
-
-    timed_message "Dependencies built"
 
     mv ${project_dir}/tpl/RAJA/*.cmake ${project_dir}/.
 
+    section_end
 fi
 
 # Find cmake cache file (hostconfig)
@@ -176,13 +291,13 @@ then
         hostconfig_path=${hostconfigs[0]}
     elif [[ ${#hostconfigs[@]} == 0 ]]
     then
-        echo "[Error]: No result for: ${project_dir}/*.cmake"
-        echo "[Error]: Spack generated host-config not found."
+        print_error "No result for: ${project_dir}/*.cmake"
+        print_error "Spack generated host-config not found."
         exit 1
     else
-        echo "[Error]: More than one result for: ${project_dir}/*.cmake"
-        echo "[Error]: ${hostconfigs[@]}"
-        echo "[Error]: Please specify one with HOST_CONFIG variable"
+        print_error "More than one result for: ${project_dir}/*.cmake"
+        print_error "${hostconfigs[@]}"
+        print_error "Please specify one with HOST_CONFIG variable"
         exit 1
     fi
 else
@@ -191,7 +306,7 @@ else
 fi
 
 hostconfig=$(basename ${hostconfig_path})
-echo "[Information]: Found hostconfig ${hostconfig_path}"
+print_info "Found hostconfig ${hostconfig_path}"
 
 # Build Directory
 # When using /dev/shm, we use prefix for both spack builds and source build, unless BUILD_ROOT was defined
@@ -204,26 +319,26 @@ cmake_exe=`grep 'CMake executable' ${hostconfig_path} | cut -d ':' -f 2 | xargs`
 # Build
 if [[ "${option}" != "--deps-only" && "${option}" != "--test-only" ]]
 then
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo "~ Host-config: ${hostconfig_path}"
-    echo "~ Build Dir:   ${build_dir}"
-    echo "~ Project Dir: ${project_dir}"
-    echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-    echo ""
-    timed_message "Cleaning working directory"
+    print_info "Prefix       ${prefix}"
+    print_info "Host-config  ${hostconfig_path}"
+    print_info "Build Dir    ${build_dir}"
+    print_info "Project Dir  ${project_dir}"
 
+    section_start "clean" "Cleaning working directory" "collapsed"
     # Map CPU core allocations
     declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["matrix"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
 
     # If using Multi-project, set up the submodule
     if [[ -n ${raja_version} ]]
     then
+      section_start "raja_submodule_update" "Updating RAJA Submodule to develop" "collapsed"
       cd tpl/RAJA
-      timed_message "Updating RAJA Submodule to develop"
       git pull origin develop
-      timed_message "Updating Submodules within RAJA"
+      section_end
+      section_start "raja_submodules" "Updating Submodules within RAJA" "collapsed"
       git submodule update --init --recursive
       cd -
+      section_end
     fi
 
     # If building, then delete everything first
@@ -232,8 +347,8 @@ then
     #       use max cores.
     rm -rf ${build_dir} 2>/dev/null
     mkdir -p ${build_dir} && cd ${build_dir}
+    section_end
 
-    timed_message "Building RAJAPerf"
     # We set the MPI tests command to allow overlapping.
     # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
     # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
@@ -243,18 +358,37 @@ then
         cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
     fi
 
-    $cmake_exe \
+    section_start "cmake_config" "CMake Configuration" "collapsed"
+    if ! $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \
       ${project_dir}
+      then
+        section_end
+        print_error "CMake configuration failed, dumping output..."
+
+        $cmake_exe \
+          -C ${hostconfig_path} \
+          ${cmake_options} \
+          ${project_dir} --debug-output --trace-expand
+
+        exit 1
+    fi
+    section_end
+
+    section_start "build" "Building RAJAPerf" "collapsed"
     if ! $cmake_exe --build . -j ${core_counts[$truehostname]}
     then
-        echo "[Error]: Compilation failed, building with verbose output..."
-        timed_message "Re-building with --verbose"
-        $cmake_exe --build . --verbose -j 1
-    fi
+        section_end
+        print_error "Compilation failed, building with verbose output..."
 
-    timed_message "RAJA Perf Suite built"
+        section_start "build_verbose" "Verbose Rebuild"
+        $cmake_exe --build . --verbose -j 1
+        section_end
+
+        exit 1
+    fi
+    section_end
 fi
 
 # Test
@@ -263,34 +397,41 @@ then
 
     if [[ ! -d ${build_dir} ]]
     then
-        echo "[Error]: Build directory not found : ${build_dir}" && exit 1
+        print_error "Build directory not found : ${build_dir}"
+        exit 1
     fi
 
     cd ${build_dir}
 
-    timed_message "Testing RAJA Perf Suite"
+    section_start "tests" "Running Tests" "collapsed"
     ctest --output-on-failure -T test 2>&1 | tee tests_output.txt
 
     no_test_str="No tests were found!!!"
     if [[ "$(tail -n 1 tests_output.txt)" == "${no_test_str}" ]]
     then
-        echo "[Error]: No tests were found" && exit 1
+        section_end
+        print_error "No tests were found"
+        exit 1
     fi
 
-    timed_message "Preparing tests xml reports for export"
     tree Testing
     xsltproc -o junit.xml ${project_dir}/blt/tests/ctest-to-junit.xsl Testing/*/Test.xml
     mv junit.xml ${project_dir}/junit.xml
 
     if grep -q "Errors while running CTest" ./tests_output.txt
     then
-        echo "[Error]: Failure(s) while running CTest" && exit 1
+        section_end
+        print_error "Failure(s) while running CTest"
+        exit 1
     fi
-
-    timed_message "RAJA Perf Suite tests completed"
+    section_end
 fi
 
-timed_message "Cleaning up"
-make clean
+#timed_message "Cleaning up"
+#make clean
 
-timed_message "Build and test completed"
+cd ${project_dir}
+
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+echo "~ Build and test completed"
+echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"

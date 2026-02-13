@@ -37,7 +37,7 @@ rocmcc_6_4_1_hip:
 
 rocmcc_6_4_1_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx942 %llvm-amdgpu@=6.4.1 ^hip@6.4.1"
+    SPEC: "~shared +rocm +openmp amdgpu_target=gfx942 %llvm-amdpgu@=6.4.1 ^hip@6.4.1"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
