@@ -35,33 +35,15 @@ LTIMES::LTIMES(const RunParams& params)
   //m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g)*(getTargetProblemSize()/m_num_d/m_num_g) ;//256;//std::max((getTargetProblemSize() + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
 
   m_num_z = (params.getTargetSize(getDefaultProblemSize())/m_num_d/m_num_g);
-
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
-
-  std::cout << "d=" << m_num_d << " g=" << m_num_g << " m=" << m_num_m << " z=" << m_num_z << std::endl;
-  std::cout << "psi=" << m_psilen << " phi=" << m_philen << " ell=" << m_elllen << " zones=" << m_num_z << std::endl;
-
+  //std::cout << "d=" << m_num_d << " g=" << m_num_g << " m=" << m_num_m << " z=" << m_num_z << std::endl;
+  //std::cout << "psi=" << m_psilen << " phi=" << m_philen << " ell=" << m_elllen << " zones=" << m_num_z << std::endl;
   adiak::value("unknowns", m_psilen);
   adiak::value("groups", m_num_g);
   adiak::value("zones", m_num_z);
 
-  setActualProblemSize( m_psilen );
-
-  setItsPerRep( m_philen );
-  setKernelsPerRep(1);
-  // using total data size instead of writes and reads
-  setBytesReadPerRep( 1*sizeof(Real_type) * m_philen +
-                      1*sizeof(Real_type) * m_elllen +
-                      1*sizeof(Real_type) * m_psilen );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_philen );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * m_num_z * m_num_g * m_num_m * m_num_d);
-
-  // checksum_scale_factor = 0.001 *
-  //             ( static_cast<Checksum_type>(getDefaultProblemSize()) /
-  //                                          getActualProblemSize() );
   setSize(params.getTargetSize(getDefaultProblemSize()),
           params.getReps(getDefaultReps()));
 

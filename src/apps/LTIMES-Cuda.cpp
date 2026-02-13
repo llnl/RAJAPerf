@@ -137,8 +137,8 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 0) {
 
-      getCout() << "\n LTIMES : Using custom exec policy " << std::endl;
-      // Optimal LTimes policy, reference implementation uses GDZ (ARDRA) to optimize sweep kernel, LTimes is slower in GDZ
+      //getCout() << "\n LTIMES : Using custom exec policy " << std::endl;
+      // Optimal LTimes policy, reference implementation uses GDZ to optimize sweep kernel, LTimes is slower in GDZ
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
