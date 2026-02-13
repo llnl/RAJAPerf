@@ -52,8 +52,8 @@ LTIMES::LTIMES(const RunParams& params)
 
 void LTIMES::setSize(Index_type target_size, Index_type target_reps)
 {
-  //m_num_z = std::max((target_size + (m_num_d * m_num_g)/2) / (m_num_d * m_num_g), Index_type(1));
-  m_num_z = (target_size/m_num_d/m_num_g);
+  m_num_z = std::max((target_size/m_num_d/m_num_g), Index_type(1));
+
   m_philen = m_num_m * m_num_g * m_num_z;
   m_elllen = m_num_d * m_num_m;
   m_psilen = m_num_d * m_num_g * m_num_z;
