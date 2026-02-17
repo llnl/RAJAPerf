@@ -35,7 +35,7 @@ for KERNEL_NAME in "${KERNELS[@]}"; do
     for factor in "${FACTORS[@]}"; do
         mem=$((factor * BASEMEM))
         echo "  Running with memory = $mem"
-        flux run -xN1 -n4 ./bin/raja-perf.exe \
+        flux run -xN1 -n24 -g 1 ./bin/raja-perf.exe \
             -k "$KERNEL_NAME" \
             --npasses 1 \
             --npasses-combiners Average Minimum Maximum \
