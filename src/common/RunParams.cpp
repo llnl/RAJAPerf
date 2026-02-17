@@ -44,8 +44,8 @@ RunParams::RunParams(int argc, char** argv)
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
-   ltimes_num_d(12),
-   ltimes_num_g(220),
+   ltimes_num_d(6),
+   ltimes_num_g(32),
    ltimes_num_m(25),
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
@@ -1594,13 +1594,13 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t\t --sizefact 0.5 (run each kernel with size half its calculated size)\n"
       << "\t\t --sizefact 2.0 (run each kernel with size twice its calculated size)\n\n";
 
-  str << "\t --ltimes_num_d <int> [default is 12]\n"
+  str << "\t --ltimes_num_d <int> [default is 6]\n"
       << "\t      (For LTIMES kernels only: num_d used in kernels)\n"
       << "\t      Must be greater than 0.\n";
   str << "\t\t Example...\n"
       << "\t\t --ltimes_num_d 32\n\n";
 
-  str << "\t --ltimes_num_g <int> [default is 220]\n"
+  str << "\t --ltimes_num_g <int> [default is 32]\n"
       << "\t      (For LTIMES kernels only: num_g used in kernels)\n"
       << "\t      Must be greater than 0.\n";
   str << "\t\t Example...\n"
