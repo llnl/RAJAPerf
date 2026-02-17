@@ -274,7 +274,7 @@ public:
   //
   bool wasVariantTuningRun(VariantID vid, size_t tune_idx) const
   {
-    if (tune_idx != getUnknownTuningIdx()) {
+    if (tune_idx != getUnknownTuningIdx() && hasVariantDefined(vid)) {
       return num_exec[vid].at(tune_idx) > 0;
     }
     return false;

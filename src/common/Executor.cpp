@@ -1234,6 +1234,10 @@ void Executor::outputRunData()
     }
   }
 
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  KernelBase::setCaliperMgrFlush();
+#endif
+
   //
   // Generate output file prefix (including directory path).
   //
@@ -1283,10 +1287,6 @@ void Executor::outputRunData()
     }
 
   }
-
-#if defined(RAJA_PERFSUITE_USE_CALIPER)
-  KernelBase::setCaliperMgrFlush();
-#endif
 }
 
 unique_ptr<ostream> Executor::openOutputFile(const string& filename) const
