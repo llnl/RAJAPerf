@@ -74,6 +74,8 @@ private:
   std::unique_ptr<std::ostream> openOutputFile(const std::string& filename) const;
 
   void writeSeparator(std::ostream& file);
+  void writeKernelCounterSummary(std::ostream& str,
+                                 std::vector<KernelBase*> const& kernels) const;
 
   void writeKernelInfoSummary(std::ostream& str,
                               std::vector<KernelBase*> const& kernels,

@@ -15,6 +15,8 @@
 #include "common/DataUtils.hpp"
 #include "common/RunParams.hpp"
 #include "common/GPUUtils.hpp"
+#include "common/CountingData.hpp"
+#include "common/CountingWrapper.hpp"
 
 #include "RAJA/util/Timer.hpp"
 #include "RAJA/util/reduce.hpp"
@@ -39,6 +41,10 @@
 #include <map>
 #include <limits>
 #include <utility>
+#include <algorithm>
+#include <type_traits>
+#include <memory>
+#include <source_location>
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
 
@@ -207,24 +213,95 @@ public:
   Index_type getDefaultProblemSize() const { return default_prob_size; }
   Index_type getActualProblemSize() const { return actual_prob_size; }
   Index_type getDefaultReps() const { return default_reps; }
-  Index_type getRunReps() const { return s_warmup_run ? 1 : actual_reps; }
-  Index_type getItsPerRep() const { return its_per_rep; }
-  Index_type getKernelsPerRep() const { return kernels_per_rep; }
+  Index_type getTargetProblemSize() const;
+  Index_type getRunReps() const;
+
+  Index_type getItsPerRep() const { return its_per_rep; };
+  Index_type getKernelsPerRep() const { return kernels_per_rep; };
+
   Index_type getBytesAllocatedPerRep() const { return bytes_allocated_per_rep; }
-  Index_type getBytesMovedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count modify_write operations twice to get the memory traffic
+  Index_type getBytesMovedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count atomic_modify_write operations as a read and a write to match previous counting
   Index_type getBytesTouchedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + bytes_modify_written_per_rep + bytes_atomic_modify_written_per_rep; } // count modify_write operations once to get the data size only
-  Index_type getBytesReadPerRep() const { return bytes_read_per_rep + bytes_modify_written_per_rep; }
-  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep + bytes_modify_written_per_rep; }
+  Index_type getBytesReadPerRep() const { return bytes_read_per_rep; }
+  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep; }
   Index_type getBytesModifyWrittenPerRep() const { return bytes_modify_written_per_rep; }
   Index_type getBytesAtomicModifyWrittenPerRep() const { return bytes_atomic_modify_written_per_rep; }
+
   Index_type getFLOPsPerRep() const { return FLOPs_per_rep; }
+
+
+  Index_type getCountedItsPerRep() const { return countingData ? (countingData->all_it_per_rep_counter) : -1; }
+  Index_type getCountedParItsPerRep() const { return countingData ? (countingData->par_it_per_rep_counter) : -1; }
+  Index_type getCountedMaxLoopNestDepth() const { return countingData ? (countingData->max_all_loop_depth) : -1; }
+  Index_type getCountedMaxParLoopNestDepth() const { return countingData ? (countingData->max_par_loop_depth) : -1; }
+  Index_type getCountedKernelsPerRep() const { return countingData ? countingData->kernel_per_rep_counter : -1; }
+  Index_type getCountedSyncsPerRep() const { return countingData ? countingData->par_sync_per_rep_counter : -1; }
+  Index_type getCountedTeamSyncsPerRep() const { return countingData ? countingData->team_sync_per_rep_counter : -1; }
+  Index_type getCountedNumAllocations(counting::AllocationGroup g) const { return countingData ? countingData->memory_allocations[Size_type(g)] : -1; }
+  Index_type getCountedAllocatedBytes(counting::AllocationGroup g) const { return countingData ? countingData->memory_bytes[Size_type(g)] : -1; }
+
+  Index_type getCountedTotalBytes(counting::AllocationGroup g) const
+  {
+    Index_type count = -1;
+    if (countingData) {
+      count = 0;
+      for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
+        count += countingData->memory_total_bytes[Size_type(g)].accessed[a];
+        if (counting::MemoryAccess(a) == counting::MemoryAccess::atomicModifyWrite) {
+          count += countingData->memory_total_bytes[Size_type(g)].accessed[a]; // count twice, as both a read and a write
+        }
+      }
+    };
+    return count;
+  }
+  Index_type getCountedTotalBytesPerAccess(counting::AllocationGroup g, counting::MemoryAccess ma) const
+  { return countingData ? countingData->memory_total_bytes[Size_type(g)].accessed[Size_type(ma)] : -1; }
+
+  // count atomic_modify_write operations as a read and a write to match previous counting
+  Index_type getCountedBytesTouched(counting::CountingPoint p, counting::AllocationGroup g) const
+  { return countingData ? countingData->memory_totals_bytes[Size_type(p)][Size_type(g)].touched : -1; }
+  Index_type getCountedBytes(counting::CountingPoint p, counting::AllocationGroup g) const
+  {
+    Index_type count = -1;
+    if (countingData) {
+      count = 0;
+      for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
+        count += countingData->memory_totals_bytes[Size_type(p)][Size_type(g)].accessed[a];
+        if (counting::MemoryAccess(a) == counting::MemoryAccess::atomicModifyWrite) {
+          count += countingData->memory_totals_bytes[Size_type(p)][Size_type(g)].accessed[a]; // count twice, as both a read and a write
+        }
+      }
+    };
+    return count;
+  }
+  Index_type getCountedBytesPerAccess(counting::CountingPoint p, counting::AllocationGroup g, counting::MemoryAccess ma) const
+  { return countingData ? countingData->memory_totals_bytes[Size_type(p)][Size_type(g)].accessed[Size_type(ma)] : -1; }
+
+  Index_type getCountedOpsPerRep(counting::OpType ot, counting::Operation op) const { return countingData ? countingData->operation_counters[Size_type(ot)][Size_type(op)] : -1; }
+
+  Index_type getCountedArithmeticOpsPerRep(counting::OpType ot) const
+  {
+    Index_type count = -1;
+    if (countingData) {
+      // count a subset of operations including things like add, sub, mult, div, abs, sqrt, but not assign, eq, ne, lt, le, gt, or ge
+      count = 0;
+      for (Size_type op = Size_type(counting::Operation::FLOP_begin);
+           op < Size_type(counting::Operation::FLOP_end); ++op) {
+        count += countingData->operation_counters[Size_type(ot)][op];
+      }
+    }
+    return count;
+  }
+
+
   double getBlockSize() const { return kernel_block_size; }
+
   ChecksumConsistency getChecksumConsistency() const { return checksum_consistency; };
   Checksum_type getChecksumTolerance() const { return checksum_tolerance; }
   Complexity getComplexity() const { return complexity; };
+
   Index_type getMaxPerfectLoopDimensions() const { return num_nested_perfect_loops; };
   Index_type getProblemDimensionality() const { return problem_dimensionality; };
-
 
   bool usesFeature(FeatureID fid) const { return uses_feature[fid]; };
 
@@ -429,151 +506,259 @@ public:
   DataSpace getReductionDataSpace(VariantID vid) const;
   DataSpace getMPIDataSpace(VariantID vid) const;
 
-  template <typename T>
-  void allocData(DataSpace dataSpace, T& ptr, Size_type len)
+
+
+  virtual void setCountedAttributes() {}; //
+
+
+  counting::ScopedContext initializeCounters(
+      std::initializer_list<const char*> wrapper_formats,
+      std::source_location location = std::source_location::current())
   {
-    rajaperf::allocData(dataSpace,
-        ptr, len, getDataAlignment());
+    countingData = std::make_unique<counting::CountingData>();
+    countingData->set_formats(wrapper_formats);
+    enable_data_registration = true;
+    return countingData->create_context("", location);
   }
 
-  template <typename T>
-  void allocAndInitData(DataSpace dataSpace, T*& ptr, Size_type len)
+  void finalizeCounters(counting::ScopedContext& context,
+      std::source_location location = std::source_location::current())
   {
-    rajaperf::allocAndInitData(dataSpace,
-        ptr, len, getDataAlignment());
+    context.release();
+    enable_data_registration = false;
+    countingData->finalize_context(location);
   }
 
-  template <typename T, typename V>
-  void allocAndInitDataConst(DataSpace dataSpace, T*& ptr, Size_type len, V val)
+  void printCounters(std::ostream& str) const
   {
-    rajaperf::allocAndInitDataConst(dataSpace,
-        ptr, len, getDataAlignment(), val);
+    if (countingData) {
+      countingData->print(str);
+    }
   }
 
-  template <typename T>
-  void allocAndInitDataRandSign(DataSpace dataSpace, T*& ptr, Size_type len)
+
+  void registerData(counting::pointer auto& ptr,
+      counting::integral auto const& len,
+      counting::raw_pointer auto ptr_ptr,
+      std::source_location location = std::source_location::current())
   {
-    rajaperf::allocAndInitDataRandSign(dataSpace,
-        ptr, len, getDataAlignment());
+    using pointed_to_type = counting::pointed_to_type_t<decltype(ptr)>;
+    if (!enable_data_registration) return;
+    countingData->add_allocation(
+        counting::get_type_name<pointed_to_type>(),
+        static_cast<void*>(counting::get_value(ptr)),
+        counting::get_value(len), sizeof(pointed_to_type),
+        static_cast<const void*>(ptr_ptr), location);
   }
 
-  template <typename T>
-  void allocAndInitDataRandValue(DataSpace dataSpace, T*& ptr, Size_type len)
+  void deRegisterData(counting::pointer auto& ptr,
+      counting::raw_pointer auto ptr_ptr,
+      std::source_location location = std::source_location::current())
   {
-    rajaperf::allocAndInitDataRandValue(dataSpace,
-        ptr, len, getDataAlignment());
+    if (!enable_data_registration) return;
+    countingData->remove_allocation(
+        static_cast<void*>(counting::get_value(ptr)),
+        static_cast<const void*>(ptr_ptr), location);
   }
 
-  template <typename T>
-  rajaperf::AutoDataMover<T> scopedMoveData(DataSpace dataSpace, T*& ptr, Size_type len)
+  void allocData(DataSpace dataSpace, counting::pointer auto& ptr_in,
+                 counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
+  {
+    auto ptr = counting::get_value(ptr_in);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocData(dataSpace, ptr, len, getDataAlignment());
+    registerData(ptr, len, &counting::get_value(ptr_in), location);
+    ptr_in = ptr;
+  }
+
+  void allocAndInitData(DataSpace dataSpace, counting::pointer auto& ptr_in,
+                        counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
+  {
+    auto ptr = counting::get_value(ptr_in);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocAndInitData(dataSpace, ptr, len, getDataAlignment());
+    registerData(ptr, len, &counting::get_value(ptr_in), location);
+    ptr_in = ptr;
+  }
+
+  void allocAndInitDataConst(DataSpace dataSpace, counting::pointer auto& ptr_in,
+                             counting::integral auto const& len_in, auto const& val,
+      std::source_location location = std::source_location::current())
+  {
+    auto ptr = counting::get_value(ptr_in);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocAndInitDataConst(dataSpace, ptr, len, getDataAlignment(), counting::get_value(val));
+    registerData(ptr, len, &counting::get_value(ptr_in), location);
+    ptr_in = ptr;
+  }
+
+  void allocAndInitDataRandSign(DataSpace dataSpace, counting::pointer auto& ptr_in,
+                                counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
+  {
+    auto ptr = counting::get_value(ptr_in);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocAndInitDataRandSign(dataSpace, ptr, len, getDataAlignment());
+    registerData(ptr, len, &counting::get_value(ptr_in), location);
+    ptr_in = ptr;
+  }
+
+  void allocAndInitDataRandValue(DataSpace dataSpace, counting::pointer auto& ptr_in,
+                                 counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
+  {
+    auto ptr = counting::get_value(ptr_in);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocAndInitDataRandValue(dataSpace, ptr, len, getDataAlignment());
+    registerData(ptr, len, &counting::get_value(ptr_in), location);
+    ptr_in = ptr;
+  }
+
+  auto scopedMoveDataForInit(DataSpace dataSpace, DataSpace hds, counting::raw_pointer auto& ptr,
+                             counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
+  {
+    Size_type len = counting::get_value(len_in);
+    Size_type align = getDataAlignment();
+    KernelBase& self = *this;
+    return rajaperf::AutoDataMover([=, &ptr](){
+
+          auto new_ptr = ptr;
+          if (dataSpace != hds) {
+            rajaperf::allocData(dataSpace, new_ptr, len, align);
+          }
+          return new_ptr;
+
+        }, [=, &self, &ptr](auto new_ptr){
+
+          if (dataSpace != hds) {
+            rajaperf::copyData(dataSpace, new_ptr, hds, ptr, len);
+            rajaperf::deallocData(hds, ptr);
+            ptr = new_ptr;
+          }
+
+          self.registerData(ptr, len, &ptr, location);
+
+        });
+  }
+
+  auto allocDataForInit(DataSpace dataSpace, counting::raw_pointer auto& ptr,
+                        counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
   {
     DataSpace hds = rajaperf::hostCopyDataSpace(dataSpace);
-    rajaperf::moveData(hds, dataSpace, ptr, len, getDataAlignment());
-    return {dataSpace, hds, ptr, len, getDataAlignment()};
-  }
-
-  template <typename T>
-  void copyData(DataSpace dst_dataSpace, T* dst_ptr,
-                DataSpace src_dataSpace, const T* src_ptr,
-                Size_type len)
-  {
-    rajaperf::copyData(dst_dataSpace, dst_ptr, src_dataSpace, src_ptr, len);
-  }
-
-  template <typename T>
-  void deallocData(DataSpace dataSpace, T& ptr)
-  {
-    rajaperf::deallocData(dataSpace, ptr);
-  }
-
-  template <typename T>
-  void allocData(T*& ptr, Size_type len, VariantID vid)
-  {
-    rajaperf::allocData(getDataSpace(vid),
-        ptr, len, getDataAlignment());
-  }
-
-  template <typename T>
-  void allocAndCopyHostData(T*& dst_ptr,
-                            const T* src_ptr,
-                            Size_type len,
-                            VariantID vid)
-  {
-    rajaperf::allocData(getDataSpace(vid),
-        dst_ptr, len, getDataAlignment());
-
-    rajaperf::copyData(getDataSpace(vid),
-        dst_ptr, DataSpace::Host, src_ptr, len);
-  }
-
-  template <typename T>
-  void allocAndInitData(T*& ptr, Size_type len, VariantID vid)
-  {
-    rajaperf::allocAndInitData(getDataSpace(vid),
-        ptr, len, getDataAlignment());
-  }
-
-  template <typename T, typename V>
-  void allocAndInitDataConst(T*& ptr, Size_type len, V val, VariantID vid)
-  {
-    rajaperf::allocAndInitDataConst(getDataSpace(vid),
-        ptr, len, getDataAlignment(), val);
-  }
-
-  template <typename T>
-  void allocAndInitDataRandSign(T*& ptr, Size_type len, VariantID vid)
-  {
-    rajaperf::allocAndInitDataRandSign(getDataSpace(vid),
-        ptr, len, getDataAlignment());
-  }
-
-  template <typename T>
-  void allocAndInitDataRandValue(T*& ptr, Size_type len, VariantID vid)
-  {
-    rajaperf::allocAndInitDataRandValue(getDataSpace(vid),
-        ptr, len, getDataAlignment());
-  }
-
-  template <typename T>
-  rajaperf::AutoDataMover<T> allocDataForInit(T*& ptr, Size_type len, VariantID vid)
-  {
-    DataSpace ds = getDataSpace(vid);
-    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    Size_type len = counting::get_value(len_in);
     rajaperf::allocData(hds, ptr, len, getDataAlignment());
-    return {ds, hds, ptr, len, getDataAlignment()};
+    // don't register temporary data
+    return scopedMoveDataForInit(dataSpace, hds, ptr, len, location);
   }
 
-  template <typename T>
-  rajaperf::AutoDataMover<T> allocAndInitDataForInit(T*& ptr, Size_type len, VariantID vid)
+  auto allocAndInitDataForInit(DataSpace dataSpace, counting::raw_pointer auto& ptr,
+                               counting::integral auto const& len_in,
+      std::source_location location = std::source_location::current())
   {
-    DataSpace ds = getDataSpace(vid);
-    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
+    DataSpace hds = rajaperf::hostCopyDataSpace(dataSpace);
+    Size_type len = counting::get_value(len_in);
     rajaperf::allocAndInitData(hds, ptr, len, getDataAlignment());
-    return {ds, hds, ptr, len, getDataAlignment()};
+    // don't register temporary data
+    return scopedMoveDataForInit(dataSpace, hds, ptr, len, location);
   }
 
-  template <typename T>
-  rajaperf::AutoDataMover<T> allocAndInitDataConstForInit(T*& ptr, Size_type len, T val, VariantID vid)
+  auto allocAndInitDataConstForInit(DataSpace dataSpace, counting::raw_pointer auto& ptr,
+                                    counting::integral auto const& len_in, auto const& val,
+      std::source_location location = std::source_location::current())
   {
-    DataSpace ds = getDataSpace(vid);
-    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
-    rajaperf::allocAndInitDataConst(hds, ptr, len, getDataAlignment(), val);
-    return {ds, hds, ptr, len, getDataAlignment()};
+    DataSpace hds = rajaperf::hostCopyDataSpace(dataSpace);
+    Size_type len = counting::get_value(len_in);
+    rajaperf::allocAndInitDataConst(hds, ptr, len, getDataAlignment(), counting::get_value(val));
+    // don't register temporary data
+    return scopedMoveDataForInit(dataSpace, hds, ptr, len, location);
   }
 
-  template <typename T>
-  rajaperf::AutoDataMover<T> scopedMoveData(T*& ptr, Size_type len, VariantID vid)
+  void copyData(DataSpace dst_dataSpace, counting::convertible_to_pointer auto const& dst,
+                DataSpace src_dataSpace, counting::convertible_to_pointer auto const& src,
+                counting::integral auto const& len)
   {
-    DataSpace ds = getDataSpace(vid);
-    DataSpace hds = rajaperf::hostCopyDataSpace(ds);
-    rajaperf::moveData(hds, ds, ptr, len, getDataAlignment());
-    return {ds, hds, ptr, len, getDataAlignment()};
+    rajaperf::copyData(dst_dataSpace, counting::get_value(dst),
+                       src_dataSpace, counting::get_value(src), len);
   }
 
-  template <typename T>
-  void deallocData(T*& ptr, VariantID vid)
+  void deallocData(DataSpace dataSpace, counting::pointer auto& ptr_in,
+      std::source_location location = std::source_location::current())
   {
-    rajaperf::deallocData(getDataSpace(vid), ptr);
+    auto ptr = counting::get_value(ptr_in);
+    deRegisterData(ptr, &counting::get_value(ptr_in), location);
+    rajaperf::deallocData(dataSpace, ptr);
+    ptr_in = nullptr;
+  }
+
+
+  void allocData(counting::pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocData(getDataSpace(vid), ptr, len, location);
+  }
+
+  void allocAndCopyHostData(counting::pointer auto& dst_ptr,
+                            counting::convertible_to_pointer auto const& src,
+                            counting::integral auto const& len,
+                            VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocData(getDataSpace(vid), dst_ptr, len, location);
+    copyData(getDataSpace(vid), dst_ptr, DataSpace::Host, src, len);
+  }
+
+  void allocAndInitData(counting::pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocAndInitData(getDataSpace(vid), ptr, len, location);
+  }
+
+  void allocAndInitDataConst(counting::pointer auto& ptr, counting::integral auto const& len,
+                             auto const& val, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocAndInitDataConst(getDataSpace(vid), ptr, len, val, location);
+  }
+
+  void allocAndInitDataRandSign(counting::pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocAndInitDataRandSign(getDataSpace(vid), ptr, len, location);
+  }
+
+  void allocAndInitDataRandValue(counting::pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    allocAndInitDataRandValue(getDataSpace(vid), ptr, len, location);
+  }
+
+  auto allocDataForInit(counting::raw_pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    return allocDataForInit(getDataSpace(vid), ptr, len, location);
+  }
+
+  auto allocAndInitDataForInit(counting::raw_pointer auto& ptr, counting::integral auto const& len, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    return allocAndInitDataForInit(getDataSpace(vid), ptr, len, location);
+  }
+
+  auto allocAndInitDataConstForInit(counting::raw_pointer auto& ptr, counting::integral auto const& len,
+                                    auto const& val, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    return allocAndInitDataConstForInit(getDataSpace(vid), ptr, len, val, location);
+  }
+
+  void deallocData(counting::pointer auto& ptr, VariantID vid,
+      std::source_location location = std::source_location::current())
+  {
+    deallocData(getDataSpace(vid), ptr, location);
   }
 
   template <typename T>
@@ -757,6 +942,10 @@ private:
   Index_type bytes_modify_written_per_rep;
   Index_type bytes_atomic_modify_written_per_rep;
   Index_type FLOPs_per_rep;
+
+  bool enable_data_registration = false;
+  std::unique_ptr<counting::CountingData> countingData;
+
   double kernel_block_size = nan(""); // Set default value for non GPU kernels
 
   VariantID running_variant;

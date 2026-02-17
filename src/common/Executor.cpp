@@ -40,7 +40,10 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+
+#include <limits>
 #include <cmath>
+#include <functional>
 #include <algorithm>
 
 #if defined(_WIN32)
@@ -380,6 +383,7 @@ void Executor::setupSuite()
   const std::set<KernelID>& run_kern = run_params.getKernelIDsToRun();
   for (auto kid = run_kern.begin(); kid != run_kern.end(); ++kid) {
     kernels.push_back( getKernelObject(*kid, run_params) );
+    kernels.back()->setCountedAttributes();
   }
 
   const std::set<VariantID>& run_var = run_params.getVariantIDsToRun();
@@ -641,176 +645,375 @@ void Executor::writeKernelInfoSummary(ostream& str,
 #endif
   }
 
+  const bool skip_if_nonpositive = !to_file;
+
 //
 // Set up column headers and column widths for kernel summary output.
 //
-  size_t     kernel_width = 0;
-  Index_type psize_width = 0;
-  Index_type reps_width = 0;
-  Index_type itsrep_width = 0;
-  Index_type bytesMovedrep_width = 0;
-  Index_type flopsrep_width = 0;
-  Index_type bytesTouchedrep_width = 0;
-  Index_type bytesReadrep_width = 0;
-  Index_type bytesWrittenrep_width = 0;
-  Index_type bytesModifyWrittenrep_width = 0;
-  Index_type bytesAtomicModifyWrittenrep_width = 0;
-  Index_type bytesAllocatedrep_width = 0;
-  size_t     checksumConsistency_width = 0;
-  size_t     operationalComplexity_width = 0;
+  string attr_category_head("");
 
-  size_t     dash_width = 0;
+  string kern_head("Kernels");
 
+  Index_type kercol_width = static_cast<Index_type>(kern_head.size());
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
-    kernel_width = max(kernel_width, kernels[ik]->getName().size());
-    psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
-    reps_width = max(reps_width, kernels[ik]->getRunReps());
-    itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
-    bytesMovedrep_width = max(bytesMovedrep_width, kernels[ik]->getBytesMovedPerRep());
-    flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
-    bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
-    bytesReadrep_width = max(bytesReadrep_width, kernels[ik]->getBytesReadPerRep());
-    bytesWrittenrep_width = max(bytesWrittenrep_width, kernels[ik]->getBytesWrittenPerRep());
-    bytesModifyWrittenrep_width = max(bytesModifyWrittenrep_width, kernels[ik]->getBytesModifyWrittenPerRep());
-    bytesAtomicModifyWrittenrep_width = max(bytesAtomicModifyWrittenrep_width, kernels[ik]->getBytesAtomicModifyWrittenPerRep());
-    bytesAllocatedrep_width = max(bytesAllocatedrep_width, kernels[ik]->getBytesAllocatedPerRep());
-    checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
-    operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
+    kercol_width = max(kercol_width, static_cast<Index_type>(kernels[ik]->getName().size()));
   }
+  kercol_width += 2;
 
+//
+// Set up separators and width parameters.
+//
   const string sepchr(" , ");
 
-  string kernel_head("Kernel");
-  kernel_width = max( kernel_head.size(),
-                      kernel_width ) + 2;
-  dash_width += kernel_width;
+  Index_type current_width = 0; // does not contain kercol_width
+  const Index_type screen_width = 80;
+  const Index_type max_width = to_file ? std::numeric_limits<Index_type>::max()
+                                       : max(screen_width-kercol_width, screen_width/2);
 
-  double psize = log10( static_cast<double>(psize_width) );
-  string psize_head("Problem size");
-  psize_width = max( static_cast<Index_type>(psize_head.size()),
-                     static_cast<Index_type>(psize) ) + 3;
-  dash_width += psize_width + static_cast<Index_type>(sepchr.size());
+//
+// Set up storage for attributes which will become the columns.
+//
+  struct Attribute
+  {
+    std::string category_name;
+    std::string name;
+    Index_type width;
+    std::function<std::string(KernelBase const*)> getter;
+  };
 
-  double rsize = log10( static_cast<double>(reps_width) );
-  string rsize_head("Reps");
-  reps_width = max( static_cast<Index_type>(rsize_head.size()),
-                    static_cast<Index_type>(rsize) ) + 3;
-  dash_width += reps_width + static_cast<Index_type>(sepchr.size());
+  std::vector<Attribute> attrs;
 
-  double irsize = log10( static_cast<double>(itsrep_width) );
-  string itsrep_head("Iterations/rep");
-  itsrep_width = max( static_cast<Index_type>(itsrep_head.size()),
-                      static_cast<Index_type>(irsize) ) + 3;
-  dash_width += itsrep_width + static_cast<Index_type>(sepchr.size());
+//
+// function used to print the table, includes the kernel column and attr columns.
+// Clears attr columns after printing to make using more than once easier.
+//
+  auto print_attr_table = [&]() {
 
-  string kernsrep_head("Kernels/rep");
-  Index_type kernsrep_width =
-    max( static_cast<Index_type>(kernsrep_head.size()),
-         static_cast<Index_type>(4) );
-  dash_width += kernsrep_width + static_cast<Index_type>(sepchr.size());
-
-  double brsize = log10( static_cast<double>(bytesMovedrep_width) );
-  string bytesMovedrep_head("BytesMoved/rep");
-  bytesMovedrep_width = max( static_cast<Index_type>(bytesMovedrep_head.size()),
-                        static_cast<Index_type>(brsize) ) + 3;
-  dash_width += bytesMovedrep_width + static_cast<Index_type>(sepchr.size());
-
-  double frsize = log10( static_cast<double>(flopsrep_width) );
-  string flopsrep_head("FLOPS/rep");
-  flopsrep_width = max( static_cast<Index_type>(flopsrep_head.size()),
-                         static_cast<Index_type>(frsize) ) + 3;
-  dash_width += flopsrep_width + static_cast<Index_type>(sepchr.size());
-
-  double btrsize = log10( static_cast<double>(bytesTouchedrep_width) );
-  string bytesTouchedrep_head("BytesTouched/rep");
-  bytesTouchedrep_width = max( static_cast<Index_type>(bytesTouchedrep_head.size()),
-                        static_cast<Index_type>(btrsize) ) + 3;
-  dash_width += bytesTouchedrep_width + static_cast<Index_type>(sepchr.size());
-
-  double brrsize = log10( static_cast<double>(bytesReadrep_width) );
-  string bytesReadrep_head("BytesRead/rep");
-  bytesReadrep_width = max( static_cast<Index_type>(bytesReadrep_head.size()),
-                        static_cast<Index_type>(brrsize) ) + 3;
-  dash_width += bytesReadrep_width + static_cast<Index_type>(sepchr.size());
-
-  double bwrsize = log10( static_cast<double>(bytesWrittenrep_width) );
-  string bytesWrittenrep_head("BytesWritten/rep");
-  bytesWrittenrep_width = max( static_cast<Index_type>(bytesWrittenrep_head.size()),
-                        static_cast<Index_type>(bwrsize) ) + 3;
-  dash_width += bytesWrittenrep_width + static_cast<Index_type>(sepchr.size());
-
-  double bmwrsize = log10( static_cast<double>(bytesModifyWrittenrep_width) );
-  string bytesModifyWrittenrep_head("BytesModifyWritten/rep");
-  bytesModifyWrittenrep_width = max( static_cast<Index_type>(bytesModifyWrittenrep_head.size()),
-                        static_cast<Index_type>(bmwrsize) ) + 3;
-  dash_width += bytesModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
-
-  double bamrrsize = log10( static_cast<double>(bytesAtomicModifyWrittenrep_width) );
-  string bytesAtomicModifyWrittenrep_head("BytesAtomicModifyWritten/rep");
-  bytesAtomicModifyWrittenrep_width = max( static_cast<Index_type>(bytesAtomicModifyWrittenrep_head.size()),
-                        static_cast<Index_type>(bamrrsize) ) + 3;
-  dash_width += bytesAtomicModifyWrittenrep_width + static_cast<Index_type>(sepchr.size());
-
-  double barsize = log10( static_cast<double>(bytesAllocatedrep_width) );
-  string bytesAllocatedrep_head("BytesAllocated/rep");
-  bytesAllocatedrep_width = max( static_cast<Index_type>(bytesAllocatedrep_head.size()),
-                                 static_cast<Index_type>(barsize) ) + 3;
-  dash_width += bytesAllocatedrep_width + static_cast<Index_type>(sepchr.size());
-
-  string checksumConsistency_head("ChecksumConsistency");
-  checksumConsistency_width = max( checksumConsistency_head.size(),
-                                     checksumConsistency_width ) + 2;
-  dash_width += checksumConsistency_width + static_cast<Index_type>(sepchr.size());
-
-  string operationalComplexity_head("OperationalComplexity");
-  operationalComplexity_width = max( operationalComplexity_head.size(),
-                                     operationalComplexity_width ) + 2;
-  dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
-
-  str           <<left << setw(kernel_width) << kernel_head
-      << sepchr <<right<< setw(psize_width) << psize_head
-      << sepchr <<right<< setw(reps_width) << rsize_head
-      << sepchr <<right<< setw(itsrep_width) << itsrep_head
-      << sepchr <<right<< setw(kernsrep_width) << kernsrep_head
-      << sepchr <<right<< setw(bytesMovedrep_width) << bytesMovedrep_head
-      << sepchr <<right<< setw(flopsrep_width) << flopsrep_head
-      << sepchr <<right<< setw(bytesTouchedrep_width) << bytesTouchedrep_head
-      << sepchr <<right<< setw(bytesReadrep_width) << bytesReadrep_head
-      << sepchr <<right<< setw(bytesWrittenrep_width) << bytesWrittenrep_head
-      << sepchr <<right<< setw(bytesModifyWrittenrep_width) << bytesModifyWrittenrep_head
-      << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << bytesAtomicModifyWrittenrep_head
-      << sepchr <<right<< setw(bytesAllocatedrep_width) << bytesAllocatedrep_head
-      << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
-      << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
-      << endl;
-
-  if ( !to_file ) {
-    for (size_t i = 0; i < dash_width; ++i) {
-      str << "-";
+    // print row of categories
+    str <<left<< setw(kercol_width) << attr_category_head;
+    for (Attribute const& attr : attrs) {
+      str << sepchr <<right<< setw(attr.width) << attr.category_name;
     }
-    str << endl;
+    str << '\n';
+
+    // print row of headers
+    str <<left<< setw(kercol_width) << kern_head;
+    for (Attribute const& attr : attrs) {
+      str << sepchr <<right<< setw(attr.width) << attr.name;
+    }
+    str << '\n';
+
+    if ( !to_file ) {
+      // print row of dashes
+      Index_type dash_width = kercol_width + current_width;
+      for (Index_type i = 0; i < dash_width; ++i) {
+        str << "-";
+      }
+      str << '\n';
+    }
+
+    for (KernelBase const* kern : kernels) {
+      // print row for each kernel
+      str <<left<< setw(kercol_width) <<  kern->getName();
+      for (Attribute const& attr : attrs) {
+        str << sepchr <<right<< setw(attr.width) << attr.getter(kern);
+      }
+      str << '\n';
+    }
+
+    if ( !to_file ) {
+      str << '\n';
+    }
+
+    attrs.clear();
+    current_width = 0;
+
+  };
+
+//
+// function for adding attr columns. This will print sections of the table if
+// as attr columns are added to keep the table from getting too wide.
+// Some attr columns may be skipped if they contain no information.
+//
+  auto add_attr = [&](std::string category_name, std::string name,
+                      auto getter, bool skip_if_nonpositive = false) {
+
+    Index_type width = max( static_cast<Index_type>(category_name.size()),
+                            static_cast<Index_type>(name.size()) );
+
+    using value_type = decltype(getter(kernels[0]));
+
+    std::function<std::string(KernelBase const*)> attr_getter;
+
+    if constexpr (std::integral<value_type>) {
+
+      Index_type max_value = std::numeric_limits<Index_type>::min();
+      for (size_t ik = 0; ik < kernels.size(); ++ik) {
+        max_value = max(max_value, getter(kernels[ik]));
+      }
+      if (skip_if_nonpositive && max_value <= static_cast<Index_type>(0)) return;
+      max_value = max(max_value, static_cast<Index_type>(1));
+      double value_width = log10(static_cast<double>(max_value)) + 1.0;
+      width = max( width, static_cast<Index_type>(value_width) );
+
+      attr_getter = [=](KernelBase const* kern) {
+            std::ostringstream str;
+            str << getter(kern);
+            return str.str();
+          };
+
+    } else if constexpr (std::convertible_to<value_type, std::string_view>) {
+
+      Index_type max_size = 0;
+      for (size_t ik = 0; ik < kernels.size(); ++ik) {
+        auto value = getter(kernels[ik]);
+        std::string_view view = value;
+        max_size = max( max_size, static_cast<Index_type>(view.size()) );
+      }
+      width = max( width, max_size );
+
+      attr_getter = [=](KernelBase const* kern) {
+            return std::string(getter(kern));
+          };
+
+    } else {
+
+      static_assert(false);
+    }
+
+    width += 2;
+    Index_type width_with_sep = static_cast<Index_type>(sepchr.size()) + width;
+
+    if (current_width + width_with_sep > max_width) {
+      print_attr_table();
+    }
+
+    current_width += width_with_sep;
+    attrs.emplace_back(Attribute{category_name, name, width, std::move(attr_getter)});
+  };
+
+//
+// user settable attributes
+//
+  add_attr("Input", "Problem size", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getActualProblemSize());
+      });
+
+  add_attr("Input", "Reps", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getRunReps());
+      });
+
+  if ( !to_file && current_width > 0 ) {
+    print_attr_table();
   }
 
+//
+// manually counted attributes
+//
+  add_attr("Estimate", "Iterations/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getItsPerRep());
+      });
+
+  add_attr("Estimate", "Kernels/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getKernelsPerRep());
+      });
+
+  add_attr("Estimate", "BytesMoved/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesMovedPerRep());
+      });
+
+  add_attr("Estimate", "FLOPS/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getFLOPsPerRep());
+      });
+
+  add_attr("Estimate", "BytesRead/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesReadPerRep());
+      });
+
+  add_attr("Estimate", "BytesWritten/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesWrittenPerRep());
+      });
+
+  add_attr("Estimate", "BytesAtomicModifyWritten/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesAtomicModifyWrittenPerRep());
+      });
+
+  add_attr("Estimate", "BytesAllocated/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesAllocatedPerRep());
+      });
+
+  add_attr("Estimate", "ChecksumConsistency", [](KernelBase const* kernel){
+        return getChecksumConsistencyName(kernel->getChecksumConsistency());
+      });
+
+  add_attr("Estimate", "OperationalComplexity", [](KernelBase const* kernel){
+        return "O("+getComplexityName(kernel->getComplexity())+")";
+      });
+
+  if ( !to_file && current_width > 0 ) {
+    print_attr_table();
+  }
+
+//
+// automatically counted high level attributes
+//
+  add_attr("Counted", "Iterations/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedItsPerRep());
+      });
+
+  add_attr("Counted", "ParallelIterations/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedParItsPerRep());
+      });
+
+  add_attr("Counted", "MaxLoopNestDepth", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedMaxLoopNestDepth());
+      });
+
+  add_attr("Counted", "MaxParallelLoopNestDepth", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedMaxParLoopNestDepth());
+      });
+
+  add_attr("Counted", "Kernels/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedKernelsPerRep());
+      });
+
+  add_attr("Counted", "Synchronizes/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedSyncsPerRep());
+      });
+
+  add_attr("Counted", "TeamSynchronizes/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getCountedTeamSyncsPerRep());
+      });
+
+  if ( !to_file && current_width > 0 ) {
+    print_attr_table();
+  }
+
+//
+// automatically counted memory attributes, at the per loop usage granularity
+//
+  for (Size_type g = 0; g < Size_type(counting::AllocationGroup::NumAllocationGroups); ++g) {
+    auto gg = counting::AllocationGroup(g);
+
+    std::string num_name = std::format("{}NumAllocations",
+        counting::getAllocationGroupName(gg));
+
+    add_attr("Counted", num_name, [gg](KernelBase const* kernel){
+          return static_cast<Index_type>(kernel->getCountedNumAllocations(gg));
+        });
+
+    std::string bytes_name = std::format("{}AllocatedBytes",
+        counting::getAllocationGroupName(gg));
+
+    add_attr("Counted", bytes_name, [gg](KernelBase const* kernel){
+          return static_cast<Index_type>(kernel->getCountedAllocatedBytes(gg));
+        });
+
+    std::string bytes_total_name = std::format("{}BytesTotal/rep",
+        counting::getAllocationGroupName(gg));
+
+    add_attr("Counted", bytes_total_name, [gg](KernelBase const* kernel){
+          return static_cast<Index_type>(
+              kernel->getCountedTotalBytes(gg));
+        });
+
+    for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
+      auto aa = counting::MemoryAccess(a);
+
+      std::string bytes_total_accessed_name = std::format("{}BytesTotal{}/rep",
+          counting::getAllocationGroupName(gg),
+          counting::getMemoryAccessNamePastTenseTitle(aa));
+      add_attr("Counted", bytes_total_accessed_name, [gg, aa](KernelBase const* kernel){
+            return static_cast<Index_type>(
+                kernel->getCountedTotalBytesPerAccess(gg, aa));
+          });
+
+    }
+
+    for (Size_type p = 0; p < Size_type(counting::CountingPoint::NumCountingPoints); ++p) {
+        auto pp = counting::CountingPoint(p);
+
+      std::string bytes_touched_name = std::format("{}BytesTouched/{}",
+          counting::getAllocationGroupName(gg),
+          counting::getCountingPointName(pp));
+
+      add_attr("Counted", bytes_touched_name, [pp, gg](KernelBase const* kernel){
+            return static_cast<Index_type>(
+                kernel->getCountedBytesTouched(pp, gg));
+          });
+
+      std::string bytes_name = std::format("{}Bytes/{}",
+          counting::getAllocationGroupName(gg),
+          counting::getCountingPointName(pp));
+
+      add_attr("Counted", bytes_name, [pp, gg](KernelBase const* kernel){
+            return static_cast<Index_type>(
+                kernel->getCountedBytes(pp, gg));
+          });
+
+      for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
+        auto aa = counting::MemoryAccess(a);
+
+        std::string bytes_accessed_name = std::format("{}Bytes{}/{}",
+            counting::getAllocationGroupName(gg),
+            counting::getMemoryAccessNamePastTenseTitle(aa),
+            counting::getCountingPointName(pp));
+        add_attr("Counted", bytes_accessed_name, [pp, gg, aa](KernelBase const* kernel){
+              return static_cast<Index_type>(
+                  kernel->getCountedBytesPerAccess(pp, gg, aa));
+            });
+
+      }
+
+    }
+  }
+
+  if ( !to_file && current_width > 0 ) {
+    print_attr_table();
+  }
+
+//
+// automatically counted operations attributes
+//
+  for (Size_type ot = 0; ot < Size_type(counting::OpType::NumOpTypes); ++ot) {
+
+    std::string opTypeName = counting::getOpTypeName(counting::OpType(ot));
+
+    add_attr("Counted", opTypeName+"_ops/rep", [ot](KernelBase const* kernel){
+          return static_cast<Index_type>(kernel->getCountedArithmeticOpsPerRep(counting::OpType(ot)));
+        }, skip_if_nonpositive);
+
+    for (Size_type op = 0; op < Size_type(counting::Operation::NumOperations); ++op) {
+
+      std::string opName = counting::getOperationName(counting::Operation(op));
+
+      add_attr("Counted", opTypeName+"_"+opName+"/rep", [ot, op](KernelBase const* kernel){
+            return static_cast<Index_type>(kernel->getCountedOpsPerRep(counting::OpType(ot), counting::Operation(op)));
+          }, skip_if_nonpositive);
+
+    }
+
+    if ( !to_file && current_width > 0 ) {
+      print_attr_table();
+    }
+
+  }
+
+  if (current_width > 0) {
+    print_attr_table();
+  }
+
+  str.flush();
+}
+
+
+void Executor::writeKernelCounterSummary(ostream& str,
+                                         vector<KernelBase*> const& kernels) const
+{
   for (size_t ik = 0; ik < kernels.size(); ++ik) {
-    KernelBase* kern = kernels[ik];
-    str           <<left << setw(kernel_width) << kern->getName()
-        << sepchr <<right<< setw(psize_width) << kern->getActualProblemSize()
-        << sepchr <<right<< setw(reps_width) << kern->getRunReps()
-        << sepchr <<right<< setw(itsrep_width) << kern->getItsPerRep()
-        << sepchr <<right<< setw(kernsrep_width) << kern->getKernelsPerRep()
-        << sepchr <<right<< setw(bytesMovedrep_width) << kern->getBytesMovedPerRep()
-        << sepchr <<right<< setw(flopsrep_width) << kern->getFLOPsPerRep()
-        << sepchr <<right<< setw(bytesTouchedrep_width) << kern->getBytesTouchedPerRep()
-        << sepchr <<right<< setw(bytesReadrep_width) << kern->getBytesReadPerRep()
-        << sepchr <<right<< setw(bytesWrittenrep_width) << kern->getBytesWrittenPerRep()
-        << sepchr <<right<< setw(bytesModifyWrittenrep_width) << kern->getBytesModifyWrittenPerRep()
-        << sepchr <<right<< setw(bytesAtomicModifyWrittenrep_width) << kern->getBytesAtomicModifyWrittenPerRep()
-        << sepchr <<right<< setw(bytesAllocatedrep_width) << kern->getBytesAllocatedPerRep()
-        << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
-        << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
-        << endl;
+    str << "\n/******** Kernel " << kernels[ik]->getName() << " ********/\n";
+    kernels[ik]->printCounters(str);
   }
-
   str.flush();
 }
 
@@ -1214,6 +1417,11 @@ void Executor::outputRunData()
       writeKernelInfoSummary(*file, kernels, to_file);
     }
 
+    file = openOutputFile(out_fprefix + "-counters.txt");
+    if ( *file ) {
+      writeKernelCounterSummary(*file, kernels);
+    }
+
     file = openOutputFile(out_fprefix + "-kernel-run-data.csv");
     writeKernelRunDataSummary(*file, kernels);
 
@@ -1265,6 +1473,8 @@ void Executor::outputRunData()
     if ( *file ) {
       constexpr bool to_file = true;
       writeKernelInfoSummary(*file, mykernel, to_file);
+
+      writeKernelCounterSummary(*file, mykernel);
     }
 
     writeSeparator(*file);
