@@ -143,6 +143,30 @@ using Real_type = float;
 
 #endif
 
+template < size_t N >
+using Real_array = Real_type[N];
+
+template < size_t N0, size_t N1 >
+using Real_array2 = Real_type[N0][N1];
+
+template < size_t N0, size_t N1, size_t N2 >
+using Real_array3 = Real_type[N0][N1][N2];
+
+template < size_t N0, size_t N1, size_t N2, size_t N3 >
+using Real_array4 = Real_type[N0][N1][N2][N3];
+
+template < size_t N >
+using Real_array_ref = Real_type(&)[N];
+
+template < size_t N0, size_t N1 >
+using Real_array2_ref = Real_type(&)[N0][N1];
+
+template < size_t N0, size_t N1, size_t N2 >
+using Real_array3_ref = Real_type(&)[N0][N1][N2];
+
+template < size_t N0, size_t N1, size_t N2, size_t N3 >
+using Real_array4_ref = Real_type(&)[N0][N1][N2][N3];
+
 using Real_ptr = Real_type*;
 using Real_const_ptr = Real_type const *;
 ///
