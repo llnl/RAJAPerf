@@ -508,7 +508,7 @@ def plot_kernel(
                 linewidth=0,
                 color=colors[idx % len(colors)],
                 marker="*",
-                markersize=30
+                markersize=20
             )
 
     if ymin > 0:
