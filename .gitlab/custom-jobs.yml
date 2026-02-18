@@ -25,6 +25,10 @@
     paths:
       - ./*.cmake
 
+.custom_perf:
+  variables:
+    CALI_CONFIG: "print.metadata"
+
 .reproducer_vars:
   script:
     - |
