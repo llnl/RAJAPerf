@@ -83,6 +83,8 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
   }
 
+  dataFile.close();
+
   m_ne = m_nx * m_ny * m_nz;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
@@ -274,6 +276,8 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
     }
 
   }
+
+  dataFile.close();
 
 }
 
