@@ -49,8 +49,10 @@ void EOS::setSize(Index_type target_size, Index_type target_reps)
   m_array_length = getActualProblemSize() + 6;
 
   setItsPerRep( getActualProblemSize() );
-  setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * getActualProblemSize() + // x, y, z
+                           1*sizeof(Real_type) * m_array_length ); // u
   setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() + // z, y
                       1*sizeof(Real_type) * m_array_length ); // u (each iterate accesses the range [i, i+6])
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x

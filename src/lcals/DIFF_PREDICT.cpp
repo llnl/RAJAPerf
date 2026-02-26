@@ -46,8 +46,9 @@ void DIFF_PREDICT::setSize(Index_type target_size, Index_type target_reps)
   setRunReps( target_reps );
 
   setItsPerRep( getActualProblemSize() );
-
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 11*sizeof(Real_type) * getActualProblemSize() ); // px, cx
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // cx(4)
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // px(13)
   setBytesModifyWrittenPerRep( 9*sizeof(Real_type) * getActualProblemSize() ); // px(4), px(5), px(6), px(7), px(8), px(9), px(10), px(11), px(12)
@@ -61,16 +62,13 @@ DIFF_PREDICT::~DIFF_PREDICT()
 
 void DIFF_PREDICT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  m_array_length = getActualProblemSize() * 14;
-  m_offset = getActualProblemSize();
-
-  allocAndInitDataConst(m_px, m_array_length, 0.0, vid);
-  allocAndInitData(m_cx, m_array_length, vid);
+  allocAndInitDataConst(m_px, 10*getActualProblemSize(), 0.0, vid);
+  allocAndInitData(m_cx, getActualProblemSize(), vid);
 }
 
 void DIFF_PREDICT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_px, m_array_length, vid);
+  addToChecksum(m_px, 10*getActualProblemSize(), vid);
 }
 
 void DIFF_PREDICT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

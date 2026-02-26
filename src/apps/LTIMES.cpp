@@ -63,6 +63,10 @@ void LTIMES::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_philen );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_elllen + // ell
+                           1*sizeof(Real_type) * m_psilen + // psi
+                           1*sizeof(Real_type) * m_philen ); // phi
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_elllen + // ell
                       1*sizeof(Real_type) * m_psilen ); // psi
@@ -78,9 +82,9 @@ LTIMES::~LTIMES()
 
 void LTIMES::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_phidat, int(m_philen), Real_type(0.0), vid);
-  allocAndInitData(m_elldat, int(m_elllen), vid);
-  allocAndInitData(m_psidat, int(m_psilen), vid);
+  allocAndInitDataConst(m_phidat, m_philen, Real_type(0.0), vid);
+  allocAndInitData(m_elldat, m_elllen, vid);
+  allocAndInitData(m_psidat, m_psilen, vid);
 }
 
 void LTIMES::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

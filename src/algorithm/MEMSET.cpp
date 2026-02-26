@@ -48,6 +48,7 @@ void MEMSET::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesReadPerRep( 0 );
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesModifyWrittenPerRep( 0 );

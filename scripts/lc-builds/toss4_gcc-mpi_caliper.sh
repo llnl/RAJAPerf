@@ -9,28 +9,42 @@
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.24.2
+
 if [[ $# -lt 3 ]]; then
   echo
-  echo "You must pass 3 arguments to the script (in this order): "
+  echo "You must pass 3 or more arguments to the script (in this order): "
   echo "   1) compiler version number"
   echo "   2) path to caliper cmake directory"
   echo "   3) path to adiak cmake directory"
+  echo "   4) optional CMake version to load."
   echo
   echo "For example: "
-  echo "    toss4_gcc-mpi_caliper.sh 10.3.1 /usr/workspace/wsb/asde/caliper-quartz/share/cmake/caliper /usr/workspace/wsb/asde/caliper-quartz/lib/cmake/adiak"
-  exit
+  echo "    toss4_gcc-mpi_caliper.sh 10.3.1 /usr/workspace/wsb/asde/caliper-quartz/share/cmake/caliper /usr/workspace/wsb/asde/caliper-quartz/lib/cmake/adiak [3.27.4]"
+  exit 1
 fi
 
 COMP_VER=$1
 CALI_DIR=$2
 ADIAK_DIR=$3
-shift 3
+
+# Detect optional fourth positional argument as a CMake version if it looks like N.M or N.M.P
+# Otherwise, treat it as a normal CMake argument.
+if [ -n "$4" ] && [[ "$4" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$4
+  shift 4
+else
+  CMAKE_VER=$DEFAULT_CMAKE_VER
+  shift 3
+fi
 
 BUILD_SUFFIX=lc_toss4-gcc-mpi-${COMP_VER}
 RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/gcc_X.cmake
 
 echo
 echo "Creating build directory build_${BUILD_SUFFIX} and generating configuration in it"
+echo "Using CMake version: ${CMAKE_VER}"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -38,7 +52,7 @@ echo
 rm -rf build_${BUILD_SUFFIX} 2>/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
-module load cmake/3.23.1
+module load cmake/${CMAKE_VER}
 
 cmake \
   -DCMAKE_BUILD_TYPE=Release \

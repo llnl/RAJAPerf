@@ -191,8 +191,6 @@ private:
 
   Index_type m_jn;
   Index_type m_kn;
-
-  Index_type m_array_length;
 };
 
 } // end namespace lcals

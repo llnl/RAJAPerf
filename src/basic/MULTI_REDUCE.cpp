@@ -55,8 +55,12 @@ void MULTI_REDUCE::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Data_type) * getActualProblemSize() + // bins
-                      1*sizeof(Index_type) * getActualProblemSize() ); // data
+
+  setBytesAllocatedPerRep( 1*sizeof(Data_type) * getActualProblemSize() + // data
+                           1*sizeof(Index_type) * getActualProblemSize() + // bins
+                           1*sizeof(Data_type) * m_num_bins ); // values
+  setBytesReadPerRep( 1*sizeof(Data_type) * getActualProblemSize() + // data
+                      1*sizeof(Index_type) * getActualProblemSize() ); // bins
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 1*sizeof(Data_type) * m_num_bins ); // values

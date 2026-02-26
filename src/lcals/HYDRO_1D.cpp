@@ -46,13 +46,14 @@ void HYDRO_1D::setSize(Index_type target_size, Index_type target_reps)
   setActualProblemSize( target_size );
   setRunReps( target_reps );
 
-  m_array_length = getActualProblemSize() + 12;
-
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * getActualProblemSize() + // y
-                      1*sizeof(Real_type ) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * getActualProblemSize() ); // x
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() + // x, y
+                           1*sizeof(Real_type) * (getActualProblemSize()+1) ); // z
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // y
+                      1*sizeof(Real_type) * (getActualProblemSize()+1) ); // z (each iterate accesses the range [i+10, i+11])
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(5 * getActualProblemSize());
@@ -64,9 +65,9 @@ HYDRO_1D::~HYDRO_1D()
 
 void HYDRO_1D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitDataConst(m_x, m_array_length, 0.0, vid);
-  allocAndInitData(m_y, m_array_length, vid);
-  allocAndInitData(m_z, m_array_length, vid);
+  allocAndInitDataConst(m_x, getActualProblemSize(), 0.0, vid);
+  allocAndInitData(m_y, getActualProblemSize(), vid);
+  allocAndInitData(m_z, getActualProblemSize()+1, vid);
 
   initData(m_q, vid);
   initData(m_r, vid);

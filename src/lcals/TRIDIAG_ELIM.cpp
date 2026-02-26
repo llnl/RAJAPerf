@@ -50,8 +50,10 @@ void TRIDIAG_ELIM::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_N-1 );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 3*sizeof(Real_type ) * (m_N-1) ); // z, y, xin
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // xout
+
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_N ); // xout, xin, y, z
+  setBytesReadPerRep( 3*sizeof(Real_type) * (m_N-1) ); // z, y, xin
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_N-1) ); // xout
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * (m_N-1));
