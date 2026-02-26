@@ -404,6 +404,14 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
       i++;
       if ( i < argc ) {
         npasses = ::atoi( argv[i] );
+        #if defined(RAJA_PERFSUITE_USE_CALIPER)
+          if (npasses > 1) {
+            getCout() << "\nBad input:"
+                  << " --npasses cannot be >1 when profiling with Caliper"
+                  << std::endl;
+            input_state = BadInput;
+          }
+        #endif
       } else {
         getCout() << "\nBad input:"
                   << " must give --npasses a value for number of passes (int)"
