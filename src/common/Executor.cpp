@@ -321,6 +321,10 @@ Executor::Executor(int argc, char** argv)
   adiak::value("ProblemSizeFactorRunParam",(uint)run_params.getSizeFactor());
   adiak::value("ProblemMinSizeRunParam",(uint)run_params.getMinSize());
 
+  adiak::value("LtimesNumGroups", (uint)run_params.getLtimesNumG());
+  adiak::value("LtimesNumMoments", (uint)run_params.getLtimesNumM());
+  adiak::value("LtimesNumDirections", (uint)run_params.getLtimesNumD());
+
   // Openmp section
 #if defined(_OPENMP)
   std::string strval = "";
