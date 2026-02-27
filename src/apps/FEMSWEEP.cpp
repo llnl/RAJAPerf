@@ -8,12 +8,13 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 #include "FEMSWEEP.hpp"
-#include "FEMSWEEP_DATA.hpp"
 
 #include "RAJA/RAJA.hpp"
 
 #include "common/DataUtils.hpp"
 
+#include <fstream>
+#include <string>
 #include <algorithm>
 #include <cmath>
 
@@ -26,12 +27,65 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  m_nx = 15;
-  m_ny = 15;
-  m_nz = 15;
+  auto readOneLong = [=](std::ifstream & file, Index_type & val, std::string valname) {
+
+    // Read next line for value.
+    std::string line;
+    if ( std::getline(file, line) )
+    {
+      val = std::stol(line);
+    }
+    else
+    {
+      std::cout << "Unable to initialize " << valname << " properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
+    }
+
+  };
+
+  m_mesh_file = params.getFemsweepMeshFile();
+
+  // Read problem size from file.
+  std::ifstream dataFile(m_mesh_file);
+
+  if ( !dataFile.is_open() )
+  {
+    std::cout << "Could not open " << m_mesh_file << " in constructor." << std::endl;
+  }
+
+  std::string line;
+  while ( std::getline(dataFile, line) )
+  {
+
+    if ( line == std::string("m_nx") )
+    {
+      readOneLong(dataFile, m_nx, "m_nx");
+    }
+
+    else if ( line == std::string("m_ny") )
+    {
+      readOneLong(dataFile, m_ny, "m_ny");
+    }
+
+    else if ( line == std::string("m_nz") )
+    {
+      readOneLong(dataFile, m_nz, "m_nz");
+    }
+
+    else if ( line == std::string("m_na") )
+    {
+      readOneLong(dataFile, m_na, "m_na");
+    }
+
+    else if ( line == std::string("m_ng") )
+    {
+      readOneLong(dataFile, m_ng, "m_ng");
+    }
+
+  }
+
+  dataFile.close();
+
   m_ne = m_nx * m_ny * m_nz;
-  m_na = 72;
-  m_ng = 128;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
@@ -56,10 +110,15 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
 void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type target_reps)
 {
+  m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
+                          m_nx * (m_ny - 1) * m_nz +
+                          m_nx * m_ny * (m_nz - 1);
+  m_boundaryfaces = 2 * m_nx * m_ny + 2 * m_ny * m_nz + 2 * m_nx * m_nz;
+  m_hplanes = m_nx + m_ny + m_nz - 2;
+
   m_Blen = ND * m_ne * m_na;
   m_Alen = ND * ND * m_ne * m_na;
-  // 9450 is a property of the mesh. Will need to derive this when mesh generator is available.
-  m_Flen = FDS * FDS * 2 * 9450 * m_na;
+  m_Flen = FDS * FDS * 2 * m_sharedinteriorfaces * m_na;
   m_Sglen = m_ne * m_ng;
   m_M0len = ND * ND * m_ne;
   m_Xlen = ND * m_ne * m_ng * m_na;
@@ -116,6 +175,40 @@ FEMSWEEP::~FEMSWEEP()
 {
 }
 
+template < typename T >
+void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname)
+{
+  std::string line;
+
+  // Read next line for array size.
+  if ( std::getline(file, line) )
+  {
+    long sizetemp = std::stol(line);
+    // Check size for sanity.
+    if ( sizetemp != expectedsize )
+    {
+      std::cout << "Size of " << arrname << " in " << m_mesh_file << " does not match." << std::endl;
+    }
+    auto temp_arr = allocDataForInit(arr, sizetemp, vid); 
+    // Read rest of entries for array.
+    for ( int lcount = 0; lcount < sizetemp; ++lcount )
+    {
+      if ( std::getline(file, line) )
+      {
+        arr[lcount] = std::stol(line);
+      }
+      else
+      {
+        std::cout << "Invalid entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
+      }
+    }
+  }
+  else
+  {
+    std::cout << "Invalid size entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
+  }
+}
+
 void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
@@ -125,18 +218,67 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
-  // Some of the constants are properties of the mesh.
-  // Will need to derive these when mesh generator is available.
-  allocAndCopyHostData(m_nhpaa_r, g_nhpaa_r, m_na       , vid);
-  allocAndCopyHostData(m_ohpaa_r, g_ohpaa_r, m_na       , vid);
-  allocAndCopyHostData(m_phpaa_r, g_phpaa_r, m_na * 43  , vid);
-  allocAndCopyHostData(m_order_r, g_order_r, m_na * m_ne, vid);
+  // Read mesh connectivity data from file.
+  std::ifstream dataFile(m_mesh_file);
 
-  allocAndCopyHostData(m_AngleElem2FaceType, g_AngleElem2FaceType, NLF * m_ne * m_na , vid);
-  allocAndCopyHostData(m_elem_to_faces     , g_elem_to_faces     , NLF * m_ne        , vid);
-  allocAndCopyHostData(m_F_g2l             , g_F_g2l             , 10800             , vid);
-  allocAndCopyHostData(m_idx1              , g_idx1              , 37800             , vid);
-  allocAndCopyHostData(m_idx2              , g_idx2              , 37800             , vid);
+  if ( !dataFile.is_open() )
+  {
+    std::cout << "Could not open " << m_mesh_file << " in setUp." << std::endl;
+  }
+
+  std::string line;
+  while ( std::getline(dataFile, line) )
+  {
+
+    if ( line == "m_nhpaa_r" )
+    {
+      readIndexArray(vid, dataFile, m_nhpaa_r, m_na, "m_nhpaa_r");
+    }
+
+    else if ( line == std::string("m_ohpaa_r") )
+    {
+      readIndexArray(vid, dataFile, m_ohpaa_r, m_na, "m_ohpaa_r");
+    }
+
+    else if ( line == std::string("m_phpaa_r") )
+    {
+      readIndexArray(vid, dataFile, m_phpaa_r, m_na * m_hplanes, "m_phpaa_r");
+    }
+
+    else if ( line == std::string("m_order_r") )
+    {
+      readIndexArray(vid, dataFile, m_order_r, m_na * m_ne, "m_order_r");
+    }
+
+    else if ( line == std::string("m_AngleElem2FaceType") )
+    {
+      readIndexArray(vid, dataFile, m_AngleElem2FaceType, NLF * m_na * m_ne, "m_AngleElem2FaceType");
+    }
+
+    else if ( line == std::string("m_elem_to_faces") )
+    {
+      readIndexArray(vid, dataFile, m_elem_to_faces, NLF * m_ne, "m_elem_to_faces");
+    }
+
+    else if ( line == std::string("m_F_g2l") )
+    {
+      readIndexArray(vid, dataFile, m_F_g2l, m_sharedinteriorfaces + m_boundaryfaces, "m_F_g2l");
+    }
+
+    else if ( line == std::string("m_idx1") )
+    {
+      readIndexArray(vid, dataFile, m_idx1, m_sharedinteriorfaces * 4, "m_idx1");
+    }
+
+    else if ( line == std::string("m_idx2") )
+    {
+      readIndexArray(vid, dataFile, m_idx2, m_sharedinteriorfaces * 4, "m_idx2");
+    }
+
+  }
+
+  dataFile.close();
+
 }
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

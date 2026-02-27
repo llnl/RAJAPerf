@@ -64,7 +64,7 @@
 ///                  // data can result in exponential growth instead. A specific trick of 
 ///                  // multiplying by zero, without the compiler optimizing it away, is 
 ///                  // necessary to prevent unbounded growth and avoid computing NaNs.
-///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
+///                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne];
 ///               } // i
 ///               b[djs % ND] -= F;
 ///            } // j
@@ -104,6 +104,7 @@ constexpr int FDS = 4;  // number of DOFs per face
   Index_type ne = m_ne; \
   Index_type na = m_na; \
   Index_type ng = m_ng; \
+  Index_type sharedinteriorfaces = m_sharedinteriorfaces; \
 \
   Index_ptr nhpaa_r = m_nhpaa_r;  \
   Index_ptr ohpaa_r = m_ohpaa_r;  \
@@ -157,7 +158,7 @@ constexpr int FDS = 4;  // number of DOFs per face
               { \
                  const int ffi = f * FDS + i; \
                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
-                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * 9450 * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
+                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
               b[djs % ND] -= F; \
            } \
@@ -299,6 +300,9 @@ public:
   template < size_t block_size >
   void runHipVariantImpl(VariantID vid);
 
+  template < typename T >
+  void readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname);
+
 private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
@@ -308,6 +312,8 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
+  std::string m_mesh_file;  // Path to file name of femsweep mesh.
+
   Index_type m_nx;
   Index_type m_ny;
   Index_type m_nz;
@@ -315,23 +321,16 @@ private:
   Index_type m_na;
   Index_type m_ng;
 
+  Index_type m_sharedinteriorfaces;
+  Index_type m_boundaryfaces;
+  Index_type m_hplanes;
+
   Real_ptr m_Bdat;
   Real_ptr m_Adat;
   Real_ptr m_Fdat;
   Real_ptr m_Sgdat;
   Real_ptr m_M0dat;
   Real_ptr m_Xdat;
-
-  Index_ptr m_nhpaa_r;
-  Index_ptr m_ohpaa_r;
-  Index_ptr m_phpaa_r;
-  Index_ptr m_order_r;
-
-  Index_ptr m_AngleElem2FaceType;
-  Index_ptr m_elem_to_faces     ;
-  Index_ptr m_F_g2l             ;
-  Index_ptr m_idx1              ;
-  Index_ptr m_idx2              ;
 
   Index_type m_Blen;
   Index_type m_Alen;
@@ -352,16 +351,16 @@ private:
   Index_type m_idx2len;
 
   // Mesh data
-  static Index_type g_nhpaa_r[72];
-  static Index_type g_ohpaa_r[72];
-  static Index_type g_phpaa_r[3096];
-  static Index_type g_order_r[243000];
+  Index_ptr m_nhpaa_r;
+  Index_ptr m_ohpaa_r;
+  Index_ptr m_phpaa_r;
+  Index_ptr m_order_r;
 
-  static Index_type g_AngleElem2FaceType[1458000];
-  static Index_type g_elem_to_faces[20250]     ;
-  static Index_type g_F_g2l[10800]             ;
-  static Index_type g_idx1[37800]              ;
-  static Index_type g_idx2[37800]              ;
+  Index_ptr m_AngleElem2FaceType;
+  Index_ptr m_elem_to_faces     ;
+  Index_ptr m_F_g2l             ;
+  Index_ptr m_idx1              ;
+  Index_ptr m_idx2              ;
 };
 
 } // end namespace apps
