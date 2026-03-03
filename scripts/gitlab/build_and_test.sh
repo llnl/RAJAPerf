@@ -305,7 +305,7 @@ then
 
     timed_message "Performance tests for RAJA Perf Suite"
 
-    raja_perf_command="${build_dir}/bin/raja-perf.exe --kernels ${perf_kernels} --exclude-kernels ${perf_exclude_kernels} --variants ${perf_variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
+    raja_perf_command="${build_dir}/bin/raja-perf.exe --warmup-perfrun-same --kernels ${perf_kernels} --exclude-kernels ${perf_exclude_kernels} --variants ${perf_variants} --outdir ${perf_artifact_dir} ${perf_run_opts}"
 
     if [[ -n ${perf_mpi_exec} ]]
     then
