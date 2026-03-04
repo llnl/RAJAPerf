@@ -51,17 +51,20 @@ void POLYBENCH_ATAX::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( 2 * m_N + m_N );
   setKernelsPerRep(2);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N +       // x
-                      1*sizeof(Real_type ) * m_N * m_N + // A
 
-                      1*sizeof(Real_type ) * m_N +        // tmp
-                      1*sizeof(Real_type ) * m_N * m_N ); // A
-  setBytesWrittenPerRep( 2*sizeof(Real_type ) * m_N + // y, tmp
+  setBytesAllocatedPerRep( 3*sizeof(Real_type) * m_N +        // tmp, x, y
+                           1*sizeof(Real_type) * m_N * m_N ); // A
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N +       // x
+                      1*sizeof(Real_type) * m_N * m_N + // A
+
+                      1*sizeof(Real_type) * m_N +        // tmp
+                      1*sizeof(Real_type) * m_N * m_N ); // A
+  setBytesWrittenPerRep( 2*sizeof(Real_type) * m_N + // y, tmp
 
                          0);
   setBytesModifyWrittenPerRep( 0 +
 
-                               1*sizeof(Real_type ) * m_N ); // y
+                               1*sizeof(Real_type) * m_N ); // y
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(2 * m_N*m_N +
                  2 * m_N*m_N );

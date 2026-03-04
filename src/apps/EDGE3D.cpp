@@ -59,6 +59,7 @@ void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( number_of_elements );
   setKernelsPerRep(1);
 
+  setBytesAllocatedPerRep( 4*sizeof(Real_type) * m_array_length ); // x, y, z, sum
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
   setBytesReadPerRep( 3*sizeof(Real_type) * (getItsPerRep() + 1+m_domain->jp+m_domain->kp) ); // x, y, z (3d nodal stencil pattern: 8 touches per iterate)

@@ -50,8 +50,10 @@ void FIRST_SUM::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( m_N-1 );
   setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Real_type ) * m_N ); // y (each iterate accesses the range [i-1, i])
-  setBytesWrittenPerRep( 1*sizeof(Real_type ) * (m_N-1) ); // x
+
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N ); // x, y
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_N ); // y (each iterate accesses the range [i-1, i])
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_N-1) ); // x
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
   setFLOPsPerRep(1 * (m_N-1));

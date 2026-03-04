@@ -64,23 +64,50 @@ void INTSC_HEXRECT::setSize(Index_type target_size, Index_type target_reps)
   //  Requested number of intersections will be converted to an even cube
   //  number of intersections.
   //
-  Size_type a3 =
-      (Size_type) ( std::cbrt((Real_type) target_size + 0.5) );
+  Index_type a3 = static_cast<Size_type>(std::cbrt(target_size + 0.5));
 
   // number of donor zones on a side of the cube
-  Size_type side = a3 / 2 ;
+  Index_type side = a3 / 2 ;
 
-  if ( side < 1UL ) { side = 1UL ; }
+  if ( side < 1L ) { side = 1L ; }
 
-  m_ndzones = side * side * side ;   // number of "donor zones" on a side
-  Size_type n_intsc = intsc_per_zone*m_ndzones ;   // number of intersections
-  m_ntzones = n_intsc ;          // one "target zone" per intersection
+  m_ndzones = side * side * side;  // number of "donor zones" on a side
+  Index_type n_intsc = intsc_per_zone*m_ndzones;   // number of intersections
+  m_ntzones = n_intsc;             // one "target zone" per intersection
+
+  // m_nrecords = number of intersections = 8 * number of donor zones
+  m_nrecords = n_intsc ;
+
+  m_ndx = static_cast<Int_type>(std::cbrt(m_ndzones + 0.5));
+  m_ndy = m_ndx ;
+  m_ndz = m_ndx ;
+
+  // a simple Cartesian mesh
+  m_ndnodes = static_cast<Index_type>(m_ndx+1) *
+              static_cast<Index_type>(m_ndy+1) *
+              static_cast<Index_type>(m_ndz+1) ;
+
+  m_nplanes = static_cast<Index_type>(m_ndx+2) +
+              static_cast<Index_type>(m_ndy+2) +
+              static_cast<Index_type>(m_ndz+2) ;
 
   setActualProblemSize( n_intsc );
   setRunReps( target_reps );
 
   setItsPerRep( n_intsc );
   setKernelsPerRep(1);
+
+  // Pack the sizes, pointers, and coordinates together.
+  Size_type planes_size = sizeof(Plane) + m_nplanes * sizeof(Real_type);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_ndnodes + // xdnode
+                           1*sizeof(Real_type) * m_ndnodes + // ydnode
+                           1*sizeof(Real_type) * m_ndnodes + // zdnode
+                           1*sizeof(Int_type) * 8*m_ndzones + // znlist
+                           1*sizeof(Char_type) * planes_size + // ncord
+                           1*sizeof(Int_type) * m_nrecords + // intsc_d
+                           1*sizeof(Int_type) * m_nrecords + // intsc_t
+                           1*sizeof(Real_type) * 4L*m_nrecords ); // records
 
   // touched data size, not actual number of stores and loads
   // see VOL3D.cpp
@@ -106,81 +133,51 @@ INTSC_HEXRECT::~INTSC_HEXRECT()
 {
 }
 
-
-
-void INTSC_HEXRECT::copyTargetToDevice
-    ( Real_const_ptr_ptr planes, // [3] Target mesh planes in (z,y,x)
-      Int_const_ptr ncord,    // [3] number of target zones in (z,y,x)
-      VariantID vid )      // to allocate memory on device
-{
-  Int_type my_ncord[4] = {0} ;     // Fourth integer for alignment.
-  my_ncord[2] = ncord[2] ;    // x
-  my_ncord[1] = ncord[1] ;    // y
-  my_ncord[0] = ncord[0] ;    // z
-
-  // ncord is the number of zones in each direction.
-  Index_type nplanes = my_ncord[2] + my_ncord[1] + my_ncord[0] + 3 ;
-
-  // Pack the coordinates together, on the GPU.
-  //  Allocate 3 spots for pointers to planes arrays, to set on GPU.
-  Index_type planes_size =
-      4 * sizeof(Int_type) + nplanes * sizeof(Real_type) + 3 * sizeof(void*) ;
-
-  auto a_nc = allocDataForInit ( m_ncord, planes_size, vid ) ;
-  for ( Index_type k=0 ; k<planes_size ; ++k ) {
-    m_ncord[k] = (Char_type)0 ;
-  }
-
-  //  Build the buffer on the host in order to reduce the number
-  //  of cudaMemcpy calls which are slow.
-  Int_ptr ncord_ptr = (Int_ptr) m_ncord ;
-  for ( Index_type k=0 ; k<4 ; ++k ) {
-    ncord_ptr[k] = my_ncord[k] ;
-  }
-
-  Index_type pos = 4 * sizeof(Int_type) ;
-  pos += 3 * sizeof(void*) ;    // pointers to planes arrays
-  Real_ptr cord_ptr = (Real_ptr) (m_ncord + pos) ;
-  for ( Index_type dir = 0 ; dir < 3 ; ++dir ) {   // Loop over directions.
-    if ( my_ncord[dir] > 0 ) {
-      for ( Index_type k=0 ; k <  (my_ncord[dir]+1) ; ++k ) {
-        cord_ptr[k] = planes[dir][k] ;
-      }
-      cord_ptr += my_ncord[dir] + 1 ;
-    }
-  }
-}
-
-
 //   Set up the Cartesian target mesh.  It is a series of Cartesian planes
 // in each direction.
 //
 //  The target mesh is one more than the number of donor zones in
 // each direction, so that each donor zone may intersect eight target zones.
 //
-void INTSC_HEXRECT::setupTargetPlanes
-    ( Real_ptr_ptr planes, Int_ptr ncord,
-      Int_type const ndx, Int_type const ndy, Int_type const ndz,  // donor zones each dir.
-      Real_type const x0, Real_type const y0, Real_type const z0,  // corner
-      Real_type const sep )    // plane pitch (separation)
+void INTSC_HEXRECT::setupTargetPlanes(VariantID vid)
 {
-  Int_type nx = ndx + 2 ;     // number of target planes
-  Int_type ny = ndy + 2 ;
-  Int_type nz = ndz + 2 ;
-  Int_type ntx = ndx + 1 ;    // number of target zones each direction
-  Int_type nty = ndy + 1 ;
-  Int_type ntz = ndz + 1 ;
+  // ncord is the number of target zones in each direction.
+  Int_type ncord[3];
+  ncord[0] = m_ndz + 1;
+  ncord[1] = m_ndy + 1;
+  ncord[2] = m_ndx + 1;
 
-  allocData  ( DataSpace::Host, planes[0], (nx+ny+nz) ) ;
-  planes[1] = planes[0] + nz ;
-  planes[2] = planes[1] + ny ;
+  // coordinate of first plane in each direction.
+  Real_type coords0[3];
+  coords0[0] = m_z0;
+  coords0[1] = m_y0;
+  coords0[2] = m_x0;
 
-  //  Target mesh plane coordinates.
-  for ( Index_type k=0 ; k < nz ; ++k ) {  planes[0][k] = z0 + k*sep ; }
-  for ( Index_type k=0 ; k < ny ; ++k ) {  planes[1][k] = y0 + k*sep ; }
-  for ( Index_type k=0 ; k < nx ; ++k ) {  planes[2][k] = x0 + k*sep ; }
+  // Pack the sizes, pointers, and coordinates together.
+  Size_type planes_size = sizeof(Plane) + m_nplanes * sizeof(Real_type);
 
-  ncord[0] = ntz ;    ncord[1] = nty ;    ncord[2] = ntx ;
+  auto a_nc = allocDataForInit(m_ncord, planes_size, vid);
+
+  //  Build the buffer on the host in order to reduce the number
+  //  of cudaMemcpy calls which are slow.
+  Plane* plane_ptr = reinterpret_cast<Plane*>(m_ncord);
+  Real_ptr setup_cord_ptr = reinterpret_cast<Real_ptr>(m_ncord + sizeof(Plane));
+  Real_ptr final_cord_ptr = reinterpret_cast<Real_ptr>(a_nc.get_final_ptr() + sizeof(Plane));
+
+  // Loop over directions.
+  for ( Index_type dir = 0 ; dir < 3 ; ++dir ) {
+
+    plane_ptr->ncord[dir] = ncord[dir] ;
+    plane_ptr->planes[dir] = final_cord_ptr;
+
+    // Set target mesh plane coordinates.
+    for ( Index_type k = 0; k < ncord[dir]+1; ++k ) {
+      setup_cord_ptr[k] = coords0[dir] + k*m_sep;
+    }
+
+    setup_cord_ptr += ncord[dir]+1;
+    final_cord_ptr += ncord[dir]+1;
+  }
 
 }
 
@@ -191,46 +188,45 @@ void INTSC_HEXRECT::setupTargetPlanes
 //  Zones are slightly smaller than the target mesh zones, so that the
 //  volumes of intersection vary.
 //
-void INTSC_HEXRECT::setupDonorMesh
-    ( Real_type const sep,    // Target mesh plane pitch (separation)
-      Real_type const xd0, Real_type const yd0, Real_type const zd0,  // donor corner
-      Int_type const ndx, Int_type const ndy, Int_type const ndz,  // donor zones each dir.
-      Real_ptr x, Real_ptr y, Real_ptr z,   // node coordinates (output)
-      Int_ptr znlist )     // zone node list.  Kernel uses indirect addressing.
+void INTSC_HEXRECT::setupDonorMesh()
 {
   //  slightly smaller zone widths for donor mesh.
-  m_sep1x = sep * ( 1.0 - 0.5 / (Real_type)(ndx+1) ) ;
-  m_sep1y = sep * ( 1.0 - 0.5 / (Real_type)(ndy+1) ) ;
-  m_sep1z = sep * ( 1.0 - 0.5 / (Real_type)(ndz+1) ) ;
+  m_sep1x = m_sep * ( 1.0 - 0.5 / (Real_type)(m_ndx+1) ) ;
+  m_sep1y = m_sep * ( 1.0 - 0.5 / (Real_type)(m_ndy+1) ) ;
+  m_sep1z = m_sep * ( 1.0 - 0.5 / (Real_type)(m_ndz+1) ) ;
 
-  for ( Index_type kz = 0 ; kz < ndz+1 ; ++kz ) {
-    for ( Index_type ky = 0 ; ky < ndy+1 ; ++ky ) {
-      for ( Index_type kx = 0 ; kx < ndx+1 ; ++kx ) {
-        Int_type node = kx + (ndx+1) * (ky + (ndy+1) * kz)  ;
+  for ( Index_type kz = 0 ; kz < m_ndz+1 ; ++kz ) {
+    for ( Index_type ky = 0 ; ky < m_ndy+1 ; ++ky ) {
+      for ( Index_type kx = 0 ; kx < m_ndx+1 ; ++kx ) {
+        Int_type node = kx + (m_ndx+1) * (ky + (m_ndy+1) * kz)  ;
 
-        x[node] = xd0 + kx * m_sep1x ;
-        y[node] = yd0 + ky * m_sep1y ;
-        z[node] = zd0 + kz * m_sep1z ;
+        m_xdnode[node] = m_xd0 + kx * m_sep1x ;
+        m_ydnode[node] = m_yd0 + ky * m_sep1y ;
+        m_zdnode[node] = m_zd0 + kz * m_sep1z ;
 
-      }}}
+      }
+    }
+  }
 
-  for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
-    for ( Index_type jy = 0 ; jy < ndy ; ++jy ) {
-      for ( Index_type jx = 0 ; jx < ndx ; ++jx ) {
+  for ( Index_type jz = 0 ; jz < m_ndz ; ++jz ) {
+    for ( Index_type jy = 0 ; jy < m_ndy ; ++jy ) {
+      for ( Index_type jx = 0 ; jx < m_ndx ; ++jx ) {
 
-        Int_type zone = jx + ndx * (jy + ndy * jz ) ;
+        Int_type zone = jx + m_ndx * (jy + m_ndy * jz ) ;
 
-        Int_type node0 = jx + (ndx+1) * (jy + (ndy+1) * jz ) ;
+        Int_type node0 = jx + (m_ndx+1) * (jy + (m_ndy+1) * jz ) ;
 
-        znlist[ 8*zone     ] = node0 ;
-        znlist[ 8*zone + 1 ] = node0 + 1 ;
-        znlist[ 8*zone + 2 ] = node0 + (ndx+1) ;
-        znlist[ 8*zone + 3 ] = node0 + (ndx+1) + 1 ;
-        znlist[ 8*zone + 4 ] = node0 + (ndx+1)*(ndy+1) ;
-        znlist[ 8*zone + 5 ] = node0 + (ndx+1)*(ndy+1) + 1 ;
-        znlist[ 8*zone + 6 ] = node0 + (ndx+1)*(ndy+1) + (ndx+1) ;
-        znlist[ 8*zone + 7 ] = node0 + (ndx+1)*(ndy+1) + (ndx+1) + 1 ;
-      }}}
+        m_znlist[ 8*zone     ] = node0 ;
+        m_znlist[ 8*zone + 1 ] = node0 + 1 ;
+        m_znlist[ 8*zone + 2 ] = node0 + (m_ndx+1) ;
+        m_znlist[ 8*zone + 3 ] = node0 + (m_ndx+1) + 1 ;
+        m_znlist[ 8*zone + 4 ] = node0 + (m_ndx+1)*(m_ndy+1) ;
+        m_znlist[ 8*zone + 5 ] = node0 + (m_ndx+1)*(m_ndy+1) + 1 ;
+        m_znlist[ 8*zone + 6 ] = node0 + (m_ndx+1)*(m_ndy+1) + (m_ndx+1) ;
+        m_znlist[ 8*zone + 7 ] = node0 + (m_ndx+1)*(m_ndy+1) + (m_ndx+1) + 1 ;
+      }
+    }
+  }
 }
 
 
@@ -240,137 +236,97 @@ void INTSC_HEXRECT::setupDonorMesh
 //   test we can calculate it from the alignment of the donor and
 //   target meshes.
 //
-void INTSC_HEXRECT::setupIntscPairs
-    ( Int_const_ptr ncord,    // number of target zones each direction
-      Int_type const ndx, Int_type const ndy, Int_type const ndz,  // donor zones each dir.
-      Int_ptr intsc_d,    // Donor zone of each intersecting pair
-      Int_ptr intsc_t )   // Target zone of each intersecting pair
+void INTSC_HEXRECT::setupIntscPairs()
 {
-  Int_type ntx = ncord[2] ;    // number of target zones each direction
-  Int_type nty = ncord[1] ;
+  Int_type ntx = m_ndx + 1; // number of target zones each direction
+  Int_type nty = m_ndy + 1;
 
-  for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
-    for ( Index_type jy = 0 ; jy < ndy ; ++jy ) {
-      for ( Index_type jx = 0 ; jx < ndx ; ++jx ) {
+  for ( Index_type jz = 0 ; jz < m_ndz ; ++jz ) {
+    for ( Index_type jy = 0 ; jy < m_ndy ; ++jy ) {
+      for ( Index_type jx = 0 ; jx < m_ndx ; ++jx ) {
 
-        Int_type zone = jx + ndx * (jy + ndy * jz ) ;
+        Int_type zone = jx + m_ndx * (jy + m_ndy * jz ) ;
 
-        for ( Index_type i = 0 ; i<8 ; ++i ) { intsc_d[ 8*zone+i ] = zone ; }
+        for ( Index_type i = 0 ; i < 8 ; ++i ) {
+          m_intsc_d[ 8*zone+i ] = zone ;
+        }
 
         Int_type tzone0 = jx + ntx * (jy + nty * jz) ;
 
         //  which target zones to intersect.
-        intsc_t[ 8*zone     ] = tzone0 ;
-        intsc_t[ 8*zone + 1 ] = tzone0 + 1 ;
-        intsc_t[ 8*zone + 2 ] = tzone0 + ntx ;
-        intsc_t[ 8*zone + 3 ] = tzone0 + ntx + 1 ;
-        intsc_t[ 8*zone + 4 ] = tzone0 + ntx*nty ;
-        intsc_t[ 8*zone + 5 ] = tzone0 + ntx*nty + 1 ;
-        intsc_t[ 8*zone + 6 ] = tzone0 + ntx*nty + ntx ;
-        intsc_t[ 8*zone + 7 ] = tzone0 + ntx*nty + ntx + 1 ;
-      }}}
+        m_intsc_t[ 8*zone     ] = tzone0 ;
+        m_intsc_t[ 8*zone + 1 ] = tzone0 + 1 ;
+        m_intsc_t[ 8*zone + 2 ] = tzone0 + ntx ;
+        m_intsc_t[ 8*zone + 3 ] = tzone0 + ntx + 1 ;
+        m_intsc_t[ 8*zone + 4 ] = tzone0 + ntx*nty ;
+        m_intsc_t[ 8*zone + 5 ] = tzone0 + ntx*nty + 1 ;
+        m_intsc_t[ 8*zone + 6 ] = tzone0 + ntx*nty + ntx ;
+        m_intsc_t[ 8*zone + 7 ] = tzone0 + ntx*nty + ntx + 1 ;
+      }
+    }
+  }
 }
 
 
 void INTSC_HEXRECT::setUp(VariantID vid,
                           Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  //  m_nrecords = number of intersections = 8 * number of donor zones
-  m_nrecords = getActualProblemSize() ;
-
-  Size_type ndzones = m_ndzones ;    // number of donor zones
-
-  m_ndx = (Int_type) ( cbrt( ndzones + 0.5 ) ) ;
-  m_ndy = m_ndx ;
-  m_ndz = m_ndx ;
-  Int_type const ndx = m_ndx ;
-  Int_type const ndy = m_ndy ;
-  Int_type const ndz = m_ndz ;
-
   // scaled offsets for donor mesh
   m_x_scl_offs = 1 ;
   m_y_scl_offs = 2 ;
   m_z_scl_offs = 3 ;
-  Int_type const x_scl_offs = m_x_scl_offs ;
-  Int_type const y_scl_offs = m_y_scl_offs ;
-  Int_type const z_scl_offs = m_z_scl_offs ;
-
-  Real_ptr planes[3] ;
-  Int_type ncord[3] ;
 
   m_sep = 0.1 ;           // target plane pitch (separation)
   m_x0 = -2.0 ;           // corner of target mesh
   m_y0 = -1.0 ;
   m_z0 = 1.0 ;
-  Real_type sep = m_sep ;
 
   //   corner of donor mesh
-  auto corner_d =
-      [=] ( Real_type const c0, Real_type const sep,
-            Int_type const scl_offs, Int_type const ndc ) {
+  auto corner_d = [=](Real_type const c0, Real_type const sep,
+                      Int_type const scl_offs, Int_type const ndc) {
 
-    Real_type corner = c0 + sep * (1.0 - (Real_type)scl_offs / (Real_type)(ndc+1) ) ;
-    return corner ;
-  } ;
+    return c0 + sep * (static_cast<Real_type>(1.0) - static_cast<Real_type>(scl_offs) / static_cast<Real_type>(ndc+1));
+  };
 
-  m_xd0 = corner_d ( m_x0, sep, x_scl_offs, ndx ) ;
-  m_yd0 = corner_d ( m_y0, sep, y_scl_offs, ndy ) ;
-  m_zd0 = corner_d ( m_z0, sep, z_scl_offs, ndz ) ;
+  m_xd0 = corner_d(m_x0, m_sep, m_x_scl_offs, m_ndx);
+  m_yd0 = corner_d(m_y0, m_sep, m_y_scl_offs, m_ndy);
+  m_zd0 = corner_d(m_z0, m_sep, m_z_scl_offs, m_ndz);
 
   //  donor zone coordinates (a simple Cartesian mesh).
-  int ndnodes = (ndx+1)*(ndy+1)*(ndz+1) ;
-  auto a_xd = allocDataForInit ( m_xdnode, ndnodes, vid ) ;
-  auto a_yd = allocDataForInit ( m_ydnode, ndnodes, vid ) ;
-  auto a_zd = allocDataForInit ( m_zdnode, ndnodes, vid ) ;
+  auto a_xd = allocDataForInit(m_xdnode, m_ndnodes, vid);
+  auto a_yd = allocDataForInit(m_ydnode, m_ndnodes, vid);
+  auto a_zd = allocDataForInit(m_zdnode, m_ndnodes, vid);
 
   // zone node list for the donor mesh
-  auto a_zl = allocDataForInit ( m_znlist, 8*ndzones, vid ) ;
+  auto a_zl = allocDataForInit(m_znlist, 8*m_ndzones, vid);
 
-  setupDonorMesh
-      ( sep, m_xd0, m_yd0, m_zd0, ndx, ndy, ndz,
-        m_xdnode, m_ydnode, m_zdnode, m_znlist ) ;
+  setupDonorMesh();
 
-  setupTargetPlanes
-      ( planes, ncord,
-        ndx, ndy, ndz,
-        m_x0, m_y0, m_z0, sep ) ;
+  setupTargetPlanes(vid);
 
   // which zones to intersect.  Computed by hand for this test of
   // the geometry kernel.
-  auto a_id = allocDataForInit ( m_intsc_d, m_nrecords, vid ) ;
-  auto a_it = allocDataForInit ( m_intsc_t, m_nrecords, vid ) ;
+  auto a_id = allocDataForInit(m_intsc_d, m_nrecords, vid);
+  auto a_it = allocDataForInit(m_intsc_t, m_nrecords, vid);
 
-  setupIntscPairs
-      ( ncord, ndx, ndy, ndz, m_intsc_d, m_intsc_t ) ;
+  setupIntscPairs();
 
-  Real_const_ptr_ptr planes_c = const_cast<Real_const_ptr_ptr>(planes) ;
-
-  copyTargetToDevice ( planes_c, ncord, vid ) ;
-
-  allocAndInitDataConst ( m_records, 4L*m_nrecords, 0.0, vid ) ;
+  allocAndInitDataConst( m_records, 4L*m_nrecords, 0.0, vid ) ;
 
   //  Output records copied to the host.
-  allocData             ( DataSpace::Host, m_records_h, 4L*m_nrecords ) ;
-
-  deallocData ( DataSpace::Host, planes[0] ) ;
+  allocData( DataSpace::Host, m_records_h, 4L*m_nrecords ) ;
 }
 
 
 //   Number of subzone intersections = 8 * number of standard intersections.
 //
-void INTSC_HEXRECT::checkMoments
-    ( Real_ptr records,  // volumes, moments from GPU (rescaled here)
-      Int_type const n_intsc,   // number of intersections = 8*ndx*ndy*ndz
-      Int_type const ndx, Int_type const ndy, Int_type const ndz,  // donor zones each dir.
-      Real_type const xd0, Real_type const yd0, Real_type const zd0,  // donor corner
-      Real_type const x0, Real_type const y0, Real_type const z0,  // target corner
-      Real_type const sep,  //  target plane pitch
-      Real_type const sep1x, Real_type const sep1y, Real_type const sep1z,
-      VariantID vid )     // Print variant name in case of error.
+void INTSC_HEXRECT::checkMoments(VariantID vid) // Print variant name in case of error.
 {
+  Real_ptr records = m_records_h; // volumes, moments from GPU (rescaled here)
+  Int_type const n_intsc = m_nrecords; // number of intersections = 8*m_ndx*m_ndy*m_ndz
 
   {
-    Real_type scale = 8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
+    Real_type scale = 8.0 * (Real_type)((m_ndx+1)*(m_ndy+1)*(m_ndz+1)) / (m_sep*m_sep*m_sep) ;
 
     //  Scale the volumes to produce integers.
     for ( Index_type i = 0 ; i < 4*n_intsc ; ++i ) {
@@ -392,32 +348,32 @@ void INTSC_HEXRECT::checkMoments
     }
 
     Real_ptr zca, zcb, yca, ycb, xca, xcb ;
-    allocData  ( DataSpace::Host, zca, ndz ) ;
-    allocData  ( DataSpace::Host, zcb, ndz ) ;
-    allocData  ( DataSpace::Host, yca, ndy ) ;
-    allocData  ( DataSpace::Host, ycb, ndy ) ;
-    allocData  ( DataSpace::Host, xca, ndx ) ;
-    allocData  ( DataSpace::Host, xcb, ndx ) ;
+    allocData  ( DataSpace::Host, zca, m_ndz ) ;
+    allocData  ( DataSpace::Host, zcb, m_ndz ) ;
+    allocData  ( DataSpace::Host, yca, m_ndy ) ;
+    allocData  ( DataSpace::Host, ycb, m_ndy ) ;
+    allocData  ( DataSpace::Host, xca, m_ndx ) ;
+    allocData  ( DataSpace::Host, xcb, m_ndx ) ;
 
-    for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
-      Real_type za = zd0 + jz * sep1z ;
-      Real_type zp = z0 + (jz+1)*sep ;
+    for ( Index_type jz = 0 ; jz < m_ndz ; ++jz ) {
+      Real_type za = m_zd0 + jz * m_sep1z ;
+      Real_type zp = m_z0 + (jz+1)*m_sep ;
       zca[jz] = 0.5 * ( za + zp ) ;
-      zcb[jz] = zca[jz] + 0.5 * sep1z ;
+      zcb[jz] = zca[jz] + 0.5 * m_sep1z ;
     }
 
-    for ( Index_type jy = 0 ; jy < ndy ; ++jy ) {
-      Real_type ya = yd0 + jy * sep1y ;
-      Real_type yp = y0 + (jy+1)*sep ;
+    for ( Index_type jy = 0 ; jy < m_ndy ; ++jy ) {
+      Real_type ya = m_yd0 + jy * m_sep1y ;
+      Real_type yp = m_y0 + (jy+1)*m_sep ;
       yca[jy] = 0.5 * ( ya + yp ) ;
-      ycb[jy] = yca[jy] + 0.5 * sep1y ;
+      ycb[jy] = yca[jy] + 0.5 * m_sep1y ;
     }
 
-    for ( Index_type jx = 0 ; jx < ndx ; ++jx ) {
-      Real_type xa = xd0 + jx * sep1x ;
-      Real_type xp = x0 + (jx+1)*sep ;
+    for ( Index_type jx = 0 ; jx < m_ndx ; ++jx ) {
+      Real_type xa = m_xd0 + jx * m_sep1x ;
+      Real_type xp = m_x0 + (jx+1)*m_sep ;
       xca[jx] = 0.5 * ( xa + xp ) ;
-      xcb[jx] = xca[jx] + 0.5 * sep1x ;
+      xcb[jx] = xca[jx] + 0.5 * m_sep1x ;
     }
 
 
@@ -430,9 +386,9 @@ void INTSC_HEXRECT::checkMoments
       Real_type expect_xc=0.0, expect_yc=0.0, expect_zc=0.0 ;
       Real_type calc_xc=0.0, calc_yc=0.0, calc_zc=0.0 ;
 
-      for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
-        for ( Index_type jy = 0 ; jy < ndy ; ++jy ) {
-          for ( Index_type jx = 0 ; jx < ndx ; ++jx ) {
+      for ( Index_type jz = 0 ; jz < m_ndz ; ++jz ) {
+        for ( Index_type jy = 0 ; jy < m_ndy ; ++jy ) {
+          for ( Index_type jx = 0 ; jx < m_ndx ; ++jx ) {
 
             for ( Index_type irec = rec0 ; irec < rec0+8 ; ++irec ) {
 
@@ -469,7 +425,7 @@ void INTSC_HEXRECT::checkMoments
             rec0 += 8 ;
           }}}
 
-      Real_type const tol = 1.0e-12 * sep * (Real_type)ndx ;
+      Real_type const tol = 1.0e-12 * m_sep * (Real_type)m_ndx ;
       if ( maxerr > tol ) {
         Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
@@ -516,22 +472,13 @@ void INTSC_HEXRECT::checkMoments
   }
 }
 
-
-void INTSC_HEXRECT::checkScaledVolumes
-    ( Real_const_ptr records,  // volumes, moments on host (rescaled here)
-      Int_type const x_scl_offs, Int_type const y_scl_offs,  // scaled offsets
-      Int_type const z_scl_offs,
-      Real_type const sep,     //  target plane pitch
-      VariantID vid )   // Print variant name in case of error.
+void INTSC_HEXRECT::checkScaledVolumes(VariantID vid) // Print variant name in case of error.
 {
+  Real_const_ptr records = m_records_h; // volumes, moments on host (rescaled here)
 
   {
-    Int_type ndx = m_ndx ;
-    Int_type ndy = m_ndy ;
-    Int_type ndz = m_ndz ;
-
     Real_type scale =
-        8.0 * (Real_type)((ndx+1)*(ndy+1)*(ndz+1)) / (sep*sep*sep) ;
+        8.0 * (Real_type)((m_ndx+1)*(m_ndy+1)*(m_ndz+1)) / (m_sep*m_sep*m_sep) ;
 
     Int_type loc_jx=0, loc_jy=0, loc_jz=0 ;
     Int_type loc_krec=0 ;
@@ -540,18 +487,18 @@ void INTSC_HEXRECT::checkScaledVolumes
 
     Int_type rec0 = 0 ;
     Real_type maxerr = 0.0 ;
-    for ( Index_type jz = 0 ; jz < ndz ; ++jz ) {
-      Int_type zm = jz + 2*z_scl_offs ;
-      Int_type zp = 2*(ndz+1) - 1 - zm ;
+    for ( Index_type jz = 0 ; jz < m_ndz ; ++jz ) {
+      Int_type zm = jz + 2*m_z_scl_offs ;
+      Int_type zp = 2*(m_ndz+1) - 1 - zm ;
 
-      for ( Index_type jy = 0 ; jy < ndy ; ++jy ) {
-        Int_type ym = jy + 2*y_scl_offs ;
-        Int_type yp = 2*(ndy+1) - 1 - ym ;
+      for ( Index_type jy = 0 ; jy < m_ndy ; ++jy ) {
+        Int_type ym = jy + 2*m_y_scl_offs ;
+        Int_type yp = 2*(m_ndy+1) - 1 - ym ;
 
-        for ( Index_type jx = 0 ; jx < ndx ; ++jx ) {
+        for ( Index_type jx = 0 ; jx < m_ndx ; ++jx ) {
 
-          Int_type xm = jx + 2*x_scl_offs ;
-          Int_type xp = 2*(ndx+1) - 1 - xm ;
+          Int_type xm = jx + 2*m_x_scl_offs ;
+          Int_type xp = 2*(m_ndx+1) - 1 - xm ;
 
           //  Check the intersections for this donor zone.
           for ( Index_type krec = 0 ; krec < 8 ; ++krec ) {
@@ -592,7 +539,7 @@ void INTSC_HEXRECT::checkScaledVolumes
         }}}
     maxerr /= scale ;   // Compare the unscaled volume error.
 
-    Real_type const tol = 1.0e-12 * sep*sep*sep ;
+    Real_type const tol = 1.0e-12 * m_sep*m_sep*m_sep ;
     if ( maxerr > tol ) {
       Char_const_ptr tst = "INTSC_HEXRECT:" ;
 
@@ -631,17 +578,12 @@ void INTSC_HEXRECT::checkScaledVolumes
 
 void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  copyData ( DataSpace::Host, m_records_h,
-             getDataSpace(vid), m_records, 4L*m_nrecords ) ;
+  copyData(DataSpace::Host, m_records_h,
+           getDataSpace(vid), m_records, 4L*m_nrecords) ;
 
-  checkMoments
-      ( m_records_h, m_nrecords,
-        m_ndx, m_ndy, m_ndz, m_xd0, m_yd0, m_zd0,
-        m_x0, m_y0, m_z0, m_sep, m_sep1x, m_sep1y, m_sep1z, vid ) ;
+  checkMoments(vid);
 
-  checkScaledVolumes
-      ( m_records_h,
-        m_x_scl_offs, m_y_scl_offs, m_z_scl_offs, m_sep, vid ) ;
+  checkScaledVolumes(vid);
 
   addToChecksum(m_records, 4L*m_nrecords, vid);
 }
@@ -649,14 +591,14 @@ void INTSC_HEXRECT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tun
 void INTSC_HEXRECT::tearDown(VariantID vid,
                              Size_type RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  deallocData ( m_records, vid ) ;
-  deallocData ( m_intsc_t, vid ) ;
-  deallocData ( m_intsc_d, vid ) ;
-  deallocData ( m_znlist, vid ) ;
-  deallocData ( m_xdnode, vid ) ;
-  deallocData ( m_ydnode, vid ) ;
-  deallocData ( m_zdnode, vid ) ;
-  deallocData ( DataSpace::Host, m_records_h ) ;
+  deallocData(m_records, vid);
+  deallocData(m_intsc_t, vid);
+  deallocData(m_intsc_d, vid);
+  deallocData(m_znlist, vid);
+  deallocData(m_xdnode, vid);
+  deallocData(m_ydnode, vid);
+  deallocData(m_zdnode, vid);
+  deallocData(DataSpace::Host, m_records_h);
 }
 
 } // end namespace apps

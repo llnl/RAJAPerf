@@ -48,6 +48,10 @@ void INDEXLIST_3LOOP::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( 3 * getActualProblemSize() + 1 );
   setKernelsPerRep(3);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
+                           1*sizeof(Int_type) * getActualProblemSize() + // list
+                           1*sizeof(Index_type) * (getActualProblemSize()+1) ); // counts
   setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
                       0 +
                       1*sizeof(Index_type) * (getActualProblemSize()+1) ); // counts

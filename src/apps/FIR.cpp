@@ -50,6 +50,10 @@ void FIR::setSize(Index_type target_size, Index_type target_reps)
 
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( m_coefflen*sizeof(Real_type) + // coeff
+                           1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) + // in
+                           1*sizeof(Real_type) * getActualProblemSize() ); // out
   setBytesReadPerRep( m_coefflen*sizeof(Real_type) + // coeff
                       1*sizeof(Real_type) * (getActualProblemSize() + m_coefflen-1) ); // in
   setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // out

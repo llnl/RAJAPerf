@@ -55,6 +55,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
 
   its_per_rep = -1;
   kernels_per_rep = -1;
+  bytes_allocated_per_rep = -1;
   bytes_read_per_rep = -1;
   bytes_written_per_rep = -1;
   bytes_modify_written_per_rep = -1;
@@ -67,6 +68,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   checksum_reference = 0.0;
   checksum_reference_variant = NumVariants;
   checksum_reference_tuning = getUnknownTuningIdx();
+  checksum_reference_tuning_attributes = TuningAttribute::none;
 
   checksum_tolerance = ChecksumTolerance::normal;
 
@@ -89,7 +91,11 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_INT,
+  Bytes_Allocated_Rep_attr = cali_create_attribute("BytesAllocated/Rep", CALI_TYPE_INT,
+                                         CALI_ATTR_ASVALUE |
+                                         CALI_ATTR_AGGREGATABLE |
+                                         CALI_ATTR_SKIP_EVENTS);
+  Bytes_Moved_Rep_attr = cali_create_attribute("BytesMoved/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
@@ -151,11 +157,13 @@ KernelBase::~KernelBase()
 
 
 void KernelBase::addVariantTuning(VariantID vid, std::string name,
+                                  TuningAttribute attrs,
                                   variant_tuning_method_pointer method)
 {
   if (!isVariantAvailable(vid)) return;
 
   variant_tuning_names[vid].emplace_back(std::move(name));
+  variant_tuning_attrs[vid].emplace_back(std::move(attrs));
   variant_tuning_methods[vid].emplace_back(method);
   checksum_min[vid].emplace_back(std::numeric_limits<Checksum_type>::max());
   checksum_max[vid].emplace_back(-std::numeric_limits<Checksum_type>::max());
@@ -307,6 +315,7 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
 {
   running_variant = vid;
   running_tuning = tune_idx;
+  TuningAttribute running_attrs = getTuningAttributes(vid, tune_idx);
 
   resetTimer();
 
@@ -323,11 +332,15 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
   checksum_max[vid].at(tune_idx) = std::max(new_checksum, checksum_max[vid].at(tune_idx));
   checksum_sum[vid].at(tune_idx) += new_checksum;
 
-  if (checksum_reference_variant == NumVariants) {
+  if ( checksum_reference_variant == NumVariants ||
+       ( !hasTuningAttribute(checksum_reference_tuning_attributes, TuningAttribute::preferred_checksum) &&
+         hasTuningAttribute(running_attrs, TuningAttribute::preferred_checksum) ) ) {
     // use first run variant tuning as checksum reference
+    // or the first run variant tuning with preferred_checksum
     checksum_reference = new_checksum;
     checksum_reference_variant = vid;
     checksum_reference_tuning = tune_idx;
+    checksum_reference_tuning_attributes = running_attrs;
   }
 
   this->tearDown(vid, tune_idx);
@@ -394,8 +407,18 @@ void KernelBase::print(std::ostream& os) const
                          << std::endl;
     }
   }
+  os << "\t\t\t variant_tuning_attrs: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < variant_tuning_attrs[j].size(); ++t) {
+      os << "\t\t\t\t\t" << getTuningAttributeName(getTuningAttributes(static_cast<VariantID>(j), t))
+                         << std::endl;
+    }
+  }
   os << "\t\t\t its_per_rep = " << its_per_rep << std::endl;
   os << "\t\t\t kernels_per_rep = " << kernels_per_rep << std::endl;
+  os << "\t\t\t bytes_allocated_per_rep = " << bytes_allocated_per_rep << std::endl;
   os << "\t\t\t bytes_read_per_rep = " << bytes_read_per_rep << std::endl;
   os << "\t\t\t bytes_written_per_rep = " << bytes_written_per_rep << std::endl;
   os << "\t\t\t bytes_modify_written_per_rep = " << bytes_modify_written_per_rep << std::endl;
@@ -435,6 +458,7 @@ void KernelBase::print(std::ostream& os) const
   }
   os << "\t\t\t checksum_reference_variant = " << getVariantName(checksum_reference_variant) << std::endl;
   os << "\t\t\t checksum_reference_tuning = " << checksum_reference_tuning << std::endl;
+  os << "\t\t\t checksum_reference_tuning_attributes = " << getTuningAttributeName(checksum_reference_tuning_attributes) << std::endl;
   os << "\t\t\t checksum_reference = " << checksum_reference << std::endl;
   os << "\t\t\t checksum_min: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
@@ -476,7 +500,8 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
     cali_set_helper(Reps_attr, getRunReps());
     cali_set_helper(Iters_Rep_attr, getItsPerRep());
     cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
-    cali_set_helper(Bytes_Rep_attr, getBytesPerRep());
+    cali_set_helper(Bytes_Allocated_Rep_attr, getBytesAllocatedPerRep());
+    cali_set_helper(Bytes_Moved_Rep_attr, getBytesMovedPerRep());
     cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
     cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
     cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
@@ -532,7 +557,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Reps)", "as": "Reps" },
           { "expr": "any(max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
           { "expr": "any(max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
@@ -563,7 +588,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Reps)", "as": "Reps" },
           { "expr": "any(any#max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(any#max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(any#max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(any#max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
           { "expr": "any(any#max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(any#max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(any#max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },

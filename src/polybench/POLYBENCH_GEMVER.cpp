@@ -50,7 +50,7 @@ void POLYBENCH_GEMVER::setSize(Index_type target_size, Index_type target_reps)
 {
   m_n =  std::sqrt( target_size ) + std::sqrt(2)-1;
 
-  setActualProblemSize( m_n * m_n );
+  setActualProblemSize( m_n*m_n );
   setRunReps( target_reps );
 
   setItsPerRep( m_n*m_n +
@@ -58,27 +58,30 @@ void POLYBENCH_GEMVER::setSize(Index_type target_size, Index_type target_reps)
                 m_n +
                 m_n );
   setKernelsPerRep(4);
-  setBytesReadPerRep( 4*sizeof(Real_type ) * m_n + // u1, v1, u2, v2
 
-                      1*sizeof(Real_type ) * m_n * m_n + // A
-                      1*sizeof(Real_type ) * m_n + // y
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_n*m_n + // A
+                           8*sizeof(Real_type) * m_n );    // u1, v1, u2, v2, w, x, y, z
+  setBytesReadPerRep( 4*sizeof(Real_type) * m_n +     // u1, v1, u2, v2
 
-                      1*sizeof(Real_type ) * m_n + // z
+                      1*sizeof(Real_type) * m_n*m_n + // A
+                      1*sizeof(Real_type) * m_n +     // y
 
-                      1*sizeof(Real_type ) * m_n * m_n + // A
-                      2*sizeof(Real_type ) * m_n ); // x
+                      1*sizeof(Real_type) * m_n +     // z
+
+                      1*sizeof(Real_type) * m_n*m_n + // A
+                      2*sizeof(Real_type) * m_n );    // x
   setBytesWrittenPerRep( 0 +
 
-                         1*sizeof(Real_type ) * m_n + // x
+                         1*sizeof(Real_type) * m_n +  // x
 
                          0 +
 
-                         1*sizeof(Real_type ) * m_n ); // w
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type ) * m_n * m_n + // A
+                         1*sizeof(Real_type) * m_n ); // w
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_n*m_n + // A
 
                                0 +
 
-                               1*sizeof(Real_type ) * m_n + // x
+                               1*sizeof(Real_type) * m_n +     // x
 
                                0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
@@ -94,7 +97,7 @@ POLYBENCH_GEMVER::~POLYBENCH_GEMVER()
 
 void POLYBENCH_GEMVER::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_A, m_n * m_n, vid);
+  allocAndInitData(m_A, m_n*m_n, vid);
   allocAndInitData(m_u1, m_n, vid);
   allocAndInitData(m_v1, m_n, vid);
   allocAndInitData(m_u2, m_n, vid);
