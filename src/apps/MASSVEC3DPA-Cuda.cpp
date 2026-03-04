@@ -76,129 +76,6 @@ void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B,
 
 template <size_t block_size>
 __launch_bounds__(block_size) __global__
-void MassVec3DPA_ARGUMENT_LOOP_INC(const Real_ptr B,
-                                   const Real_ptr D, const Real_ptr X,
-                                   Real_ptr Y,
-                                   const Index_type runtime_block_size)
-{
-
-  const Index_type e = blockIdx.x;
-
-  MASSVEC3DPA_0_GPU;
-
-  GPU_SHARED_LOOP_2D_INC(q, d, mvpa::Q1D, mvpa::D1D, runtime_block_size) {
-    MASSVEC3DPA_1;
-  }
-
-  for (Index_type c = 0; c < 3; ++c) {
-    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_2;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_3;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_4;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_5;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_6;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_7;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                           runtime_block_size) {
-      MASSVEC3DPA_8;
-    }
-    __syncthreads();
-
-  } // (c) dimension loop
-}
-
-template <size_t block_size>
-__launch_bounds__(block_size) __global__
-void MassVec3DPA_COMPILE_LOOP_INC(const Real_ptr B,
-                                  const Real_ptr D, const Real_ptr X,
-                                  Real_ptr Y)
-{
-
-  const Index_type e = blockIdx.x;
-
-  MASSVEC3DPA_0_GPU;
-
-  GPU_SHARED_LOOP_2D_INC(q, d, mvpa::Q1D, mvpa::D1D, block_size) {
-    MASSVEC3DPA_1;
-  }
-
-  for (Index_type c = 0; c < 3; ++c) {
-    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                           block_size) {
-      MASSVEC3DPA_2;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D,
-                           block_size) {
-      MASSVEC3DPA_3;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D,
-                           block_size) {
-      MASSVEC3DPA_4;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D,
-                           block_size) {
-      MASSVEC3DPA_5;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D,
-                           block_size) {
-      MASSVEC3DPA_6;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D,
-                           block_size) {
-      MASSVEC3DPA_7;
-    }
-    __syncthreads();
-
-    GPU_SHARED_LOOP_3D_INC(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                           block_size) {
-      MASSVEC3DPA_8;
-    }
-    __syncthreads();
-
-  } // (c) dimension loop
-}
-
-template <size_t block_size>
-__launch_bounds__(block_size) __global__
 void MassVec3DPA_DIRECT(const Real_ptr B,
                         const Real_ptr D, const Real_ptr X,
                         Real_ptr Y)
@@ -446,38 +323,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       }
       stopTimer();
 
-      // Loop constants
     } else if constexpr (tune_idx == 1) {
-
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
-        dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
-        constexpr size_t shmem = 0;
-
-        RPlaunchCudaKernel((MassVec3DPA_ARGUMENT_LOOP_INC<block_size>), NE,
-                           nthreads_per_block, shmem, res.get_stream(), B, D,
-                           X, Y, static_cast<Index_type>(mvpa::Q1D));
-      }
-      stopTimer();
-
-    } else if constexpr (tune_idx == 2) {
-
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
-        dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
-        constexpr size_t shmem = 0;
-
-        RPlaunchCudaKernel((MassVec3DPA_COMPILE_LOOP_INC<block_size>), NE,
-                           nthreads_per_block, shmem, res.get_stream(), B, D,
-                           X, Y);
-      }
-      stopTimer();
-
-    } else if constexpr (tune_idx == 3) {
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -545,27 +391,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 2) {
 
-      using inner_x =
-          RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mvpa::Q1D>>;
-
-      using inner_y =
-          RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mvpa::Q1D>>;
-
-      using inner_z =
-          RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mvpa::Q1D>>;
-
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
-        runRAJAImpl<inner_x, inner_y, inner_z>(res);
-
-      } // loop over kernel reps
-      stopTimer();
-    }
-
-    if constexpr (tune_idx == 3) {
-
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_direct>;
@@ -611,12 +436,6 @@ void MASSVEC3DPA::defineCudaVariantTunings()
               vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
-              vid, "ARGUMENT_LOOP_INC_"+std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
-              vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 3>>(
               vid, "DIRECT_"+std::to_string(block_size));
 
         }
@@ -629,10 +448,7 @@ void MASSVEC3DPA::defineCudaVariantTunings()
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
               vid, "CACHE_BLOCK_DIM_"+std::to_string(block_size));
 
-          // addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
-          //     vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 3>>(
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
               vid, "DIRECT_"+std::to_string(block_size));
 
         }
