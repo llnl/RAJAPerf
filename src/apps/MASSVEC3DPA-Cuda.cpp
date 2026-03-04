@@ -433,23 +433,23 @@ void MASSVEC3DPA::defineCudaVariantTunings()
         if (vid == Base_CUDA) {
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 0>>(
-              vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
+              vid, "compile_block_inc_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
-              vid, "DIRECT_"+std::to_string(block_size));
+              vid, "direct_" + std::to_string(block_size));
 
         }
 
         if (vid == RAJA_CUDA) {
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 0>>(
-              vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
+              vid, "compile_block_inc_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
-              vid, "CACHE_BLOCK_DIM_"+std::to_string(block_size));
+              vid, "cache_loop_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
-              vid, "DIRECT_"+std::to_string(block_size));
+              vid, "direct_" + std::to_string(block_size));
 
         }
 
