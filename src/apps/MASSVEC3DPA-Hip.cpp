@@ -526,10 +526,9 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 
-      //LaunchContextDim3Policy
       //threadIdx, blockDim, blockIdx, gridDim cached
-      using CachePolicy = RAJA::IndicesAndDims<false, false, true, false>;
-      using launch_context = RAJA::LaunchContextT<RAJA::LaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+      using CachePolicy = RAJA::HipIndicesAndDims<false, false, true, false>;
+      using launch_context = RAJA::LaunchContextT<RAJA::HipLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning

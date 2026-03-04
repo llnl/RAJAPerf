@@ -163,7 +163,8 @@ public:
   void runSeqVariant(VariantID vid);
   void runOpenMPVariant(VariantID vid);
 
-  template <size_t block_size> void runCudaVariantImpl(VariantID vid);
+  template <size_t block_size, size_t tune_idx>
+  void runCudaVariantImpl(VariantID vid);
   template <size_t block_size, size_t tune_idx>
   void runHipVariantImpl(VariantID vid);
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);

@@ -58,8 +58,90 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
 }
 
-template < size_t block_size >
-void MASS3DEA::runCudaVariantImpl(VariantID vid) {
+template <typename inner_x, typename inner_y, typename inner_z, typename CONTEXT,
+          typename RESOURCE>
+void MASS3DEA::runRAJAImpl(RESOURCE &res)
+{
+
+  MASS3DEA_DATA_SETUP;
+
+  constexpr bool async = true;
+
+  using launch_policy =
+      RAJA::LaunchPolicy<
+          RAJA::cuda_launch_t<async, mea::D1D * mea::D1D * mea::D1D>>;
+
+  using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
+
+  // clang-format off
+  RAJA::launch<launch_policy>(res,
+    RAJA::LaunchParams(RAJA::Teams(NE),
+                       RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),
+    [=] RAJA_HOST_DEVICE(CONTEXT ctx) {
+
+      RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
+        [&](Index_type e) {
+
+          MASS3DEA_0
+
+          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
+            [&](Index_type) {
+              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                [&](Index_type d) {
+                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                    [&](Index_type q) {
+                      MASS3DEA_1
+                    }
+                  ); // RAJA::loop<inner_y>
+                }
+              ); // RAJA::loop<inner_x>
+            }
+          ); // RAJA::loop<inner_z>
+
+          MASS3DEA_2
+
+          RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+            [&](Index_type k1) {
+              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                [&](Index_type k2) {
+                  RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                    [&](Index_type k3) {
+                      MASS3DEA_3
+                    }
+                  ); // RAJA::loop<inner_z>
+                }
+              ); // RAJA::loop<inner_y>
+            }
+          ); // RAJA::loop<inner_x>
+
+          ctx.teamSync();
+
+          RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
+            [&](Index_type i1) {
+              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                [&](Index_type i2) {
+                  RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                    [&](Index_type i3) {
+                      MASS3DEA_4
+                    }
+                  ); // RAJA::loop<inner_z>
+                }
+              ); // RAJA::loop<inner_y>
+            }
+          ); // RAJA::loop<inner_x>
+
+        }  // lambda (e)
+      );  // RAJA::loop<outer_x>
+
+    }  // outer lambda (ctx)
+  );  // RAJA::launch
+  // clang-format on
+
+}
+
+template <size_t block_size, size_t tune_idx>
+void MASS3DEA::runCudaVariantImpl(VariantID vid)
+{
   setBlockSize(block_size);
 
   const Index_type run_reps = getRunReps();
@@ -72,108 +154,65 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid) {
 
   case Base_CUDA: {
 
-    startTimer();
-    // Loop counter increment uses macro to quiet C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+    if constexpr (tune_idx == 0) {
 
-      dim3 nthreads_per_block(mea::D1D, mea::D1D, mea::D1D);
-      constexpr size_t shmem = 0;
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      RPlaunchCudaKernel( (Mass3DEA<block_size>),
-                          NE, nthreads_per_block,
-                          shmem, res.get_stream(),
-                          B, D, M );
+        dim3 nthreads_per_block(mea::D1D, mea::D1D, mea::D1D);
+        constexpr size_t shmem = 0;
+
+        RPlaunchCudaKernel((Mass3DEA<block_size>), NE, nthreads_per_block, shmem,
+                           res.get_stream(), B, D, M);
+      }
+      stopTimer();
     }
-    stopTimer();
-
     break;
   }
 
   case RAJA_CUDA: {
 
-    constexpr bool async = true;
+    if constexpr (tune_idx == 0) {
 
-    using launch_policy = RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, mea::D1D*mea::D1D*mea::D1D>>;
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
-    using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
 
-    using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mea::D1D>>;
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mea::D1D>>;
+      // threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::CudaIndicesAndDims<false, false, true, false>;
+      using launch_context =
+          RAJA::LaunchContextT<
+              RAJA::CudaLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mea::D1D>>;
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+        runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
 
-    startTimer();
-    // Loop counter increment uses macro to quiet C++20 compiler warning
-    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+      }  // loop over kernel reps
+      stopTimer();
 
-      //clang-format off
-      RAJA::launch<launch_policy>( res,
-        RAJA::LaunchParams(RAJA::Teams(NE),
-                         RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),
-        [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+    } else if constexpr (tune_idx == 1) {
 
-          RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-            [&](Index_type e) {
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mea::D1D>>;
 
-              MASS3DEA_0
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mea::D1D>>;
 
-              RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-                [&](Index_type ) {
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                    [&](Index_type d) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                        [&](Index_type q) {
-                          MASS3DEA_1
-                        }
-                      ); // RAJA::loop<inner_y>
-                    }
-                  ); // RAJA::loop<inner_x>
-                }
-              ); // RAJA::loop<inner_z>
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mea::D1D>>;
 
+      using launch_context = RAJA::LaunchContext;
 
-              MASS3DEA_2
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+        runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
 
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                [&](Index_type k1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                    [&](Index_type k2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                        [&](Index_type k3) {
-                          MASS3DEA_3
-                        }
-                      ); // RAJA::loop<inner_x>
-                    }
-                  ); // RAJA::loop<inner_y>
-                }
-              ); // RAJA::loop<inner_z>
-
-              ctx.teamSync();
-
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                [&](Index_type i1) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                    [&](Index_type i2) {
-                      RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                        [&](Index_type i3) {
-                          MASS3DEA_4
-                        }
-                      ); // RAJA::loop<inner_x>
-                    }
-                  ); // RAJA::loop<inner_y>
-                }
-              ); // RAJA::loop<inner_z>
-
-            }  // lambda (e)
-          );  // RAJA::loop<outer_x>
-
-        }  // outer lambda (ctx)
-      );  // RAJA::launch
-      //clang-format on
-
-    }  // loop over kernel reps
-    stopTimer();
+      }  // loop over kernel reps
+      stopTimer();
+    }
 
     break;
   }
@@ -186,7 +225,35 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASS3DEA, Cuda, Base_CUDA, RAJA_CUDA)
+void MASS3DEA::defineCudaVariantTunings()
+{
+
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
+
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
+
+        if (vid == Base_CUDA) {
+          addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
+              vid, "block_" + std::to_string(block_size));
+        }
+
+        if (vid == RAJA_CUDA) {
+          addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
+              vid, "cache_loop_" + std::to_string(block_size));
+          addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 1>>(
+              vid, "thread_size_" + std::to_string(block_size));
+        }
+
+      }
+
+    });
+
+  }
+
+}
 
 } // end namespace apps
 } // end namespace rajaperf

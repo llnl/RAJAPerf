@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// Copyright (c) Lawrence Livermore National Security, LLC and other
 // RAJA Project Developers. See top-level LICENSE and COPYRIGHT
 // files for dates and other details. No copyright assignment is required
 // to contribute to RAJA Performance Suite.
@@ -181,10 +181,11 @@ void MASS3DEA::runHipVariantImpl(VariantID vid)
 
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 
-      using CachePolicy = RAJA::IndicesAndDims<true, true, true, true>;
+      //threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::HipIndicesAndDims<false, false, true, false>;
       using launch_context =
-          RAJA::LaunchContextT<
-              RAJA::LaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+              RAJA::LaunchContextT<RAJA::HipLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning

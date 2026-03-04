@@ -251,7 +251,8 @@ void MassVec3DPA_DIRECT(const Real_ptr B,
   } // (c) dimension loop
 }
 
-template<typename inner_x, typename inner_y, typename inner_z, typename RESOURCE>
+template<typename inner_x, typename inner_y, typename inner_z,
+         typename CONTEXT, typename RESOURCE>
 void MASSVEC3DPA::runRAJAImpl(RESOURCE &res)
 {
 
@@ -269,7 +270,7 @@ void MASSVEC3DPA::runRAJAImpl(RESOURCE &res)
     res,
     RAJA::LaunchParams(RAJA::Teams(NE),
     RAJA::Threads(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D)),
-    [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+    [=] RAJA_HOST_DEVICE(CONTEXT ctx) {
 
       RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
         [&](Index_type e) {
@@ -520,11 +521,38 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 1) {
 
-      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mvpa::Q1D>>;
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
-      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mvpa::Q1D>>;
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
 
-      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mvpa::Q1D>>;
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
+
+      // threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::CudaIndicesAndDims<false, false, true, false>;
+      using launch_context =
+          RAJA::LaunchContextT<
+              RAJA::CudaLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+        runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
+
+      } // loop over kernel reps
+      stopTimer();
+    }
+
+    if constexpr (tune_idx == 2) {
+
+      using inner_x =
+          RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mvpa::Q1D>>;
+
+      using inner_y =
+          RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mvpa::Q1D>>;
+
+      using inner_z =
+          RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mvpa::Q1D>>;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -536,7 +564,7 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       stopTimer();
     }
 
-    if constexpr (tune_idx == 2) {
+    if constexpr (tune_idx == 3) {
 
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
 
@@ -599,9 +627,12 @@ void MASSVEC3DPA::defineCudaVariantTunings()
               vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
-              vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
+              vid, "CACHE_BLOCK_DIM_"+std::to_string(block_size));
 
-          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
+          // addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
+          //     vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
+
+          addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 3>>(
               vid, "DIRECT_"+std::to_string(block_size));
 
         }
