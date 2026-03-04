@@ -520,14 +520,16 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 1) {
 
-      using inner_x = RAJA::LoopPolicy<RAJA::expt::hip_ctx_thread_loop_x>;
+      using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
-      using inner_y = RAJA::LoopPolicy<RAJA::expt::hip_ctx_thread_loop_y>;
+      using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
 
-      using inner_z = RAJA::LoopPolicy<RAJA::expt::hip_ctx_thread_loop_z>;
+      using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 
       //LaunchContextDim3Policy
-      using launch_context = RAJA::LaunchContextT<RAJA::LaunchContextDim3Policy>;
+      //threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::IndicesAndDims<false, false, true, false>;
+      using launch_context = RAJA::LaunchContextT<RAJA::LaunchContextIndicesAndDimsPolicy<CachePolicy>>;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -600,8 +602,8 @@ void MASSVEC3DPA::defineHipVariantTunings()
 
         if (vid == Base_HIP) {
 
-         addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 0>>(
-         vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 0>>(
+        vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
 
         //addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 1>>(
         //vid, "ARGUMENT_LOOP_INC_"+std::to_string(block_size));
@@ -609,25 +611,24 @@ void MASSVEC3DPA::defineHipVariantTunings()
         //          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 2>>(
         //vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
 
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 3>>(
-              vid, "DIRECT_"+std::to_string(block_size));
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 3>>(
+        vid, "DIRECT_"+std::to_string(block_size));
 
         }
 
         if (vid == RAJA_HIP) {
 
           addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 0>>(
-              vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
-
+          vid, "BLOCKDIM_LOOP_INC_"+std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 1>>(
-             vid, "CACHE_BLOCK_DIM_"+std::to_string(block_size));
+          vid, "CACHE_BLOCK_DIM_"+std::to_string(block_size));
 
           // addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 2>>(
           //vid, "COMPILE_LOOP_INC_"+std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 3>>(
-              vid, "DIRECT_"+std::to_string(block_size));
+          vid, "DIRECT_"+std::to_string(block_size));
 
         }
 
