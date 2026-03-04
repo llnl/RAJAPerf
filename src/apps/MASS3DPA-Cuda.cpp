@@ -32,57 +32,57 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
 
   MASS3DPA_0_GPU
 
-  GPU_FOREACH_THREAD(dy, y, mpa::D1D) {
-    GPU_FOREACH_THREAD(dx, x, mpa::D1D){
+  GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D){
       MASS3DPA_1
     }
-    GPU_FOREACH_THREAD(dx, x, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(dx, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_2
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(dy, y, mpa::D1D) {
-    GPU_FOREACH_THREAD(qx, x, mpa::Q1D) {
+  GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_3
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(qy, y, mpa::Q1D) {
-    GPU_FOREACH_THREAD(qx, x, mpa::Q1D) {
+  GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_4
     }
   }
   __syncthreads();
-  GPU_FOREACH_THREAD(qy, y, mpa::Q1D) {
-    GPU_FOREACH_THREAD(qx, x, mpa::Q1D) {
+  GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_5
     }
   }
 
   __syncthreads();
-  GPU_FOREACH_THREAD(d, y, mpa::D1D) {
-    GPU_FOREACH_THREAD(q, x, mpa::Q1D) {
+  GPU_FOREACH_THREAD_INC(d, y, mpa::D1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(q, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_6
     }
   }
 
   __syncthreads();
-  GPU_FOREACH_THREAD(qy, y, mpa::Q1D) {
-    GPU_FOREACH_THREAD(dx, x, mpa::D1D) {
+  GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
       MASS3DPA_7
     }
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dy, y, mpa::D1D) {
-    GPU_FOREACH_THREAD(dx, x, mpa::D1D) {
+  GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
       MASS3DPA_8
     }
   }
 
   __syncthreads();
-  GPU_FOREACH_THREAD(dy, y, mpa::D1D) {
-    GPU_FOREACH_THREAD(dx, x, mpa::D1D) {
+  GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
+    GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
       MASS3DPA_9
     }
   }

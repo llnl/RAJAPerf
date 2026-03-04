@@ -26,6 +26,10 @@
 #define GPU_FOREACH_THREAD(i, k, N)                                            \
   for (Index_type i = threadIdx.k; i < N; i += blockDim.k)
 
+#define GPU_FOREACH_THREAD_INC(i, k, N, INC)                                   \
+  for (Index_type i = threadIdx.k; i < N; i += INC)
+
+
 #define GPU_FOREACH_THREAD_DIRECT(i, k, N)                                     \
   if (const Index_type i = threadIdx.k; i < N)
 #endif

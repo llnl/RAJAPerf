@@ -28,9 +28,9 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
   MASS3DEA_0
 
-  GPU_FOREACH_THREAD(iz, z, 1) {
-    GPU_FOREACH_THREAD(d, x, mea::D1D) {
-      GPU_FOREACH_THREAD(q, y, mea::Q1D) {
+  GPU_FOREACH_THREAD_INC(iz, z, 1, mea::D1D) {
+    GPU_FOREACH_THREAD_INC(d, x, mea::D1D, mea::D1D) {
+      GPU_FOREACH_THREAD_INC(q, y, mea::Q1D, mea::D1D) {
         MASS3DEA_1
       }
     }
@@ -38,9 +38,9 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
   MASS3DEA_2
 
-  GPU_FOREACH_THREAD(k1, x, mea::Q1D) {
-    GPU_FOREACH_THREAD(k2, y, mea::Q1D) {
-      GPU_FOREACH_THREAD(k3, z, mea::Q1D) {
+  GPU_FOREACH_THREAD_INC(k1, x, mea::Q1D, mea::D1D) {
+    GPU_FOREACH_THREAD_INC(k2, y, mea::Q1D, mea::D1D) {
+      GPU_FOREACH_THREAD_INC(k3, z, mea::Q1D, mea::D1D) {
         MASS3DEA_3
       }
     }
@@ -48,9 +48,9 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
   __syncthreads();
 
-  GPU_FOREACH_THREAD(i1, x, mea::D1D) {
-    GPU_FOREACH_THREAD(i2, y, mea::D1D) {
-      GPU_FOREACH_THREAD(i3, z, mea::D1D) {
+  GPU_FOREACH_THREAD_INC(i1, x, mea::D1D, mea::D1D) {
+    GPU_FOREACH_THREAD_INC(i2, y, mea::D1D, mea::D1D) {
+      GPU_FOREACH_THREAD_INC(i3, z, mea::D1D, mea::D1D) {
         MASS3DEA_4
       }
     }
