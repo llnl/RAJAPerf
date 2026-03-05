@@ -10,6 +10,9 @@ on:
         description: 'Name for benchmark group on the dashboard'
         required: false
         default: 'RAJAPerf benchmarks'
+      commit_sha:
+        description: 'Commit SHA the benchmark data corresponds to'
+        required: true
 
 jobs:
   check-performance:
@@ -23,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.commit_sha }}
 
       - name: Find associated PR
         id: findpr
@@ -46,6 +51,7 @@ jobs:
           name: ${{ github.event.inputs.benchmark_name }}
           tool: 'customSmallerIsBetter'
           output-file-path: benchmark.json
+          ref: ${{ github.event.inputs.commit_sha }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: false
           save-data-file: false
@@ -64,7 +70,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: Performance Benchmark (${{ github.event.inputs.benchmark_name }})
-          sha: ${{ github.sha }}
+          sha: ${{ github.event.inputs.commit_sha }}
           conclusion: ${{ steps.benchmark.outcome == 'success' && 'success' || 'failure' }}
           output: |
             {
@@ -85,6 +91,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.commit_sha }}
 
       - name: Decode benchmark data
         run: echo "${{ github.event.inputs.benchmark_data }}" | base64 -d > benchmark.json
@@ -96,6 +104,7 @@ jobs:
           name: ${{ github.event.inputs.benchmark_name }}
           tool: 'customSmallerIsBetter'
           output-file-path: benchmark.json
+          ref: ${{ github.event.inputs.commit_sha }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           gh-pages-branch: gh-pages
