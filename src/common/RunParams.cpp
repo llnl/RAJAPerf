@@ -47,6 +47,12 @@ RunParams::RunParams(int argc, char** argv)
    ltimes_num_d(6),
    ltimes_num_g(32),
    ltimes_num_m(25),
+   femsweep_angles_polar(3),
+   femsweep_angles_azim(3),
+   femsweep_groups(16),
+   femsweep_nx(18),
+   femsweep_ny(18),
+   femsweep_nz(18),
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
@@ -85,7 +91,6 @@ RunParams::RunParams(int argc, char** argv)
    invalid_npasses_combiner_input(),
    outdir(),
    outfile_prefix("RAJAPerf"),
-   femsweep_mesh_file(""),
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
    add_to_spot_config(),
 #endif
@@ -147,6 +152,13 @@ void RunParams::print(std::ostream& str) const
   str << "\n ltimes_num_g = " << ltimes_num_g;
   str << "\n ltimes_num_m = " << ltimes_num_m;
 
+  str << "\n femsweep_angles_polar = " << femsweep_angles_polar;
+  str << "\n femsweep_angles_azim = " << femsweep_angles_azim;
+  str << "\n femsweep_groups = " << femsweep_groups;
+  str << "\n femsweep_nx = " << femsweep_nx;
+  str << "\n femsweep_ny = " << femsweep_ny;
+  str << "\n femsweep_nz = " << femsweep_nz;
+
   str << "\n array_of_ptrs_array_size = " << array_of_ptrs_array_size;
 
   str << "\n halo_width = " << halo_width;
@@ -177,8 +189,6 @@ void RunParams::print(std::ostream& str) const
   str << "\n reference_variant = " << reference_variant;
   str << "\n outdir = " << outdir;
   str << "\n outfile_prefix = " << outfile_prefix;
-
-  str << "\n femsweep_mesh_file = " << femsweep_mesh_file;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   if (add_to_spot_config.length() > 0) {
@@ -699,6 +709,132 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
+    } else if ( opt == std::string("--femsweep_angles_polar") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_angles_polar = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--femsweep_angles_azim") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_angles_azim = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--femsweep_groups") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_groups = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--femsweep_nx") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_nx = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--femsweep_ny") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_ny = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--femsweep_nz") ) {
+
+      i++;
+      if ( i < argc ) {
+        long long num = ::atoll( argv[i] );
+        long long min_num = 1;
+        if ( num < min_num ) {
+          getCout() << "\nBad input:"
+                << " must give " << opt << " a value of at least " << min_num
+                << std::endl;
+          input_state = BadInput;
+        } else {
+          femsweep_nz = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
     } else if ( opt == std::string("--array_of_ptrs_array_size") ) {
 
       i++;
@@ -996,19 +1132,6 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         } else {
           exclude_variant_input.push_back(opt);
           ++i;
-        }
-      }
-
-    } else if ( std::string(argv[i]) == std::string("--femsweep-mesh-file") ||
-                std::string(argv[i]) == std::string("-fmf") ) {
-
-      i++;
-      if ( i < argc ) {
-        opt = std::string(argv[i]);
-        if ( opt.at(0) == '-' ) {
-          i--;
-        } else {
-          femsweep_mesh_file = std::string( argv[i] );
         }
       }
 
@@ -1636,6 +1759,42 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --ltimes_num_m 100\n\n";
 
+  str << "\t --femsweep_angles_polar <int> [default is 3]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_angles_polar 3\n\n";
+
+  str << "\t --femsweep_angles_azim <int> [default is 3]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_angles_azim 3\n\n";
+
+  str << "\t --femsweep_groups <int> [default is 128]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_groups 128\n\n";
+
+  str << "\t --femsweep_nx <int> [default is 5]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_nx 5\n\n";
+
+  str << "\t --femsweep_ny <int> [default is 5]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_ny 5\n\n";
+
+  str << "\t --femsweep_nz <int> [default is 5]\n"
+      << "\t      (For FEMSWEEP kernel only)\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --femsweep_nz 5\n\n";
+
   str << "\t --femsweep-mesh-file, -fmf <string> [Default is no file, and the femsweep is not run. The femsweep can only be run by specifying this option with a valid path to a mesh file name.]\n"
       << "\t      (path to file name of femsweep mesh)\n";
   str << "\t\t Examples...\n"
@@ -2134,19 +2293,6 @@ void RunParams::processKernelInput()
   using Slist = std::list<std::string>;
   using Svector = std::vector<std::string>;
   using KIDset = std::set<KernelID>;
-
-  // ================================================================
-  //
-  // Add FEMSWEEP to the exclusion list if the --femsweep-mesh-file
-  // was not provided. This supersedes the case where FEMSWEEP is in
-  // --kernels.
-  //
-  // ================================================================
-
-  if ( femsweep_mesh_file.empty() ) {
-    std::cout << "Excluding FEMSWEEP because no --femsweep-mesh-file provided." << std::endl;
-    exclude_kernel_input.push_back( std::string("FEMSWEEP") );
-  }
 
   // ================================================================
   //

@@ -263,6 +263,13 @@ public:
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
 
+  Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
+  Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
+  Index_type getFemsweepGroups() const { return femsweep_groups; }
+  Index_type getFemsweepX() const { return femsweep_nx; }
+  Index_type getFemsweepY() const { return femsweep_ny; }
+  Index_type getFemsweepZ() const { return femsweep_nz; }
+
   Index_type getArrayOfPtrsArraySize() const { return array_of_ptrs_array_size; }
 
   Index_type getHaloWidth() const { return halo_width; }
@@ -422,6 +429,13 @@ private:
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
+
+  int femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
+  int femsweep_angles_azim; /*!< azimuthal angles used in ltimes kernel (input option) */
+  int femsweep_groups; /*!< groups used in ltimes kernel (input option) */
+  int femsweep_nx; /*!< mesh elements in x direction used in ltimes kernel (input option) */
+  int femsweep_ny; /*!< mesh elements in y direction used in ltimes kernel (input option) */
+  int femsweep_nz; /*!< mesh elements in z direction used in ltimes kernel (input option) */
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 
