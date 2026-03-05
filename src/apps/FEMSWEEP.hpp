@@ -89,6 +89,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#include "FEMSWEEPMeshGen.hpp"
+
 constexpr int ND = 8;   // number of corners per element
 constexpr int NLF = 6;  // number of faces per element
 constexpr int FDS = 4;  // number of DOFs per face
@@ -300,9 +302,6 @@ public:
   template < size_t block_size >
   void runHipVariantImpl(VariantID vid);
 
-  template < typename T >
-  void readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname);
-
 private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
@@ -312,7 +311,8 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
-  std::string m_mesh_file;  // Path to file name of femsweep mesh.
+  AngularQuadratureLite * m_angularquadrature;
+  MeshGenerator * m_sweeper;
 
   Index_type m_nx;
   Index_type m_ny;

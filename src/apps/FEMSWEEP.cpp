@@ -8,6 +8,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 #include "FEMSWEEP.hpp"
+#include "FEMSWEEPMeshGen.hpp"
 
 #include "RAJA/RAJA.hpp"
 
@@ -27,63 +28,16 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  auto readOneLong = [=](std::ifstream & file, Index_type & val, std::string valname) {
+  m_na = 8 * params.getFemsweepPolar() * params.getFemsweepAzim();
+  m_ng = params.getFemsweepGroups();
+  m_nx = params.getFemsweepX();
+  m_ny = params.getFemsweepY();
+  m_nz = params.getFemsweepZ();
 
-    // Read next line for value.
-    std::string line;
-    if ( std::getline(file, line) )
-    {
-      val = std::stol(line);
-    }
-    else
-    {
-      std::cout << "Unable to initialize " << valname << " properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-    }
+  m_angularquadrature = new AngularQuadratureLite(params.getFemsweepPolar(), params.getFemsweepAzim());
+  m_sweeper = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
 
-  };
-
-  m_mesh_file = params.getFemsweepMeshFile();
-
-  // Read problem size from file.
-  std::ifstream dataFile(m_mesh_file);
-
-  if ( !dataFile.is_open() )
-  {
-    std::cout << "Could not open " << m_mesh_file << " in constructor." << std::endl;
-  }
-
-  std::string line;
-  while ( std::getline(dataFile, line) )
-  {
-
-    if ( line == std::string("m_nx") )
-    {
-      readOneLong(dataFile, m_nx, "m_nx");
-    }
-
-    else if ( line == std::string("m_ny") )
-    {
-      readOneLong(dataFile, m_ny, "m_ny");
-    }
-
-    else if ( line == std::string("m_nz") )
-    {
-      readOneLong(dataFile, m_nz, "m_nz");
-    }
-
-    else if ( line == std::string("m_na") )
-    {
-      readOneLong(dataFile, m_na, "m_na");
-    }
-
-    else if ( line == std::string("m_ng") )
-    {
-      readOneLong(dataFile, m_ng, "m_ng");
-    }
-
-  }
-
-  dataFile.close();
+  m_sweeper->Setup();
 
   m_ne = m_nx * m_ny * m_nz;
 
@@ -175,40 +129,6 @@ FEMSWEEP::~FEMSWEEP()
 {
 }
 
-template < typename T >
-void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname)
-{
-  std::string line;
-
-  // Read next line for array size.
-  if ( std::getline(file, line) )
-  {
-    long sizetemp = std::stol(line);
-    // Check size for sanity.
-    if ( sizetemp != expectedsize )
-    {
-      std::cout << "Size of " << arrname << " in " << m_mesh_file << " does not match." << std::endl;
-    }
-    auto temp_arr = allocDataForInit(arr, sizetemp, vid); 
-    // Read rest of entries for array.
-    for ( int lcount = 0; lcount < sizetemp; ++lcount )
-    {
-      if ( std::getline(file, line) )
-      {
-        arr[lcount] = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Invalid entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
-      }
-    }
-  }
-  else
-  {
-    std::cout << "Invalid size entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
-  }
-}
-
 void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
@@ -218,66 +138,62 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
-  // Read mesh connectivity data from file.
-  std::ifstream dataFile(m_mesh_file);
-
-  if ( !dataFile.is_open() )
+  auto temp_arr = allocDataForInit(m_nhpaa_r, m_sweeper->m_nhyperplanes_all_angles.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->m_nhyperplanes_all_angles.Size(); ++ii )
   {
-    std::cout << "Could not open " << m_mesh_file << " in setUp." << std::endl;
+    m_nhpaa_r[ii] = m_sweeper->m_nhyperplanes_all_angles[ii];
   }
 
-  std::string line;
-  while ( std::getline(dataFile, line) )
+  temp_arr = allocDataForInit(m_ohpaa_r, m_sweeper->m_ohyperplanes_all_angles.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->m_ohyperplanes_all_angles.Size(); ++ii )
   {
-
-    if ( line == "m_nhpaa_r" )
-    {
-      readIndexArray(vid, dataFile, m_nhpaa_r, m_na, "m_nhpaa_r");
-    }
-
-    else if ( line == std::string("m_ohpaa_r") )
-    {
-      readIndexArray(vid, dataFile, m_ohpaa_r, m_na, "m_ohpaa_r");
-    }
-
-    else if ( line == std::string("m_phpaa_r") )
-    {
-      readIndexArray(vid, dataFile, m_phpaa_r, m_na * m_hplanes, "m_phpaa_r");
-    }
-
-    else if ( line == std::string("m_order_r") )
-    {
-      readIndexArray(vid, dataFile, m_order_r, m_na * m_ne, "m_order_r");
-    }
-
-    else if ( line == std::string("m_AngleElem2FaceType") )
-    {
-      readIndexArray(vid, dataFile, m_AngleElem2FaceType, NLF * m_na * m_ne, "m_AngleElem2FaceType");
-    }
-
-    else if ( line == std::string("m_elem_to_faces") )
-    {
-      readIndexArray(vid, dataFile, m_elem_to_faces, NLF * m_ne, "m_elem_to_faces");
-    }
-
-    else if ( line == std::string("m_F_g2l") )
-    {
-      readIndexArray(vid, dataFile, m_F_g2l, m_sharedinteriorfaces + m_boundaryfaces, "m_F_g2l");
-    }
-
-    else if ( line == std::string("m_idx1") )
-    {
-      readIndexArray(vid, dataFile, m_idx1, m_sharedinteriorfaces * 4, "m_idx1");
-    }
-
-    else if ( line == std::string("m_idx2") )
-    {
-      readIndexArray(vid, dataFile, m_idx2, m_sharedinteriorfaces * 4, "m_idx2");
-    }
-
+    m_ohpaa_r[ii] = m_sweeper->m_ohyperplanes_all_angles[ii];
   }
 
-  dataFile.close();
+  temp_arr = allocDataForInit(m_phpaa_r, m_sweeper->m_phyperplanes_all_angles.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->m_phyperplanes_all_angles.Size(); ++ii )
+  {
+    m_phpaa_r[ii] = m_sweeper->m_phyperplanes_all_angles[ii];
+  }
+
+  const int * temp1 = m_sweeper->md_ordered_elements_all_angles.HostRead();
+  temp_arr = allocDataForInit(m_order_r, m_sweeper->md_ordered_elements_all_angles.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->md_ordered_elements_all_angles.Size(); ++ii )
+  {
+    m_order_r[ii] = temp1[ii];
+  }
+
+  const int * temp2 = m_sweeper->md_angle_elem_to_face_types.HostRead();
+  temp_arr = allocDataForInit(m_AngleElem2FaceType, m_sweeper->md_angle_elem_to_face_types.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->md_angle_elem_to_face_types.Size(); ++ii )
+  {
+    m_AngleElem2FaceType[ii] = temp2[ii];
+  }
+
+  const int * temp3 = m_sweeper->md_elem_to_faces.HostRead();
+  temp_arr = allocDataForInit(m_elem_to_faces, m_sweeper->md_elem_to_faces.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->md_elem_to_faces.Size(); ++ii )
+  {
+    m_elem_to_faces[ii] = temp3[ii];
+  }
+
+  temp_arr = allocDataForInit(m_F_g2l, m_sweeper->global_to_local_face.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->global_to_local_face.Size(); ++ii )
+  {
+    m_F_g2l[ii] = m_sweeper->global_to_local_face[ii];
+  }
+
+  temp_arr = allocDataForInit(m_idx1, m_sweeper->d_indices1.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->d_indices1.Size(); ++ii )
+  {
+    m_idx1[ii] = m_sweeper->d_indices1[ii];
+  }
+
+  temp_arr = allocDataForInit(m_idx2, m_sweeper->d_indices2.Size(), vid);
+  for ( int ii = 0; ii < m_sweeper->d_indices2.Size(); ++ii )
+  {
+    m_idx2[ii] = m_sweeper->d_indices2[ii];
+  }
 
 }
 
