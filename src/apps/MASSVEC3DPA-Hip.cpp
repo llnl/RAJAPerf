@@ -21,7 +21,7 @@ namespace rajaperf {
 namespace apps {
 
 #define MASSVEC3DPA_GPU_KERNEL_BODY(SHARED_2D, SHARED_3D)              \
-  do {                                                                 \
+  {                                                                    \
     GPU_SHARED_2D_APPLY(SHARED_2D, q, d, mvpa::Q1D, mvpa::D1D) {       \
       MASSVEC3DPA_1;                                                   \
     }                                                                  \
@@ -77,28 +77,40 @@ namespace apps {
       __syncthreads();                                                 \
                                                                        \
     } /* (c) dimension loop */                                         \
-  } while (false)
+	  }
 
-template <size_t block_size, bool use_direct>
-__launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
-                                                         const Real_ptr D,
-                                                         const Real_ptr X,
-                                                         Real_ptr Y)
+template <size_t block_size>
+__launch_bounds__(block_size) __global__ void MassVec3DPADirect(const Real_ptr B,
+                                                                const Real_ptr D,
+                                                                const Real_ptr X,
+                                                                Real_ptr Y)
 {
 
   const Index_type e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
-  if constexpr (use_direct) {
-    MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_DIRECT_2D, GPU_SHARED_DIRECT_3D);
-  } else {
-    MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_LOOP_2D, GPU_SHARED_LOOP_3D);
-  }
+  MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_DIRECT_2D, GPU_SHARED_DIRECT_3D);
+  
 }
 
-#define MASSVEC3DPA_HIP_RAJA_LAUNCH(RES, INNER_X, INNER_Y, INNER_Z, CONTEXT_T) \
-  do {                                                                         \
+template <size_t block_size>
+__launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
+                                                              const Real_ptr D,
+                                                              const Real_ptr X,
+                                                              Real_ptr Y)
+{
+
+  const Index_type e = blockIdx.x;
+
+  MASSVEC3DPA_0_GPU;
+
+  MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_LOOP_2D, GPU_SHARED_LOOP_3D);
+  
+}
+
+#define MASSVEC3DPA_HIP_RAJA_LAUNCH                                            \
+  {                                                                            \
                                                                                \
     constexpr bool async = true;                                               \
                                                                                \
@@ -109,142 +121,142 @@ __launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
                                                                                \
     /* clang-format off */                                                     \
     RAJA::launch<launch_policy>(                                               \
-      RES,                                                                     \
+      res,                                                                     \
       RAJA::LaunchParams(RAJA::Teams(NE),                                      \
       RAJA::Threads(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D)),                         \
-      [=] RAJA_HOST_DEVICE(CONTEXT_T ctx) {                                    \
+      [=] RAJA_HOST_DEVICE(launch_context ctx) {                               \
                                                                                \
         RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),                    \
           [&](Index_type e) {                                                  \
                                                                                \
             MASSVEC3DPA_0_GPU                                                  \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, 1),                 \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),                 \
               [&](Index_type) {                                                \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
                   [&](Index_type d) {                                          \
                                                                                \
-                  RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),   \
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),   \
                     [&](Index_type q) {                                        \
                       MASSVEC3DPA_1;                                           \
                     } /* lambda (q) */                                         \
-                  ); /* RAJA::loop<INNER_X> */                                 \
+                  ); /* RAJA::loop<inner_x> */                                 \
                   } /* lambda (d) */                                           \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda () */                                                \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             for (Index_type c = 0; c < 3; ++c) {                               \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
                       [&](Index_type dx) {                                     \
                         MASSVEC3DPA_2;                                         \
                       } /* lambda (dx) */                                      \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (dy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (dz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
                       [&](Index_type qx) {                                     \
                         MASSVEC3DPA_3;                                         \
                       } /* lambda (qx) */                                      \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (dy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (dz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
                       [&](Index_type qx) {                                     \
                         MASSVEC3DPA_4;                                         \
                       } /* lambda (qx) */                                      \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (qy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (dz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
                     [&](Index_type qx) {                                       \
                     MASSVEC3DPA_5;                                             \
                     } /* lambda (qx) */                                        \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (qy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (qz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
                       [&](Index_type dx) {                                     \
                         MASSVEC3DPA_6;                                         \
                       } /* lambda (dx) */                                      \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (qy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (qz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
                       [&](Index_type dx) {                                     \
                       MASSVEC3DPA_7;                                           \
                       } /* lambda (dx) */                                      \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (dy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (qz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
                     [&](Index_type dx) {                                       \
                     MASSVEC3DPA_8;                                             \
                     } /* lambda (dx) */                                        \
-                    ); /* RAJA::loop<INNER_X> */                               \
+                    ); /* RAJA::loop<inner_x> */                               \
                   } /* lambda (dy) */                                          \
-                ); /* RAJA::loop<INNER_Y> */                                   \
+                ); /* RAJA::loop<inner_y> */                                   \
               } /* lambda (dz) */                                              \
-            ); /* RAJA::loop<INNER_Z> */                                       \
+            ); /* RAJA::loop<inner_z> */                                       \
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
@@ -255,7 +267,7 @@ __launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
     ); /* RAJA::launch */                                                      \
     /* clang-format on */                                                      \
                                                                                \
-  } while (false)
+  }
 
 template <size_t block_size, size_t tune_idx>
 void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
@@ -282,7 +294,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
         dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPA<block_size, false>), NE, nthreads_per_block,
+        RPlaunchHipKernel((MassVec3DPALoop<block_size>), NE, nthreads_per_block,
                           shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
@@ -296,7 +308,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
         dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPA<block_size, true>), NE, nthreads_per_block,
+        RPlaunchHipKernel((MassVec3DPADirect<block_size>), NE, nthreads_per_block,
                           shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
@@ -319,8 +331,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
-                                   RAJA::LaunchContext);
+        using launch_context = RAJA::LaunchContext;
+        MASSVEC3DPA_HIP_RAJA_LAUNCH;
 
       } // loop over kernel reps
       stopTimer();
@@ -338,8 +350,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
-                                   RAJA::LaunchContext);
+        using launch_context = RAJA::LaunchContext;
+        MASSVEC3DPA_HIP_RAJA_LAUNCH;
 
       } // loop over kernel reps
       stopTimer();
@@ -363,8 +375,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
-                                   launch_context);
+        MASSVEC3DPA_HIP_RAJA_LAUNCH;
 
       } // loop over kernel reps
       stopTimer();

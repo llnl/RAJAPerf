@@ -58,26 +58,26 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
 }
 
-#define MASS3DEA_CUDA_RAJA_LAUNCH(RES, INNER_X, INNER_Y, INNER_Z, CONTEXT_T)   \
-  do {                                                                        \
+#define MASS3DEA_CUDA_RAJA_LAUNCH                                             \
+  {                                                                           \
                                                                               \
     /* clang-format off */                                                    \
     RAJA::launch<launch_policy>(                                              \
-      RES,                                                                    \
+      res,                                                                    \
       RAJA::LaunchParams(RAJA::Teams(NE),                                     \
-                         RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),         \
-      [=] RAJA_HOST_DEVICE(CONTEXT_T ctx) {                                   \
+                         RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),        \
+      [=] RAJA_HOST_DEVICE(launch_context ctx) {                              \
                                                                               \
         RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),                   \
           [&](Index_type e) {                                                 \
                                                                               \
             MASS3DEA_0                                                        \
                                                                               \
-            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, 1),                \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),                \
               [&](Index_type) {                                               \
-                RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
+                RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
                   [&](Index_type d) {                                         \
-                    RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
+                    RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
                       [&](Index_type q) {                                     \
                         MASS3DEA_1                                            \
                       }                                                       \
@@ -89,11 +89,11 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
                                                                               \
             MASS3DEA_2                                                        \
                                                                               \
-            RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::Q1D),          \
+            RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),         \
               [&](Index_type k1) {                                            \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),     \
                   [&](Index_type k2) {                                        \
-                    RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
+                    RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
                       [&](Index_type k3) {                                    \
                         MASS3DEA_3                                            \
                       }                                                       \
@@ -105,11 +105,11 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
                                                                               \
             ctx.teamSync();                                                   \
                                                                               \
-            RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::D1D),          \
+            RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),         \
               [&](Index_type i1) {                                            \
-                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
                   [&](Index_type i2) {                                        \
-                    RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mea::D1D), \
+                    RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D), \
                       [&](Index_type i3) {                                    \
                         MASS3DEA_4                                            \
                       }                                                       \
@@ -126,7 +126,7 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
     );                                                                        \
     /* clang-format on */                                                     \
                                                                               \
-  } while (false)
+  }
 
 template <size_t block_size, size_t tune_idx>
 void MASS3DEA::runCudaVariantImpl(VariantID vid)
@@ -182,7 +182,7 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        MASS3DEA_CUDA_RAJA_LAUNCH(res, inner_x, inner_y, inner_z, launch_context);
+        MASS3DEA_CUDA_RAJA_LAUNCH;
 
       }  // loop over kernel reps
       stopTimer();
@@ -211,7 +211,7 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        MASS3DEA_CUDA_RAJA_LAUNCH(res, inner_x, inner_y, inner_z, launch_context);
+        MASS3DEA_CUDA_RAJA_LAUNCH;
 
       }  // loop over kernel reps
       stopTimer();
