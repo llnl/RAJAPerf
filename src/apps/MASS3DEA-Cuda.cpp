@@ -175,17 +175,13 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 0) {
 
-      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mea::D1D>>;
 
-      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mea::D1D>>;
 
-      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mea::D1D>>;
 
-      // threadIdx, blockDim, blockIdx, gridDim cached
-      using CachePolicy = RAJA::CudaIndicesAndDims<false, false, true, false>;
-      using launch_context =
-          RAJA::LaunchContextT<
-              RAJA::CudaLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+      using launch_context = RAJA::LaunchContext;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -197,13 +193,17 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
 
     } else if constexpr (tune_idx == 1) {
 
-      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mea::D1D>>;
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
-      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mea::D1D>>;
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
 
-      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<mea::D1D>>;
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_loop>;
 
-      using launch_context = RAJA::LaunchContext;
+      // threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::CudaIndicesAndDims<false, false, true, false>;
+      using launch_context =
+          RAJA::LaunchContextT<
+              RAJA::CudaLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -242,9 +242,9 @@ void MASS3DEA::defineCudaVariantTunings()
 
         if (vid == RAJA_CUDA) {
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
-              vid, "cache_loop_" + std::to_string(block_size));
-          addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 1>>(
               vid, "compile_block_inc_" + std::to_string(block_size));
+          addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 1>>(
+              vid, "cache_loop_" + std::to_string(block_size));
         }
 
       }

@@ -302,6 +302,24 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 1) {
 
+      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
+
+      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_direct>;
+
+      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_direct>;
+
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+        runRAJAImpl<inner_x, inner_y, inner_z>(res);
+
+      } // loop over kernel reps
+      stopTimer();
+    }
+
+    if constexpr (tune_idx == 2) {
+
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_loop>;
@@ -319,24 +337,6 @@ void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
-
-      } // loop over kernel reps
-      stopTimer();
-    }
-
-    if constexpr (tune_idx == 2) {
-
-      using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_direct>;
-
-      using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_y_direct>;
-
-      using inner_z = RAJA::LoopPolicy<RAJA::cuda_thread_z_direct>;
-
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
-        runRAJAImpl<inner_x, inner_y, inner_z>(res);
 
       } // loop over kernel reps
       stopTimer();
@@ -381,10 +381,10 @@ void MASSVEC3DPA::defineCudaVariantTunings()
               vid, "blockdim_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 1>>(
-              vid, "cache_loop_" + std::to_string(block_size));
+              vid, "direct_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runCudaVariantImpl<block_size, 2>>(
-              vid, "direct_" + std::to_string(block_size));
+              vid, "cache_loop_" + std::to_string(block_size));
 
         }
 

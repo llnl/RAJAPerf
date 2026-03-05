@@ -295,29 +295,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     }
 
     if constexpr (tune_idx == 1) {
-
-      using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
-
-      using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
-
-      using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
-
-      //threadIdx, blockDim, blockIdx, gridDim cached
-      using CachePolicy = RAJA::HipIndicesAndDims<false, false, true, false>;
-      using launch_context = RAJA::LaunchContextT<RAJA::HipLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
-
-      startTimer();
-      // Loop counter increment uses macro to quiet C++20 compiler warning
-      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
-        MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
-                                   launch_context);
-
-      } // loop over kernel reps
-      stopTimer();
-    }
-
-    if constexpr (tune_idx == 2) {
+    
       using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_direct>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_direct>;
@@ -330,6 +308,31 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 
         MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
                                    RAJA::LaunchContext);
+
+      } // loop over kernel reps
+      stopTimer();
+    }
+
+    if constexpr (tune_idx == 2) {
+
+      using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
+
+      using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
+
+      using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
+
+      //threadIdx, blockDim, blockIdx, gridDim cached
+      using CachePolicy = RAJA::HipIndicesAndDims<false, false, true, false>;
+      using launch_context =
+          RAJA::LaunchContextT<
+              RAJA::HipLaunchContextIndicesAndDimsPolicy<CachePolicy>>;
+
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+        MASSVEC3DPA_HIP_RAJA_LAUNCH(res, inner_x, inner_y, inner_z,
+                                   launch_context);
 
       } // loop over kernel reps
       stopTimer();
@@ -376,10 +379,10 @@ void MASSVEC3DPA::defineHipVariantTunings()
               vid, "blockdim_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 1>>(
-              vid, "cache_loop_" + std::to_string(block_size));
+              vid, "direct_" + std::to_string(block_size));
 
           addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 2>>(
-              vid, "direct_" + std::to_string(block_size));
+              vid, "cache_loop_" + std::to_string(block_size));
 
         }
 
