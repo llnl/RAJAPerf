@@ -58,86 +58,75 @@ __global__ void Mass3DEA(const Real_ptr B, const Real_ptr D, Real_ptr M) {
 
 }
 
-template <typename inner_x, typename inner_y, typename inner_z, typename CONTEXT,
-          typename RESOURCE>
-void MASS3DEA::runRAJAImpl(RESOURCE &res)
-{
-
-  MASS3DEA_DATA_SETUP;
-
-  constexpr bool async = true;
-
-  using launch_policy =
-      RAJA::LaunchPolicy<
-          RAJA::cuda_launch_t<async, mea::D1D * mea::D1D * mea::D1D>>;
-
-  using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
-
-  // clang-format off
-  RAJA::launch<launch_policy>(res,
-    RAJA::LaunchParams(RAJA::Teams(NE),
-                       RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),
-    [=] RAJA_HOST_DEVICE(CONTEXT ctx) {
-
-      RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-        [&](Index_type e) {
-
-          MASS3DEA_0
-
-          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-            [&](Index_type) {
-              RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                [&](Index_type d) {
-                  RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                    [&](Index_type q) {
-                      MASS3DEA_1
-                    }
-                  ); // RAJA::loop<inner_y>
-                }
-              ); // RAJA::loop<inner_x>
-            }
-          ); // RAJA::loop<inner_z>
-
-          MASS3DEA_2
-
-          RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-            [&](Index_type k1) {
-              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                [&](Index_type k2) {
-                  RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
-                    [&](Index_type k3) {
-                      MASS3DEA_3
-                    }
-                  ); // RAJA::loop<inner_z>
-                }
-              ); // RAJA::loop<inner_y>
-            }
-          ); // RAJA::loop<inner_x>
-
-          ctx.teamSync();
-
-          RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
-            [&](Index_type i1) {
-              RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                [&](Index_type i2) {
-                  RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
-                    [&](Index_type i3) {
-                      MASS3DEA_4
-                    }
-                  ); // RAJA::loop<inner_z>
-                }
-              ); // RAJA::loop<inner_y>
-            }
-          ); // RAJA::loop<inner_x>
-
-        }  // lambda (e)
-      );  // RAJA::loop<outer_x>
-
-    }  // outer lambda (ctx)
-  );  // RAJA::launch
-  // clang-format on
-
-}
+#define MASS3DEA_CUDA_RAJA_LAUNCH(RES, INNER_X, INNER_Y, INNER_Z, CONTEXT_T)   \
+  do {                                                                        \
+                                                                              \
+    /* clang-format off */                                                    \
+    RAJA::launch<launch_policy>(                                              \
+      RES,                                                                    \
+      RAJA::LaunchParams(RAJA::Teams(NE),                                     \
+                         RAJA::Threads(mea::D1D, mea::D1D, mea::D1D)),         \
+      [=] RAJA_HOST_DEVICE(CONTEXT_T ctx) {                                   \
+                                                                              \
+        RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),                   \
+          [&](Index_type e) {                                                 \
+                                                                              \
+            MASS3DEA_0                                                        \
+                                                                              \
+            RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, 1),                \
+              [&](Index_type) {                                               \
+                RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
+                  [&](Index_type d) {                                         \
+                    RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
+                      [&](Index_type q) {                                     \
+                        MASS3DEA_1                                            \
+                      }                                                       \
+                    );                                                        \
+                  }                                                           \
+                );                                                            \
+              }                                                               \
+            );                                                                \
+                                                                              \
+            MASS3DEA_2                                                        \
+                                                                              \
+            RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::Q1D),          \
+              [&](Index_type k1) {                                            \
+                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::Q1D),     \
+                  [&](Index_type k2) {                                        \
+                    RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mea::Q1D), \
+                      [&](Index_type k3) {                                    \
+                        MASS3DEA_3                                            \
+                      }                                                       \
+                    );                                                        \
+                  }                                                           \
+                );                                                            \
+              }                                                               \
+            );                                                                \
+                                                                              \
+            ctx.teamSync();                                                   \
+                                                                              \
+            RAJA::loop<INNER_X>(ctx, RAJA::RangeSegment(0, mea::D1D),          \
+              [&](Index_type i1) {                                            \
+                RAJA::loop<INNER_Y>(ctx, RAJA::RangeSegment(0, mea::D1D),     \
+                  [&](Index_type i2) {                                        \
+                    RAJA::loop<INNER_Z>(ctx, RAJA::RangeSegment(0, mea::D1D), \
+                      [&](Index_type i3) {                                    \
+                        MASS3DEA_4                                            \
+                      }                                                       \
+                    );                                                        \
+                  }                                                           \
+                );                                                            \
+              }                                                               \
+            );                                                                \
+                                                                              \
+          }                                                                   \
+        );                                                                    \
+                                                                              \
+      }                                                                       \
+    );                                                                        \
+    /* clang-format on */                                                     \
+                                                                              \
+  } while (false)
 
 template <size_t block_size, size_t tune_idx>
 void MASS3DEA::runCudaVariantImpl(VariantID vid)
@@ -175,6 +164,13 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 0) {
 
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<
+          RAJA::cuda_launch_t<async, mea::D1D * mea::D1D * mea::D1D>>;
+
+      using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
+
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<mea::D1D>>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<mea::D1D>>;
@@ -186,12 +182,19 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
+        MASS3DEA_CUDA_RAJA_LAUNCH(res, inner_x, inner_y, inner_z, launch_context);
 
       }  // loop over kernel reps
       stopTimer();
 
     } else if constexpr (tune_idx == 1) {
+
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<
+          RAJA::cuda_launch_t<async, mea::D1D * mea::D1D * mea::D1D>>;
+
+      using outer_x = RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
 
       using inner_x = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
@@ -208,7 +211,7 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        runRAJAImpl<inner_x, inner_y, inner_z, launch_context>(res);
+        MASS3DEA_CUDA_RAJA_LAUNCH(res, inner_x, inner_y, inner_z, launch_context);
 
       }  // loop over kernel reps
       stopTimer();
@@ -225,6 +228,8 @@ void MASS3DEA::runCudaVariantImpl(VariantID vid)
   }
 }
 
+#undef MASS3DEA_CUDA_RAJA_LAUNCH
+
 void MASS3DEA::defineCudaVariantTunings()
 {
 
@@ -236,15 +241,20 @@ void MASS3DEA::defineCudaVariantTunings()
           run_params.validGPUBlockSize(block_size)) {
 
         if (vid == Base_CUDA) {
+
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
               vid, "compile_block_inc_" + std::to_string(block_size));
+
         }
 
         if (vid == RAJA_CUDA) {
+
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
               vid, "compile_block_inc_" + std::to_string(block_size));
+
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 1>>(
               vid, "cache_loop_" + std::to_string(block_size));
+
         }
 
       }
