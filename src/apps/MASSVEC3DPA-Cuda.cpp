@@ -20,6 +20,65 @@
 namespace rajaperf {
 namespace apps {
 
+#define MASSVEC3DPA_GPU_KERNEL_BODY(SHARED_2D, SHARED_3D)              \
+  do {                                                                 \
+    GPU_SHARED_2D_APPLY(SHARED_2D, q, d, mvpa::Q1D, mvpa::D1D) {       \
+      MASSVEC3DPA_1;                                                   \
+    }                                                                  \
+                                                                       \
+    for (Index_type c = 0; c < 3; ++c) {                               \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, mvpa::D1D, mvpa::D1D, \
+                          mvpa::D1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_2;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, dy, dz, mvpa::Q1D, mvpa::D1D, \
+                          mvpa::D1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_3;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, dz, mvpa::Q1D, mvpa::Q1D, \
+                          mvpa::D1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_4;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, qz, mvpa::Q1D, mvpa::Q1D, \
+                          mvpa::Q1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_5;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, qy, qz, mvpa::D1D, mvpa::Q1D, \
+                          mvpa::Q1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_6;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, qz, mvpa::D1D, mvpa::D1D, \
+                          mvpa::Q1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_7;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, mvpa::D1D, mvpa::D1D, \
+                          mvpa::D1D)                                   \
+      {                                                                \
+        MASSVEC3DPA_8;                                                 \
+      }                                                                \
+      __syncthreads();                                                 \
+                                                                       \
+    } /* (c) dimension loop */                                         \
+  } while (false)
+
 template <size_t block_size, bool use_direct>
 __launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
                                                          const Real_ptr D,
@@ -31,38 +90,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_2D_SWITCH(use_direct, q, d, mvpa::Q1D, mvpa::D1D, MASSVEC3DPA_1);
-
-  for (Index_type c = 0; c < 3; ++c) {
-    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                         MASSVEC3DPA_2);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D,
-                         MASSVEC3DPA_3);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D,
-                         MASSVEC3DPA_4);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D,
-                         MASSVEC3DPA_5);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D,
-                         MASSVEC3DPA_6);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D,
-                         MASSVEC3DPA_7);
-    __syncthreads();
-
-    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D,
-                         MASSVEC3DPA_8);
-    __syncthreads();
-
-  } // (c) dimension loop
+  if constexpr (use_direct) {
+    MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_DIRECT_2D, GPU_SHARED_DIRECT_3D);
+  } else {
+    MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_LOOP_2D, GPU_SHARED_LOOP_3D);
+  }
 }
 
 template<typename inner_x, typename inner_y, typename inner_z,
@@ -228,6 +260,8 @@ void MASSVEC3DPA::runRAJAImpl(RESOURCE &res)
   //clang-format on
 
 }
+
+#undef MASSVEC3DPA_GPU_KERNEL_BODY
 
 template <size_t block_size, size_t tune_idx>
 void MASSVEC3DPA::runCudaVariantImpl(VariantID vid)
