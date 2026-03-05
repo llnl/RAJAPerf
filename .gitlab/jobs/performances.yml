@@ -30,7 +30,7 @@ clang_14_0_6_mpi_caliper:
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq"
     PERF_RUN_OPTS: "--repfact 5.0"
-    PERF_MPI_EXEC: "srun --overlap -n 16"
+    PERF_MPI_EXEC: "srun --overlap -n 112"
   extends: .perf_on_dane
 
 rocmcc_6_4_1_hip_openmp_caliper:
