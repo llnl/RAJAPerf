@@ -243,17 +243,17 @@ void MASS3DEA::defineCudaVariantTunings()
         if (vid == Base_CUDA) {
 
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
-              vid, "compile_block_inc_" + std::to_string(block_size));
+              vid, "compile_block_stride_loop_" + std::to_string(block_size));
 
         }
 
         if (vid == RAJA_CUDA) {
 
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 0>>(
-              vid, "compile_block_inc_" + std::to_string(block_size));
+              vid, "compile_block_stride_loop_" + std::to_string(block_size));
 
           addVariantTuning<&MASS3DEA::runCudaVariantImpl<block_size, 1>>(
-              vid, "cache_loop_" + std::to_string(block_size));
+              vid, "cached_block_stride_loop_" + std::to_string(block_size));
 
         }
 
