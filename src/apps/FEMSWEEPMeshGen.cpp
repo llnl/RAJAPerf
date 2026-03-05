@@ -9,6 +9,11 @@
 
 #include "FEMSWEEPMeshGen.hpp"
 
+// For M_PI pi macro with MSVC
+#if defined(_MSC_VER) && !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
