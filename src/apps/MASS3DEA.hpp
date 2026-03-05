@@ -169,10 +169,6 @@ public:
   void runHipVariantImpl(VariantID vid);
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
-  template <typename inner_x, typename inner_y, typename inner_z,
-            typename CONTEXT = RAJA::LaunchContext, typename RESOURCE>
-  void runRAJAImpl(RESOURCE &res);
-
  private:
   static const size_t default_gpu_block_size = mea::D1D * mea::D1D * mea::D1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
