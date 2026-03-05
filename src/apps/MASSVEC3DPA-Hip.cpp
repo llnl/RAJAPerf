@@ -20,109 +20,46 @@
 namespace rajaperf {
 namespace apps {
 
-template <size_t block_size>
-__launch_bounds__(block_size) __global__
-void MassVec3DPA_BLOCKDIM_LOOP_INC(const Real_ptr B,
-                                   const Real_ptr D, const Real_ptr X,
-                                   Real_ptr Y)
+template <size_t block_size, bool use_direct>
+__launch_bounds__(block_size) __global__ void MassVec3DPA(const Real_ptr B,
+                                                         const Real_ptr D,
+                                                         const Real_ptr X,
+                                                         Real_ptr Y)
 {
 
   const Index_type e = blockIdx.x;
 
   MASSVEC3DPA_0_GPU;
 
-  GPU_SHARED_LOOP_2D(q, d, mvpa::Q1D, mvpa::D1D) {
-    MASSVEC3DPA_1;
-  }
+  GPU_SHARED_2D_SWITCH(use_direct, q, d, mvpa::Q1D, mvpa::D1D, MASSVEC3DPA_1);
 
   for (Index_type c = 0; c < 3; ++c) {
-    GPU_SHARED_LOOP_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_2;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, dz, mvpa::D1D, mvpa::D1D,
+                         mvpa::D1D, MASSVEC3DPA_2);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_3;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, qx, dy, dz, mvpa::Q1D, mvpa::D1D,
+                         mvpa::D1D, MASSVEC3DPA_3);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D) {
-      MASSVEC3DPA_4;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, qx, qy, dz, mvpa::Q1D, mvpa::Q1D,
+                         mvpa::D1D, MASSVEC3DPA_4);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D) {
-      MASSVEC3DPA_5;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, qx, qy, qz, mvpa::Q1D, mvpa::Q1D,
+                         mvpa::Q1D, MASSVEC3DPA_5);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D) {
-      MASSVEC3DPA_6;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, dx, qy, qz, mvpa::D1D, mvpa::Q1D,
+                         mvpa::Q1D, MASSVEC3DPA_6);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D) {
-      MASSVEC3DPA_7;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, qz, mvpa::D1D, mvpa::D1D,
+                         mvpa::Q1D, MASSVEC3DPA_7);
     __syncthreads();
 
-    GPU_SHARED_LOOP_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_8;
-    }
-    __syncthreads();
-
-  } // (c) dimension loop
-}
-
-template <size_t block_size>
-__launch_bounds__(block_size) __global__
-void MassVec3DPA_DIRECT(const Real_ptr B,
-                        const Real_ptr D, const Real_ptr X,
-                        Real_ptr Y)
-{
-
-  const Index_type e = blockIdx.x;
-
-  MASSVEC3DPA_0_GPU;
-
-  GPU_SHARED_DIRECT_2D(q, d, mvpa::Q1D, mvpa::D1D) {
-    MASSVEC3DPA_1;
-  }
-
-  for (Index_type c = 0; c < 3; ++c) {
-    GPU_SHARED_DIRECT_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_2;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(qx, dy, dz, mvpa::Q1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_3;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(qx, qy, dz, mvpa::Q1D, mvpa::Q1D, mvpa::D1D) {
-      MASSVEC3DPA_4;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(qx, qy, qz, mvpa::Q1D, mvpa::Q1D, mvpa::Q1D) {
-      MASSVEC3DPA_5;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(dx, qy, qz, mvpa::D1D, mvpa::Q1D, mvpa::Q1D) {
-      MASSVEC3DPA_6;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(dx, dy, qz, mvpa::D1D, mvpa::D1D, mvpa::Q1D) {
-      MASSVEC3DPA_7;
-    }
-    __syncthreads();
-
-    GPU_SHARED_DIRECT_3D(dx, dy, dz, mvpa::D1D, mvpa::D1D, mvpa::D1D) {
-      MASSVEC3DPA_8;
-    }
+    GPU_SHARED_3D_SWITCH(use_direct, dx, dy, dz, mvpa::D1D, mvpa::D1D,
+                         mvpa::D1D, MASSVEC3DPA_8);
     __syncthreads();
 
   } // (c) dimension loop
@@ -313,9 +250,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
         dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPA_BLOCKDIM_LOOP_INC<block_size>), NE,
-                           nthreads_per_block, shmem, res.get_stream(), B, D,
-                           X, Y);
+        RPlaunchHipKernel((MassVec3DPA<block_size, false>), NE, nthreads_per_block,
+                          shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
 
@@ -328,9 +264,8 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
         dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPA_DIRECT<block_size>), NE,
-                          nthreads_per_block, shmem, res.get_stream(), B, D,
-                          X, Y);
+        RPlaunchHipKernel((MassVec3DPA<block_size, true>), NE, nthreads_per_block,
+                          shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
     }

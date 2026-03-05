@@ -101,6 +101,24 @@
     for (Index_type ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size)      \
       for (Index_type tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
 
+#define GPU_SHARED_2D_SWITCH(USE_DIRECT, tx, ty, Nx, Ny, BODY)                 \
+  do {                                                                         \
+    if constexpr (USE_DIRECT) {                                                \
+      GPU_SHARED_DIRECT_2D(tx, ty, Nx, Ny) { BODY; }                           \
+    } else {                                                                   \
+      GPU_SHARED_LOOP_2D(tx, ty, Nx, Ny) { BODY; }                             \
+    }                                                                          \
+  } while (false)
+
+#define GPU_SHARED_3D_SWITCH(USE_DIRECT, tx, ty, tz, Nx, Ny, Nz, BODY)         \
+  do {                                                                         \
+    if constexpr (USE_DIRECT) {                                                \
+      GPU_SHARED_DIRECT_3D(tx, ty, tz, Nx, Ny, Nz) { BODY; }                   \
+    } else {                                                                   \
+      GPU_SHARED_LOOP_3D(tx, ty, tz, Nx, Ny, Nz) { BODY; }                     \
+    }                                                                          \
+  } while (false)
+
 #endif
 
 #endif // closing endif for header file include guard
