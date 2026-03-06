@@ -242,14 +242,14 @@ void MASS3DEA::defineHipVariantTunings()
         if (vid == Base_HIP) {
 
           addVariantTuning<&MASS3DEA::runHipVariantImpl<block_size, 0>>(
-              vid, "compile_block_stride_loop_" + std::to_string(block_size));
+              vid, "compile_time_block_stride_loop_" + std::to_string(block_size));
 
         }
 
         if (vid == RAJA_HIP) {
 
           addVariantTuning<&MASS3DEA::runHipVariantImpl<block_size, 0>>(
-              vid, "compile_block_stride_loop_" + std::to_string(block_size));
+              vid, "compile_time_block_stride_loop_" + std::to_string(block_size));
 
           addVariantTuning<&MASS3DEA::runHipVariantImpl<block_size, 1>>(
               vid, "cached_block_stride_loop_" + std::to_string(block_size));
