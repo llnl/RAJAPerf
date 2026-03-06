@@ -87,7 +87,7 @@ class IntArray
 
 template <int Rank> class MDIntArray;
 
-// A minimal dense integer array with 2D indexing and a contiguous "HostRead()" view,
+// A multi-dimensional integer array with 2D indexing and a contiguous "HostRead()" view,
 // matching what the original code used from MFEM's `mfem::MDArray<int,2>`.
 template <> class MDIntArray<2>
 {
@@ -104,7 +104,7 @@ template <> class MDIntArray<2>
    std::vector<int> data_;
 };
 
-// A minimal dense integer array with 3D indexing and a contiguous "HostRead()" view,
+// A multi-dimensional integer array with 3D indexing and a contiguous "HostRead()" view,
 // matching what the original code used from MFEM's `mfem::MDArray<int,3>`.
 template <> class MDIntArray<3>
 {

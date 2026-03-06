@@ -312,7 +312,7 @@ private:
                                                          integer::MultipleOf<32>>;
 
   AngularQuadratureLite * m_angularquadrature;
-  MeshGenerator * m_sweeper;
+  MeshGenerator * m_meshgen;
 
   Index_type m_nx;
   Index_type m_ny;

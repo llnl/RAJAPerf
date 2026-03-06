@@ -35,9 +35,9 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   m_nz = params.getFemsweepZ();
 
   m_angularquadrature = new AngularQuadratureLite(params.getFemsweepPolar(), params.getFemsweepAzim());
-  m_sweeper = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
+  m_meshgen = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
 
-  m_sweeper->Setup();
+  m_meshgen->Setup();
 
   m_ne = m_nx * m_ny * m_nz;
 
@@ -138,23 +138,23 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
-  allocAndCopyHostData(m_nhpaa_r, m_sweeper->m_nhyperplanes_all_angles.Data(), m_sweeper->m_nhyperplanes_all_angles.Size(), vid);
+  allocAndCopyHostData(m_nhpaa_r, m_meshgen->m_nhyperplanes_all_angles.Data(), m_meshgen->m_nhyperplanes_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_ohpaa_r, m_sweeper->m_ohyperplanes_all_angles.Data(), m_sweeper->m_ohyperplanes_all_angles.Size(), vid);
+  allocAndCopyHostData(m_ohpaa_r, m_meshgen->m_ohyperplanes_all_angles.Data(), m_meshgen->m_ohyperplanes_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_phpaa_r, m_sweeper->m_phyperplanes_all_angles.Data(), m_sweeper->m_phyperplanes_all_angles.Size(), vid);
+  allocAndCopyHostData(m_phpaa_r, m_meshgen->m_phyperplanes_all_angles.Data(), m_meshgen->m_phyperplanes_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_order_r, m_sweeper->md_ordered_elements_all_angles.HostRead(), m_sweeper->md_ordered_elements_all_angles.Size(), vid);
+  allocAndCopyHostData(m_order_r, m_meshgen->md_ordered_elements_all_angles.HostRead(), m_meshgen->md_ordered_elements_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_AngleElem2FaceType, m_sweeper->md_angle_elem_to_face_types.HostRead(), m_sweeper->md_angle_elem_to_face_types.Size(), vid);
+  allocAndCopyHostData(m_AngleElem2FaceType, m_meshgen->md_angle_elem_to_face_types.HostRead(), m_meshgen->md_angle_elem_to_face_types.Size(), vid);
 
-  allocAndCopyHostData(m_elem_to_faces, m_sweeper->md_elem_to_faces.HostRead(), m_sweeper->md_elem_to_faces.Size(), vid);
+  allocAndCopyHostData(m_elem_to_faces, m_meshgen->md_elem_to_faces.HostRead(), m_meshgen->md_elem_to_faces.Size(), vid);
 
-  allocAndCopyHostData(m_F_g2l, m_sweeper->global_to_local_face.Data(), m_sweeper->global_to_local_face.Size(), vid);
+  allocAndCopyHostData(m_F_g2l, m_meshgen->global_to_local_face.Data(), m_meshgen->global_to_local_face.Size(), vid);
 
-  allocAndCopyHostData(m_idx1, m_sweeper->d_indices1.Data(), m_sweeper->d_indices1.Size(), vid);
+  allocAndCopyHostData(m_idx1, m_meshgen->d_indices1.Data(), m_meshgen->d_indices1.Size(), vid);
 
-  allocAndCopyHostData(m_idx2, m_sweeper->d_indices2.Data(), m_sweeper->d_indices2.Size(), vid);
+  allocAndCopyHostData(m_idx2, m_meshgen->d_indices2.Data(), m_meshgen->d_indices2.Size(), vid);
 
 }
 
