@@ -169,6 +169,11 @@ void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  delete m_angularquadrature;
+  m_angularquadrature = nullptr;
+  delete m_meshgen;
+  m_meshgen = nullptr;
+
   deallocData(m_Bdat, vid);
   deallocData(m_Adat, vid);
   deallocData(m_Fdat, vid);
