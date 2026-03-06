@@ -63,11 +63,6 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
   m_nz = this->run_params.getFemsweepZ();
   m_ne = m_nx * m_ny * m_nz;
 
-  // Create mesh connectivity arrays
-  m_angularquadrature = new AngularQuadratureLite(this->run_params.getFemsweepPolar(), this->run_params.getFemsweepAzim());
-  m_meshgen = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
-  m_meshgen->Setup();
-
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
                           m_nx * m_ny * (m_nz - 1);
@@ -135,6 +130,11 @@ FEMSWEEP::~FEMSWEEP()
 
 void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  // Create mesh connectivity arrays
+  m_angularquadrature = new AngularQuadratureLite(this->run_params.getFemsweepPolar(), this->run_params.getFemsweepAzim());
+  m_meshgen = new MeshGenerator(*m_angularquadrature, this->run_params.getFemsweepX(), this->run_params.getFemsweepY(), this->run_params.getFemsweepZ(), this->run_params.getFemsweepGroups());
+  m_meshgen->Setup();
+
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
   allocAndInitDataRandValue (m_Adat     , m_Alen      , vid);
   allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
