@@ -91,7 +91,7 @@ __launch_bounds__(block_size) __global__ void MassVec3DPADirect(const Real_ptr B
   MASSVEC3DPA_0_GPU;
 
   MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_DIRECT_2D, GPU_SHARED_DIRECT_3D);
-  
+
 }
 
 template <size_t block_size>
@@ -106,19 +106,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
   MASSVEC3DPA_0_GPU;
 
   MASSVEC3DPA_GPU_KERNEL_BODY(GPU_SHARED_LOOP_2D, GPU_SHARED_LOOP_3D);
-  
+
 }
 
 #define MASSVEC3DPA_HIP_RAJA_LAUNCH                                            \
   {                                                                            \
-                                                                               \
-    constexpr bool async = true;                                               \
-                                                                               \
-    using launch_policy = RAJA::LaunchPolicy<                                  \
-    RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;             \
-                                                                               \
-    using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;                \
-                                                                               \
     /* clang-format off */                                                     \
     RAJA::launch<launch_policy>(                                               \
       res,                                                                     \
@@ -321,17 +313,25 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 
     if constexpr (tune_idx == 0) {
 
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<
+      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+
+      using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
+
       using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_loop>;
 
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_loop>;
 
+      using launch_context = RAJA::LaunchContext;
+
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        using launch_context = RAJA::LaunchContext;
         MASSVEC3DPA_HIP_RAJA_LAUNCH;
 
       } // loop over kernel reps
@@ -339,18 +339,26 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     }
 
     if constexpr (tune_idx == 1) {
-    
+
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<
+      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+
+      using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
+
       using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_direct>;
 
       using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_y_direct>;
 
       using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_z_direct>;
 
+      using launch_context = RAJA::LaunchContext;
+
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        using launch_context = RAJA::LaunchContext;
         MASSVEC3DPA_HIP_RAJA_LAUNCH;
 
       } // loop over kernel reps
@@ -358,6 +366,13 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
     }
 
     if constexpr (tune_idx == 2) {
+
+      constexpr bool async = true;
+
+      using launch_policy = RAJA::LaunchPolicy<
+      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+
+      using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
       using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
