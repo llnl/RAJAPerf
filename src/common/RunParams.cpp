@@ -1771,11 +1771,11 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --femsweep_angles_azim 3\n\n";
 
-  str << "\t --femsweep_groups <int> [default is 128]\n"
+  str << "\t --femsweep_groups <int> [default is 16]\n"
       << "\t      (For FEMSWEEP kernel only)\n"
       << "\t      Must be greater than 0.\n";
   str << "\t\t Example...\n"
-      << "\t\t --femsweep_groups 128\n\n";
+      << "\t\t --femsweep_groups 16\n\n";
 
   str << "\t --femsweep_nx <int> [default is 5]\n"
       << "\t      (For FEMSWEEP kernel only)\n"

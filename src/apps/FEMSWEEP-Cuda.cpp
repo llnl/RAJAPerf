@@ -33,15 +33,15 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
                             const Index_type ne,
                             const Index_type ng,
                             const Index_type sharedinteriorfaces,
-                            const Index_ptr nhpaa_r,
-                            const Index_ptr ohpaa_r,
-                            const Index_ptr phpaa_r,
-                            const Index_ptr order_r,
-                            const Index_ptr AngleElem2FaceType,
-                            const Index_ptr elem_to_faces,
-                            const Index_ptr F_g2l,
-                            const Index_ptr idx1,
-                            const Index_ptr idx2 )
+                            const Int_ptr nhpaa_r,
+                            const Int_ptr ohpaa_r,
+                            const Int_ptr phpaa_r,
+                            const Int_ptr order_r,
+                            const Int_ptr AngleElem2FaceType,
+                            const Int_ptr elem_to_faces,
+                            const Int_ptr F_g2l,
+                            const Int_ptr idx1,
+                            const Int_ptr idx2 )
 {
   const int ag = blockIdx.x * block_size + threadIdx.x;
   FEMSWEEP_KERNEL;

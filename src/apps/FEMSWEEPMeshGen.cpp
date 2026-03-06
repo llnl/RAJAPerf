@@ -29,11 +29,8 @@ namespace apps
 //   which returns an n-point Gauss–Legendre rule on [-1,1].
 // - Here we implement the same rule directly via Newton iterations on Legendre polynomials.
 // This is a common textbook algorithm (e.g. Numerical Recipes), not copied from MFEM code.
-static void GaussLegendre(int n, std::vector<double> *x, std::vector<double> *w)
+static void GaussLegendre(int n, std::vector<double> &x, std::vector<double> &w)
 {
-   x->assign(static_cast<size_t>(n), 0.0);
-   w->assign(static_cast<size_t>(n), 0.0);
-
    const double eps = 1e-14;
    const int m = (n + 1) / 2;
    for (int i = 0; i < m; ++i)
@@ -55,8 +52,8 @@ static void GaussLegendre(int n, std::vector<double> *x, std::vector<double> *w)
          z = z1 - p1 / pp;
          if (std::abs(z - z1) <= eps) { break; }
       }
-      (*x)[static_cast<size_t>(i)] = -z;
-      (*x)[static_cast<size_t>(n - 1 - i)] = z;
+      x[static_cast<size_t>(i)] = -z;
+      x[static_cast<size_t>(n - 1 - i)] = z;
 
       double p1 = 1.0;
       double p2 = 0.0;
@@ -68,8 +65,8 @@ static void GaussLegendre(int n, std::vector<double> *x, std::vector<double> *w)
       }
       const double pp = n * (z * p1 - p2) / (z * z - 1.0);
       const double wi = 2.0 / ((1.0 - z * z) * pp * pp);
-      (*w)[static_cast<size_t>(i)] = wi;
-      (*w)[static_cast<size_t>(n - 1 - i)] = wi;
+      w[static_cast<size_t>(i)] = wi;
+      w[static_cast<size_t>(n - 1 - i)] = wi;
    }
 }
 
@@ -85,7 +82,9 @@ AngularQuadratureLite::AngularQuadratureLite(int polar_order, int azimuthal_orde
    const int azimuthalAngles = 4 * azimuthal_order; // 3D
 
    std::vector<double> x, w;
-   GaussLegendre(polarAngles, &x, &w);
+   x.assign(static_cast<size_t>(polarAngles), 0.0);
+   w.assign(static_cast<size_t>(polarAngles), 0.0);
+   GaussLegendre(polarAngles, x, w);
 
    omega_.reserve(static_cast<size_t>(polarAngles * azimuthalAngles));
    for (int j = 0; j < polarAngles; ++j)

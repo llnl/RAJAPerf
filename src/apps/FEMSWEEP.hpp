@@ -108,16 +108,16 @@ constexpr int FDS = 4;  // number of DOFs per face
   Index_type ng = m_ng; \
   Index_type sharedinteriorfaces = m_sharedinteriorfaces; \
 \
-  Index_ptr nhpaa_r = m_nhpaa_r;  \
-  Index_ptr ohpaa_r = m_ohpaa_r;  \
-  Index_ptr phpaa_r = m_phpaa_r;  \
-  Index_ptr order_r = m_order_r;  \
+  Int_ptr nhpaa_r = m_nhpaa_r;  \
+  Int_ptr ohpaa_r = m_ohpaa_r;  \
+  Int_ptr phpaa_r = m_phpaa_r;  \
+  Int_ptr order_r = m_order_r;  \
 \
-  Index_ptr AngleElem2FaceType = m_AngleElem2FaceType; \
-  Index_ptr elem_to_faces      = m_elem_to_faces     ; \
-  Index_ptr F_g2l              = m_F_g2l             ; \
-  Index_ptr idx1               = m_idx1              ; \
-  Index_ptr idx2               = m_idx2              ; \
+  Int_ptr AngleElem2FaceType = m_AngleElem2FaceType; \
+  Int_ptr elem_to_faces      = m_elem_to_faces     ; \
+  Int_ptr F_g2l              = m_F_g2l             ; \
+  Int_ptr idx1               = m_idx1              ; \
+  Int_ptr idx2               = m_idx2              ; \
 
  
 #define FEMSWEEP_KERNEL \
@@ -351,16 +351,16 @@ private:
   Index_type m_idx2len;
 
   // Mesh data
-  Index_ptr m_nhpaa_r;
-  Index_ptr m_ohpaa_r;
-  Index_ptr m_phpaa_r;
-  Index_ptr m_order_r;
+  Int_ptr m_nhpaa_r;
+  Int_ptr m_ohpaa_r;
+  Int_ptr m_phpaa_r;
+  Int_ptr m_order_r;
 
-  Index_ptr m_AngleElem2FaceType;
-  Index_ptr m_elem_to_faces     ;
-  Index_ptr m_F_g2l             ;
-  Index_ptr m_idx1              ;
-  Index_ptr m_idx2              ;
+  Int_ptr m_AngleElem2FaceType;
+  Int_ptr m_elem_to_faces     ;
+  Int_ptr m_F_g2l             ;
+  Int_ptr m_idx1              ;
+  Int_ptr m_idx2              ;
 };
 
 } // end namespace apps

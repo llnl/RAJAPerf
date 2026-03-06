@@ -138,62 +138,23 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
   allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
 
-  auto temp_arr = allocDataForInit(m_nhpaa_r, m_sweeper->m_nhyperplanes_all_angles.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->m_nhyperplanes_all_angles.Size(); ++ii )
-  {
-    m_nhpaa_r[ii] = m_sweeper->m_nhyperplanes_all_angles[ii];
-  }
+  allocAndCopyHostData(m_nhpaa_r, m_sweeper->m_nhyperplanes_all_angles.Data(), m_sweeper->m_nhyperplanes_all_angles.Size(), vid);
 
-  temp_arr = allocDataForInit(m_ohpaa_r, m_sweeper->m_ohyperplanes_all_angles.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->m_ohyperplanes_all_angles.Size(); ++ii )
-  {
-    m_ohpaa_r[ii] = m_sweeper->m_ohyperplanes_all_angles[ii];
-  }
+  allocAndCopyHostData(m_ohpaa_r, m_sweeper->m_ohyperplanes_all_angles.Data(), m_sweeper->m_ohyperplanes_all_angles.Size(), vid);
 
-  temp_arr = allocDataForInit(m_phpaa_r, m_sweeper->m_phyperplanes_all_angles.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->m_phyperplanes_all_angles.Size(); ++ii )
-  {
-    m_phpaa_r[ii] = m_sweeper->m_phyperplanes_all_angles[ii];
-  }
+  allocAndCopyHostData(m_phpaa_r, m_sweeper->m_phyperplanes_all_angles.Data(), m_sweeper->m_phyperplanes_all_angles.Size(), vid);
 
-  const int * temp1 = m_sweeper->md_ordered_elements_all_angles.HostRead();
-  temp_arr = allocDataForInit(m_order_r, m_sweeper->md_ordered_elements_all_angles.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->md_ordered_elements_all_angles.Size(); ++ii )
-  {
-    m_order_r[ii] = temp1[ii];
-  }
+  allocAndCopyHostData(m_order_r, m_sweeper->md_ordered_elements_all_angles.HostRead(), m_sweeper->md_ordered_elements_all_angles.Size(), vid);
 
-  const int * temp2 = m_sweeper->md_angle_elem_to_face_types.HostRead();
-  temp_arr = allocDataForInit(m_AngleElem2FaceType, m_sweeper->md_angle_elem_to_face_types.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->md_angle_elem_to_face_types.Size(); ++ii )
-  {
-    m_AngleElem2FaceType[ii] = temp2[ii];
-  }
+  allocAndCopyHostData(m_AngleElem2FaceType, m_sweeper->md_angle_elem_to_face_types.HostRead(), m_sweeper->md_angle_elem_to_face_types.Size(), vid);
 
-  const int * temp3 = m_sweeper->md_elem_to_faces.HostRead();
-  temp_arr = allocDataForInit(m_elem_to_faces, m_sweeper->md_elem_to_faces.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->md_elem_to_faces.Size(); ++ii )
-  {
-    m_elem_to_faces[ii] = temp3[ii];
-  }
+  allocAndCopyHostData(m_elem_to_faces, m_sweeper->md_elem_to_faces.HostRead(), m_sweeper->md_elem_to_faces.Size(), vid);
 
-  temp_arr = allocDataForInit(m_F_g2l, m_sweeper->global_to_local_face.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->global_to_local_face.Size(); ++ii )
-  {
-    m_F_g2l[ii] = m_sweeper->global_to_local_face[ii];
-  }
+  allocAndCopyHostData(m_F_g2l, m_sweeper->global_to_local_face.Data(), m_sweeper->global_to_local_face.Size(), vid);
 
-  temp_arr = allocDataForInit(m_idx1, m_sweeper->d_indices1.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->d_indices1.Size(); ++ii )
-  {
-    m_idx1[ii] = m_sweeper->d_indices1[ii];
-  }
+  allocAndCopyHostData(m_idx1, m_sweeper->d_indices1.Data(), m_sweeper->d_indices1.Size(), vid);
 
-  temp_arr = allocDataForInit(m_idx2, m_sweeper->d_indices2.Size(), vid);
-  for ( int ii = 0; ii < m_sweeper->d_indices2.Size(); ++ii )
-  {
-    m_idx2[ii] = m_sweeper->d_indices2[ii];
-  }
+  allocAndCopyHostData(m_idx2, m_sweeper->d_indices2.Data(), m_sweeper->d_indices2.Size(), vid);
 
 }
 
