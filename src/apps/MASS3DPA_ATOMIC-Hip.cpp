@@ -142,11 +142,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<mpa_at::Q1D>>;
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<mpa_at::Q1D>>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_loop<mpa_at::Q1D>>;
+    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<mpa_at::Q1D>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_loop<mpa_at::Q1D>>;
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<mpa_at::Q1D>>;
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
