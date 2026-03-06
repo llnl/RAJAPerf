@@ -30,11 +30,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
 
   CONVECTION3DPA_0_GPU;
 
-  GPU_FOREACH_THREAD(dz,z,conv::D1D)
+  GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(dy,y,conv::D1D)
+    GPU_FOREACH_THREAD_INC(dy, y, conv::D1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dx,x,conv::D1D)
+      GPU_FOREACH_THREAD_INC(dx, x, conv::D1D, conv::Q1D)
       {
         CONVECTION3DPA_1;
       }
@@ -42,11 +42,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,conv::D1D)
+  GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(dy,y,conv::D1D)
+    GPU_FOREACH_THREAD_INC(dy, y, conv::D1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+      GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
       {
         CONVECTION3DPA_2;
       }
@@ -54,11 +54,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,conv::D1D)
+  GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+    GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qy,y,conv::Q1D)
+      GPU_FOREACH_THREAD_INC(qy, y, conv::Q1D, conv::Q1D)
       {
         CONVECTION3DPA_3;
       }
@@ -66,11 +66,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+  GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
+    GPU_FOREACH_THREAD_INC(qy, y, conv::Q1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qz,z,conv::Q1D)
+      GPU_FOREACH_THREAD_INC(qz, z, conv::Q1D, conv::Q1D)
       {
         CONVECTION3DPA_4;
       }
@@ -78,11 +78,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qz,z,conv::Q1D)
+  GPU_FOREACH_THREAD_INC(qz, z, conv::Q1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
+    GPU_FOREACH_THREAD_INC(qy, y, conv::Q1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+      GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
       {
         CONVECTION3DPA_5;
       }
@@ -90,11 +90,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+  GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qy,y,conv::Q1D)
+    GPU_FOREACH_THREAD_INC(qy, y, conv::Q1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dz,z,conv::D1D)
+      GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
       {
         CONVECTION3DPA_6;
       }
@@ -102,11 +102,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,conv::D1D)
+  GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(qx,x,conv::Q1D)
+    GPU_FOREACH_THREAD_INC(qx, x, conv::Q1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dy,y,conv::D1D)
+      GPU_FOREACH_THREAD_INC(dy, y, conv::D1D, conv::Q1D)
       {
         CONVECTION3DPA_7;
       }
@@ -114,11 +114,11 @@ __global__ void Convection3DPA(const Real_ptr Basis, const Real_ptr tBasis,
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD(dz,z,conv::D1D)
+  GPU_FOREACH_THREAD_INC(dz, z, conv::D1D, conv::Q1D)
   {
-    GPU_FOREACH_THREAD(dy,y,conv::D1D)
+    GPU_FOREACH_THREAD_INC(dy, y, conv::D1D, conv::Q1D)
     {
-      GPU_FOREACH_THREAD(dx,x,conv::D1D)
+      GPU_FOREACH_THREAD_INC(dx, x, conv::D1D, conv::Q1D)
       {
         CONVECTION3DPA_8;
       }
