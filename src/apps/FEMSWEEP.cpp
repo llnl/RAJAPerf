@@ -28,18 +28,18 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
+  // Set basic mesh parameters
   m_na = 8 * params.getFemsweepPolar() * params.getFemsweepAzim();
   m_ng = params.getFemsweepGroups();
   m_nx = params.getFemsweepX();
   m_ny = params.getFemsweepY();
   m_nz = params.getFemsweepZ();
+  m_ne = m_nx * m_ny * m_nz;
 
+  // Create mesh connectivity arrays
   m_angularquadrature = new AngularQuadratureLite(params.getFemsweepPolar(), params.getFemsweepAzim());
   m_meshgen = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
-
   m_meshgen->Setup();
-
-  m_ne = m_nx * m_ny * m_nz;
 
   setDefaultProblemSize(ND * m_ne * m_ng * m_na);
   setDefaultReps(1);
