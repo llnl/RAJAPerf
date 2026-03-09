@@ -1795,12 +1795,6 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --femsweep_nz 5\n\n";
 
-  str << "\t --femsweep-mesh-file, -fmf <string> [Default is no file, and the femsweep is not run. The femsweep can only be run by specifying this option with a valid path to a mesh file name.]\n"
-      << "\t      (path to file name of femsweep mesh)\n";
-  str << "\t\t Examples...\n"
-      << "\t\t --femsweep-mesh-file /path/to/rajaperf/data/FEMSWEEPMESH_72a_16g_18x_18y_18z_1GB.txt\n"
-      << "\t\t -fmf /path/to/rajaperf/data/FEMSWEEPMESH_72a_16g_18x_18y_18z_1GB.txt\n\n";
-
   str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
       << "\t      (For ARRAY_OF_PTRS only: array size used in kernel)\n"
       << "\t      Must be greater than 0.\n"
