@@ -75,7 +75,6 @@ class IntArray
    int Size() const { return static_cast<int>(data_.size()); }
    int *Data() { return data_.data(); }
    const int *Data() const { return data_.data(); }
-   const int *HostRead() const { return data_.data(); }
    int &operator[](int i) { return data_.at(static_cast<size_t>(i)); }
    int operator[](int i) const { return data_.at(static_cast<size_t>(i)); }
    void SetSize(int n) { data_.assign(static_cast<size_t>(n), 0); }
@@ -87,7 +86,7 @@ class IntArray
 
 template <int Rank> class MDIntArray;
 
-// A multi-dimensional integer array with 2D indexing and a contiguous "HostRead()" view,
+// A multi-dimensional integer array with 2D indexing and a contiguous "Data()" view,
 // matching what the original code used from MFEM's `mfem::MDArray<int,2>`.
 template <> class MDIntArray<2>
 {
@@ -95,7 +94,7 @@ template <> class MDIntArray<2>
    MDIntArray() = default;
    MDIntArray(int d0, int d1) : d0_(d0), d1_(d1), data_(static_cast<size_t>(d0 * d1)) {}
    int Size() const { return static_cast<int>(data_.size()); }
-   const int *HostRead() const { return data_.data(); }
+   const int *Data() const { return data_.data(); }
    int &operator()(int i0, int i1) { return data_.at(static_cast<size_t>(i0 + d0_ * i1)); }
    int operator()(int i0, int i1) const { return data_.at(static_cast<size_t>(i0 + d0_ * i1)); }
 
@@ -104,7 +103,7 @@ template <> class MDIntArray<2>
    std::vector<int> data_;
 };
 
-// A multi-dimensional integer array with 3D indexing and a contiguous "HostRead()" view,
+// A multi-dimensional integer array with 3D indexing and a contiguous "Data()" view,
 // matching what the original code used from MFEM's `mfem::MDArray<int,3>`.
 template <> class MDIntArray<3>
 {
@@ -115,7 +114,7 @@ template <> class MDIntArray<3>
    {
    }
    int Size() const { return static_cast<int>(data_.size()); }
-   const int *HostRead() const { return data_.data(); }
+   const int *Data() const { return data_.data(); }
    int &operator()(int i0, int i1, int i2)
    {
       return data_.at(static_cast<size_t>(i0 + d0_ * (i1 + d1_ * i2)));

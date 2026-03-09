@@ -148,11 +148,11 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
   allocAndCopyHostData(m_phpaa_r, m_meshgen->m_phyperplanes_all_angles.Data(), m_meshgen->m_phyperplanes_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_order_r, m_meshgen->md_ordered_elements_all_angles.HostRead(), m_meshgen->md_ordered_elements_all_angles.Size(), vid);
+  allocAndCopyHostData(m_order_r, m_meshgen->md_ordered_elements_all_angles.Data(), m_meshgen->md_ordered_elements_all_angles.Size(), vid);
 
-  allocAndCopyHostData(m_AngleElem2FaceType, m_meshgen->md_angle_elem_to_face_types.HostRead(), m_meshgen->md_angle_elem_to_face_types.Size(), vid);
+  allocAndCopyHostData(m_AngleElem2FaceType, m_meshgen->md_angle_elem_to_face_types.Data(), m_meshgen->md_angle_elem_to_face_types.Size(), vid);
 
-  allocAndCopyHostData(m_elem_to_faces, m_meshgen->md_elem_to_faces.HostRead(), m_meshgen->md_elem_to_faces.Size(), vid);
+  allocAndCopyHostData(m_elem_to_faces, m_meshgen->md_elem_to_faces.Data(), m_meshgen->md_elem_to_faces.Size(), vid);
 
   allocAndCopyHostData(m_F_g2l, m_meshgen->global_to_local_face.Data(), m_meshgen->global_to_local_face.Size(), vid);
 
