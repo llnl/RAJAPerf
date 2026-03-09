@@ -26,6 +26,10 @@
 #define GPU_FOREACH_THREAD(i, k, N)                                            \
   for (Index_type i = threadIdx.k; i < N; i += blockDim.k)
 
+#define GPU_FOREACH_THREAD_INC(i, k, N, INC)                                   \
+  for (Index_type i = threadIdx.k; i < N; i += INC)
+
+
 #define GPU_FOREACH_THREAD_DIRECT(i, k, N)                                     \
   if (const Index_type i = threadIdx.k; i < N)
 #endif
@@ -96,6 +100,12 @@
   for (Index_type tz = threadIdx.z; tz < Nz; tz += runtime_blocks_size)        \
     for (Index_type ty = threadIdx.y; ty < Ny; ty += runtime_blocks_size)      \
       for (Index_type tx = threadIdx.x; tx < Nx; tx += runtime_blocks_size)
+
+#define GPU_SHARED_2D_APPLY(SHARED_2D_MACRO, tx, ty, Nx, Ny)                   \
+  SHARED_2D_MACRO(tx, ty, Nx, Ny)
+
+#define GPU_SHARED_3D_APPLY(SHARED_3D_MACRO, tx, ty, tz, Nx, Ny, Nz)           \
+  SHARED_3D_MACRO(tx, ty, tz, Nx, Ny, Nz)
 
 #endif
 

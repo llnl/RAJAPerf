@@ -149,13 +149,13 @@ void DIFFUSION3DPA::runCudaVariantImpl(VariantID vid) {
         RAJA::LoopPolicy<RAJA::cuda_block_x_direct>;
 
     using inner_x =
-        RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<diff::Q1D>>;
+        RAJA::LoopPolicy<RAJA::cuda_thread_size_x_direct<diff::Q1D>>;
 
     using inner_y =
-        RAJA::LoopPolicy<RAJA::cuda_thread_size_y_loop<diff::Q1D>>;
+        RAJA::LoopPolicy<RAJA::cuda_thread_size_y_direct<diff::Q1D>>;
 
     using inner_z =
-        RAJA::LoopPolicy<RAJA::cuda_thread_size_z_loop<diff::Q1D>>;
+        RAJA::LoopPolicy<RAJA::cuda_thread_size_z_direct<diff::Q1D>>;
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
