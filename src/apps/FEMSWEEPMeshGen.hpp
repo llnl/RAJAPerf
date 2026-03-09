@@ -36,18 +36,18 @@ class AngularQuadratureLite
    // Derived from `transport_code/src/transport/AngularQuadrature.cc` constructor.
    // For this MFEM-free skeleton we assume 3D, so the azimuthal count is:
    //   azimuthalAngles = 4 * azimuthal_order  (since pow(2, dim-1) == 4 in 3D).
-   AngularQuadratureLite(int polar_order, int azimuthal_order);
+   AngularQuadratureLite(Index_type polar_order, Index_type azimuthal_order);
 
    // Returns the total number of angular directions (polarAngles * azimuthalAngles).
-   int GetNumAngles() const { return static_cast<int>(omega_.size()); }
+   Index_type GetNumAngles() const { return static_cast<Index_type>(omega_.size()); }
 
    // Returns ω = (ωx, ωy, ωz) for angle index n.
-   const std::array<double, 3> &GetAngleVector(int n) const { return omega_.at(static_cast<size_t>(n)); }
+   const std::array<Real_type, 3> &GetAngleVector(Index_type n) const { return omega_.at(static_cast<Size_type>(n)); }
 
   private:
    // Stores direction vectors ω in the same loop ordering as the original implementation:
    // outer loop over polar, inner loop over azimuthal.
-   std::vector<std::array<double, 3>> omega_;
+   std::vector<std::array<Real_type, 3>> omega_;
 };
 
 
@@ -71,62 +71,62 @@ class IntArray
 {
   public:
    IntArray() = default;
-   explicit IntArray(int n) : data_(static_cast<size_t>(n)) {}
-   int Size() const { return static_cast<int>(data_.size()); }
-   int *Data() { return data_.data(); }
-   const int *Data() const { return data_.data(); }
-   int &operator[](int i) { return data_.at(static_cast<size_t>(i)); }
-   int operator[](int i) const { return data_.at(static_cast<size_t>(i)); }
-   void SetSize(int n) { data_.assign(static_cast<size_t>(n), 0); }
-   void Append(int v) { data_.push_back(v); }
+   explicit IntArray(Index_type n) : data_(static_cast<Size_type>(n)) {}
+   Index_type Size() const { return static_cast<Index_type>(data_.size()); }
+   Index_type * Data() { return data_.data(); }
+   const Index_type * Data() const { return data_.data(); }
+   Index_type &operator[](Index_type i) { return data_.at(static_cast<Size_type>(i)); }
+   Index_type operator[](Index_type i) const { return data_.at(static_cast<Size_type>(i)); }
+   void SetSize(Index_type n) { data_.assign(static_cast<Size_type>(n), 0); }
+   void Append(Index_type v) { data_.push_back(v); }
 
   private:
-   std::vector<int> data_;
+   std::vector<Index_type> data_;
 };
 
-template <int Rank> class MDIntArray;
+template <Index_type Rank> class MDIntArray;
 
 // A multi-dimensional integer array with 2D indexing and a contiguous "Data()" view,
-// matching what the original code used from MFEM's `mfem::MDArray<int,2>`.
+// matching what the original code used from MFEM's `mfem::MDArray<Index_type,2>`.
 template <> class MDIntArray<2>
 {
   public:
    MDIntArray() = default;
-   MDIntArray(int d0, int d1) : d0_(d0), d1_(d1), data_(static_cast<size_t>(d0 * d1)) {}
-   int Size() const { return static_cast<int>(data_.size()); }
-   const int *Data() const { return data_.data(); }
-   int &operator()(int i0, int i1) { return data_.at(static_cast<size_t>(i0 + d0_ * i1)); }
-   int operator()(int i0, int i1) const { return data_.at(static_cast<size_t>(i0 + d0_ * i1)); }
+   MDIntArray(Index_type d0, Index_type d1) : d0_(d0), d1_(d1), data_(static_cast<Size_type>(d0 * d1)) {}
+   Size_type Size() const { return static_cast<Size_type>(data_.size()); }
+   const Index_type * Data() const { return data_.data(); }
+   Index_type &operator()(Index_type i0, Index_type i1) { return data_.at(static_cast<Size_type>(i0 + d0_ * i1)); }
+   Index_type operator()(Index_type i0, Index_type i1) const { return data_.at(static_cast<Size_type>(i0 + d0_ * i1)); }
 
   private:
-   int d0_ = 0, d1_ = 0;
-   std::vector<int> data_;
+   Index_type d0_ = 0, d1_ = 0;
+   std::vector<Index_type> data_;
 };
 
 // A multi-dimensional integer array with 3D indexing and a contiguous "Data()" view,
-// matching what the original code used from MFEM's `mfem::MDArray<int,3>`.
+// matching what the original code used from MFEM's `mfem::MDArray<Index_type,3>`.
 template <> class MDIntArray<3>
 {
   public:
    MDIntArray() = default;
-   MDIntArray(int d0, int d1, int d2)
-      : d0_(d0), d1_(d1), d2_(d2), data_(static_cast<size_t>(d0 * d1 * d2))
+   MDIntArray(Index_type d0, Index_type d1, Index_type d2)
+      : d0_(d0), d1_(d1), d2_(d2), data_(static_cast<Size_type>(d0 * d1 * d2))
    {
    }
-   int Size() const { return static_cast<int>(data_.size()); }
-   const int *Data() const { return data_.data(); }
-   int &operator()(int i0, int i1, int i2)
+   Size_type Size() const { return static_cast<Size_type>(data_.size()); }
+   const Index_type * Data() const { return data_.data(); }
+   Index_type &operator()(Index_type i0, Index_type i1, Index_type i2)
    {
-      return data_.at(static_cast<size_t>(i0 + d0_ * (i1 + d1_ * i2)));
+      return data_.at(static_cast<Size_type>(i0 + d0_ * (i1 + d1_ * i2)));
    }
-   int operator()(int i0, int i1, int i2) const
+   Index_type operator()(Index_type i0, Index_type i1, Index_type i2) const
    {
-      return data_.at(static_cast<size_t>(i0 + d0_ * (i1 + d1_ * i2)));
+      return data_.at(static_cast<Size_type>(i0 + d0_ * (i1 + d1_ * i2)));
    }
 
   private:
-   int d0_ = 0, d1_ = 0, d2_ = 0;
-   std::vector<int> data_;
+   Index_type d0_ = 0, d1_ = 0, d2_ = 0;
+   std::vector<Index_type> data_;
 };
 
 // Minimal mesh generator that constructs exactly the mesh connectivity arrays:
@@ -143,16 +143,16 @@ class MeshGenerator
   public:
    // Derived from the original sweeper constructor parameters used by the mesh generator.
    // We assume a 3D Cartesian HEX mesh of size nx*ny*nz and Q1 (8 dofs per element).
-   MeshGenerator(AngularQuadratureLite &quad, int nx, int ny, int nz, int num_groups);
+   MeshGenerator(AngularQuadratureLite &quad, Index_type nx, Index_type ny, Index_type nz, Index_type num_groups);
 
    // Derived from `transport_code/src/sweep/gpu/setup/Setup.cc` (the trimmed setup path):
    // runs topology build + connectivity + face types + hyperplane ordering.
    void Setup();
 
    // Used by the sweep.
-   const int m_num_groups;
-   const int m_num_angles;
-   const int nelem;
+   const Index_type m_num_groups;
+   const Index_type m_num_angles;
+   const Index_type nelem;
 
    // Used by the sweep: hyperplane counts/offsets/sizes across all angles.
    IntArray m_nhyperplanes_all_angles;
@@ -175,19 +175,19 @@ class MeshGenerator
    // - and the base face vertex ordering used to compute orientation and normals.
    struct FaceInfo
    {
-      int elem1 = -1;
-      int lf1 = -1;
-      int elem2 = -1;
-      int lf2 = -1;
-      int orient = 0;
-      std::array<int, 4> base_verts{};
+      Index_type elem1 = -1;
+      Index_type lf1 = -1;
+      Index_type elem2 = -1;
+      Index_type lf2 = -1;
+      Index_type orient = 0;
+      std::array<Index_type, 4> base_verts{};
    };
 
    const AngularQuadratureLite &quad_;
-   const int nx_, ny_, nz_;
+   const Index_type nx_, ny_, nz_;
 
    // For each element, the global vertex ids of the 8 HEX vertices in MFEM's local vertex order.
-   std::vector<std::array<int, 8>> elem_verts_;
+   std::vector<std::array<Index_type, 8>> elem_verts_;
 
    // Global face list in MFEM numbering (as produced by `GetElementToFaceTable`).
    std::vector<FaceInfo> faces_;

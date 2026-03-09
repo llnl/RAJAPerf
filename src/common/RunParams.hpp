@@ -428,12 +428,12 @@ private:
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
 
-  int femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
-  int femsweep_angles_azim; /*!< azimuthal angles used in ltimes kernel (input option) */
-  int femsweep_groups; /*!< groups used in ltimes kernel (input option) */
-  int femsweep_nx; /*!< mesh elements in x direction used in ltimes kernel (input option) */
-  int femsweep_ny; /*!< mesh elements in y direction used in ltimes kernel (input option) */
-  int femsweep_nz; /*!< mesh elements in z direction used in ltimes kernel (input option) */
+  Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
+  Index_type femsweep_angles_azim; /*!< azimuthal angles used in ltimes kernel (input option) */
+  Index_type femsweep_groups; /*!< groups used in ltimes kernel (input option) */
+  Index_type femsweep_nx; /*!< mesh elements in x direction used in ltimes kernel (input option) */
+  Index_type femsweep_ny; /*!< mesh elements in y direction used in ltimes kernel (input option) */
+  Index_type femsweep_nz; /*!< mesh elements in z direction used in ltimes kernel (input option) */
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 
