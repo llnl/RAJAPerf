@@ -9,11 +9,6 @@
 
 #include "FEMSWEEPMeshGen.hpp"
 
-// Universal definition of pi
-#ifndef PI_
-#define PI_ 3.1415926535897932385
-#endif
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -21,6 +16,10 @@
 
 namespace rajaperf
 {
+
+// Universal definition of pi
+inline constexpr double RAJAPERF_PI = 3.1415926535897932385;
+
 namespace apps
 {
 
@@ -35,7 +34,7 @@ static void GaussLegendre(int n, std::vector<double> &x, std::vector<double> &w)
    const int m = (n + 1) / 2;
    for (int i = 0; i < m; ++i)
    {
-      double z = std::cos(PI_ * (i + 0.75) / (n + 0.5));
+      double z = std::cos(RAJAPERF_PI * (i + 0.75) / (n + 0.5));
       double z1 = 0.0;
       while (true)
       {
@@ -92,7 +91,7 @@ AngularQuadratureLite::AngularQuadratureLite(int polar_order, int azimuthal_orde
       const double theta = std::acos(x[static_cast<size_t>(j)]);
       for (int k = 0; k < azimuthalAngles; ++k)
       {
-         const double gamma = (-PI_ / azimuthalAngles) + (2.0 * PI_ / azimuthalAngles) * (k + 1.0);
+         const double gamma = (-RAJAPERF_PI / azimuthalAngles) + (2.0 * RAJAPERF_PI / azimuthalAngles) * (k + 1.0);
          const double st = std::sin(theta);
          omega_.push_back({st * std::cos(gamma), st * std::sin(gamma), std::cos(theta)});
       }
