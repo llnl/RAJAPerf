@@ -8,7 +8,7 @@
 
 clang_14_0_6_openmp_caliper:
   variables:
-    SPEC: "~shared +openmp +caliper %clang@=14.0.6"
+    SPEC: "~shared +openmp +caliper %%clang@=14.0.6"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq RAJA_OpenMP"
     PERF_RUN_OPTS: "--repfact 5.0 --sizefact 5.0"
@@ -26,7 +26,7 @@ gcc_10_3_1_openmp_caliper:
 
 clang_14_0_6_mpi_caliper:
   variables:
-    SPEC: "~shared +mpi +caliper %clang@=14.0.6"
+    SPEC: "~shared +mpi +caliper %%clang@=14.0.6"
     PERF_KERNELS: "Basic"
     PERF_VARIANTS: "RAJA_Seq"
     PERF_RUN_OPTS: "--repfact 5.0"
