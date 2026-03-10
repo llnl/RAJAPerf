@@ -112,7 +112,7 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
                       1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
-  setBytesWrittenPerRep( 0 );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_Xlen );  // Xdat
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_Xlen ); // Xdat
   setBytesAtomicModifyWrittenPerRep( 0 );
 
