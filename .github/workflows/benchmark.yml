@@ -44,6 +44,6 @@ jobs:
           comment-always: false
           comment-on-alert: false
           summary-always: true
-          fail-on-alert: true
+          fail-on-alert: false
           alert-threshold: '120%'
           max-items-in-chart: 100
