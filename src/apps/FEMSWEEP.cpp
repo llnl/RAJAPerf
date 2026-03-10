@@ -28,8 +28,7 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  setDefaultProblemSize(ND *
-                        params.getFemsweepX() * params.getFemsweepY() * params.getFemsweepZ() * // mesh elements
+  setDefaultProblemSize(params.getFemsweepX() * params.getFemsweepY() * params.getFemsweepZ() * // mesh elements
                         params.getFemsweepGroups() *  // energy groups
                         8 * params.getFemsweepPolar() * params.getFemsweepAzim()  // angles
                        );
@@ -53,15 +52,42 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   addVariantTunings();
 }
 
-void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type target_reps)
+void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
 {
   // Set basic mesh parameters
+
+  // Always use user or default angles and groups.
   m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
   m_ng = this->run_params.getFemsweepGroups();
-  m_nx = this->run_params.getFemsweepX();
-  m_ny = this->run_params.getFemsweepY();
-  m_nz = this->run_params.getFemsweepZ();
-  m_ne = m_nx * m_ny * m_nz;
+
+  if (this->run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory)
+  {
+    // Adapt mesh size to runtime memory requirements.
+    Index_type remainder = target_size / (m_na * m_ng);
+
+    // Cube root of a number less than 4 will always round down, so set these to 1 regardless.
+    if ( remainder < 4 )
+    {
+      m_nx = 1;
+      m_ny = 1;
+      m_nz = 1;
+    }
+    else
+    {
+      Index_type rounded_cube = std::round( std::cbrt(remainder) );
+      m_nx = rounded_cube;
+      m_ny = rounded_cube;
+      m_nz = rounded_cube;
+    }
+
+  }
+  else  // Using user or default parameters to set mesh size.
+  {
+    m_nx = this->run_params.getFemsweepX();
+    m_ny = this->run_params.getFemsweepY();
+    m_nz = this->run_params.getFemsweepZ();
+    m_ne = m_nx * m_ny * m_nz;
+  }
 
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
