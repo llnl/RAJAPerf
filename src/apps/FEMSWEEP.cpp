@@ -147,7 +147,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +     // L & U formation
                   ND * (ND-1) * 3 +               // forward substitution
                   ND * (ND-1) * 3 +               // backward substitution
-                  NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
+                  NLF * FDS * m_nx * m_ny * 6) *  // coupling between sides of faces
                   m_ne * m_na * m_ng );           // for all elements, angles, and groups
 }
 
