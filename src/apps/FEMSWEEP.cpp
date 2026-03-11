@@ -144,11 +144,10 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +     // L & U formation
-                  ND * (ND-1) * 3 +               // forward substitution
-                  ND * (ND-1) * 3 +               // backward substitution
-                  NLF * FDS * m_nx * m_ny * 6) *  // coupling between sides of faces
-                  m_ne * m_na * m_ng );           // for all elements, angles, and groups
+  setFLOPsPerRep( (ND * ND + ND * ND * ND + // LU (naive)
+                  NLF * FDS +               // boundary
+                  NLF * FDS * FDS * 3) *    // coupling between sides of faces
+                  m_ne * m_na * m_ng );     // for all elements, angles, and groups
 }
 
 FEMSWEEP::~FEMSWEEP()
