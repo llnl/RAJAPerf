@@ -139,7 +139,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                       1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_Xlen );  // Xdat
+  setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_Xlen ); // Xdat
   setBytesAtomicModifyWrittenPerRep( 0 );
 
