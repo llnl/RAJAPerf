@@ -8,6 +8,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 #include "FEMSWEEP.hpp"
+#include "FEMSWEEP-SOLVER.hpp"
 
 #include "RAJA/RAJA.hpp"
 

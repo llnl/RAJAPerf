@@ -134,6 +134,8 @@
 #define Real_array4_ref RAJAPERF_ARRAY4_WRAPPER(Real_array4_ref)
 #define Real_ptr RAJAPERF_WRAPPER(Real_ptr)
 #define Real_ptr_ptr RAJAPERF_WRAPPER(Real_ptr_ptr)
+#define Real_const_ptr RAJAPERF_WRAPPER(Real_const_ptr)
+#define Real_const_ptr_ptr RAJAPERF_WRAPPER(Real_const_ptr_ptr)
 #define Complex_type RAJAPERF_WRAPPER(Complex_type)
 #define Complex_ptr RAJAPERF_WRAPPER(Complex_ptr)
 #define Data_type RAJAPERF_WRAPPER(Data_type)

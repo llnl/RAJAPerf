@@ -220,5 +220,55 @@ void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_idx2              , vid);
 }
 
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+} // end namespace apps
+} // end namespace rajaperf
+
+// This shouldn't result in ODR violations as the argument types have changed
+#include "FEMSWEEP-SOLVER.hpp"
+
+namespace rajaperf
+{
+namespace apps
+{
+
+void FEMSWEEP::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    FEMSWEEP_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Int_type ag = 0; ag < na * ng; ++ag)) {
+        RAJAPERF_COUNTERS_LOOP_BODY(FEMSWEEP_KERNEL);
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace apps
 } // end namespace rajaperf

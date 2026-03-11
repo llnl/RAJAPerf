@@ -10,53 +10,53 @@
 ///
 /// FEMSWEEP kernel reference implementation:
 ///
-/// for (int ag = 0; ag < na * ng; ++ag)
+/// for (Int_type ag = 0; ag < na * ng; ++ag)
 /// {
-///   const int a = ag / ng;
-///   const int g = ag % ng;
+///   const Int_type a = ag / ng;
+///   const Int_type g = ag % ng;
 ///   // number and offset of hyperplanes for this angle
-///   const int nhp = nhpaa_r[a];
-///   const int ohp = ohpaa_r[a];
+///   const Int_type nhp = nhpaa_r[a];
+///   const Int_type ohp = ohpaa_r[a];
 ///   // elements in this hyperplanes processed so far
-///   int s_nehp_done = 0;
-///   double A[ND * ND], b[ND];
+///   Int_type s_nehp_done = 0;
+///   Real_type A[ND * ND], b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
-///   double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
-///   for (int hp = 0; hp < nhp; ++hp) // loop over hyperplanes
+///   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
+///   for (Int_type hp = 0; hp < nhp; ++hp) // loop over hyperplanes
 ///   {
 ///      // number of element in this hyperplane
-///      const int nehp = phpaa_r[ohp + hp];
+///      const Int_type nehp = phpaa_r[ohp + hp];
 ///      // loop over all elements of this hyperplane
-///      for (int k = 0; k < nehp; ++k)
+///      for (Int_type k = 0; k < nehp; ++k)
 ///      {
-///         const int e = order_r[k + s_nehp_done + a * ne];
-///         for (int j = 0; j < ND; ++j) // load B & A
+///         const Int_type e = order_r[k + s_nehp_done + a * ne];
+///         for (Int_type j = 0; j < ND; ++j) // load B & A
 ///         {
 ///            b[j] = Bdat[j + e * ND + a * ne * ND];
-///            for (int i = 0; i < ND; ++i)
+///            for (Int_type i = 0; i < ND; ++i)
 ///            {
 ///               A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND];
 ///            }
 ///         }
-///         for (int face = 0; face < NLF; ++face) // local faces
+///         for (Int_type face = 0; face < NLF; ++face) // local faces
 ///         {
-///            const int sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
-///            const int f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; // signed face
-///            const int s = (e == idx1[f * FDS] / ND) ? 0 : 1; // side
+///            const Int_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
+///            const Int_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; // signed face
+///            const Int_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; // side
 ///            if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) // non-reentrant and outgoing, or boundary
 ///            {
 ///               continue;
 ///            }
-///            for (int j = 0; j < FDS; ++j) // face dofs
+///            for (Int_type j = 0; j < FDS; ++j) // face dofs
 ///            {
-///               const int ffj = f * FDS + j;
-///               const int djs = s == 0 ? idx1[ffj] : idx2[ffj];
-///               double F = 0.0;
-///               for (int i = 0; i < FDS; i++) // face dofs
+///               const Int_type ffj = f * FDS + j;
+///               const Int_type djs = s == 0 ? idx1[ffj] : idx2[ffj];
+///               Real_type F = 0.0;
+///               for (Int_type i = 0; i < FDS; i++) // face dofs
 ///               {
-///                  const int ffi = f * FDS + i;
-///                  const int dis = s == 0 ? idx2[ffi] : idx1[ffi];
+///                  const Int_type ffi = f * FDS + i;
+///                  const Int_type dis = s == 0 ? idx2[ffi] : idx1[ffi];
 ///                  // Fdat : 4 x 4 x 2 x nf_int x na
 ///                  // Note: s ^ 1 == 1 if s == 0, and s ^ 1 == 0 if s == 1.
 ///                  // The solution remains bounded when matrices and indirection arrays from a
@@ -69,7 +69,7 @@
 ///               b[djs % ND] -= F;
 ///            } // j
 ///         }    // local faces
-///         const double s = Sgdat[e + g * ne];
+///         const Real_type s = Sgdat[e + g * ne];
 ///         // A = A + s * M0, b is the result
 ///         SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);  // 8x8 solve
 ///      }  // thread loop elems in hp
@@ -121,152 +121,60 @@ constexpr int FDS = 4;  // number of DOFs per face
 
  
 #define FEMSWEEP_KERNEL \
-  const int a = ag / ng; \
-  const int g = ag % ng; \
-  const int nhp = nhpaa_r[a]; \
-  const int ohp = ohpaa_r[a]; \
-  int s_nehp_done = 0; \
-  double A[ND * ND], b[ND]; \
-  double Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
-  for (int hp = 0; hp < nhp; ++hp) \
+  const Int_type a = ag / ng; \
+  const Int_type g = ag % ng; \
+  const Int_type nhp = nhpaa_r[a]; \
+  const Int_type ohp = ohpaa_r[a]; \
+  Int_type s_nehp_done = 0; \
+  Real_array<ND * ND> A; \
+  Real_array<ND> b; \
+  Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
+  for (Int_type hp = 0; hp < nhp; ++hp) \
   { \
-     const int nehp = phpaa_r[ohp + hp]; \
-     for (int k = 0; k < nehp; ++k) \
+     const Int_type nehp = phpaa_r[ohp + hp]; \
+     for (Int_type k = 0; k < nehp; ++k) \
      { \
-        const int e = order_r[k + s_nehp_done + a * ne]; \
-        for (int j = 0; j < ND; ++j) \
+        const Int_type e = order_r[k + s_nehp_done + a * ne]; \
+        for (Int_type j = 0; j < ND; ++j) \
         { \
            b[j] = Bdat[j + e * ND + a * ne * ND]; \
-           for (int i = 0; i < ND; ++i) \
+           for (Int_type i = 0; i < ND; ++i) \
            { \
               A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
            } \
         } \
-        for (int face = 0; face < NLF; ++face) \
+        for (Int_type face = 0; face < NLF; ++face) \
         { \
-           const int sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
-           const int f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
-           const int s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
+           const Int_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
+           const Int_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
+           const Int_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
            if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) \
            { \
               continue; \
            } \
-           for (int j = 0; j < FDS; ++j) \
+           for (Int_type j = 0; j < FDS; ++j) \
            { \
-              const int ffj = f * FDS + j; \
-              const int djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
-              double F = 0.0; \
-              for (int i = 0; i < FDS; i++) \
+              const Int_type ffj = f * FDS + j; \
+              const Int_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
+              Real_type F = 0.0; \
+              for (Int_type i = 0; i < FDS; i++) \
               { \
-                 const int ffi = f * FDS + i; \
-                 const int dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
+                 const Int_type ffi = f * FDS + i; \
+                 const Int_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
               b[djs % ND] -= F; \
            } \
         } \
-        const double s = Sgdat[e + g * ne]; \
-        SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
+        const Real_type s = Sgdat[e + g * ne]; \
+        SolveLinearSystemNxN<ND>(A, \
+                                 s, \
+                                 &M0dat[0 + 0 * ND + e * ND * ND], \
+                                 Real_array_ref<ND>(b), \
+                                 &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
      } \
      s_nehp_done += nehp; \
   } \
-
-// LU factorization with no pivoting
-template <int N>
-RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(double *A, 
-                                                  const double s,
-                                                  const double *M, 
-                                                  const double *b, 
-                                                  double * x)
-{
-  double tempA[N][N];
-  double L[N][N];
-  double U[N][N];
-  double D[N];
-
-  // tempA = A + s * M0
-  // set L to 0, U to identity
-  for ( int ii = 0; ii < N; ++ii )
-  {
-    for ( int jj = 0; jj < N; ++jj )
-    {
-      tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
-      L[ii][jj] = 0.0;
-      if ( ii == jj )
-      {
-        U[ii][jj] = 1.0;
-      }
-      else
-      {
-        U[ii][jj] = 0.0;
-      }
-    }
-  }
-
-  // set first column of L, and first row of U
-  for ( int ii = 0; ii < N; ++ii )
-  {
-    L[ii][0] = tempA[ii][0];
-  }
-
-  for ( int ii = 1; ii < N; ++ii )
-  {
-    U[0][ii] = tempA[0][ii]/tempA[0][0];
-  }
-
-  // form L & U
-  // L formed one column at a time
-  // U formed one row at a time
-  for ( int ii = 1; ii < N; ++ii )
-  {
-    // L column formation
-    for ( int jj = ii; jj < N; ++jj )
-    {
-      double sum = 0.0;
-      for ( int kk = 0; kk < jj; ++kk )
-      {
-        sum += L[jj][kk] * U[kk][ii];
-      }
-      L[jj][ii] = tempA[jj][ii] - sum;
-    }
-
-    // U row formation
-    for ( int jj = ii+1; jj < N; ++jj )
-    {
-      double sum = 0.0;
-      for ( int kk = 0; kk < ii; ++kk )
-      {
-        sum += L[ii][kk] * U[kk][jj];
-      }
-      U[ii][jj] = (tempA[ii][jj] - sum)/L[ii][ii];
-    }
-  }
-
-  // forward substitution
-  D[0] = b[0]/L[0][0];
-  for ( int ii = 1; ii < N; ++ii )
-  {
-    double sum = 0.0;
-    for ( int jj = 0; jj < ii; ++jj )
-    {
-      sum += L[ii][jj] * D[jj];
-    }
-    D[ii] = (b[ii] - sum)/L[ii][ii];
-  }
-
-  // backward substitution
-  x[N-1] = D[N-1];
-  for ( int ii = N - 1 - 1; ii > -1; --ii )
-  {
-    double sum = 0.0;
-    for ( int jj = ii+1; jj < N; ++jj )
-    {
-      sum += U[ii][jj] * x[jj];
-    }
-    x[ii] = D[ii] - sum;
-  }
-
-}
 
 
 namespace rajaperf
@@ -288,6 +196,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();
