@@ -60,7 +60,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
   m_ng = this->run_params.getFemsweepGroups();
 
-  if (this->run_params.getSizeMeaning() == RunParams::SizeMeaning::Memory)
+  if (!this->run_params.isFemsweepMeshDims())
   {
     // Adapt mesh size to runtime memory requirements.
     Index_type remainder = target_size / (m_na * m_ng);
@@ -86,8 +86,9 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
     m_nx = this->run_params.getFemsweepX();
     m_ny = this->run_params.getFemsweepY();
     m_nz = this->run_params.getFemsweepZ();
-    m_ne = m_nx * m_ny * m_nz;
   }
+  
+  m_ne = m_nx * m_ny * m_nz;
 
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
@@ -158,7 +159,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   // Create mesh connectivity arrays
   m_angularquadrature = new AngularQuadratureLite(this->run_params.getFemsweepPolar(), this->run_params.getFemsweepAzim());
-  m_meshgen = new MeshGenerator(*m_angularquadrature, this->run_params.getFemsweepX(), this->run_params.getFemsweepY(), this->run_params.getFemsweepZ(), this->run_params.getFemsweepGroups());
+  m_meshgen = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
   m_meshgen->Setup();
 
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
@@ -186,6 +187,11 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 
   allocAndCopyHostData(m_idx2, m_meshgen->d_indices2.Data(), m_meshgen->d_indices2.Size(), vid);
 
+  delete m_angularquadrature;
+  m_angularquadrature = nullptr;
+  delete m_meshgen;
+  m_meshgen = nullptr;
+
 }
 
 void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -195,11 +201,6 @@ void FEMSWEEP::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
 
 void FEMSWEEP::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  delete m_angularquadrature;
-  m_angularquadrature = nullptr;
-  delete m_meshgen;
-  m_meshgen = nullptr;
-
   deallocData(m_Bdat, vid);
   deallocData(m_Adat, vid);
   deallocData(m_Fdat, vid);
