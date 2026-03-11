@@ -266,9 +266,21 @@ public:
   Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
   Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
   Index_type getFemsweepGroups() const { return femsweep_groups; }
-  Index_type getFemsweepX() const { return femsweep_nx; }
-  Index_type getFemsweepY() const { return femsweep_ny; }
-  Index_type getFemsweepZ() const { return femsweep_nz; }
+  Index_type getFemsweepX() const { return femsweep_mesh_dims[0]; }
+  Index_type getFemsweepY() const { return femsweep_mesh_dims[1]; }
+  Index_type getFemsweepZ() const { return femsweep_mesh_dims[2]; }
+  bool isFemsweepMeshDims() const { return is_femsweep_mesh_dims; }
+
+  size_t numValidFemsweepMeshDims() const { return femsweep_mesh_dims.size(); }
+  bool validFemsweepMeshDims(size_t femsweep_mesh_dim) const
+  {
+    for (Index_type valid_femsweep_mesh_dims : femsweep_mesh_dims) {
+      if (valid_femsweep_mesh_dims == femsweep_mesh_dim) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   Index_type getArrayOfPtrsArraySize() const { return array_of_ptrs_array_size; }
 
@@ -429,11 +441,10 @@ private:
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
 
   Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
-  Index_type femsweep_angles_azim; /*!< azimuthal angles used in ltimes kernel (input option) */
-  Index_type femsweep_groups; /*!< groups used in ltimes kernel (input option) */
-  Index_type femsweep_nx; /*!< mesh elements in x direction used in ltimes kernel (input option) */
-  Index_type femsweep_ny; /*!< mesh elements in y direction used in ltimes kernel (input option) */
-  Index_type femsweep_nz; /*!< mesh elements in z direction used in ltimes kernel (input option) */
+  Index_type femsweep_angles_azim; /*!< azimuthal angles used in femsweep kernel (input option) */
+  Index_type femsweep_groups; /*!< groups used in femsweep kernel (input option) */
+  std::vector<Index_type> femsweep_mesh_dims; /*!< mesh dimensions x, y, and z used in femsweep kernel (input option) */
+  bool is_femsweep_mesh_dims; /*!< enable user input of femsweep mesh dimensions x, y, and z in femsweep kernel (true if vector femsweep_mesh_dims is properly passed on command line) */
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 

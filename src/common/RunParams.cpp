@@ -50,9 +50,8 @@ RunParams::RunParams(int argc, char** argv)
    femsweep_angles_polar(3),
    femsweep_angles_azim(3),
    femsweep_groups(16),
-   femsweep_nx(18),
-   femsweep_ny(18),
-   femsweep_nz(18),
+   femsweep_mesh_dims({5, 5, 5}),
+   is_femsweep_mesh_dims(false),
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
@@ -155,9 +154,10 @@ void RunParams::print(std::ostream& str) const
   str << "\n femsweep_angles_polar = " << femsweep_angles_polar;
   str << "\n femsweep_angles_azim = " << femsweep_angles_azim;
   str << "\n femsweep_groups = " << femsweep_groups;
-  str << "\n femsweep_nx = " << femsweep_nx;
-  str << "\n femsweep_ny = " << femsweep_ny;
-  str << "\n femsweep_nz = " << femsweep_nz;
+  str << "\n femsweep_mesh_dims = ";
+  for (size_t j = 0; j < femsweep_mesh_dims.size(); ++j) {
+    str << "\n\t" << femsweep_mesh_dims[j];
+  }
 
   str << "\n array_of_ptrs_array_size = " << array_of_ptrs_array_size;
 
@@ -772,68 +772,39 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--femsweep_nx") ) {
+    } else if ( opt == std::string("--femsweep_mesh_dims") ) {
 
+      bool done = false;
+      constexpr int total_dims = 3;
+      int count = 0;
+      femsweep_mesh_dims.clear();
       i++;
-      if ( i < argc ) {
-        long long num = ::atoll( argv[i] );
-        long long min_num = 1;
-        if ( num < min_num ) {
-          getCout() << "\nBad input:"
-                << " must give " << opt << " a value of at least " << min_num
-                << std::endl;
-          input_state = BadInput;
+      while ( i < argc && !done ) {
+        opt = std::string(argv[i]);
+        if ( opt.at(0) == '-' ) {
+          i--;
+          done = true;
         } else {
-          femsweep_nx = num;
+          int dimension = ::atoi( opt.c_str() );
+          if ( dimension <= 0 ) {
+            getCout() << "\nBad input:"
+                      << " must give --femsweep_mesh_dims POSITIVE values (int)"
+                      << std::endl;
+            input_state = BadInput;
+          } else {
+            femsweep_mesh_dims.push_back(dimension);
+            ++count;
+          }
+          ++i;
         }
-      } else {
+      }
+      if (count != total_dims) {
         getCout() << "\nBad input:"
-                  << " must give " << opt << " a value (int)"
+                  << " must give --femsweep_mesh_dims exactly 3 positive values (int)"
                   << std::endl;
         input_state = BadInput;
       }
-
-    } else if ( opt == std::string("--femsweep_ny") ) {
-
-      i++;
-      if ( i < argc ) {
-        long long num = ::atoll( argv[i] );
-        long long min_num = 1;
-        if ( num < min_num ) {
-          getCout() << "\nBad input:"
-                << " must give " << opt << " a value of at least " << min_num
-                << std::endl;
-          input_state = BadInput;
-        } else {
-          femsweep_ny = num;
-        }
-      } else {
-        getCout() << "\nBad input:"
-                  << " must give " << opt << " a value (int)"
-                  << std::endl;
-        input_state = BadInput;
-      }
-
-    } else if ( opt == std::string("--femsweep_nz") ) {
-
-      i++;
-      if ( i < argc ) {
-        long long num = ::atoll( argv[i] );
-        long long min_num = 1;
-        if ( num < min_num ) {
-          getCout() << "\nBad input:"
-                << " must give " << opt << " a value of at least " << min_num
-                << std::endl;
-          input_state = BadInput;
-        } else {
-          femsweep_nz = num;
-        }
-      } else {
-        getCout() << "\nBad input:"
-                  << " must give " << opt << " a value (int)"
-                  << std::endl;
-        input_state = BadInput;
-      }
+      is_femsweep_mesh_dims = true;
 
     } else if ( opt == std::string("--array_of_ptrs_array_size") ) {
 
@@ -1777,23 +1748,11 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --femsweep_groups 16\n\n";
 
-  str << "\t --femsweep_nx <int> [default is 5]\n"
-      << "\t      (For FEMSWEEP kernel only)\n"
-      << "\t      Must be greater than 0.\n";
+  str << "\t --femsweep_mesh_dims <three space-separated ints> [default is 5 5 5]\n"
+      << "\t      (Mesh dimensions in x, y, and z for FEMSWEEP kernel only)\n"
+      << "\t      If femsweep_mesh_dims is specified, then user specified x, y, and z will generate the mesh, and --memory_allocated will be overidden.\n";
   str << "\t\t Example...\n"
-      << "\t\t --femsweep_nx 5\n\n";
-
-  str << "\t --femsweep_ny <int> [default is 5]\n"
-      << "\t      (For FEMSWEEP kernel only)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --femsweep_ny 5\n\n";
-
-  str << "\t --femsweep_nz <int> [default is 5]\n"
-      << "\t      (For FEMSWEEP kernel only)\n"
-      << "\t      Must be greater than 0.\n";
-  str << "\t\t Example...\n"
-      << "\t\t --femsweep_nz 5\n\n";
+      << "\t\t --femsweep_mesh_dims 6 7 8 (runs kernels with mesh dimensions of 6 elements in x, 7 elements in y, and 8 elements in z directions)\n\n";
 
   str << "\t --array_of_ptrs_array_size <int> [default is " << ARRAY_OF_PTRS_MAX_ARRAY_SIZE << "]\n"
       << "\t      (For ARRAY_OF_PTRS only: array size used in kernel)\n"
