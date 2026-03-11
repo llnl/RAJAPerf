@@ -214,7 +214,7 @@ public:
   Index_type getActualProblemSize() const { return actual_prob_size; }
   Index_type getDefaultReps() const { return default_reps; }
   Index_type getTargetProblemSize() const;
-  Index_type getRunReps() const;
+  Index_type getRunReps() const { return s_warmup_run ? 1 : actual_reps; }
 
   Index_type getItsPerRep() const { return its_per_rep; };
   Index_type getKernelsPerRep() const { return kernels_per_rep; };
