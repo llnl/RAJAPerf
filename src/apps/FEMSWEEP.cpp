@@ -135,7 +135,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                       m_ng*sizeof(Index_type) * m_na + // ohpaa_r,
                       m_ng*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
                       m_ng*sizeof(Index_type) * m_na * m_ne + // order_r,
-                      m_ng*m_na*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                      m_ng*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
                       m_ng*m_na*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
                       m_ng*m_na*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
                       m_ng*m_na*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
