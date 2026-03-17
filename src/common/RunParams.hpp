@@ -272,7 +272,7 @@ public:
   bool isFemsweepMeshDims() const { return is_femsweep_mesh_dims; }
 
   size_t numValidFemsweepMeshDims() const { return femsweep_mesh_dims.size(); }
-  bool validFemsweepMeshDims(size_t femsweep_mesh_dim) const
+  bool validFemsweepMeshDims(Index_type femsweep_mesh_dim) const
   {
     for (Index_type valid_femsweep_mesh_dims : femsweep_mesh_dims) {
       if (valid_femsweep_mesh_dims == femsweep_mesh_dim) {
