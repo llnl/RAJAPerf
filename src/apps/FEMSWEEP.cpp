@@ -125,22 +125,22 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                            1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                            1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
   // using total data size instead of writes and reads
-  setBytesReadPerRep( m_ng*2*sizeof(Real_type) * m_Blen + // Bdat
-                      2*sizeof(Real_type) * m_Alen + // Adat
-                      m_ng*NLF*sizeof(Real_type) * m_Flen + // Fdat
-                      m_na*sizeof(Real_type) * m_Sglen + // Sgdat
-                      m_ng*m_na*sizeof(Real_type) * m_M0len + // M0dat
-                      1*sizeof(Real_type) * m_sharedinteriorfaces * m_na * m_ng * ND * NLF * FDS * FDS + // Xdat
-                      m_ng*sizeof(Index_type) * m_na + // nhpaa_r,
-                      m_ng*sizeof(Index_type) * m_na + // ohpaa_r,
-                      m_ng*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
-                      m_ng*sizeof(Index_type) * m_na * m_ne + // order_r,
-                      m_ng*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
-                      m_ng*m_na*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
-                      m_ng*m_na*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
-                      m_ng*m_na*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
-                      m_ng*m_na*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
-  setBytesWrittenPerRep( ND*sizeof(Real_type) * m_Xlen );
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_Blen + // Bdat
+                      1*sizeof(Real_type) * m_Alen + // Adat
+                      1*sizeof(Real_type) * m_Flen + // Fdat
+                      1*sizeof(Real_type) * m_Sglen + // Sgdat
+                      1*sizeof(Real_type) * m_M0len + // M0dat
+                      (ND-1)*sizeof(Real_type) * m_na * m_ng * m_ne + // Xdat
+                      1*sizeof(Index_type) * m_na + // nhpaa_r,
+                      1*sizeof(Index_type) * m_na + // ohpaa_r,
+                      1*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
+                      1*sizeof(Index_type) * m_na * m_ne + // order_r,
+                      1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                      1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
+                      1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_Xlen );
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
