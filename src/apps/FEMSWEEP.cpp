@@ -65,20 +65,11 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
     // Adapt mesh size to runtime memory requirements.
     Index_type remainder = target_size / (m_na * m_ng);
 
-    // Cube root of a number less than 4 will always round down, so set these to 1 regardless.
-    if ( remainder < 4 )
-    {
-      m_nx = 1;
-      m_ny = 1;
-      m_nz = 1;
-    }
-    else
-    {
-      Index_type rounded_cube = std::round( std::cbrt(remainder) );
-      m_nx = rounded_cube;
-      m_ny = rounded_cube;
-      m_nz = rounded_cube;
-    }
+    // Use the rounded cube root, or the minimum of 1 in each dimension.
+    Index_type rounded_cube = std::max(1, std::round(std::cbrt(remainder)) );
+    m_nx = rounded_cube;
+    m_ny = rounded_cube;
+    m_nz = rounded_cube;
 
   }
   else  // Using user or default parameters to set mesh size.
