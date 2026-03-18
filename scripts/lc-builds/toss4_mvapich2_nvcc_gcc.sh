@@ -19,7 +19,7 @@ if [[ $# -lt 4 ]]; then
   echo "   2) NVCC compiler version number"
   echo "   3) CUDA compute architecture"
   echo "   4) GCC compiler version number"
-  echo "   5) optional cmake version
+  echo "   5) optional cmake version"
   echo
   echo "For example: "
   echo "    toss4_mvapich2_nvcc_gcc.sh 2.3.7 12.2.2 90 10.3.1 [3.27.4]"
@@ -33,12 +33,12 @@ GCC_COMP_VER=$4
 
 # Detect optional fourth positional argument as a CMake version if it looks like N.M or N.M.P
 # Otherwise, treat it as a normal CMake argument.
-if [ -n "$4" ] && [[ "$4" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
-  CMAKE_VER=$4
-  shift 4
+if [ -n "$5" ] && [[ "$5" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$5
+  shift 5
 else
   CMAKE_VER=$DEFAULT_CMAKE_VER
-  shift 3
+  shift 4
 fi
 
 BUILD_SUFFIX=lc_toss4-mvapich2-${MPI_VER}-nvcc-${NVCC_COMP_VER}-${NVCC_COMP_ARCH}-gcc-${GCC_COMP_VER}
