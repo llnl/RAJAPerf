@@ -17,8 +17,11 @@
 namespace rajaperf
 {
 
+namespace numbers
+{
 // Universal definition of pi
-inline constexpr Real_type RAJAPERF_PI = 3.1415926535897932385;
+inline constexpr Real_type pi = 3.1415926535897932385;
+}
 
 namespace apps
 {
@@ -34,7 +37,7 @@ static void GaussLegendre(Index_type n, std::vector<Real_type> &x, std::vector<R
    const Index_type m = (n + 1) / 2;
    for (Index_type i = 0; i < m; ++i)
    {
-      Real_type z = std::cos(RAJAPERF_PI * (i + 0.75) / (n + 0.5));
+      Real_type z = std::cos(rajaperf::numbers::pi * (i + 0.75) / (n + 0.5));
       Real_type z1 = 0.0;
       while (true)
       {
@@ -91,7 +94,7 @@ AngularQuadratureLite::AngularQuadratureLite(Index_type polar_order, Index_type 
       const Real_type theta = std::acos(x[static_cast<Size_type>(j)]);
       for (Index_type k = 0; k < azimuthalAngles; ++k)
       {
-         const Real_type gamma = (-RAJAPERF_PI / azimuthalAngles) + (2.0 * RAJAPERF_PI / azimuthalAngles) * (k + 1.0);
+         const Real_type gamma = (-rajaperf::numbers::pi / azimuthalAngles) + (2.0 * rajaperf::numbers::pi / azimuthalAngles) * (k + 1.0);
          const Real_type st = std::sin(theta);
          omega_.push_back({st * std::cos(gamma), st * std::sin(gamma), std::cos(theta)});
       }
