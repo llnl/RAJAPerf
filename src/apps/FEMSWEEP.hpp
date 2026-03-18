@@ -175,6 +175,84 @@
   }
 
 
+// manually optimized index calculations
+#define FEMSWEEP_KERNEL_IOP \
+  const Index_type a = ag / ng; \
+  const Index_type g = ag % ng; \
+  const Index_type nhp = nhpaa_r[a]; \
+  const Index_type ohp = ohpaa_r[a]; \
+  const Index_type a_ne = a * ne; \
+  const Index_type a_ne_NLF = a_ne * NLF; \
+  const Index_type a_ne_ND = a_ne * ND; \
+  const Index_type a_ne_ND2 = a_ne * ND2; \
+  const Index_type F_offset_a = a * sharedinteriorfaces * (2 * FDS2); \
+  const Index_type g_ne = g * ne; \
+  const Index_type g_ne_ND = g * ne * ND; \
+  const Real_type Ffactor = fmax(sin(Adat[order_r[a_ne]*ND2 + a_ne_ND2]) - 2.0, 0.0); \
+  Index_type nehp_pos = a_ne; \
+  for (Index_type hp = 0; hp < nhp; ++hp) \
+  { \
+     const Index_type nehp = phpaa_r[ohp + hp]; \
+     for (Index_type k = 0; k < nehp; ++k) \
+     { \
+        const Index_type e = order_r[k + nehp_pos]; \
+        const Index_type e_ND = e * ND; \
+        const Index_type e_ND2 = e * ND2; \
+        const Index_type e_NLF = e * NLF; \
+        const Index_type A_offset_e_a = e_ND2 + a_ne_ND2; \
+        const Index_type B_offset_e_a = e_ND + a_ne_ND; \
+        Real_array<ND2> A; \
+        Real_array<ND> b; \
+        for (Index_type j = 0; j < ND; ++j) \
+        { \
+           const Index_type j_ND = j * ND; \
+           b[j] = Bdat[j + B_offset_e_a]; \
+           for (Index_type i = 0; i < ND; ++i) \
+           { \
+              const Index_type A_offset_i_j = i + j_ND; \
+              A[A_offset_i_j] = Adat[A_offset_i_j + A_offset_e_a]; \
+           } \
+        } \
+        const Index_type AE2FT_offset_e_a = e_NLF + a_ne_NLF; \
+        const Index_type X_offset_g_a = g_ne_ND + a_ne_ND * ng; \
+        for (Index_type face = 0; face < NLF; ++face) \
+        { \
+           const Index_type sf_gl = F_g2l[elem_to_faces[face + e_NLF]]; \
+           if ((AngleElem2FaceType[face + AE2FT_offset_e_a] == 0) || (sf_gl < 0)) \
+           { \
+              continue; \
+           } \
+           const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
+           const Index_type f_FDS = f * FDS; \
+           const Index_type s = (e == idx1[f_FDS] / ND) ? 0 : 1; \
+           const Index_type F_offset_a_f = F_offset_a + \
+                                         f * (2 * FDS2) + (s ^ 1) * FDS2; \
+           for (Index_type j = 0; j < FDS; ++j) \
+           { \
+              const Index_type F_offset_a_f_j = F_offset_a_f + j * FDS; \
+              const Index_type ffj = f_FDS + j; \
+              const Index_type djs = (s == 0) ? idx1[ffj] : idx2[ffj]; \
+              Real_type F = 0.0; \
+              for (Index_type i = 0; i < FDS; i++) \
+              { \
+                 const Index_type ffi = f_FDS + i; \
+                 const Index_type dis = (s == 0) ? idx2[ffi] : idx1[ffi]; \
+                 F += Ffactor * Fdat[i + F_offset_a_f_j] * \
+                                Xdat[dis + X_offset_g_a]; \
+              } \
+              b[djs % ND] -= F; \
+           } \
+        } \
+        const Real_type s = Sgdat[e + g_ne]; \
+        SolveLinearSystemNxN<ND>(A, \
+                                 s, \
+                                 &M0dat[e_ND2], \
+                                 Real_array_ref<ND>(b), \
+                                 &Xdat[e_ND + X_offset_g_a]); \
+     } \
+     nehp_pos += nehp; \
+  }
+
 namespace rajaperf
 {
 class RunParams;
@@ -185,6 +263,8 @@ namespace apps
 constexpr Index_type ND = 8;   // number of corners per element
 constexpr Index_type NLF = 6;  // number of faces per element
 constexpr Index_type FDS = 4;  // number of DOFs per face
+constexpr Index_type ND2 = ND*ND;
+constexpr Index_type FDS2 = FDS*FDS;
 
 class FEMSWEEP : public KernelBase
 {
