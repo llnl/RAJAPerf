@@ -131,7 +131,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
   Index_type amount_Xdat_modify_written = 1.55 * m_na * m_ng * m_sharedinteriorfaces;
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_Xlen - amount_Xdat_modify_written) ); // remainder of Psi after part of Xdat based on sharedinteriorfaces
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_Xlen - amount_Xdat_modify_written) ); // remainder of Xdat after part based on sharedinteriorfaces
   setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * amount_Xdat_modify_written );  // part of Xdat based on sharedinteriorfaces
   setBytesAtomicModifyWrittenPerRep( 0 );
 
