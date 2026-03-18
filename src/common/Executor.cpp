@@ -325,6 +325,13 @@ Executor::Executor(int argc, char** argv)
   adiak::value("LtimesNumMoments", (uint)run_params.getLtimesNumM());
   adiak::value("LtimesNumDirections", (uint)run_params.getLtimesNumD());
 
+  adiak::value("FemsweepPolar", (uint)run_params.getFemsweepPolar());
+  adiak::value("FemsweepAzim", (uint)run_params.getFemsweepAzim());
+  adiak::value("FemsweepGroups", (uint)run_params.getFemsweepGroups());
+  adiak::value("FemsweepX", (uint)run_params.getFemsweepX());
+  adiak::value("FemsweepY", (uint)run_params.getFemsweepY());
+  adiak::value("FemsweepZ", (uint)run_params.getFemsweepZ());
+
   // Openmp section
 #if defined(_OPENMP)
   std::string strval = "";
