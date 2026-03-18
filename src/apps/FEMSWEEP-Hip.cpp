@@ -44,7 +44,7 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
                             const Index_ptr idx1,
                             const Index_ptr idx2 )
 {
-  const int ag = hipBlockIdx_x * block_size + hipThreadIdx_x;
+  const Index_type ag = hipBlockIdx_x * block_size + hipThreadIdx_x;
   FEMSWEEP_KERNEL;
 }
 
@@ -118,7 +118,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
                                 RAJA::Threads(block_size)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
                RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-                 [&](int ag) {
+                 [&](Index_type ag) {
                    FEMSWEEP_KERNEL;
                  });  // ag loop
          });  // RAJA Launch

@@ -247,7 +247,7 @@ void FEMSWEEP::setCountedAttributes()
     RAJAPERF_COUNTERS_REP_SCOPE()
     {
 
-      RAJAPERF_COUNTERS_PAR_LOOP(for (Int_type ag = 0; ag < na * ng; ++ag)) {
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type ag = 0; ag < na * ng; ++ag)) {
         RAJAPERF_COUNTERS_LOOP_BODY(FEMSWEEP_KERNEL);
       }
 

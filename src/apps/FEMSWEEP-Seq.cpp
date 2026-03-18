@@ -34,7 +34,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-         for (int ag = 0; ag < na * ng; ++ag)
+         for (Index_type ag = 0; ag < na * ng; ++ag)
          {
             FEMSWEEP_KERNEL;
          }
@@ -63,7 +63,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
              RAJA::LaunchParams(),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
              RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-               [&](int ag) {
+               [&](Index_type ag) {
                  FEMSWEEP_KERNEL;
                });
          });
