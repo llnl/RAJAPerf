@@ -60,7 +60,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
   m_ng = this->run_params.getFemsweepGroups();
 
-  if (!this->run_params.isFemsweepMeshDims())
+  if (!this->run_params.useFemsweepMeshDims())
   {
     // Adapt mesh size to runtime memory requirements.
     Index_type remainder = target_size / (m_na * m_ng);

@@ -51,7 +51,7 @@ RunParams::RunParams(int argc, char** argv)
    femsweep_angles_azim(3),
    femsweep_groups(16),
    femsweep_mesh_dims({5, 5, 5}),
-   is_femsweep_mesh_dims(false),
+   use_femsweep_mesh_dims(false),
    array_of_ptrs_array_size(ARRAY_OF_PTRS_MAX_ARRAY_SIZE),
    halo_width(1),
    halo_num_vars(3),
@@ -154,7 +154,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n femsweep_angles_polar = " << femsweep_angles_polar;
   str << "\n femsweep_angles_azim = " << femsweep_angles_azim;
   str << "\n femsweep_groups = " << femsweep_groups;
-  str << "\n is_femsweep_mesh_dims = " << (is_femsweep_mesh_dims ? "true" : "false");
+  str << "\n use_femsweep_mesh_dims = " << (use_femsweep_mesh_dims ? "true" : "false");
   str << "\n femsweep_mesh_dims = ";
   for (size_t j = 0; j < femsweep_mesh_dims.size(); ++j) {
     str << "\n\t" << femsweep_mesh_dims[j];
@@ -805,7 +805,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                   << std::endl;
         input_state = BadInput;
       }
-      is_femsweep_mesh_dims = true;
+      use_femsweep_mesh_dims = true;
 
     } else if ( opt == std::string("--array_of_ptrs_array_size") ) {
 
