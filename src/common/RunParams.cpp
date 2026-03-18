@@ -154,6 +154,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n femsweep_angles_polar = " << femsweep_angles_polar;
   str << "\n femsweep_angles_azim = " << femsweep_angles_azim;
   str << "\n femsweep_groups = " << femsweep_groups;
+  str << "\n is_femsweep_mesh_dims = " << (is_femsweep_mesh_dims ? "true" : "false");
   str << "\n femsweep_mesh_dims = ";
   for (size_t j = 0; j < femsweep_mesh_dims.size(); ++j) {
     str << "\n\t" << femsweep_mesh_dims[j];
