@@ -95,8 +95,15 @@ template <> class MDIntArray<2>
    MDIntArray(Index_type d0, Index_type d1) : d0_(d0), d1_(d1), data_(static_cast<Size_type>(d0 * d1)) {}
    Size_type Size() const { return static_cast<Size_type>(data_.size()); }
    const Index_type * Data() const { return data_.data(); }
-   Index_type &operator()(Index_type i0, Index_type i1) { return data_.at(static_cast<Size_type>(i0 + d0_ * i1)); }
-   Index_type operator()(Index_type i0, Index_type i1) const { return data_.at(static_cast<Size_type>(i0 + d0_ * i1)); }
+   Index_type &operator()(Index_type i0, Index_type i1)
+   {
+      return data_.at(static_cast<Size_type>(i0 + d0_ * i1));
+   }
+   Index_type operator()(Index_type i0, Index_type i1) const
+   {
+      RAJA_UNUSED_VAR(d1_);
+      return data_.at(static_cast<Size_type>(i0 + d0_ * i1));
+   }
 
   private:
    Index_type d0_ = 0, d1_ = 0;
@@ -121,6 +128,7 @@ template <> class MDIntArray<3>
    }
    Index_type operator()(Index_type i0, Index_type i1, Index_type i2) const
    {
+      RAJA_UNUSED_VAR(d2_);
       return data_.at(static_cast<Size_type>(i0 + d0_ * (i1 + d1_ * i2)));
    }
 

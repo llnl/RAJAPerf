@@ -60,25 +60,16 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
   m_ng = this->run_params.getFemsweepGroups();
 
-  if (!this->run_params.isFemsweepMeshDims())
+  if (!this->run_params.useFemsweepMeshDims())
   {
     // Adapt mesh size to runtime memory requirements.
     Index_type remainder = target_size / (m_na * m_ng);
 
-    // Cube root of a number less than 4 will always round down, so set these to 1 regardless.
-    if ( remainder < 4 )
-    {
-      m_nx = 1;
-      m_ny = 1;
-      m_nz = 1;
-    }
-    else
-    {
-      Index_type rounded_cube = std::round( std::cbrt(remainder) );
-      m_nx = rounded_cube;
-      m_ny = rounded_cube;
-      m_nz = rounded_cube;
-    }
+    // Use the rounded cube root, or the minimum of 1 in each dimension.
+    Index_type rounded_cube = std::max(1.0, std::round(std::cbrt(remainder)) );
+    m_nx = rounded_cube;
+    m_ny = rounded_cube;
+    m_nz = rounded_cube;
 
   }
   else  // Using user or default parameters to set mesh size.
@@ -125,28 +116,28 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                            1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                            1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
   // using total data size instead of writes and reads
-  setBytesReadPerRep( m_ng*2*sizeof(Real_type) * m_Blen + // Bdat
-                      2*sizeof(Real_type) * m_Alen + // Adat
-                      m_ng*NLF*sizeof(Real_type) * m_Flen + // Fdat
-                      m_na*sizeof(Real_type) * m_Sglen + // Sgdat
-                      m_ng*m_na*sizeof(Real_type) * m_M0len + // M0dat
-                      1*sizeof(Real_type) * m_sharedinteriorfaces * m_na * m_ng * ND * NLF * FDS * FDS + // Xdat
-                      m_ng*sizeof(Index_type) * m_na + // nhpaa_r,
-                      m_ng*sizeof(Index_type) * m_na + // ohpaa_r,
-                      m_ng*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
-                      m_ng*sizeof(Index_type) * m_na * m_ne + // order_r,
-                      m_ng*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
-                      m_ng*m_na*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
-                      m_ng*m_na*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
-                      m_ng*m_na*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
-                      m_ng*m_na*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
-  setBytesWrittenPerRep( ND*sizeof(Real_type) * m_Xlen );
-  setBytesModifyWrittenPerRep( 0 );
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_Blen + // Bdat
+                      1*sizeof(Real_type) * m_Alen + // Adat
+                      1*sizeof(Real_type) * m_Flen + // Fdat
+                      1*sizeof(Real_type) * m_Sglen + // Sgdat
+                      1*sizeof(Real_type) * m_M0len + // M0dat
+                      1*sizeof(Index_type) * m_na + // nhpaa_r,
+                      1*sizeof(Index_type) * m_na + // ohpaa_r,
+                      1*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
+                      1*sizeof(Index_type) * m_na * m_ne + // order_r,
+                      1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
+                      1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
+                      1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
+  Index_type amount_Xdat_modify_written = 1.55 * m_na * m_ng * m_sharedinteriorfaces;
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_Xlen - amount_Xdat_modify_written) ); // remainder of Xdat after part based on sharedinteriorfaces
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * amount_Xdat_modify_written );  // part of Xdat based on sharedinteriorfaces
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
   setFLOPsPerRep( m_ne * m_na * m_ng *                        // for all elements, angles, and groups
-                  (ND * ND * ND + 7 * ND * ND / 2 - ND / 2 - 1) + // LU (naive)
+                  (ND * ND * ND + 7 * ND * ND / 2 - ND / 2) + // LU (naive)
                   m_sharedinteriorfaces * m_na * m_ng *       // for all shared faces, angles, and groups
                   (FDS +                                      // B
                   FDS * FDS * 3));                            // coupling between sides of faces

@@ -19,7 +19,8 @@
 ///   const Index_type ohp = ohpaa_r[a];
 ///   // elements in this hyperplanes processed so far
 ///   Index_type s_nehp_done = 0;
-///   Real_type A[ND * ND], b[ND];
+///   Real_type A[ND*ND];
+//    Real_type b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
 ///   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
@@ -165,11 +166,7 @@
            } \
         } \
         const Real_type s = Sgdat[e + g * ne]; \
-        SolveLinearSystemNxN<ND>(A, \
-                                 s, \
-                                 &M0dat[0 + 0 * ND + e * ND * ND], \
-                                 Real_array_ref<ND>(b), \
-                                 &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
+        SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
      } \
      s_nehp_done += nehp; \
   }

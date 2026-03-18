@@ -14,19 +14,20 @@
 
 namespace rajaperf
 {
-  
+
 // LU factorization with no pivoting
 template <long N>
 RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
                                                   const Real_type s,
                                                   Real_const_ptr M,
-                                                  Real_array_ref<N> b, /* Real_array_const_ref */
+                                                  Real_ptr b,
                                                   Real_ptr x)
 {
   Real_array2<N, N> tempA;
   Real_array2<N, N> L;
   Real_array2<N, N> U;
   Real_array<N> D;
+  Real_array<N> tempx;
 
   // tempA = A + s * M0
   // set L to 0, U to identity
@@ -99,15 +100,15 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   }
 
   // backward substitution
-  x[N-1] = D[N-1];
+  x[N-1] = tempx[N-1] = D[N-1];
   for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
   {
     Real_type sum = 0.0;
     for ( Index_type jj = ii+1; jj < N; ++jj )
     {
-      sum += U[ii][jj] * x[jj];
+      sum += U[ii][jj] * tempx[jj];
     }
-    x[ii] = D[ii] - sum;
+    x[ii] = tempx[ii] = D[ii] - sum;
   }
 
 }
