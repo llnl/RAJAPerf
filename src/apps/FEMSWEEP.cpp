@@ -130,7 +130,6 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                       1*sizeof(Real_type) * m_Flen + // Fdat
                       1*sizeof(Real_type) * m_Sglen + // Sgdat
                       1*sizeof(Real_type) * m_M0len + // M0dat
-                      (ND-1)*sizeof(Real_type) * m_na * m_ng * m_ne + // Xdat
                       1*sizeof(Index_type) * m_na + // nhpaa_r,
                       1*sizeof(Index_type) * m_na + // ohpaa_r,
                       1*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
@@ -140,13 +139,13 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
                       1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
                       1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * m_Xlen );
-  setBytesModifyWrittenPerRep( 0 );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_Xlen - 1.55 * m_na * m_ng * m_sharedinteriorfaces) ); // remainder of Psi after sharedinteriorfaces
+  setBytesModifyWrittenPerRep( 1.55*sizeof(Real_type) * m_na * m_ng * m_sharedinteriorfaces );  // a multiple of sharedinteriorfaces
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
   setFLOPsPerRep( m_ne * m_na * m_ng *                        // for all elements, angles, and groups
-                  (ND * ND * ND + 7 * ND * ND / 2 - ND / 2 - 1) + // LU (naive)
+                  (ND * ND * ND + 7 * ND * ND / 2 - ND / 2) + // LU (naive)
                   m_sharedinteriorfaces * m_na * m_ng *       // for all shared faces, angles, and groups
                   (FDS +                                      // B
                   FDS * FDS * 3));                            // coupling between sides of faces
