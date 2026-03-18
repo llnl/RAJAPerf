@@ -10,54 +10,54 @@
 ///
 /// FEMSWEEP kernel reference implementation:
 ///
-/// for (Int_type ag = 0; ag < na * ng; ++ag)
+/// for (Index_type ag = 0; ag < na * ng; ++ag)
 /// {
-///   const Int_type a = ag / ng;
-///   const Int_type g = ag % ng;
+///   const Index_type a = ag / ng;
+///   const Index_type g = ag % ng;
 ///   // number and offset of hyperplanes for this angle
-///   const Int_type nhp = nhpaa_r[a];
-///   const Int_type ohp = ohpaa_r[a];
+///   const Index_type nhp = nhpaa_r[a];
+///   const Index_type ohp = ohpaa_r[a];
 ///   // elements in this hyperplanes processed so far
-///   Int_type s_nehp_done = 0;
+///   Index_type s_nehp_done = 0;
 ///   double A[ND*ND];
 //    double b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
 ///   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
-///   for (Int_type hp = 0; hp < nhp; ++hp) // loop over hyperplanes
+///   for (Index_type hp = 0; hp < nhp; ++hp) // loop over hyperplanes
 ///   {
 ///      // number of element in this hyperplane
-///      const Int_type nehp = phpaa_r[ohp + hp];
+///      const Index_type nehp = phpaa_r[ohp + hp];
 ///      // loop over all elements of this hyperplane
-///      for (Int_type k = 0; k < nehp; ++k)
+///      for (Index_type k = 0; k < nehp; ++k)
 ///      {
-///         const Int_type e = order_r[k + s_nehp_done + a * ne];
-///         for (Int_type j = 0; j < ND; ++j) // load B & A
+///         const Index_type e = order_r[k + s_nehp_done + a * ne];
+///         for (Index_type j = 0; j < ND; ++j) // load B & A
 ///         {
 ///            b[j] = Bdat[j + e * ND + a * ne * ND];
-///            for (Int_type i = 0; i < ND; ++i)
+///            for (Index_type i = 0; i < ND; ++i)
 ///            {
 ///               A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND];
 ///            }
 ///         }
-///         for (Int_type face = 0; face < NLF; ++face) // local faces
+///         for (Index_type face = 0; face < NLF; ++face) // local faces
 ///         {
-///            const Int_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
-///            const Int_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; // signed face
-///            const Int_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; // side
+///            const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
+///            const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; // signed face
+///            const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; // side
 ///            if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) // non-reentrant and outgoing, or boundary
 ///            {
 ///               continue;
 ///            }
-///            for (Int_type j = 0; j < FDS; ++j) // face dofs
+///            for (Index_type j = 0; j < FDS; ++j) // face dofs
 ///            {
-///               const Int_type ffj = f * FDS + j;
-///               const Int_type djs = s == 0 ? idx1[ffj] : idx2[ffj];
+///               const Index_type ffj = f * FDS + j;
+///               const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj];
 ///               Real_type F = 0.0;
-///               for (Int_type i = 0; i < FDS; i++) // face dofs
+///               for (Index_type i = 0; i < FDS; i++) // face dofs
 ///               {
-///                  const Int_type ffi = f * FDS + i;
-///                  const Int_type dis = s == 0 ? idx2[ffi] : idx1[ffi];
+///                  const Index_type ffi = f * FDS + i;
+///                  const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi];
 ///                  // Fdat : 4 x 4 x 2 x nf_int x na
 ///                  // Note: s ^ 1 == 1 if s == 0, and s ^ 1 == 0 if s == 1.
 ///                  // The solution remains bounded when matrices and indirection arrays from a
@@ -122,46 +122,46 @@ constexpr int FDS = 4;  // number of DOFs per face
 
  
 #define FEMSWEEP_KERNEL \
-  const Int_type a = ag / ng; \
-  const Int_type g = ag % ng; \
-  const Int_type nhp = nhpaa_r[a]; \
-  const Int_type ohp = ohpaa_r[a]; \
-  Int_type s_nehp_done = 0; \
+  const Index_type a = ag / ng; \
+  const Index_type g = ag % ng; \
+  const Index_type nhp = nhpaa_r[a]; \
+  const Index_type ohp = ohpaa_r[a]; \
+  Index_type s_nehp_done = 0; \
   double A[ND*ND]; \
   double b[ND]; \
   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
-  for (Int_type hp = 0; hp < nhp; ++hp) \
+  for (Index_type hp = 0; hp < nhp; ++hp) \
   { \
-     const Int_type nehp = phpaa_r[ohp + hp]; \
-     for (Int_type k = 0; k < nehp; ++k) \
+     const Index_type nehp = phpaa_r[ohp + hp]; \
+     for (Index_type k = 0; k < nehp; ++k) \
      { \
-        const Int_type e = order_r[k + s_nehp_done + a * ne]; \
-        for (Int_type j = 0; j < ND; ++j) \
+        const Index_type e = order_r[k + s_nehp_done + a * ne]; \
+        for (Index_type j = 0; j < ND; ++j) \
         { \
            b[j] = Bdat[j + e * ND + a * ne * ND]; \
-           for (Int_type i = 0; i < ND; ++i) \
+           for (Index_type i = 0; i < ND; ++i) \
            { \
               A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
            } \
         } \
-        for (Int_type face = 0; face < NLF; ++face) \
+        for (Index_type face = 0; face < NLF; ++face) \
         { \
-           const Int_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
-           const Int_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
-           const Int_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
+           const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
+           const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
+           const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
            if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) \
            { \
               continue; \
            } \
-           for (Int_type j = 0; j < FDS; ++j) \
+           for (Index_type j = 0; j < FDS; ++j) \
            { \
-              const Int_type ffj = f * FDS + j; \
-              const Int_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
+              const Index_type ffj = f * FDS + j; \
+              const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
               Real_type F = 0.0; \
-              for (Int_type i = 0; i < FDS; i++) \
+              for (Index_type i = 0; i < FDS; i++) \
               { \
-                 const Int_type ffi = f * FDS + i; \
-                 const Int_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
+                 const Index_type ffi = f * FDS + i; \
+                 const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
                  F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
               } \
               b[djs % ND] -= F; \
@@ -192,9 +192,9 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // tempA = A + s * M0
   // set L to 0, U to identity
-  for ( Int_type ii = 0; ii < N; ++ii )
+  for ( Index_type ii = 0; ii < N; ++ii )
   {
-    for ( Int_type jj = 0; jj < N; ++jj )
+    for ( Index_type jj = 0; jj < N; ++jj )
     {
       tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
       L[ii][jj] = 0.0;
@@ -210,12 +210,12 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   }
 
   // set first column of L, and first row of U
-  for ( Int_type ii = 0; ii < N; ++ii )
+  for ( Index_type ii = 0; ii < N; ++ii )
   {
     L[ii][0] = tempA[ii][0];
   }
 
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     U[0][ii] = tempA[0][ii]/tempA[0][0];
   }
@@ -223,13 +223,13 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   // form L & U
   // L formed one column at a time
   // U formed one row at a time
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     // L column formation
-    for ( Int_type jj = ii; jj < N; ++jj )
+    for ( Index_type jj = ii; jj < N; ++jj )
     {
       Real_type sum = 0.0;
-      for ( Int_type kk = 0; kk < jj; ++kk )
+      for ( Index_type kk = 0; kk < jj; ++kk )
       {
         sum += L[jj][kk] * U[kk][ii];
       }
@@ -237,10 +237,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
     }
 
     // U row formation
-    for ( Int_type jj = ii+1; jj < N; ++jj )
+    for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       Real_type sum = 0.0;
-      for ( Int_type kk = 0; kk < ii; ++kk )
+      for ( Index_type kk = 0; kk < ii; ++kk )
       {
         sum += L[ii][kk] * U[kk][jj];
       }
@@ -250,10 +250,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // forward substitution
   D[0] = b[0]/L[0][0];
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     Real_type sum = 0.0;
-    for ( Int_type jj = 0; jj < ii; ++jj )
+    for ( Index_type jj = 0; jj < ii; ++jj )
     {
       sum += L[ii][jj] * D[jj];
     }
@@ -262,10 +262,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // backward substitution
   x[N-1] = tempx[N-1] = D[N-1];
-  for ( Int_type ii = N - 1 - 1; ii > -1; --ii )
+  for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
   {
     Real_type sum = 0.0;
-    for ( Int_type jj = ii+1; jj < N; ++jj )
+    for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       sum += U[ii][jj] * tempx[jj];
     }
