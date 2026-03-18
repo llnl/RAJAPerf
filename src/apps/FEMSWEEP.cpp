@@ -66,7 +66,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
     Index_type remainder = target_size / (m_na * m_ng);
 
     // Use the rounded cube root, or the minimum of 1 in each dimension.
-    Index_type rounded_cube = std::max(1, std::round(std::cbrt(remainder)) );
+    Index_type rounded_cube = std::max(1.0, std::round(std::cbrt(remainder)) );
     m_nx = rounded_cube;
     m_ny = rounded_cube;
     m_nz = rounded_cube;
