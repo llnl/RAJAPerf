@@ -16,7 +16,7 @@ namespace rajaperf
 {
   
 // LU factorization with no pivoting
-template <int N>
+template <long N>
 RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
                                                   const Real_type s,
                                                   Real_const_ptr M,
@@ -30,9 +30,9 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // tempA = A + s * M0
   // set L to 0, U to identity
-  for ( Int_type ii = 0; ii < N; ++ii )
+  for ( Index_type ii = 0; ii < N; ++ii )
   {
-    for ( Int_type jj = 0; jj < N; ++jj )
+    for ( Index_type jj = 0; jj < N; ++jj )
     {
       tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
       L[ii][jj] = 0.0;
@@ -48,12 +48,12 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   }
 
   // set first column of L, and first row of U
-  for ( Int_type ii = 0; ii < N; ++ii )
+  for ( Index_type ii = 0; ii < N; ++ii )
   {
     L[ii][0] = tempA[ii][0];
   }
 
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     U[0][ii] = tempA[0][ii]/tempA[0][0];
   }
@@ -61,13 +61,13 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   // form L & U
   // L formed one column at a time
   // U formed one row at a time
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     // L column formation
-    for ( Int_type jj = ii; jj < N; ++jj )
+    for ( Index_type jj = ii; jj < N; ++jj )
     {
       Real_type sum = 0.0;
-      for ( Int_type kk = 0; kk < jj; ++kk )
+      for ( Index_type kk = 0; kk < jj; ++kk )
       {
         sum += L[jj][kk] * U[kk][ii];
       }
@@ -75,10 +75,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
     }
 
     // U row formation
-    for ( Int_type jj = ii+1; jj < N; ++jj )
+    for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       Real_type sum = 0.0;
-      for ( Int_type kk = 0; kk < ii; ++kk )
+      for ( Index_type kk = 0; kk < ii; ++kk )
       {
         sum += L[ii][kk] * U[kk][jj];
       }
@@ -88,10 +88,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // forward substitution
   D[0] = b[0]/L[0][0];
-  for ( Int_type ii = 1; ii < N; ++ii )
+  for ( Index_type ii = 1; ii < N; ++ii )
   {
     Real_type sum = 0.0;
-    for ( Int_type jj = 0; jj < ii; ++jj )
+    for ( Index_type jj = 0; jj < ii; ++jj )
     {
       sum += L[ii][jj] * D[jj];
     }
@@ -100,10 +100,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // backward substitution
   x[N-1] = D[N-1];
-  for ( Int_type ii = N - 1 - 1; ii > -1; --ii )
+  for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
   {
     Real_type sum = 0.0;
-    for ( Int_type jj = ii+1; jj < N; ++jj )
+    for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       sum += U[ii][jj] * x[jj];
     }
