@@ -19,8 +19,8 @@
 ///   const Index_type ohp = ohpaa_r[a];
 ///   // elements in this hyperplanes processed so far
 ///   Index_type s_nehp_done = 0;
-///   double A[ND*ND];
-//    double b[ND];
+///   Real_type A[ND*ND];
+//    Real_type b[ND];
 ///   // This factor helps maintain stability in the solution of the matrix solve
 ///   // by eliminating the perturbation of the right-hand side.
 ///   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
@@ -127,8 +127,8 @@ constexpr int FDS = 4;  // number of DOFs per face
   const Index_type nhp = nhpaa_r[a]; \
   const Index_type ohp = ohpaa_r[a]; \
   Index_type s_nehp_done = 0; \
-  double A[ND*ND]; \
-  double b[ND]; \
+  Real_type A[ND*ND]; \
+  Real_type b[ND]; \
   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
   for (Index_type hp = 0; hp < nhp; ++hp) \
   { \
@@ -181,14 +181,14 @@ template <int N>
 RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A, 
                                                   const Real_type s,
                                                   Real_const_ptr M, 
-                                                  const double * b, 
+                                                  Real_ptr b, 
                                                   Real_ptr x)
 {
-  double tempA[N][N];
-  double L[N][N];
-  double U[N][N];
-  double D[N];
-  double tempx[N];
+  Real_type tempA[N][N];
+  Real_type L[N][N];
+  Real_type U[N][N];
+  Real_type D[N];
+  Real_type tempx[N];
 
   // tempA = A + s * M0
   // set L to 0, U to identity
