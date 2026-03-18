@@ -220,10 +220,10 @@ public:
   Index_type getKernelsPerRep() const { return kernels_per_rep; };
 
   Index_type getBytesAllocatedPerRep() const { return bytes_allocated_per_rep; }
-  Index_type getBytesMovedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count atomic_modify_write operations as a read and a write to match previous counting
+  Index_type getBytesMovedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + 2*bytes_modify_written_per_rep + 2*bytes_atomic_modify_written_per_rep; } // count atomic_modify_write operations as a read and a write to match previous counting
   Index_type getBytesTouchedPerRep() const { return bytes_read_per_rep + bytes_written_per_rep + bytes_modify_written_per_rep + bytes_atomic_modify_written_per_rep; } // count modify_write operations once to get the data size only
-  Index_type getBytesReadPerRep() const { return bytes_read_per_rep; }
-  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep; }
+  Index_type getBytesReadPerRep() const { return bytes_read_per_rep + bytes_modify_written_per_rep; }
+  Index_type getBytesWrittenPerRep() const { return bytes_written_per_rep + bytes_modify_written_per_rep; }
   Index_type getBytesModifyWrittenPerRep() const { return bytes_modify_written_per_rep; }
   Index_type getBytesAtomicModifyWrittenPerRep() const { return bytes_atomic_modify_written_per_rep; }
 
@@ -240,7 +240,7 @@ public:
   Index_type getCountedNumAllocations(counting::AllocationGroup g) const { return countingData ? countingData->memory_allocations[Size_type(g)] : -1; }
   Index_type getCountedAllocatedBytes(counting::AllocationGroup g) const { return countingData ? countingData->memory_bytes[Size_type(g)] : -1; }
 
-  Index_type getCountedTotalBytes(counting::AllocationGroup g) const
+  Index_type getCountedTotalBytesMoved(counting::AllocationGroup g) const
   {
     Index_type count = -1;
     if (countingData) {
@@ -254,13 +254,24 @@ public:
     };
     return count;
   }
+  Index_type getCountedTotalBytesTouched(counting::AllocationGroup g) const
+  {
+    Index_type count = -1;
+    if (countingData) {
+      count = 0;
+      for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
+        count += countingData->memory_total_bytes[Size_type(g)].accessed[a];
+      }
+    };
+    return count;
+  }
   Index_type getCountedTotalBytesPerAccess(counting::AllocationGroup g, counting::MemoryAccess ma) const
   { return countingData ? countingData->memory_total_bytes[Size_type(g)].accessed[Size_type(ma)] : -1; }
 
   // count atomic_modify_write operations as a read and a write to match previous counting
   Index_type getCountedBytesTouched(counting::CountingPoint p, counting::AllocationGroup g) const
   { return countingData ? countingData->memory_totals_bytes[Size_type(p)][Size_type(g)].touched : -1; }
-  Index_type getCountedBytes(counting::CountingPoint p, counting::AllocationGroup g) const
+  Index_type getCountedBytesMoved(counting::CountingPoint p, counting::AllocationGroup g) const
   {
     Index_type count = -1;
     if (countingData) {

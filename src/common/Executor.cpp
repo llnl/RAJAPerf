@@ -833,12 +833,20 @@ void Executor::writeKernelInfoSummary(ostream& str,
         return static_cast<Index_type>(kernel->getFLOPsPerRep());
       });
 
+  add_attr("Estimate", "BytesTouched/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesTouchedPerRep());
+      });
+
   add_attr("Estimate", "BytesRead/rep", [](KernelBase const* kernel){
         return static_cast<Index_type>(kernel->getBytesReadPerRep());
       });
 
   add_attr("Estimate", "BytesWritten/rep", [](KernelBase const* kernel){
         return static_cast<Index_type>(kernel->getBytesWrittenPerRep());
+      });
+
+  add_attr("Estimate", "BytesModifyWritten/rep", [](KernelBase const* kernel){
+        return static_cast<Index_type>(kernel->getBytesModifyWrittenPerRep());
       });
 
   add_attr("Estimate", "BytesAtomicModifyWritten/rep", [](KernelBase const* kernel){
@@ -902,32 +910,40 @@ void Executor::writeKernelInfoSummary(ostream& str,
   for (Size_type g = 0; g < Size_type(counting::AllocationGroup::NumAllocationGroups); ++g) {
     auto gg = counting::AllocationGroup(g);
 
-    std::string num_name = std::format("{}NumAllocations",
+    std::string num_allocations_name = std::format("{}NumAllocations",
         counting::getAllocationGroupName(gg));
 
-    add_attr("Counted", num_name, [gg](KernelBase const* kernel){
+    add_attr("Counted", num_allocations_name, [gg](KernelBase const* kernel){
           return static_cast<Index_type>(kernel->getCountedNumAllocations(gg));
         });
 
-    std::string bytes_name = std::format("{}AllocatedBytes",
+    std::string bytes_allocated_name = std::format("{}AllocatedBytes",
         counting::getAllocationGroupName(gg));
 
-    add_attr("Counted", bytes_name, [gg](KernelBase const* kernel){
+    add_attr("Counted", bytes_allocated_name, [gg](KernelBase const* kernel){
           return static_cast<Index_type>(kernel->getCountedAllocatedBytes(gg));
         });
 
-    std::string bytes_total_name = std::format("{}BytesTotal/rep",
+    std::string bytes_moved_total_name = std::format("{}BytesMovedTotal/rep",
         counting::getAllocationGroupName(gg));
 
-    add_attr("Counted", bytes_total_name, [gg](KernelBase const* kernel){
+    add_attr("Counted", bytes_moved_total_name, [gg](KernelBase const* kernel){
           return static_cast<Index_type>(
-              kernel->getCountedTotalBytes(gg));
+              kernel->getCountedTotalBytesMoved(gg));
+        });
+
+    std::string bytes_touched_total_name = std::format("{}BytesTouchedTotal/rep",
+        counting::getAllocationGroupName(gg));
+
+    add_attr("Counted", bytes_touched_total_name, [gg](KernelBase const* kernel){
+          return static_cast<Index_type>(
+              kernel->getCountedTotalBytesTouched(gg));
         });
 
     for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
       auto aa = counting::MemoryAccess(a);
 
-      std::string bytes_total_accessed_name = std::format("{}BytesTotal{}/rep",
+      std::string bytes_total_accessed_name = std::format("{}Bytes{}Total/rep",
           counting::getAllocationGroupName(gg),
           counting::getMemoryAccessNamePastTenseTitle(aa));
       add_attr("Counted", bytes_total_accessed_name, [gg, aa](KernelBase const* kernel){
@@ -940,6 +956,15 @@ void Executor::writeKernelInfoSummary(ostream& str,
     for (Size_type p = 0; p < Size_type(counting::CountingPoint::NumCountingPoints); ++p) {
         auto pp = counting::CountingPoint(p);
 
+      std::string bytes_moved_name = std::format("{}BytesMoved/{}",
+          counting::getAllocationGroupName(gg),
+          counting::getCountingPointName(pp));
+
+      add_attr("Counted", bytes_moved_name, [pp, gg](KernelBase const* kernel){
+            return static_cast<Index_type>(
+                kernel->getCountedBytesMoved(pp, gg));
+          });
+
       std::string bytes_touched_name = std::format("{}BytesTouched/{}",
           counting::getAllocationGroupName(gg),
           counting::getCountingPointName(pp));
@@ -947,15 +972,6 @@ void Executor::writeKernelInfoSummary(ostream& str,
       add_attr("Counted", bytes_touched_name, [pp, gg](KernelBase const* kernel){
             return static_cast<Index_type>(
                 kernel->getCountedBytesTouched(pp, gg));
-          });
-
-      std::string bytes_name = std::format("{}Bytes/{}",
-          counting::getAllocationGroupName(gg),
-          counting::getCountingPointName(pp));
-
-      add_attr("Counted", bytes_name, [pp, gg](KernelBase const* kernel){
-            return static_cast<Index_type>(
-                kernel->getCountedBytes(pp, gg));
           });
 
       for (Size_type a = 0; a < Size_type(counting::MemoryAccess::NumMemoryAccesses); ++a) {
