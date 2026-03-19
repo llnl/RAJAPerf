@@ -56,24 +56,23 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
 {
   // Set basic mesh parameters
 
-  // Always use user or default angles and groups.
   m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
   m_ng = this->run_params.getFemsweepGroups();
 
   if (!this->run_params.useFemsweepMeshDims())
   {
-    // Adapt mesh size to runtime memory requirements.
-    Index_type remainder = target_size / (m_na * m_ng);
+    // Pick mesh size based on target_size.
+    Real_type remainder = std::max(1.0, static_cast<Real_type>(target_size) / (ND * m_na * m_ng));
 
-    // Use the rounded cube root, or the minimum of 1 in each dimension.
-    Index_type rounded_cube = std::max(1.0, std::round(std::cbrt(remainder)) );
+    Index_type rounded_cube = std::cbrt(remainder) + std::cbrt(3)-1.0;
     m_nx = rounded_cube;
     m_ny = rounded_cube;
     m_nz = rounded_cube;
 
   }
-  else  // Using user or default parameters to set mesh size.
+  else
   {
+    // Use user parameters to set mesh size.
     m_nx = this->run_params.getFemsweepX();
     m_ny = this->run_params.getFemsweepY();
     m_nz = this->run_params.getFemsweepZ();
