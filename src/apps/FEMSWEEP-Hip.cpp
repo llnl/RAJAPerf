@@ -131,20 +131,20 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
          RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(RAJA::Teams(grid_size),
+             RAJA::LaunchParams(RAJA::Teams(ng, na),
                                 RAJA::Threads(block_size)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
            RAJA::loop<outer_y>(ctx, RAJA::RangeSegment(0, na),
-               [&](int a) {
+               [&](Index_type a) {
              RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, ng),
-                 [&](int g) {
+                 [&](Index_type g) {
                FEMSWEEP_KERNEL_SETUP;
                Index_type nehp_pos = 0;
                for (Index_type hp = 0; hp < nhp; ++hp)
                {
                  const Index_type nehp = phpaa_r[ohp + hp];
                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
-                     [&](int k) {
+                     [&](Index_type k) {
                    FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
                  });  // k loop
                  ctx.teamSync();

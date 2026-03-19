@@ -33,10 +33,13 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-         for (int ag = 0; ag < na * ng; ++ag)
-         {
+        for (Index_type a = 0; a < na; ++a)
+        {
+          for (Index_type g = 0; g < ng; ++g)
+          {
             FEMSWEEP_KERNEL;
-         }
+          }
+        }
 
       }
       stopTimer();
@@ -54,18 +57,24 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
       using outer_x =
           RAJA::LoopPolicy<RAJA::seq_exec>;
 
+      using outer_y =
+          RAJA::LoopPolicy<RAJA::seq_exec>;
+
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-         RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(),
-             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
-             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-               [&](int ag) {
-                 FEMSWEEP_KERNEL;
-               });
-         });
+        RAJA::launch<launch_policy>( res,
+            RAJA::LaunchParams(),
+            [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+          RAJA::loop<outer_y>(ctx, RAJA::RangeSegment(0, na),
+              [&](Index_type a) {
+            RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, ng),
+                [&](Index_type g) {
+              FEMSWEEP_KERNEL;
+            });
+          });
+        });
 
       }
       stopTimer();

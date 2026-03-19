@@ -92,9 +92,9 @@
 
 #include "FEMSWEEPMeshGen.hpp"
 
-constexpr int ND = 8;   // number of corners per element
-constexpr int NLF = 6;  // number of faces per element
-constexpr int FDS = 4;  // number of DOFs per face
+constexpr long ND = 8;   // number of corners per element
+constexpr long NLF = 6;  // number of faces per element
+constexpr long FDS = 4;  // number of DOFs per face
 
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \
@@ -164,9 +164,8 @@ constexpr int FDS = 4;  // number of DOFs per face
   const Real_type s = Sgdat[e + g * ne]; \
   SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
 
+
 #define FEMSWEEP_KERNEL \
-  const Index_type a = ag / ng; \
-  const Index_type g = ag % ng; \
   FEMSWEEP_KERNEL_SETUP; \
   Index_type nehp_pos = 0; \
   for (Index_type hp = 0; hp < nhp; ++hp) \
@@ -184,7 +183,7 @@ namespace rajaperf
 {
 
 // LU factorization with no pivoting
-template <int N>
+template <long N>
 RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A, 
                                                   const Real_type s,
                                                   Real_const_ptr M, 
