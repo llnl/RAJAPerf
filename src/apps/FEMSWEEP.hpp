@@ -165,20 +165,6 @@ constexpr long FDS = 4;  // number of DOFs per face
   SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
 
 
-#define FEMSWEEP_KERNEL \
-  FEMSWEEP_KERNEL_SETUP; \
-  Index_type nehp_pos = 0; \
-  for (Index_type hp = 0; hp < nhp; ++hp) \
-  { \
-    const Index_type nehp = phpaa_r[ohp + hp]; \
-    for (Index_type k = 0; k < nehp; ++k) \
-    { \
-      FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT; \
-    } \
-    nehp_pos += nehp; \
-  }
-
-
 namespace rajaperf
 {
 

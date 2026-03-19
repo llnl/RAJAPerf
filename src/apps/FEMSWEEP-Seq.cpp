@@ -37,7 +37,17 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
         {
           for (Index_type g = 0; g < ng; ++g)
           {
-            FEMSWEEP_KERNEL;
+            FEMSWEEP_KERNEL_SETUP;
+            Index_type nehp_pos = 0;
+            for (Index_type hp = 0; hp < nhp; ++hp)
+            {
+              const Index_type nehp = phpaa_r[ohp + hp];
+              for (Index_type k = 0; k < nehp; ++k)
+              {
+                FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+              }
+              nehp_pos += nehp;
+            }
           }
         }
 
@@ -60,6 +70,9 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
       using outer_y =
           RAJA::LoopPolicy<RAJA::seq_exec>;
 
+      using inner_x =
+          RAJA::LoopPolicy<RAJA::seq_exec>;
+
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
@@ -71,9 +84,20 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
               [&](Index_type a) {
             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, ng),
                 [&](Index_type g) {
-              FEMSWEEP_KERNEL;
-            });
-          });
+               FEMSWEEP_KERNEL_SETUP;
+               Index_type nehp_pos = 0;
+               for (Index_type hp = 0; hp < nhp; ++hp)
+               {
+                 const Index_type nehp = phpaa_r[ohp + hp];
+                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
+                     [&](Index_type k) {
+                   FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                 });  // k loop
+                 ctx.teamSync();
+                 nehp_pos += nehp;
+               }
+             });  // g loop
+           });  // a loop
         });
 
       }
