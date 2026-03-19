@@ -120,58 +120,65 @@ constexpr int FDS = 4;  // number of DOFs per face
   Index_ptr idx1               = m_idx1              ; \
   Index_ptr idx2               = m_idx2              ; \
 
- 
+
+#define FEMSWEEP_KERNEL_SETUP \
+  const Index_type nhp = nhpaa_r[a]; \
+  const Index_type ohp = ohpaa_r[a]; \
+  Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
+
+#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT \
+  Real_type A[ND*ND]; \
+  Real_type b[ND]; \
+  const Index_type e = order_r[k + nehp_pos + a * ne]; \
+  for (Index_type j = 0; j < ND; ++j) \
+  { \
+    b[j] = Bdat[j + e * ND + a * ne * ND]; \
+    for (Index_type i = 0; i < ND; ++i) \
+    { \
+      A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
+    } \
+  } \
+  for (Index_type face = 0; face < NLF; ++face) \
+  { \
+    const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
+    const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
+    const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
+    if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) \
+    { \
+      continue; \
+    } \
+    for (Index_type j = 0; j < FDS; ++j) \
+    { \
+      const Index_type ffj = f * FDS + j; \
+      const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
+      Real_type F = 0.0; \
+      for (Index_type i = 0; i < FDS; i++) \
+      { \
+        const Index_type ffi = f * FDS + i; \
+        const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
+        F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
+      } \
+      b[djs % ND] -= F; \
+    } \
+  } \
+  const Real_type s = Sgdat[e + g * ne]; \
+  SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
+
 #define FEMSWEEP_KERNEL \
   const Index_type a = ag / ng; \
   const Index_type g = ag % ng; \
-  const Index_type nhp = nhpaa_r[a]; \
-  const Index_type ohp = ohpaa_r[a]; \
-  Index_type s_nehp_done = 0; \
-  Real_type A[ND*ND]; \
-  Real_type b[ND]; \
-  Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0); \
+  FEMSWEEP_KERNEL_SETUP; \
+  Index_type nehp_pos = 0; \
   for (Index_type hp = 0; hp < nhp; ++hp) \
   { \
-     const Index_type nehp = phpaa_r[ohp + hp]; \
-     for (Index_type k = 0; k < nehp; ++k) \
-     { \
-        const Index_type e = order_r[k + s_nehp_done + a * ne]; \
-        for (Index_type j = 0; j < ND; ++j) \
-        { \
-           b[j] = Bdat[j + e * ND + a * ne * ND]; \
-           for (Index_type i = 0; i < ND; ++i) \
-           { \
-              A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
-           } \
-        } \
-        for (Index_type face = 0; face < NLF; ++face) \
-        { \
-           const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
-           const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
-           const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
-           if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) \
-           { \
-              continue; \
-           } \
-           for (Index_type j = 0; j < FDS; ++j) \
-           { \
-              const Index_type ffj = f * FDS + j; \
-              const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
-              Real_type F = 0.0; \
-              for (Index_type i = 0; i < FDS; i++) \
-              { \
-                 const Index_type ffi = f * FDS + i; \
-                 const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
-                 F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
-              } \
-              b[djs % ND] -= F; \
-           } \
-        } \
-        const Real_type s = Sgdat[e + g * ne]; \
-        SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]); \
-     } \
-     s_nehp_done += nehp; \
-  } \
+    const Index_type nehp = phpaa_r[ohp + hp]; \
+    for (Index_type k = 0; k < nehp; ++k) \
+    { \
+      FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT; \
+    } \
+    nehp_pos += nehp; \
+  }
+
 
 namespace rajaperf
 {
