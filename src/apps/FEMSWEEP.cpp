@@ -62,7 +62,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   if (!this->run_params.useFemsweepMeshDims())
   {
     // Pick mesh size based on target_size.
-    Real_type remainder = std::max(1.0, static_cast<Real_type>(target_size) / (ND * m_na * m_ng));
+    Real_type remainder = std::max(1.0, static_cast<Real_type>(target_size) / (m_na * m_ng));
 
     Index_type rounded_cube = std::cbrt(remainder) + std::cbrt(3)-1.0;
     m_nx = rounded_cube;
@@ -93,7 +93,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   m_M0len = ND * ND * m_ne;
   m_Xlen = ND * m_ne * m_ng * m_na;
 
-  setActualProblemSize( m_Xlen );
+  setActualProblemSize( m_ne * m_ng * m_na );
   setRunReps( target_reps );
 
   setItsPerRep(1);
