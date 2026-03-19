@@ -44,7 +44,7 @@ void VOL3D::runSyclVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
  
-      const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
+      const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend-ibegin, work_group_size);
 
       qu->submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
