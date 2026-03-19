@@ -69,7 +69,7 @@ void VOL3D::runCudaVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend-ibegin, block_size);
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel( (vol3d<block_size>),
