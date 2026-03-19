@@ -158,7 +158,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
   allocAndInitDataRandValue (m_Sgdat    , m_Sglen     , vid);
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
-  allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
+  allocAndInitDataConst     (m_Xdat     , m_Xlen, 0.0 , vid);
 
   allocAndCopyHostData(m_nhpaa_r, m_meshgen->m_nhyperplanes_all_angles.Data(), m_meshgen->m_nhyperplanes_all_angles.Size(), vid);
 
