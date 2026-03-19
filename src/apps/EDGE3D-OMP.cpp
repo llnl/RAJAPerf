@@ -11,6 +11,8 @@
 
 #include "RAJA/RAJA.hpp"
 
+#include "EDGE3D_HELPER.hpp"
+
 #include "AppsData.hpp"
 
 #include <iostream>

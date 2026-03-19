@@ -13,6 +13,8 @@
 
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
 
+#include "EDGE3D_HELPER.hpp"
+
 #include "common/OpenMPTargetDataUtils.hpp"
 
 #include "AppsData.hpp"

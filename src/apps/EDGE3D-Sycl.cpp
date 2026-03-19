@@ -13,6 +13,8 @@
 
 #if defined(RAJA_ENABLE_SYCL)
 
+#include "EDGE3D_HELPER.hpp"
+
 #include "common/SyclDataUtils.hpp"
 
 #include "AppsData.hpp"
