@@ -43,8 +43,20 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
                             const Index_ptr idx1,
                             const Index_ptr idx2 )
 {
-  const int ag = hipBlockIdx_x * block_size + hipThreadIdx_x;
-  FEMSWEEP_KERNEL;
+  const Index_type a = blockIdx.y;
+  const Index_type g = blockIdx.x;
+  FEMSWEEP_KERNEL_SETUP;
+  Index_type nehp_pos = 0;
+  for (Index_type hp = 0; hp < nhp; ++hp)
+  {
+    const Index_type nehp = phpaa_r[ohp + hp];
+    for (Index_type k = threadIdx.x; k < nehp; k += block_size)
+    {
+      FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+    }
+    __syncthreads();
+    nehp_pos += nehp;
+  }
 }
 
 template < size_t block_size >
@@ -66,7 +78,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-         const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
+         const dim3 grid_size(ng, na);
          constexpr size_t shmem = 0;
 
          RPlaunchHipKernel( (FEMSweep3D<block_size>),
@@ -105,8 +117,14 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
       using launch_policy =
           RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
 
+      using outer_y =
+          RAJA::LoopPolicy<RAJA::hip_block_y_direct_unchecked>;
+
       using outer_x =
-          RAJA::LoopPolicy<RAJA::hip_global_size_x_direct<block_size>>;
+          RAJA::LoopPolicy<RAJA::hip_block_x_direct_unchecked>;
+
+      using inner_x =
+          RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<block_size>>;
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -116,10 +134,24 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
              RAJA::LaunchParams(RAJA::Teams(grid_size),
                                 RAJA::Threads(block_size)),
              [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
-               RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-                 [&](int ag) {
-                   FEMSWEEP_KERNEL;
-                 });  // ag loop
+           RAJA::loop<outer_y>(ctx, RAJA::RangeSegment(0, na),
+               [&](int a) {
+             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, ng),
+                 [&](int g) {
+               FEMSWEEP_KERNEL_SETUP;
+               Index_type nehp_pos = 0;
+               for (Index_type hp = 0; hp < nhp; ++hp)
+               {
+                 const Index_type nehp = phpaa_r[ohp + hp];
+                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
+                     [&](int k) {
+                   FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                 });  // k loop
+                 ctx.teamSync();
+                 nehp_pos += nehp;
+               }
+             });  // g loop
+           });  // a loop
          });  // RAJA Launch
 
       }
