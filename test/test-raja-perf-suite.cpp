@@ -116,6 +116,9 @@ TEST(ShortSuiteTest, Basic)
   // STEP 3: Report suite run summary
   executor.reportRunSummary(std::cout);
 
+  // check that our arguments were valid
+  ASSERT_EQ(executor.getInputState(), rajaperf::RunParams::CheckRun);
+
   // STEP 4: Execute suite
   executor.runSuite();
 
