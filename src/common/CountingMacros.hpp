@@ -129,6 +129,7 @@
 #define Real_array3 RAJAPERF_ARRAY3_WRAPPER(Real_array3)
 #define Real_array4 RAJAPERF_ARRAY4_WRAPPER(Real_array4)
 #define Real_array_ref RAJAPERF_ARRAY1_WRAPPER(Real_array_ref)
+#define Real_array_const_ref RAJAPERF_ARRAY1_WRAPPER(Real_array_const_ref)
 #define Real_array2_ref RAJAPERF_ARRAY2_WRAPPER(Real_array2_ref)
 #define Real_array3_ref RAJAPERF_ARRAY3_WRAPPER(Real_array3_ref)
 #define Real_array4_ref RAJAPERF_ARRAY4_WRAPPER(Real_array4_ref)

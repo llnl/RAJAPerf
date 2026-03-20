@@ -157,6 +157,8 @@ using Real_array4 = Real_type[N0][N1][N2][N3];
 
 template < size_t N >
 using Real_array_ref = Real_type(&)[N];
+template < size_t N >
+using Real_array_const_ref = const Real_type(&)[N];
 
 template < size_t N0, size_t N1 >
 using Real_array2_ref = Real_type(&)[N0][N1];
@@ -179,6 +181,12 @@ using Complex_type = std::complex<Real_type>;
 
 using Complex_ptr = Complex_type*;
 #endif
+
+
+
+using Int_type_t = Int_type;
+using Index_type_t = Index_type;
+using Real_type_t = Real_type;
 
 
 #define RAJAPERF_STRINGIFY_HELPER(...) #__VA_ARGS__

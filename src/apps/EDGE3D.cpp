@@ -16,6 +16,7 @@
 
 #include <cmath>
 
+#include "EDGE3D_HELPER.hpp"
 
 namespace rajaperf
 {

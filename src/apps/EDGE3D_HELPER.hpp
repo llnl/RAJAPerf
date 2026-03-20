@@ -17,19 +17,19 @@ namespace rajaperf
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void edge_MpSmatrix(
-  const Real_type  (&x)[NB],
-  const Real_type  (&y)[NB],
-  const Real_type  (&z)[NB],
+  Real_array_const_ref<NB> x,
+  Real_array_const_ref<NB> y,
+  Real_array_const_ref<NB> z,
   Real_type        alpha,
   Real_type        beta,
   const Real_type  detj_tol,
   const Int_type   quad_type,
   const Int_type   quad_order,
-  Real_type        (&matrix)[EB][EB])
+  Real_array2_ref<EB, EB> matrix)
 {
   // Get integration points and weights
-  Real_type qpts_1d[MAX_QUAD_ORDER];
-  Real_type wgts_1d[MAX_QUAD_ORDER];
+  Real_array<MAX_QUAD_ORDER> qpts_1d;
+  Real_array<MAX_QUAD_ORDER> wgts_1d;
 
   get_quadrature_rule(quad_type, quad_order, qpts_1d, wgts_1d);
 
@@ -63,7 +63,7 @@ RAJA_INLINE void edge_MpSmatrix(
     const Real_type xloc = qpts_1d[i];
     const Real_type tmpx = 1. - xloc;
 
-    Real_type dbasisx[EB] = {0};
+    Real_array<EB> dbasisx = {};
     curl_edgebasis_x(dbasisx, tmpx, xloc);
 
     for ( Int_type j = 0; j < quad_order; j++ ) {
@@ -81,10 +81,10 @@ RAJA_INLINE void edge_MpSmatrix(
       const Real_type jzy = Jzy(x, y, z, tmpxy, xloctmpy, xyloc, tmpxyloc);
       const Real_type jzz = Jzz(x, y, z, tmpxy, xloctmpy, xyloc, tmpxyloc);
 
-      Real_type ebasisz[EB] = {0};
+      Real_array<EB> ebasisz = {};
       edgebasis_z(ebasisz, tmpxy, xloctmpy, xyloc, tmpxyloc);
 
-      Real_type dbasisy[EB] = {0};
+      Real_array<EB> dbasisy = {};
       curl_edgebasis_y(dbasisy, tmpy, yloc);
 
       // Differeniate basis with respect to z at this quadrature point
@@ -115,9 +115,9 @@ RAJA_INLINE void edge_MpSmatrix(
         const Real_type jyz = Jyz(x, y, z, tmpxz, xloctmpz, tmpxzloc, xzloc);
 
         Real_type jinvxx, jinvxy, jinvxz,
-                            jinvyx, jinvyy, jinvyz,
-                            jinvzx, jinvzy, jinvzz,
-                            detj_unfixed, detj, abs_detj, invdetj;
+                  jinvyx, jinvyy, jinvyz,
+                  jinvzx, jinvzy, jinvzz,
+                  detj_unfixed, detj, abs_detj, invdetj;
 
         jacobian_inv(
           jxx, jxy, jxz,
@@ -131,20 +131,20 @@ RAJA_INLINE void edge_MpSmatrix(
 
         const Real_type detjwgts = wgts*abs_detj;
 
-        Real_type ebasisx[EB] = {0};
+        Real_array<EB> ebasisx = {};
         edgebasis_x(ebasisx, tmpyz, yloctmpz, tmpyzloc, yzloc);
 
-        Real_type ebasisy[EB] = {0};
+        Real_array<EB> ebasisy = {};
         edgebasis_y(ebasisy, tmpxz, xloctmpz, tmpxzloc, xzloc);
 
-        Real_type dbasisz[EB] = {0};
+        Real_array<EB> dbasisz = {};
         curl_edgebasis_z(dbasisz, tmpz, zloc);
 
         const Real_type inv_abs_detj = 1./(abs_detj+ptiny);
 
-        Real_type tebasisx[EB] = {0};
-        Real_type tebasisy[EB] = {0};
-        Real_type tebasisz[EB] = {0};
+        Real_array<EB> tebasisx = {};
+        Real_array<EB> tebasisy = {};
+        Real_array<EB> tebasisz = {};
 
         transform_edge_basis(
           jinvxx, jinvxy, jinvxz,
@@ -153,9 +153,9 @@ RAJA_INLINE void edge_MpSmatrix(
           ebasisx, ebasisy, ebasisz,
           tebasisx, tebasisy, tebasisz);
 
-        Real_type tdbasisx[EB] = {0};
-        Real_type tdbasisy[EB] = {0};
-        Real_type tdbasisz[EB] = {0};
+        Real_array<EB> tdbasisx = {};
+        Real_array<EB> tdbasisy = {};
+        Real_array<EB> tdbasisz = {};
 
         transform_curl_edge_basis(
           jxx, jxy, jxz,
@@ -168,15 +168,15 @@ RAJA_INLINE void edge_MpSmatrix(
         // the inner product: alpha*<w_i, w_j>
         inner_product(
           detjwgts*alpha,
-          tebasisx, tebasisy, tebasisz,
-          tebasisx, tebasisy, tebasisz,
+          Real_array_const_ref<EB>{tebasisx}, Real_array_const_ref<EB>{tebasisy}, Real_array_const_ref<EB>{tebasisz},
+          Real_array_const_ref<EB>{tebasisx}, Real_array_const_ref<EB>{tebasisy}, Real_array_const_ref<EB>{tebasisz},
           matrix, true);
 
          // the inner product: beta*<Curl(w_i), Curl(w_j)>
         inner_product(
           detjwgts*beta,
-          tdbasisx, tdbasisy, tdbasisz,
-          tdbasisx, tdbasisy, tdbasisz,
+          Real_array_const_ref<EB>{tdbasisx}, Real_array_const_ref<EB>{tdbasisy}, Real_array_const_ref<EB>{tdbasisz},
+          Real_array_const_ref<EB>{tdbasisx}, Real_array_const_ref<EB>{tdbasisy}, Real_array_const_ref<EB>{tdbasisz},
           matrix, true);
       }
     }

@@ -189,6 +189,10 @@
 #ifndef RAJAPerf_Apps_EDGE3D_HPP
 #define RAJAPerf_Apps_EDGE3D_HPP
 
+#define NB 8
+#define EB 12
+#define FB 6
+#define MAX_QUAD_ORDER 5
 #define NQ_1D 2
 
 #define EDGE3D_DATA_SETUP \
@@ -206,10 +210,13 @@
   NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
 
 #define EDGE3D_BODY \
-  Real_type X[NB] = {x0[i],x1[i],x2[i],x3[i],x4[i],x5[i],x6[i],x7[i]};\
-  Real_type Y[NB] = {y0[i],y1[i],y2[i],y3[i],y4[i],y5[i],y6[i],y7[i]};\
-  Real_type Z[NB] = {z0[i],z1[i],z2[i],z3[i],z4[i],z5[i],z6[i],z7[i]};\
-  Real_type edge_matrix[EB][EB];\
+  Real_array<NB> X;\
+  Real_array<NB> Y;\
+  Real_array<NB> Z;\
+  Real_array2<EB, EB> edge_matrix;\
+  X[0]=x0[i]; X[1]=x1[i]; X[2]=x2[i]; X[3]=x3[i]; X[4]=x4[i]; X[5]=x5[i]; X[6]=x6[i]; X[7]=x7[i];\
+  Y[0]=y0[i]; Y[1]=y1[i]; Y[2]=y2[i]; Y[3]=y3[i]; Y[4]=y4[i]; Y[5]=y5[i]; Y[6]=y6[i]; Y[7]=y7[i];\
+  Z[0]=z0[i]; Z[1]=z1[i]; Z[2]=z2[i]; Z[3]=z3[i]; Z[4]=z4[i]; Z[5]=z5[i]; Z[6]=z6[i]; Z[7]=z7[i];\
   edge_MpSmatrix(X, Y, Z, 1.0, 1.0, 0.0, 1.0, NQ_1D, edge_matrix);\
   Real_type local_sum = 0.0;\
   for (Int_type m = 0; m < EB; m++) {\
