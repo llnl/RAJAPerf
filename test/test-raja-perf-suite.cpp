@@ -62,7 +62,7 @@ TEST(ShortSuiteTest, Basic)
   sargv.emplace_back(std::string("3"));
 #endif
   sargv.emplace_back(std::string("--show-progress"));
-  sargv.emplace_back(std::string("--disable-warmup"));
+  sargv.emplace_back(std::string("--warmup-disable"));
 
 #if defined(RAJA_ENABLE_HIP) && \
      (HIP_VERSION_MAJOR < 5 || \
