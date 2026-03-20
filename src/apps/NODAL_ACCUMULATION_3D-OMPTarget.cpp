@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,7 +30,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -40,32 +41,15 @@ void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(x0,x1,x2,x3,x4,x5,x6,x7, \
                                        vol, real_zones) device( did )
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
         NODAL_ACCUMULATION_3D_BODY_INDEX;
-
-        Real_type val = 0.125 * vol[i];
-
-        #pragma omp atomic
-        x0[i] += val;
-        #pragma omp atomic
-        x1[i] += val;
-        #pragma omp atomic
-        x2[i] += val;
-        #pragma omp atomic
-        x3[i] += val;
-        #pragma omp atomic
-        x4[i] += val;
-        #pragma omp atomic
-        x5[i] += val;
-        #pragma omp atomic
-        x6[i] += val;
-        #pragma omp atomic
-        x7[i] += val;
+        NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
     }
@@ -79,11 +63,12 @@ void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         zones, [=](Index_type i) {
-        NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::omp_atomic);
+        NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
       });
 
     }
@@ -93,6 +78,8 @@ void NODAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
     getCout() << "\n  NODAL_ACCUMULATION_3D : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NODAL_ACCUMULATION_3D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

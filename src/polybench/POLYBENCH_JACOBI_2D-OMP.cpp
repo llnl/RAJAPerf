@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -19,7 +20,7 @@ namespace polybench
 {
 
 
-void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -32,24 +33,21 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              POLYBENCH_JACOBI_2D_BODY1;
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            POLYBENCH_JACOBI_2D_BODY1;
           }
+        }
 
-          #pragma omp parallel for
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              POLYBENCH_JACOBI_2D_BODY2;
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            POLYBENCH_JACOBI_2D_BODY2;
           }
-
         }
 
       }
@@ -68,24 +66,21 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
                                      };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
-
-          #pragma omp parallel for
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              poly_jacobi2d_base_lam1(i, j);
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            poly_jacobi2d_base_lam1(i, j);
           }
+        }
 
-          #pragma omp parallel for
-          for (Index_type i = 1; i < N-1; ++i ) {
-            for (Index_type j = 1; j < N-1; ++j ) {
-              poly_jacobi2d_base_lam2(i, j);
-            }
+        #pragma omp parallel for
+        for (Index_type i = 1; i < N-1; ++i ) {
+          for (Index_type j = 1; j < N-1; ++j ) {
+            poly_jacobi2d_base_lam2(i, j);
           }
-
         }
 
       }
@@ -122,20 +117,17 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 0; t < tsteps; ++t) {
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                             RAJA::RangeSegment{1, N-1}),
-            res,
-
-	    poly_jacobi2d_lam1,
-	    poly_jacobi2d_lam2
-          );
-
-        }
+          poly_jacobi2d_lam1,
+          poly_jacobi2d_lam2
+        );
 
       }
       stopTimer();
@@ -153,6 +145,8 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace polybench
 } // end namespace rajaperf

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -31,6 +32,8 @@ namespace polybench
 template < size_t work_group_size >
 void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
 {
+  setBlockSize(work_group_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getSyclResource()};
@@ -41,74 +44,72 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
   if ( vid == Base_SYCL ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (t = 0; t < tsteps; ++t) {
+      const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(ny, work_group_size);
 
-        const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(ny, work_group_size);
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<1> (global_size1, work_group_size),
+                       [=] (sycl::nd_item<1> item) {
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<1> (global_size1, work_group_size),
-                         [=] (sycl::nd_item<1> item) {
+          Index_type j = item.get_global_id(0);
+          if (j < ny) {
+             POLYBENCH_FDTD_2D_BODY1;
+          }
 
-            Index_type j = item.get_global_id(0);
-            if (j < ny) {
-               POLYBENCH_FDTD_2D_BODY1;
-            }
-
-          });
         });
+      });
 
-        sycl::range<3> global_dim234(1,
-                                     i_wg_sz * RAJA_DIVIDE_CEILING_INT(nx, i_wg_sz),
-                                     j_wg_sz * RAJA_DIVIDE_CEILING_INT(ny, j_wg_sz));
+      sycl::range<3> global_dim234(1,
+                                   i_wg_sz * RAJA_DIVIDE_CEILING_INT(nx, i_wg_sz),
+                                   j_wg_sz * RAJA_DIVIDE_CEILING_INT(ny, j_wg_sz));
 
-        sycl::range<3> wkgroup_dim234(1, i_wg_sz, j_wg_sz);
+      sycl::range<3> wkgroup_dim234(1, i_wg_sz, j_wg_sz);
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
-                         [=] (sycl::nd_item<3> item) {
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
+                       [=] (sycl::nd_item<3> item) {
 
-            Index_type i = item.get_global_id(1);
-            Index_type j = item.get_global_id(2);
+          Index_type i = item.get_global_id(1);
+          Index_type j = item.get_global_id(2);
 
-            if (i > 0 && i < nx && j < ny) {
-              POLYBENCH_FDTD_2D_BODY2;
-            }
+          if (i > 0 && i < nx && j < ny) {
+            POLYBENCH_FDTD_2D_BODY2;
+          }
 
-          });
         });
+      });
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
-                         [=] (sycl::nd_item<3> item) {
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
+                       [=] (sycl::nd_item<3> item) {
 
-            Index_type i = item.get_global_id(1);
-            Index_type j = item.get_global_id(2);
+          Index_type i = item.get_global_id(1);
+          Index_type j = item.get_global_id(2);
 
-            if (i < nx && j > 0 && j < ny) {
-              POLYBENCH_FDTD_2D_BODY3;
-            }
+          if (i < nx && j > 0 && j < ny) {
+            POLYBENCH_FDTD_2D_BODY3;
+          }
 
-          });
         });
+      });
 
-        qu->submit([&] (sycl::handler& h) {
-          h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
-                         [=] (sycl::nd_item<3> item) {
+      qu->submit([&] (sycl::handler& h) {
+        h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
+                       [=] (sycl::nd_item<3> item) {
 
-            Index_type i = item.get_global_id(1);
-            Index_type j = item.get_global_id(2);
+          Index_type i = item.get_global_id(1);
+          Index_type j = item.get_global_id(2);
 
-            if (i < nx-1 && j < ny-1) {
-              POLYBENCH_FDTD_2D_BODY4;
-            }
+          if (i < nx-1 && j < ny-1) {
+            POLYBENCH_FDTD_2D_BODY4;
+          }
 
-          });
         });
+      });
 
-      } // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
@@ -130,44 +131,42 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (t = 0; t < tsteps; ++t) {
+      RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
+      [=] (Index_type j) {
+        POLYBENCH_FDTD_2D_BODY1_RAJA;
+      });
 
-        RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
-        [=] (Index_type j) {
-          POLYBENCH_FDTD_2D_BODY1_RAJA;
-        });
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, nx},
+                         RAJA::RangeSegment{0, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY2_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, nx},
-                           RAJA::RangeSegment{0, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY2_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx},
+                         RAJA::RangeSegment{1, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY3_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx},
-                           RAJA::RangeSegment{1, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY3_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
+                         RAJA::RangeSegment{0, ny-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY4_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
-                           RAJA::RangeSegment{0, ny-1}),
-          res, 
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY4_RAJA;
-          }
-        );
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
@@ -176,7 +175,7 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_FDTD_2D, Sycl)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_FDTD_2D, Sycl, Base_SYCL, RAJA_SYCL)
 
 } // end namespace polybench
 } // end namespace rajaperf

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace basic
 {
 
 
-void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MULTI_REDUCE::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -35,14 +36,14 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       MULTI_REDUCE_SETUP_VALUES;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES;
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
-          #pragma omp atomic
-          MULTI_REDUCE_BODY;
+          MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_OMP);
         }
 
         MULTI_REDUCE_FINALIZE_VALUES;
@@ -60,12 +61,12 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       MULTI_REDUCE_SETUP_VALUES;
 
       auto multi_reduce_base_lam = [=](Index_type i) {
-                                 #pragma omp atomic
-                                 MULTI_REDUCE_BODY;
-                               };
+            MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_OMP);
+          };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES;
 
@@ -89,13 +90,14 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         MULTI_REDUCE_INIT_VALUES_RAJA(RAJA::omp_multi_reduce);
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-            MULTI_REDUCE_BODY;
+            MULTI_REDUCE_BODY(RAJAPERF_ADD);
         });
 
         MULTI_REDUCE_FINALIZE_VALUES_RAJA(RAJA::omp_multi_reduce);
@@ -118,6 +120,8 @@ void MULTI_REDUCE::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MULTI_REDUCE, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

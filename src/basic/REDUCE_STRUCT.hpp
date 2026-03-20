@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -40,24 +41,24 @@
 #define REDUCE_STRUCT_DATA_SETUP \
   PointsType points; \
   points.N = getActualProblemSize(); \
-  points.x = m_x; \
-  points.y = m_y; \
+  Real_ptr x = m_x; \
+  Real_ptr y = m_y;
 
 #define REDUCE_STRUCT_BODY  \
-  xsum += points.x[i] ; \
-  xmin = RAJA_MIN(xmin, points.x[i]) ; \
-  xmax = RAJA_MAX(xmax, points.x[i]) ; \
-  ysum += points.y[i] ; \
-  ymin = RAJA_MIN(ymin, points.y[i]) ; \
-  ymax = RAJA_MAX(ymax, points.y[i]) ;
+  xsum += x[i] ; \
+  xmin = RAJA_MIN(xmin, x[i]) ; \
+  xmax = RAJA_MAX(xmax, x[i]) ; \
+  ysum += y[i] ; \
+  ymin = RAJA_MIN(ymin, y[i]) ; \
+  ymax = RAJA_MAX(ymax, y[i]) ;
 
 #define REDUCE_STRUCT_BODY_RAJA  \
-  xsum += points.x[i] ; \
-  xmin.min(points.x[i]) ; \
-  xmax.max(points.x[i]) ; \
-  ysum += points.y[i] ; \
-  ymin.min(points.y[i]) ; \
-  ymax.max(points.y[i]) ;
+  xsum += x[i] ; \
+  xmin.min(x[i]) ; \
+  xmax.max(x[i]) ; \
+  ysum += y[i] ; \
+  ymin.min(y[i]) ; \
+  ymax.max(y[i]) ;
 
 
 #include "common/KernelBase.hpp"
@@ -77,20 +78,24 @@ public:
 
   ~REDUCE_STRUCT();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineOpenMPTargetVariantTunings();
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void setSeqTuningDefinitions(VariantID vid);
-  void setOpenMPTuningDefinitions(VariantID vid);
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
+
+  template < size_t tune_idx >
+  void runSeqVariant(VariantID vid);
+
+  template < size_t tune_idx >
+  void runOpenMPVariant(VariantID vid);
 
   template < size_t block_size, typename MappingHelper >
   void runCudaVariantBase(VariantID vid);
@@ -108,7 +113,6 @@ public:
 
   struct PointsType {
     Index_type N;
-    Real_ptr x, y;
 
     Real_ptr GetCenter(){return &center[0];};
     Real_type GetXMax(){return xmax;};

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace basic
 {
 
 
-void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PI_ATOMIC::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -31,12 +32,12 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         for (Index_type i = ibegin; i < iend; ++i ) {
-          double x = (double(i) + 0.5) * dx;
-          *pi += dx / (1.0 + x * x);
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
         }
         m_pi_final = *pi * 4.0;
 
@@ -50,12 +51,12 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
     case Lambda_Seq : {
 
       auto piatomic_base_lam = [=](Index_type i) {
-                                 double x = (double(i) + 0.5) * dx;
-                                 *pi += dx / (1.0 + x * x);
-                               };
+            PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_SEQ);
+          };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -74,14 +75,14 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         *pi = m_pi_init;
         RAJA::forall<RAJA::seq_exec>(  res,
           RAJA::RangeSegment(ibegin, iend),
           [=](Index_type i) {
-            double x = (double(i) + 0.5) * dx;
-            RAJA::atomicAdd<RAJA::seq_atomic>(pi, dx / (1.0 + x * x));
+            PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_SEQ);
         });
         m_pi_final = *pi * 4.0;
 
@@ -101,6 +102,8 @@ void PI_ATOMIC::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx
   PI_ATOMIC_DATA_TEARDOWN;
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PI_ATOMIC, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -23,54 +24,52 @@ namespace apps
 DIFFUSION3DPA::DIFFUSION3DPA(const RunParams& params)
   : KernelBase(rajaperf::Apps_DIFFUSION3DPA, params)
 {
-  m_NE_default = 15625;
-
-  setDefaultProblemSize(m_NE_default*DPA_Q1D*DPA_Q1D*DPA_Q1D);
+  Index_type NE_default = 15625;
+  setDefaultProblemSize(NE_default*diff::D1D*diff::D1D*diff::D1D);
   setDefaultReps(50);
 
-  m_NE = std::max((getTargetProblemSize() + (DPA_Q1D*DPA_Q1D*DPA_Q1D)/2) / (DPA_Q1D*DPA_Q1D*DPA_Q1D), Index_type(1));
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setActualProblemSize( m_NE*DPA_Q1D*DPA_Q1D*DPA_Q1D );
-
-  setItsPerRep(getActualProblemSize());
-  setKernelsPerRep(1);
-
-  setBytesReadPerRep( 2*sizeof(Real_type) * DPA_Q1D*DPA_D1D + // b, g
-                      2*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE + // x, y
-                    SYM*sizeof(Real_type) * DPA_Q1D*DPA_Q1D*DPA_Q1D*m_NE ); // d
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * DPA_D1D*DPA_D1D*DPA_D1D*m_NE ); // y
-  setBytesAtomicModifyWrittenPerRep( 0 );
-
-  setFLOPsPerRep(m_NE * (DPA_Q1D * DPA_D1D +
-                         5 * DPA_D1D * DPA_D1D * DPA_Q1D * DPA_D1D +
-                         7 * DPA_D1D * DPA_D1D * DPA_Q1D * DPA_Q1D +
-                         7 * DPA_Q1D * DPA_D1D * DPA_Q1D * DPA_Q1D +
-                         15 * DPA_Q1D * DPA_Q1D * DPA_Q1D +
-                         DPA_Q1D * DPA_D1D +
-                         7 * DPA_Q1D * DPA_Q1D * DPA_D1D * DPA_Q1D +
-                         7 * DPA_Q1D * DPA_Q1D * DPA_D1D * DPA_D1D +
-                         7 * DPA_D1D * DPA_Q1D * DPA_D1D * DPA_D1D +
-                         3 * DPA_D1D * DPA_D1D * DPA_D1D));
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Launch);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( RAJA_Seq );
+  addVariantTunings();
+}
 
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
+void DIFFUSION3DPA::setSize(Index_type target_size, Index_type target_reps)
+{
+  m_NE = std::max((target_size + (diff::D1D*diff::D1D*diff::D1D)/2) / (diff::D1D*diff::D1D*diff::D1D), Index_type(1));
 
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
+  setActualProblemSize( m_NE*diff::D1D*diff::D1D*diff::D1D );
+  setRunReps( target_reps );
 
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  setItsPerRep( m_NE*diff::D1D*diff::D1D*diff::D1D );
+  setKernelsPerRep(1);
 
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
+               diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE + // d
+                           2*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE ); // x, y
+  setBytesReadPerRep( 2*sizeof(Real_type) * diff::Q1D*diff::D1D + // b, g
+                      1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE + // x
+          diff::DPA_SYM*sizeof(Real_type) * diff::Q1D*diff::Q1D*diff::Q1D*m_NE ); // d
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * diff::D1D*diff::D1D*diff::D1D*m_NE ); // y
+  setBytesAtomicModifyWrittenPerRep( 0 );
 
+  setFLOPsPerRep(m_NE * (4 * diff::D1D * diff::D1D * diff::D1D + //DIFFUSION3DPA_3
+                         6 * diff::D1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_4
+                         (6 * diff::D1D  + 15) * diff::Q1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_5
+                         (6 * diff::Q1D) * diff::D1D * diff::Q1D * diff::Q1D + //DIFFUSION3DPA_7
+                         (6 * diff::Q1D) * diff::D1D * diff::D1D * diff::Q1D + //DIFFUSION3DPA_8
+                         (6 * diff::Q1D + 1)*diff::D1D*diff::D1D*diff::D1D)); //DIFFUSION3DPA_9
 }
 
 DIFFUSION3DPA::~DIFFUSION3DPA()
@@ -80,22 +79,20 @@ DIFFUSION3DPA::~DIFFUSION3DPA()
 void DIFFUSION3DPA::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
 
-  allocAndInitDataConst(m_B, int(DPA_Q1D*DPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_G, int(DPA_Q1D*DPA_D1D), Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, int(DPA_Q1D*DPA_Q1D*DPA_Q1D*SYM*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_X, int(DPA_D1D*DPA_D1D*DPA_D1D*m_NE), Real_type(1.0), vid);
-  allocAndInitDataConst(m_Y, int(DPA_D1D*DPA_D1D*DPA_D1D*m_NE), Real_type(0.0), vid);
+  allocAndInitDataConst(m_B, diff::Q1D*diff::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_G, diff::Q1D*diff::D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, diff::Q1D*diff::Q1D*diff::Q1D*diff::DPA_SYM*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_X, diff::D1D*diff::D1D*diff::D1D*m_NE, Real_type(1.0), vid);
+  allocAndInitDataConst(m_Y, diff::D1D*diff::D1D*diff::D1D*m_NE, Real_type(0.0), vid);
 }
 
-void DIFFUSION3DPA::updateChecksum(VariantID vid, size_t tune_idx)
+void DIFFUSION3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_Y, DPA_D1D*DPA_D1D*DPA_D1D*m_NE, vid);
+  addToChecksum(m_Y, diff::D1D*diff::D1D*diff::D1D*m_NE, vid);
 }
 
 void DIFFUSION3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
-
   deallocData(m_B, vid);
   deallocData(m_G, vid);
   deallocData(m_D, vid);

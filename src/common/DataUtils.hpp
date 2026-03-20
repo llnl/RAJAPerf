@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@
 #include "RPTypes.hpp"
 
 #include <limits>
-#include <new>
+#include <cstring>
 #include <type_traits>
 
 #if defined(RAJA_ENABLE_CUDA)
@@ -97,18 +98,19 @@ void initData(Int_ptr& ptr, Size_type len);
 void initData(Real_ptr& ptr, Size_type len);
 
 /*!
- * \brief Initialize Real_type data array.
+ * \brief Initialize data array.
  *
  * Array entries are set to given constant value.
  */
-void initDataConst(Real_ptr& ptr, Size_type len, Real_type val);
+template < typename T, typename V >
+void initDataConst(T*& ptr, Size_type len, V val)
+{
+  for (Size_type i = 0; i < len; ++i) {
+    ptr[i] = val;
+  };
 
-/*!
- * \brief Initialize Index_type data array.
- *
- * Array entries are set to given constant value.
- */
-void initDataConst(Index_type*& ptr, Size_type len, Index_type val);
+  incDataInitCount();
+}
 
 /*!
  * \brief Initialize Real_type data array with random sign.
@@ -150,17 +152,13 @@ void initData(Real_type& d);
  *
  * Checksumn is multiplied by given scale factor.
  */
-long double calcChecksum(Int_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Int_ptr d, Size_type len);
 ///
-long double calcChecksum(unsigned long long* d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(unsigned long long* d, Size_type len);
 ///
-long double calcChecksum(Real_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Real_ptr d, Size_type len);
 ///
-long double calcChecksum(Complex_ptr d, Size_type len,
-                         Real_type scale_factor);
+Checksum_type calcChecksum(Complex_ptr d, Size_type len);
 
 }  // closing brace for detail namespace
 
@@ -204,7 +202,7 @@ inline void allocData(DataSpace dataSpace, T*& ptr_ref, Size_type len, Size_type
     // perform first touch on Omp Data
     #pragma omp parallel for
     for (Size_type i = 0; i < len; ++i) {
-      ptr[i] = T{};
+      std::memset(static_cast<void*>(&ptr[i]), 0, sizeof(T));
     };
   }
 #endif
@@ -273,6 +271,7 @@ struct AutoDataMover
 
   AutoDataMover(AutoDataMover&& rhs)
     : m_ptr(std::exchange(rhs.m_ptr, nullptr))
+    , m_new_ptr(std::exchange(rhs.m_new_ptr, nullptr))
     , m_new_dataSpace(rhs.m_new_dataSpace)
     , m_old_dataSpace(rhs.m_old_dataSpace)
     , m_len(rhs.m_len)
@@ -282,6 +281,7 @@ struct AutoDataMover
   {
     finalize();
     m_ptr = std::exchange(rhs.m_ptr, nullptr);
+    m_new_ptr = std::exchange(rhs.m_new_ptr, nullptr);
     m_new_dataSpace = rhs.m_new_dataSpace;
     m_old_dataSpace = rhs.m_old_dataSpace;
     m_len = rhs.m_len;
@@ -289,22 +289,56 @@ struct AutoDataMover
     return *this;
   }
 
-  void finalize()
-  {
-    if (m_ptr) {
-      moveData(m_new_dataSpace, m_old_dataSpace,
-          *m_ptr, m_len, m_align);
-      m_ptr = nullptr;
-    }
-  }
-
   ~AutoDataMover()
   {
     finalize();
   }
 
+  // Get the pointer that will replace *m_ptr after finalize is called.
+  // Use this to populate pointers into the final data structure but do not
+  // dereference this pointer in setup code.
+  T* get_final_ptr()
+  {
+    if (m_ptr && !m_new_ptr) {
+
+      if (m_new_dataSpace != m_old_dataSpace) {
+
+        allocData(m_new_dataSpace, m_new_ptr, m_len, m_align);
+
+      } else {
+
+        m_new_ptr = *m_ptr;
+
+      }
+    }
+
+    return m_new_ptr;
+  }
+
+  void finalize()
+  {
+    if (m_ptr) {
+
+      get_final_ptr();
+
+      if (m_new_dataSpace != m_old_dataSpace) {
+
+        copyData(m_new_dataSpace, m_new_ptr, m_old_dataSpace, *m_ptr, m_len);
+
+        deallocData(m_old_dataSpace, *m_ptr);
+
+        *m_ptr = m_new_ptr;
+
+      }
+
+      m_ptr = nullptr;
+      m_new_ptr = nullptr;
+    }
+  }
+
 private:
   T** m_ptr;
+  T* m_new_ptr = nullptr;
   DataSpace m_new_dataSpace;
   DataSpace m_old_dataSpace;
   Size_type m_len;
@@ -332,9 +366,9 @@ inline void allocAndInitData(DataSpace dataSpace, T*& ptr, Size_type len, Size_t
  *
  * Array entries are initialized using the method initDataConst.
  */
-template <typename T>
+template <typename T, typename V>
 inline void allocAndInitDataConst(DataSpace dataSpace, T*& ptr, Size_type len, Size_type align,
-                                  T val)
+                                  V val)
 {
   DataSpace init_dataSpace = hostCopyDataSpace(dataSpace);
 
@@ -384,8 +418,7 @@ inline void allocAndInitDataRandValue(DataSpace dataSpace, T*& ptr, Size_type le
  * Calculate and return checksum for arrays.
  */
 template <typename T>
-inline long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size_type align,
-                                Real_type scale_factor)
+inline Checksum_type calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size_type align)
 {
   T* check_ptr = ptr;
   T* copied_ptr = nullptr;
@@ -399,7 +432,7 @@ inline long double calcChecksum(DataSpace dataSpace, T* ptr, Size_type len, Size
     check_ptr = copied_ptr;
   }
 
-  auto val = detail::calcChecksum(check_ptr, len, scale_factor);
+  Checksum_type val = detail::calcChecksum(check_ptr, len);
 
   if (check_dataSpace != dataSpace) {
     deallocData(check_dataSpace, copied_ptr);

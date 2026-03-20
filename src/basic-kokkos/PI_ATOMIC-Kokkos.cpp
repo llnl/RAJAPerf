@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -14,7 +15,7 @@
 namespace rajaperf {
 namespace basic {
 
-void PI_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void PI_ATOMIC::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -30,7 +31,8 @@ void PI_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
 
     Kokkos::fence();
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Initializing a value, pi, on the host
       *pi = m_pi_init;
@@ -41,7 +43,7 @@ void PI_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
           "PI_ATOMIC-Kokkos Kokkos_Lambda",
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ibegin, iend),
           KOKKOS_LAMBDA(Index_type i) {
-            double x = (double(i) + 0.5) * dx;
+            Real_type x = (Real_type(i) + 0.5) * dx;
             // Make a reference to the 0th element of a 1D view with one
             // element
             Kokkos::atomic_add(&pi_view(0), dx / (1.0 + x * x));
@@ -63,6 +65,8 @@ void PI_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_
   }
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PI_ATOMIC, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -129,15 +130,6 @@
   yps = y74 + y30 ; \
   zps = z74 + z30 ; \
  \
-  cyz = y74 * z60 - z74 * y60 ; \
-  czx = z74 * x60 - x74 * z60 ; \
-  cxy = x74 * y60 - y74 * x60 ; \
-  vol[i] += xps * cyz + yps * czx + zps * cxy ; \
- \
-  xps = x74 + x30 ; \
-  yps = y74 + y30 ; \
-  zps = z74 + z30 ; \
- \
   cyz = y71 * z50 - z71 * y50 ; \
   czx = z71 * x50 - x71 * z50 ; \
   cxy = x71 * y50 - y71 * x50 ; \
@@ -164,20 +156,21 @@ public:
 
   ~VOL3D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
@@ -197,7 +190,7 @@ private:
 
   Real_type m_vnormq;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
   Index_type m_array_length;
 };
 

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -21,7 +22,7 @@ namespace rajaperf
 namespace polybench
 {
 
-void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -30,30 +31,27 @@ void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
-
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
-            for (Index_type k = 1; k < N-1; ++k ) {
-              POLYBENCH_HEAT_3D_BODY1;
-            }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        for (Index_type j = 1; j < N-1; ++j ) {
+          for (Index_type k = 1; k < N-1; ++k ) {
+            POLYBENCH_HEAT_3D_BODY1;
           }
         }
+      }
 
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
-            for (Index_type k = 1; k < N-1; ++k ) {
-              POLYBENCH_HEAT_3D_BODY2;
-            }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        for (Index_type j = 1; j < N-1; ++j ) {
+          for (Index_type k = 1; k < N-1; ++k ) {
+            POLYBENCH_HEAT_3D_BODY2;
           }
         }
-
       }
 
     }
@@ -74,31 +72,28 @@ void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] (Index_type i, Index_type j, Index_type k) {
+          POLYBENCH_HEAT_3D_BODY1_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] (Index_type i, Index_type j, Index_type k) {
-            POLYBENCH_HEAT_3D_BODY1_RAJA;
-          }
-        );
-
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] (Index_type i, Index_type j, Index_type k) {
-            POLYBENCH_HEAT_3D_BODY2_RAJA;
-          }
-        );
-
-      }
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] (Index_type i, Index_type j, Index_type k) {
+          POLYBENCH_HEAT_3D_BODY2_RAJA;
+        }
+      );
 
     }
     stopTimer();
@@ -108,6 +103,8 @@ void POLYBENCH_HEAT_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

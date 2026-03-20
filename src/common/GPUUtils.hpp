@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -273,16 +274,17 @@ using reducer_helpers = camp::list<
 // Initialize device_ptr_name with length copies of init_value
 // host_ptr_name will be used as an intermediary with an explicit copy
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(gpu_type, init_value, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(gpu_type, gpu_type_upper, init_value, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
         host_ptr_name[i*(replication) + r] = (init_value);                     \
       }                                                                        \
     }                                                                          \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( device_ptr_name, host_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        device_ptr_name, host_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyHostToDevice, res.get_stream() ) );                    \
+        gpu_type##MemcpyHostToDevice, res.get_stream() );                      \
   } else {                                                                     \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
@@ -294,16 +296,17 @@ using reducer_helpers = camp::list<
 // Initialize device_ptr_name with values in init_ptr
 // host_ptr_name will be used as an intermediary with an explicit copy
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(gpu_type, init_ptr, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(gpu_type, gpu_type_upper, init_ptr, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
         host_ptr_name[i*(replication) + r] = (init_ptr)[i];                    \
       }                                                                        \
     }                                                                          \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( device_ptr_name, host_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        device_ptr_name, host_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyHostToDevice, res.get_stream() ) );                    \
+        gpu_type##MemcpyHostToDevice, res.get_stream() );                      \
   } else {                                                                     \
     for (size_t i = 0; i < static_cast<size_t>(length); ++i) {                 \
       for (size_t r = 0; r < static_cast<size_t>(replication); ++r) {          \
@@ -314,66 +317,67 @@ using reducer_helpers = camp::list<
 
 // Copy back data from device_ptr_name into host_ptr_name
 // if the reduction data space is not host accessible
-#define RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(gpu_type, device_ptr_name, host_ptr_name, length, replication) \
+#define RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(gpu_type, gpu_type_upper, device_ptr_name, host_ptr_name, length, replication) \
   if (device_ptr_name != host_ptr_name) {                                      \
-    gpu_type##Errchk( gpu_type##MemcpyAsync( host_ptr_name, device_ptr_name,   \
+    CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##MemcpyAsync,       \
+        host_ptr_name, device_ptr_name,                                        \
         (length)*(replication)*sizeof(device_ptr_name[0]),                     \
-        gpu_type##MemcpyDeviceToHost, res.get_stream() ) );                    \
+        gpu_type##MemcpyDeviceToHost, res.get_stream() );                      \
   }                                                                            \
-  gpu_type##Errchk( gpu_type##StreamSynchronize( res.get_stream() ) );
+  CAMP_##gpu_type_upper##_API_INVOKE_AND_CHECK( gpu_type##StreamSynchronize,   \
+      res.get_stream() );
 
 #define RAJAPERF_CUDA_REDUCER_SETUP(pointer_type, device_ptr_name, host_ptr_name, length, replication) \
   RAJAPERF_GPU_REDUCER_SETUP_IMPL(pointer_type, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_TEARDOWN(device_ptr_name, host_ptr_name) \
   RAJAPERF_GPU_REDUCER_TEARDOWN_IMPL(device_ptr_name, host_ptr_name)
 #define RAJAPERF_CUDA_REDUCER_INITIALIZE_VALUE(init_value, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(cuda, init_value, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(cuda, CUDA, init_value, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_INITIALIZE(init_ptr, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(cuda, init_ptr, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(cuda, CUDA, init_ptr, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_CUDA_REDUCER_COPY_BACK(device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(cuda, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(cuda, CUDA, device_ptr_name, host_ptr_name, length, replication)
 
 #define RAJAPERF_HIP_REDUCER_SETUP(pointer_type, device_ptr_name, host_ptr_name, length, replication) \
   RAJAPERF_GPU_REDUCER_SETUP_IMPL(pointer_type, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_TEARDOWN(device_ptr_name, host_ptr_name) \
   RAJAPERF_GPU_REDUCER_TEARDOWN_IMPL(device_ptr_name, host_ptr_name)
 #define RAJAPERF_HIP_REDUCER_INITIALIZE_VALUE(init_value, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(hip, init_value, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_VALUE_IMPL(hip, HIP, init_value, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_INITIALIZE(init_ptr, device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(hip, init_ptr, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_INITIALIZE_IMPL(hip, HIP, init_ptr, device_ptr_name, host_ptr_name, length, replication)
 #define RAJAPERF_HIP_REDUCER_COPY_BACK(device_ptr_name, host_ptr_name, length, replication) \
-  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(hip, device_ptr_name, host_ptr_name, length, replication)
+  RAJAPERF_GPU_REDUCER_COPY_BACK_IMPL(hip, HIP, device_ptr_name, host_ptr_name, length, replication)
 
 
+
+// Define the define*VariantTunings function with the given variants for
+// gpu block size tunings.
 //
-#define RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(kernel, variant)     \
-  void kernel::run##variant##Variant(VariantID vid, size_t tune_idx)           \
+// KERNEL is the name of the kernel type (e.g. DAXPY)
+// VariantName is the name of the Variant (e.g. Cuda)
+// ... the names of the variants to add variant tunings for (e.g. Base_Cuda, Lambda_Cuda, RAJA_Cuda)
+//
+// Example:
+// RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DAXPY, Cuda, Base_Cuda, Lambda_Cuda, RAJA_Cuda)
+//
+#define RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(KERNEL, Variant, ...) \
+  void KERNEL::define##Variant##VariantTunings()                               \
   {                                                                            \
-    size_t t = 0;                                                              \
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                     \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        if (tune_idx == t) {                                                   \
-          setBlockSize(block_size);                                            \
-          run##variant##VariantImpl<block_size>(vid);                          \
+    for (VariantID vid : {__VA_ARGS__}) { \
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                   \
+        if (run_params.numValidGPUBlockSize() == 0u ||                         \
+            run_params.validGPUBlockSize(block_size)) {                        \
+          if (block_size == 0u) {                                              \
+            addVariantTuning<&KERNEL::run##Variant##VariantImpl<block_size>>(  \
+                vid, "block_auto");                                            \
+          } else {                                                             \
+            addVariantTuning<&KERNEL::run##Variant##VariantImpl<block_size>>(  \
+                vid, "block_"+std::to_string(block_size));                     \
+          }                                                                    \
         }                                                                      \
-        t += 1;                                                                \
-      }                                                                        \
-    });                                                                        \
-  }                                                                            \
-                                                                               \
-  void kernel::set##variant##TuningDefinitions(VariantID vid)                  \
-  {                                                                            \
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {                     \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        if (block_size == 0u) {                                                 \
-          addVariantTuningName(vid, "block_auto");                             \
-        } else {                                                               \
-          addVariantTuningName(vid, "block_"+std::to_string(block_size));      \
-        }                                                                      \
-      }                                                                        \
-    });                                                                        \
+      });                                                                      \
+    }                                                                          \
   }
 
 #endif  // closing endif for header file include guard

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -20,7 +21,7 @@ namespace apps
 {
 
 
-void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -36,30 +37,13 @@ void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUS
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
           NODAL_ACCUMULATION_3D_BODY_INDEX;
-
-          Real_type val = 0.125 * vol[i];
-
-          #pragma omp atomic
-          x0[i] += val;
-          #pragma omp atomic
-          x1[i] += val;
-          #pragma omp atomic
-          x2[i] += val;
-          #pragma omp atomic
-          x3[i] += val;
-          #pragma omp atomic
-          x4[i] += val;
-          #pragma omp atomic
-          x5[i] += val;
-          #pragma omp atomic
-          x6[i] += val;
-          #pragma omp atomic
-          x7[i] += val;
+          NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_OMP);
         }
 
       }
@@ -72,29 +56,12 @@ void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUS
 
       auto nodal_accumulation_3d_lam = [=](Index_type ii) {
             NODAL_ACCUMULATION_3D_BODY_INDEX;
-
-            Real_type val = 0.125 * vol[i];
-
-            #pragma omp atomic
-            x0[i] += val;
-            #pragma omp atomic
-            x1[i] += val;
-            #pragma omp atomic
-            x2[i] += val;
-            #pragma omp atomic
-            x3[i] += val;
-            #pragma omp atomic
-            x4[i] += val;
-            #pragma omp atomic
-            x5[i] += val;
-            #pragma omp atomic
-            x6[i] += val;
-            #pragma omp atomic
-            x7[i] += val;
+            NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_OMP);
           };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type ii = ibegin ; ii < iend ; ++ii ) {
@@ -115,11 +82,12 @@ void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUS
                                                res, RAJA::Unowned);
 
       auto nodal_accumulation_3d_lam = [=](Index_type i) {
-                                         NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::omp_atomic);
+                                         NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
                                        };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           zones, nodal_accumulation_3d_lam);
@@ -140,6 +108,8 @@ void NODAL_ACCUMULATION_3D::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUS
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(NODAL_ACCUMULATION_3D, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace apps
 } // end namespace rajaperf

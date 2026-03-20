@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -37,7 +38,7 @@ __global__ void nodal_accumulation_3d(Real_ptr vol,
    Index_type i = ii + ibegin;
    if (i < iend) {
      NODAL_ACCUMULATION_3D_BODY_INDEX;
-     NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::hip_atomic);
+     NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_HIP);
    }
 }
 
@@ -45,6 +46,8 @@ __global__ void nodal_accumulation_3d(Real_ptr vol,
 template < size_t block_size >
 void NODAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = m_domain->n_real_zones;
@@ -56,7 +59,8 @@ void NODAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -78,11 +82,12 @@ void NODAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::hip_exec<block_size, true /*async*/> >( res,
         zones, [=] __device__ (Index_type i) {
-          NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(RAJA::hip_atomic);
+          NODAL_ACCUMULATION_3D_BODY(RAJAPERF_ATOMIC_ADD_RAJA_HIP);
       });
 
     }
@@ -93,7 +98,7 @@ void NODAL_ACCUMULATION_3D::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NODAL_ACCUMULATION_3D, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(NODAL_ACCUMULATION_3D, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace apps
 } // end namespace rajaperf

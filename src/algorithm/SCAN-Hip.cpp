@@ -98,23 +98,23 @@ void SCAN::runHipVariantLibrary(VariantID vid)
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
 #if defined(__HIPCC__)
-    hipErrchk(::rocprim::exclusive_scan(d_temp_storage,
-                                        temp_storage_bytes,
-                                        x+ibegin,
-                                        y+ibegin,
-                                        init_val,
-                                        len,
-                                        binary_op,
-                                        stream));
+    CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::exclusive_scan,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        y+ibegin,
+        init_val,
+        len,
+        binary_op,
+        stream);
 #elif defined(__CUDACC__)
-    hipErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                               temp_storage_bytes,
-                                               x+ibegin,
-                                               y+ibegin,
-                                               binary_op,
-                                               init_val,
-                                               len,
-                                               stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+        d_temp_storage, temp_storage_bytes,
+        x+ibegin,
+        y+ibegin,
+        binary_op,
+        init_val,
+        len,
+        stream);
 #endif
 
     // Allocate temporary storage
@@ -123,27 +123,28 @@ void SCAN::runHipVariantLibrary(VariantID vid)
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       // Run
 #if defined(__HIPCC__)
-      hipErrchk(::rocprim::exclusive_scan(d_temp_storage,
-                                          temp_storage_bytes,
-                                          x+ibegin,
-                                          y+ibegin,
-                                          init_val,
-                                          len,
-                                          binary_op,
-                                          stream));
+      CAMP_HIP_API_INVOKE_AND_CHECK(::rocprim::exclusive_scan,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          y+ibegin,
+          init_val,
+          len,
+          binary_op,
+          stream);
 #elif defined(__CUDACC__)
-      hipErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                 temp_storage_bytes,
-                                                 x+ibegin,
-                                                 y+ibegin,
-                                                 binary_op,
-                                                 init_val,
-                                                 len,
-                                                 stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+          d_temp_storage, temp_storage_bytes,
+          x+ibegin,
+          y+ibegin,
+          binary_op,
+          init_val,
+          len,
+          stream);
 #endif
 
     }
@@ -155,7 +156,8 @@ void SCAN::runHipVariantLibrary(VariantID vid)
   } else if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::exclusive_scan< RAJA::hip_exec<0, true /*async*/> >(res, RAJA_SCAN_ARGS);
 
@@ -170,6 +172,8 @@ void SCAN::runHipVariantLibrary(VariantID vid)
 template < size_t block_size, size_t items_per_thread >
 void SCAN::runHipVariantCustom(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -191,10 +195,11 @@ void SCAN::runHipVariantCustom(VariantID vid)
     allocData(DataSpace::HipDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      hipErrchk( hipMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size,
-                                res.get_stream()) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
 
       RPlaunchHipKernel( (scan_custom<block_size, items_per_thread>),
                          grid_size, block_size,
@@ -216,19 +221,13 @@ void SCAN::runHipVariantCustom(VariantID vid)
 }
 
 
-void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
+void SCAN::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
-    if (tune_idx == t) {
-
-      runHipVariantLibrary(vid);
-
-    }
-
-    t += 1;
+    addVariantTuning<&SCAN::runHipVariantLibrary>(
+        vid, "rocprim");
 
     if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
 
@@ -241,16 +240,12 @@ void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
 
           if (camp::size<hip_items_per_thread>::value == 0) {
 
-            if (tune_idx == t) {
-
-              runHipVariantCustom<decltype(block_size)::value,
+            addVariantTuning<&SCAN::runHipVariantCustom<
+                                 decltype(block_size)::value,
                                  detail::hip::grid_scan_default_items_per_thread<
-                                    Real_type, block_size, RAJA_PERFSUITE_TUNING_HIP_ARCH>::value
-                                 >(vid);
-
-            }
-
-            t += 1;
+                                     Real_type, block_size,
+                                     RAJA_PERFSUITE_TUNING_HIP_ARCH>::value>>(
+                vid, "block_"+std::to_string(block_size));
 
           }
 
@@ -259,58 +254,11 @@ void SCAN::runHipVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidItemsPerThread() == 0u ||
                 run_params.validItemsPerThread(block_size)) {
 
-              if (tune_idx == t) {
-
-                runHipVariantCustom<block_size, items_per_thread>(vid);
-
-              }
-
-              t += 1;
-
-            }
-
-          });
-
-        }
-
-      });
-    }
-
-  } else {
-
-    getCout() << "\n  SCAN : Unknown Hip variant id = " << vid << std::endl;
-
-  }
-}
-
-void SCAN::setHipTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
-
-    addVariantTuningName(vid, "rocprim");
-
-    if ( vid == Base_HIP && run_params.getEnableCustomScan() ) {
-
-      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-        if (run_params.numValidGPUBlockSize() == 0u ||
-            run_params.validGPUBlockSize(block_size)) {
-
-          using hip_items_per_thread = hip_items_per_thread_type<block_size>;
-
-          if (camp::size<hip_items_per_thread>::value == 0) {
-
-            addVariantTuningName(vid, "block_"+std::to_string(block_size));
-
-          }
-
-          seq_for(hip_items_per_thread{}, [&](auto items_per_thread) {
-
-            if (run_params.numValidItemsPerThread() == 0u ||
-                run_params.validItemsPerThread(block_size)) {
-
-              addVariantTuningName(vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
-                                        "block_"+std::to_string(block_size));
+              addVariantTuning<&SCAN::runHipVariantCustom<
+                                   block_size,
+                                   items_per_thread>>(
+                  vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
+                       "block_"+std::to_string(block_size));
 
             }
 

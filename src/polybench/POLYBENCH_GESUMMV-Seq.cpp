@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace rajaperf
 namespace polybench
 {
 
-void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps= getRunReps();
 
@@ -29,7 +30,8 @@ void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < N; ++i ) {
           POLYBENCH_GESUMMV_BODY1;
@@ -59,7 +61,8 @@ void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
                                     };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         for (Index_type i = 0; i < N; ++i ) {
           POLYBENCH_GESUMMV_BODY1;
@@ -105,7 +108,8 @@ void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::kernel_param_resource<EXEC_POL>(
           RAJA::make_tuple( RAJA::RangeSegment{0, N},
@@ -133,6 +137,8 @@ void POLYBENCH_GESUMMV::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_GESUMMV, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

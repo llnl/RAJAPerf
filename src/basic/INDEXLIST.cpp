@@ -24,39 +24,42 @@ INDEXLIST::INDEXLIST(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(100);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 1*sizeof(Index_type) +
-                      1*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 1*sizeof(Index_type) +
-                         1*sizeof(Int_type) * getActualProblemSize() / 2 ); // about 50% output
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(0);
+  setChecksumConsistency(ChecksumConsistency::Consistent);
+  setChecksumTolerance(ChecksumTolerance::zero);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Scan);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-
-#if _OPENMP >= 201811 && defined(RAJA_PERFSUITE_ENABLE_OPENMP5_SCAN)
-  setVariantDefined( Base_OpenMPTarget );
-#endif
-
   if (run_params.getEnableCustomScan()) {
 
-    setVariantDefined( Base_CUDA );
-
-    setVariantDefined( Base_HIP );
+    addVariantTunings();
 
   }
+}
+
+void INDEXLIST::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
+
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
+
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() + // x
+                           1*sizeof(Int_type) * getActualProblemSize() ); // list
+  setBytesReadPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // x
+  setBytesWrittenPerRep( 1*sizeof(Int_type) * getActualProblemSize() / 2 ); // list (about 50% output)
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(0);
 }
 
 INDEXLIST::~INDEXLIST()
@@ -70,15 +73,14 @@ void INDEXLIST::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_len = -1;
 }
 
-void INDEXLIST::updateChecksum(VariantID vid, size_t tune_idx)
+void INDEXLIST::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_list, getActualProblemSize(), vid);
-  checksum[vid][tune_idx] += Checksum_type(m_len);
+  addToChecksum(m_list, getActualProblemSize(), vid);
+  addToChecksum(m_len);
 }
 
 void INDEXLIST::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_list, vid);
 }

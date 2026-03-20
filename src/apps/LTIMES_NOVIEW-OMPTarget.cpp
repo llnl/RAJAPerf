@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -22,7 +23,7 @@ namespace apps
 {
 
 
-void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -31,7 +32,8 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(phidat, elldat, psidat) device( did )
       #pragma omp teams distribute parallel for schedule(static, 1) collapse(3)
@@ -63,7 +65,8 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::kernel_resource<EXEC_POL>(
         RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
@@ -83,13 +86,23 @@ void LTIMES_NOVIEW::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED
   }
 }
 
-void LTIMES_NOVIEW::setOpenMPTargetTuningDefinitions(VariantID vid)
+void LTIMES_NOVIEW::defineOpenMPTargetVariantTunings()
 {
 
-  if (vid == RAJA_OpenMPTarget) {
-    addVariantTuningName(vid, "kernel");
-  } else {
-    addVariantTuningName(vid, "default");
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
+
+    if (vid == RAJA_OpenMPTarget) {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
+          vid, "kernel");
+
+    } else {
+
+      addVariantTuning<&LTIMES_NOVIEW::runOpenMPTargetVariant>(
+          vid, "default");
+
+    }
+
   }
 
 }

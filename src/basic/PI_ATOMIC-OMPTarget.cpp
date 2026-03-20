@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,7 +28,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -38,16 +39,15 @@ void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       initOpenMPDeviceData(pi, &m_pi_init, 1);
 
       #pragma omp target is_device_ptr(pi)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        double x = (double(i) + 0.5) * dx;
-        #pragma omp atomic
-        *pi += dx / (1.0 + x * x);
+        PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
       getOpenMPDeviceData(&m_pi_final, pi, 1);
@@ -61,14 +61,14 @@ void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       initOpenMPDeviceData(pi, &m_pi_init, 1);
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-          double x = (double(i) + 0.5) * dx;
-          RAJA::atomicAdd<RAJA::omp_atomic>(pi, dx / (1.0 + x * x));
+          PI_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP);
       });
 
       getOpenMPDeviceData(&m_pi_final, pi, 1);
@@ -84,6 +84,8 @@ void PI_ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG
   PI_ATOMIC_DATA_TEARDOWN;
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(PI_ATOMIC, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
@@ -60,7 +62,7 @@ cmake \
   -DCMAKE_HIP_ARCHITECTURES="${COMP_ARCH}" \
   -DGPU_TARGETS="${COMP_ARCH}" \
   -DAMDGPU_TARGETS="${COMP_ARCH}" \
-  -DBLT_CXX_STD=c++14 \
+  -DBLT_CXX_STD=c++17 \
   -C ${RAJA_HOSTCONFIG} \
   -DENABLE_HIP=ON \
   -DENABLE_OPENMP=ON \

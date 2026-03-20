@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,14 +10,11 @@
 ///
 /// POLYBENCH_JACOBI_1D kernel reference implementation:
 ///
-/// for (t = 0; t < TSTEPS; t++)
-/// {
-///   for (i = 1; i < N - 1; i++) {
-///     B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
-///   }
-///   for (i = 1; i < N - 1; i++) {
-///     A[i] = 0.33333 * (B[i-1] + B[i] + B[i + 1]);
-///   }
+/// for (i = 1; i < N - 1; i++) {
+///   B[i] = 0.33333 * (A[i-1] + A[i] + A[i + 1]);
+/// }
+/// for (i = 1; i < N - 1; i++) {
+///   A[i] = 0.33333 * (B[i-1] + B[i] + B[i + 1]);
 /// }
 
 
@@ -26,12 +24,7 @@
 #define POLYBENCH_JACOBI_1D_DATA_SETUP \
   Real_ptr A = m_A; \
   Real_ptr B = m_B; \
-  \
-  copyData(getDataSpace(vid), A, getDataSpace(vid), m_Ainit, m_N); \
-  copyData(getDataSpace(vid), B, getDataSpace(vid), m_Binit, m_N); \
-  \
-  const Index_type N = m_N; \
-  const Index_type tsteps = m_tsteps;
+  const Index_type N = m_N;
 
 
 #define POLYBENCH_JACOBI_1D_BODY1 \
@@ -59,20 +52,21 @@ public:
 
   ~POLYBENCH_JACOBI_1D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx); 
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
@@ -87,12 +81,9 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
   Index_type m_N;
-  Index_type m_tsteps;
 
   Real_ptr m_A;
   Real_ptr m_B;
-  Real_ptr m_Ainit;
-  Real_ptr m_Binit;
 };
 
 } // end namespace polybench

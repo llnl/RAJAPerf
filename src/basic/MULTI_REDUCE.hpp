@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -22,8 +23,8 @@
   Index_type num_bins = m_num_bins; \
   Index_ptr bins = m_bins; \
   Data_ptr data = m_data; \
-  std::vector<Data_type>& values_init = m_values_init; \
-  std::vector<Data_type>& values_final = m_values_final;
+  Data_ptr values_init = m_values_init; \
+  Data_ptr values_final = m_values_final;
 
 #define MULTI_REDUCE_DATA_TEARDOWN
 
@@ -46,10 +47,12 @@
   }
 
 #define MULTI_REDUCE_INIT_VALUES_RAJA(policy) \
-  RAJA::MultiReduceSum<policy, Data_type> values(values_init);
+  auto values_init_span = RAJA::make_span(values_init, num_bins); \
+  RAJA::MultiReduceSum<policy, Data_type> values(values_init_span);
 
 #define MULTI_REDUCE_FINALIZE_VALUES_RAJA(policy) \
-  values.get_all(values_final);
+  auto values_final_span = RAJA::make_span(values_final, num_bins); \
+  values.get_all(values_final_span);
 
 #define MULTI_REDUCE_GPU_FINALIZE_VALUES(hvalues, num_bins, replication) \
   for (Index_type b = 0; b < (num_bins); ++b) { \
@@ -61,11 +64,8 @@
   }
 
 
-#define MULTI_REDUCE_BODY \
-  values[bins[i]] += data[i];
-
-#define MULTI_REDUCE_RAJA_BODY(policy) \
-  RAJA::atomicAdd<policy>(&values[bins[i]], data[i]);
+#define MULTI_REDUCE_BODY(atomicAdd) \
+  atomicAdd(values[bins[i]], data[i]);
 
 
 #include "common/KernelBase.hpp"
@@ -87,18 +87,20 @@ public:
 
   ~MULTI_REDUCE();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < Index_type block_size,
              Index_type preferred_global_replication,
@@ -129,8 +131,8 @@ private:
   RunParams::BinAssignmentAlgorithm m_bin_assignment_algorithm;
   Index_ptr m_bins;
   Data_ptr m_data;
-  std::vector<Data_type> m_values_init;
-  std::vector<Data_type> m_values_final;
+  Data_ptr m_values_init;
+  Data_ptr m_values_final;
 };
 
 } // end namespace basic

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -34,6 +35,10 @@
 #define PI_ATOMIC_GPU_DATA_SETUP \
   Real_type dx = m_dx;
 
+#define PI_ATOMIC_BODY(atomicAdd) \
+  Real_type x = (Real_type(i) + 0.5) * dx; \
+  atomicAdd(*pi, dx / (1.0 + x * x));
+
 
 #include "common/KernelBase.hpp"
 
@@ -52,20 +57,22 @@ public:
 
   ~PI_ATOMIC();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineKokkosVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void runKokkosVariant(VariantID vid, size_t tune_idx);
-
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
+  void runKokkosVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);

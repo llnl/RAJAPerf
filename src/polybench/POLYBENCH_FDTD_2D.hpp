@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,28 +10,28 @@
 ///
 /// POLYBENCH_FDTD_2D kernel reference implementation:
 ///
-/// for (t = 0; t < TSTEPS; t++)
-/// {
+/// // removed loop [0, TSTEPS)
+///
+/// for (j = 0; j < ny; j++) {
+///   ey[0][j] = fict[t];
+/// }
+/// for (i = 1; i < nx; i++) {
 ///   for (j = 0; j < ny; j++) {
-///     ey[0][j] = fict[t];
-///   }
-///   for (i = 1; i < nx; i++) {
-///     for (j = 0; j < ny; j++) {
-///       ey[i][j] = ey[i][j] - 0.5*(hz[i][j]-hz[i-1][j]);
-///     }
-///   }
-///   for (i = 0; i < nx; i++) {
-///     for (j = 1; j < ny; j++) {
-///       ex[i][j] = ex[i][j] - 0.5*(hz[i][j]-hz[i][j-1]);
-///     }
-///   }
-///   for (i = 0; i < nx - 1; i++) {
-///     for (j = 0; j < ny - 1; j++) {
-///       hz[i][j] = hz[i][j] - 0.7*(ex[i][j+1] - ex[i][j] +
-///                                  ey[i+1][j] - ey[i][j]);
-///     }
+///     ey[i][j] = ey[i][j] - 0.5*(hz[i][j]-hz[i-1][j]);
 ///   }
 /// }
+/// for (i = 0; i < nx; i++) {
+///   for (j = 1; j < ny; j++) {
+///     ex[i][j] = ex[i][j] - 0.5*(hz[i][j]-hz[i][j-1]);
+///   }
+/// }
+/// for (i = 0; i < nx - 1; i++) {
+///   for (j = 0; j < ny - 1; j++) {
+///     hz[i][j] = hz[i][j] - 0.7*(ex[i][j+1] - ex[i][j] +
+///                                ey[i+1][j] - ey[i][j]);
+///   }
+/// }
+/// // removed end loop
 
 
 #ifndef RAJAPerf_POLYBENCH_FDTD_2D_HPP
@@ -41,7 +42,6 @@
   Index_type t = 0; \
   const Index_type nx = m_nx; \
   const Index_type ny = m_ny; \
-  const Index_type tsteps = m_tsteps; \
 \
   Real_ptr fict = m_fict; \
   Real_ptr ex = m_ex; \
@@ -104,20 +104,21 @@ public:
 
   ~POLYBENCH_FDTD_2D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx); 
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
  
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);

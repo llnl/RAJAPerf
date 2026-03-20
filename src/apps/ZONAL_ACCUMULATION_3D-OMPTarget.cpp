@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,7 +30,7 @@ namespace apps
   const size_t threads_per_team = 256;
 
 
-void ZONAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ZONAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -40,7 +41,8 @@ void ZONAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(x0,x1,x2,x3,x4,x5,x6,x7, \
                                        vol, real_zones) device( did )
@@ -61,7 +63,8 @@ void ZONAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
                                              res, RAJA::Unowned);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         zones, [=](Index_type i) {
@@ -75,6 +78,8 @@ void ZONAL_ACCUMULATION_3D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPER
     getCout() << "\n  ZONAL_ACCUMULATION_3D : Unknown OMP Target variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ZONAL_ACCUMULATION_3D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace apps
 } // end namespace rajaperf

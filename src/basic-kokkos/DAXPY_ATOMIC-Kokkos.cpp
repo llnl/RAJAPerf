@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@
 namespace rajaperf {
 namespace basic {
 
-void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void DAXPY_ATOMIC::runKokkosVariant(VariantID vid)
 {
 
   const Index_type run_reps = getRunReps();
@@ -40,7 +41,8 @@ void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Kokkos::parallel_for(
           "DAXPY_ATOMIC_Kokkos Kokkos_Lambda",
@@ -64,6 +66,8 @@ void DAXPY_ATOMIC::runKokkosVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tu
   moveDataToHostFromKokkosView(x, x_view, iend);
   moveDataToHostFromKokkosView(y, y_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(DAXPY_ATOMIC, Kokkos, Kokkos_Lambda)
 
 } // end namespace basic
 } // end namespace rajaperf

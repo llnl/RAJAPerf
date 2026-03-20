@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -46,9 +47,11 @@ void MEMSET::runCudaVariantLibrary(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      cudaErrchk( cudaMemsetAsync(MEMSET_STD_ARGS, res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
+          MEMSET_STD_ARGS, res.get_stream() );
 
     }
     stopTimer();
@@ -56,7 +59,8 @@ void MEMSET::runCudaVariantLibrary(VariantID vid)
   } else if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       res.memset(MEMSET_STD_ARGS);
 
@@ -74,6 +78,8 @@ void MEMSET::runCudaVariantLibrary(VariantID vid)
 template < size_t block_size >
 void MEMSET::runCudaVariantBlock(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -85,7 +91,8 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -101,7 +108,8 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto memset_lambda = [=] __device__ (Index_type i) {
         MEMSET_BODY;
@@ -122,7 +130,8 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
   } else if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
@@ -140,57 +149,36 @@ void MEMSET::runCudaVariantBlock(VariantID vid)
 
 }
 
-void MEMSET::runCudaVariant(VariantID vid, size_t tune_idx)
+
+// _memset_define_cuda_start
+void MEMSET::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_CUDA || vid == RAJA_CUDA) {
+  for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
 
-    if (tune_idx == t) {
+    if (vid == Base_CUDA || vid == RAJA_CUDA) {
 
-      runCudaVariantLibrary(vid);
+      addVariantTuning<&MEMSET::runCudaVariantLibrary>(
+          vid, "library");
 
     }
 
-    t += 1;
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-  }
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      if (tune_idx == t) {
-        setBlockSize(block_size);
-        runCudaVariantBlock<block_size>(vid);
+        addVariantTuning<&MEMSET::runCudaVariantBlock<block_size>>(
+            vid, "block_"+std::to_string(block_size));
 
       }
 
-      t += 1;
+    });
 
-    }
-
-  });
-}
-
-void MEMSET::setCudaTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_CUDA || vid == RAJA_CUDA) {
-    addVariantTuningName(vid, "library");
   }
 
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      addVariantTuningName(vid, "block_"+std::to_string(block_size));
-
-    }
-
-  });
 }
+// _memset_define_cuda_end
 
 } // end namespace algorithm
 } // end namespace rajaperf

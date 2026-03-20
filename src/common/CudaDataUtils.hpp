@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -64,9 +65,8 @@ void RPlaunchCudaKernel(void (*kernel)(KernArgs...),
   void* arg_arr[count]{(void*)&args...};
 
   auto k = reinterpret_cast<const void*>(kernel);
-  cudaErrchk( cudaLaunchKernel(k, numBlocks, dimBlocks,
-                               arg_arr,
-                               sharedMemBytes, stream) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaLaunchKernel,
+      k, numBlocks, dimBlocks, arg_arr, sharedMemBytes, stream );
 }
 
 /*!
@@ -141,7 +141,7 @@ namespace detail
 inline int getCudaDevice()
 {
   int device = -1;
-  cudaErrchk( cudaGetDevice( &device ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaGetDevice, &device );
   return device;
 }
 
@@ -151,7 +151,7 @@ inline int getCudaDevice()
 inline cudaDeviceProp getCudaDeviceProp()
 {
   cudaDeviceProp prop;
-  cudaErrchk(cudaGetDeviceProperties(&prop, getCudaDevice()));
+  CAMP_CUDA_API_INVOKE_AND_CHECK(cudaGetDeviceProperties, &prop, getCudaDevice());
   return prop;
 }
 
@@ -164,8 +164,8 @@ RAJA_INLINE
 int getCudaOccupancyMaxBlocks(Func&& func, int num_threads, size_t shmem_size)
 {
   int max_blocks = -1;
-  cudaErrchk(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-      &max_blocks, func, num_threads, shmem_size));
+  CAMP_CUDA_API_INVOKE_AND_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor,
+      &max_blocks, func, num_threads, shmem_size);
 
   size_t multiProcessorCount = getCudaDeviceProp().multiProcessorCount;
 
@@ -177,9 +177,9 @@ int getCudaOccupancyMaxBlocks(Func&& func, int num_threads, size_t shmem_size)
  */
 inline void copyCudaData(void* dst_ptr, const void* src_ptr, Size_type len)
 {
-  cudaErrchk( cudaMemcpy( dst_ptr, src_ptr, len,
-              cudaMemcpyDefault ) );
-  cudaErrchk( cudaDeviceSynchronize( ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemcpy,
+      dst_ptr, src_ptr, len, cudaMemcpyDefault );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaDeviceSynchronize, );
 }
 
 /*!
@@ -188,7 +188,7 @@ inline void copyCudaData(void* dst_ptr, const void* src_ptr, Size_type len)
 inline void* allocCudaDeviceData(Size_type len)
 {
   void* dptr = nullptr;
-  cudaErrchk( cudaMalloc( &dptr, len ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMalloc, &dptr, len );
   return dptr;
 }
 
@@ -198,7 +198,8 @@ inline void* allocCudaDeviceData(Size_type len)
 inline void* allocCudaManagedData(Size_type len)
 {
   void* mptr = nullptr;
-  cudaErrchk( cudaMallocManaged( &mptr, len, cudaMemAttachGlobal ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMallocManaged,
+      &mptr, len, cudaMemAttachGlobal );
   return mptr;
 }
 
@@ -208,8 +209,10 @@ inline void* allocCudaManagedData(Size_type len)
 inline void* allocCudaManagedHostPreferredData(Size_type len)
 {
   void* mptr = nullptr;
-  cudaErrchk( cudaMallocManaged( &mptr, len, cudaMemAttachGlobal ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMallocManaged,
+      &mptr, len, cudaMemAttachGlobal );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId );
   return mptr;
 }
 
@@ -219,8 +222,10 @@ inline void* allocCudaManagedHostPreferredData(Size_type len)
 inline void* allocCudaManagedDevicePreferredData(Size_type len)
 {
   void* mptr = nullptr;
-  cudaErrchk( cudaMallocManaged( &mptr, len, cudaMemAttachGlobal ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetPreferredLocation, getCudaDevice() ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMallocManaged,
+      &mptr, len, cudaMemAttachGlobal );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetPreferredLocation, getCudaDevice() );
   return mptr;
 }
 
@@ -230,9 +235,12 @@ inline void* allocCudaManagedDevicePreferredData(Size_type len)
 inline void* allocCudaManagedHostPreferredDeviceAccessedData(Size_type len)
 {
   void* mptr = nullptr;
-  cudaErrchk( cudaMallocManaged( &mptr, len, cudaMemAttachGlobal ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetAccessedBy, getCudaDevice() ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMallocManaged,
+      &mptr, len, cudaMemAttachGlobal );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetAccessedBy, getCudaDevice() );
   return mptr;
 }
 
@@ -242,9 +250,12 @@ inline void* allocCudaManagedHostPreferredDeviceAccessedData(Size_type len)
 inline void* allocCudaManagedDevicePreferredHostAccessedData(Size_type len)
 {
   void* mptr = nullptr;
-  cudaErrchk( cudaMallocManaged( &mptr, len, cudaMemAttachGlobal ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetPreferredLocation, getCudaDevice() ) );
-  cudaErrchk( cudaMemAdvise( mptr, len, cudaMemAdviseSetAccessedBy, cudaCpuDeviceId ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMallocManaged,
+      &mptr, len, cudaMemAttachGlobal );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetPreferredLocation, getCudaDevice() );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemAdvise,
+      mptr, len, cudaMemAdviseSetAccessedBy, cudaCpuDeviceId );
   return mptr;
 }
 
@@ -254,7 +265,8 @@ inline void* allocCudaManagedDevicePreferredHostAccessedData(Size_type len)
 inline void* allocCudaPinnedData(Size_type len)
 {
   void* pptr = nullptr;
-  cudaErrchk( cudaHostAlloc( &pptr, len, cudaHostAllocMapped ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaHostAlloc,
+      &pptr, len, cudaHostAllocMapped );
   return pptr;
 }
 
@@ -264,7 +276,7 @@ inline void* allocCudaPinnedData(Size_type len)
  */
 inline void deallocCudaDeviceData(void* dptr)
 {
-  cudaErrchk( cudaFree( dptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, dptr );
 }
 
 /*!
@@ -272,7 +284,7 @@ inline void deallocCudaDeviceData(void* dptr)
  */
 inline void deallocCudaManagedData(void* mptr)
 {
-  cudaErrchk( cudaFree( mptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, mptr );
 }
 
 /*!
@@ -280,7 +292,7 @@ inline void deallocCudaManagedData(void* mptr)
  */
 inline void deallocCudaManagedHostPreferredData(void* mptr)
 {
-  cudaErrchk( cudaFree( mptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, mptr );
 }
 
 /*!
@@ -288,7 +300,7 @@ inline void deallocCudaManagedHostPreferredData(void* mptr)
  */
 inline void deallocCudaManagedDevicePreferredData(void* mptr)
 {
-  cudaErrchk( cudaFree( mptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, mptr );
 }
 
 /*!
@@ -296,7 +308,7 @@ inline void deallocCudaManagedDevicePreferredData(void* mptr)
  */
 inline void deallocCudaManagedHostPreferredDeviceAccessedData(void* mptr)
 {
-  cudaErrchk( cudaFree( mptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, mptr );
 }
 
 /*!
@@ -304,7 +316,7 @@ inline void deallocCudaManagedHostPreferredDeviceAccessedData(void* mptr)
  */
 inline void deallocCudaManagedDevicePreferredHostAccessedData(void* mptr)
 {
-  cudaErrchk( cudaFree( mptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFree, mptr );
 }
 
 /*!
@@ -312,7 +324,7 @@ inline void deallocCudaManagedDevicePreferredHostAccessedData(void* mptr)
  */
 inline void deallocCudaPinnedData(void* pptr)
 {
-  cudaErrchk( cudaFreeHost( pptr ) );
+  CAMP_CUDA_API_INVOKE_AND_CHECK( cudaFreeHost, pptr );
 }
 
 }  // closing brace for detail namespace

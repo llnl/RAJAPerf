@@ -1,10 +1,10 @@
 on: push
 name: Build
 jobs:
-  build_docker:
+  docker_build_and_test:
     strategy:
       matrix:
-        target: [gcc12, gcc13, clang13, clang15, rocm6, rocm6_desul, intel2024, intel2024_debug, intel2024_sycl]
+        target: [gcc12, gcc12_debug, gcc13, gcc13_desul, clang14_debug, clang14_desul, intel2024_2, intel2024_2_debug, intel2024_2_sycl, rocm6_4_3_desul]
     runs-on: ubuntu-latest
     steps:
     - run: |
@@ -20,7 +20,7 @@ jobs:
     - uses: docker/build-push-action@v6
       with:
         target: ${{ matrix.target }}
-  build_mac:
+  mac_build_and_test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,14 +30,17 @@ jobs:
         with:
           build-dir: build
           options:
-            CMAKE_CXX_STANDARD=14
+            CMAKE_CXX_STANDARD=17
             ENABLE_OPENMP=Off
             CMAKE_BUILD_TYPE=Release
           run-build: true
           build-args: '--parallel 16'
       - uses: threeal/ctest-action@v1.1.0
-  build_windows:
+  windows_build_and_test:
+    runs-on: windows-latest
     strategy:
+      # If any of check fails, allow other jobs to continue running.
+      fail-fast: false
       matrix:
         shared: 
 ## ====================================
@@ -48,14 +51,15 @@ jobs:
 ##          CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=On
         - args: BUILD_SHARED_LIBS=Off
           
-    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout RAJA Perf
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 ## ====================================
 ## Config and build action
-      - uses: threeal/cmake-action@v1.3.0
+      - name: Windows CMake and Build
+        uses: threeal/cmake-action@v1.3.0
         with:
           build-dir: build
           options:
@@ -72,6 +76,14 @@ jobs:
 ##        dir -r D:\a\RAJA\RAJA\build\test
 ## ====================================
 ## Run tests action
-      - uses: threeal/ctest-action@v1.1.0
-        with:
-          build-config: Debug
+#     - name: Run tests
+#       uses: threeal/ctest-action@v1.1.0
+#       with:
+#         build-config: Debug
+## Directly execute ctest command
+      - name: Run tests
+        timeout-minutes: 45
+        run: | 
+          cd build
+          ctest -C Debug -T Test --output-on-failure -V
+        shell: pwsh

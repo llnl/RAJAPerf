@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -31,35 +32,36 @@
 #define RAJAPerf_Apps_MATVEC_3D_STENCIL_HPP
 
 #define MATVEC_3D_STENCIL_DATA_SETUP \
+  Real_ptr x = m_x; \
   Real_ptr b = m_b; \
   \
-  Real_ptr xdbl = m_x - m_domain->kp - m_domain->jp - 1 ; \
-  Real_ptr xdbc = m_x - m_domain->kp - m_domain->jp     ; \
-  Real_ptr xdbr = m_x - m_domain->kp - m_domain->jp + 1 ; \
-  Real_ptr xdcl = m_x - m_domain->kp                - 1 ; \
-  Real_ptr xdcc = m_x - m_domain->kp                    ; \
-  Real_ptr xdcr = m_x - m_domain->kp                + 1 ; \
-  Real_ptr xdfl = m_x - m_domain->kp + m_domain->jp - 1 ; \
-  Real_ptr xdfc = m_x - m_domain->kp + m_domain->jp     ; \
-  Real_ptr xdfr = m_x - m_domain->kp + m_domain->jp + 1 ; \
-  Real_ptr xcbl = m_x                - m_domain->jp - 1 ; \
-  Real_ptr xcbc = m_x                - m_domain->jp     ; \
-  Real_ptr xcbr = m_x                - m_domain->jp + 1 ; \
-  Real_ptr xccl = m_x                               - 1 ; \
-  Real_ptr xccc = m_x                                   ; \
-  Real_ptr xccr = m_x                               + 1 ; \
-  Real_ptr xcfl = m_x                + m_domain->jp - 1 ; \
-  Real_ptr xcfc = m_x                + m_domain->jp     ; \
-  Real_ptr xcfr = m_x                + m_domain->jp + 1 ; \
-  Real_ptr xubl = m_x + m_domain->kp - m_domain->jp - 1 ; \
-  Real_ptr xubc = m_x + m_domain->kp - m_domain->jp     ; \
-  Real_ptr xubr = m_x + m_domain->kp - m_domain->jp + 1 ; \
-  Real_ptr xucl = m_x + m_domain->kp                - 1 ; \
-  Real_ptr xucc = m_x + m_domain->kp                    ; \
-  Real_ptr xucr = m_x + m_domain->kp                + 1 ; \
-  Real_ptr xufl = m_x + m_domain->kp + m_domain->jp - 1 ; \
-  Real_ptr xufc = m_x + m_domain->kp + m_domain->jp     ; \
-  Real_ptr xufr = m_x + m_domain->kp + m_domain->jp + 1 ; \
+  Real_ptr xdbl = x - m_domain->kp - m_domain->jp - 1 ; \
+  Real_ptr xdbc = x - m_domain->kp - m_domain->jp     ; \
+  Real_ptr xdbr = x - m_domain->kp - m_domain->jp + 1 ; \
+  Real_ptr xdcl = x - m_domain->kp                - 1 ; \
+  Real_ptr xdcc = x - m_domain->kp                    ; \
+  Real_ptr xdcr = x - m_domain->kp                + 1 ; \
+  Real_ptr xdfl = x - m_domain->kp + m_domain->jp - 1 ; \
+  Real_ptr xdfc = x - m_domain->kp + m_domain->jp     ; \
+  Real_ptr xdfr = x - m_domain->kp + m_domain->jp + 1 ; \
+  Real_ptr xcbl = x                - m_domain->jp - 1 ; \
+  Real_ptr xcbc = x                - m_domain->jp     ; \
+  Real_ptr xcbr = x                - m_domain->jp + 1 ; \
+  Real_ptr xccl = x                               - 1 ; \
+  Real_ptr xccc = x                                   ; \
+  Real_ptr xccr = x                               + 1 ; \
+  Real_ptr xcfl = x                + m_domain->jp - 1 ; \
+  Real_ptr xcfc = x                + m_domain->jp     ; \
+  Real_ptr xcfr = x                + m_domain->jp + 1 ; \
+  Real_ptr xubl = x + m_domain->kp - m_domain->jp - 1 ; \
+  Real_ptr xubc = x + m_domain->kp - m_domain->jp     ; \
+  Real_ptr xubr = x + m_domain->kp - m_domain->jp + 1 ; \
+  Real_ptr xucl = x + m_domain->kp                - 1 ; \
+  Real_ptr xucc = x + m_domain->kp                    ; \
+  Real_ptr xucr = x + m_domain->kp                + 1 ; \
+  Real_ptr xufl = x + m_domain->kp + m_domain->jp - 1 ; \
+  Real_ptr xufc = x + m_domain->kp + m_domain->jp     ; \
+  Real_ptr xufr = x + m_domain->kp + m_domain->jp + 1 ; \
   \
   Real_ptr dbl = m_matrix.dbl; \
   Real_ptr dbc = m_matrix.dbc; \
@@ -127,20 +129,21 @@ public:
 
   ~MATVEC_3D_STENCIL();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
@@ -188,7 +191,7 @@ private:
   Real_ptr m_x;
   Matrix m_matrix;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_zonal_array_length;
 };

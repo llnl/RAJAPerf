@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -19,9 +20,9 @@
 ///   vmax = RAJA_MAX(vmax, vec[i]) ;
 /// }
 ///
-/// m_vsum += vsum;
-/// m_vmin = RAJA_MIN(m_vmin, vmin);
-/// m_vmax = RAJA_MAX(m_vmax, vmax);
+/// m_vsum = vsum;
+/// m_vmin = vmin;
+/// m_vmax = vmax;
 ///
 /// RAJA_MIN/MAX are macros that do what you would expect.
 ///
@@ -61,24 +62,27 @@ public:
 
   ~REDUCE3_INT();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineOpenMPTargetVariantTunings();
+  void defineKokkosVariantTunings();
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void runKokkosVariant(VariantID vid, size_t tune_idx);
+  void runOpenMPTargetVariant(VariantID vid);
+  void runKokkosVariant(VariantID vid);
 
-  void setSeqTuningDefinitions(VariantID vid);
-  void setOpenMPTuningDefinitions(VariantID vid);
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  template < size_t tune_idx >
+  void runSeqVariant(VariantID vid);
+
+  template < size_t tune_idx >
+  void runOpenMPVariant(VariantID vid);
 
   template < size_t block_size, typename MappingHelper >
   void runCudaVariantBase(VariantID vid);

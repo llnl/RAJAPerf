@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -14,8 +15,7 @@
 namespace rajaperf {
 namespace lcals {
 
-void GEN_LIN_RECUR::runKokkosVariant(VariantID vid,
-                                     size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void GEN_LIN_RECUR::runKokkosVariant(VariantID vid) {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
   const Index_type iend = getActualProblemSize();
@@ -36,7 +36,8 @@ void GEN_LIN_RECUR::runKokkosVariant(VariantID vid,
     Kokkos::fence();
     startTimer();
 
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       Kokkos::parallel_for(
           "GEN_LIN_RECUR_Kokkos Kokkos Lambda -- BODY1",
@@ -74,6 +75,8 @@ void GEN_LIN_RECUR::runKokkosVariant(VariantID vid,
   moveDataToHostFromKokkosView(sb, sb_view, iend);
   moveDataToHostFromKokkosView(stb5, stb5_view, iend);
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(GEN_LIN_RECUR, Kokkos, Kokkos_Lambda)
 
 } // end namespace lcals
 } // end namespace rajaperf

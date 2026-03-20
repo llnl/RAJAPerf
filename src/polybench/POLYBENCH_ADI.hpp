@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,39 +25,39 @@
 ///  e = 1.0 + mul2;
 ///  f = d;
 ///
-/// for (t=1; t<=TSTEPS; t++) {
-///    //Column Sweep
-///    for (i=1; i<N-1; i++) {
-///      v[0][i] = 1.0;
-///      p[i][0] = 0.0;
-///      q[i][0] = v[0][i];
-///      for (j=1; j<N-1; j++) {
-///        p[i][j] = -c / (a*p[i][j-1]+b);
-///        q[i][j] = (-d*u[j][i-1]+(1.0+2.0*d)*u[j][i] -
-///                   f*u[j][i+1]-a*q[i][j-1]) / (a*p[i][j-1]+b);
-///      }
-///
-///      v[N-1][i] = 1.0;
-///      for (k=N-2; k>=1; k--) {
-///        v[k][i] = p[i][k] * v[k+1][i] + q[i][k];
-///      }
+///  // removed loop [1, TSTEPS]
+///  //Column Sweep
+///  for (i=1; i<N-1; i++) {
+///    v[0][i] = 1.0;
+///    p[i][0] = 0.0;
+///    q[i][0] = v[0][i];
+///    for (j=1; j<N-1; j++) {
+///      p[i][j] = -c / (a*p[i][j-1]+b);
+///      q[i][j] = (-d*u[j][i-1]+(1.0+2.0*d)*u[j][i] -
+///                 f*u[j][i+1]-a*q[i][j-1]) / (a*p[i][j-1]+b);
 ///    }
-///    //Row Sweep
-///    for (i=1; i<N-1; i++) {
-///      u[i][0] = 1.0;
-///      p[i][0] = 0.0;
-///      q[i][0] = u[i][0];
-///      for (j=1; j<N-1; j++) {
-///        p[i][j] = -f / (d*p[i][j-1]+e);
-///        q[i][j] = (-a*v[i-1][j]+(1.0+2.0*a)*v[i][j] -
-///                  c*v[i+1][j]-d*q[i][j-1]) / (d*p[i][j-1]+e);
-///      }
-///      u[i][N-1] = 1.0;
-///      for (k=N-2; k>=1; k--) {
-///        u[i][k] = p[i][k] * u[i][k+1] + q[i][k];
-///      }
+///
+///    v[N-1][i] = 1.0;
+///    for (k=N-2; k>=1; k--) {
+///      v[k][i] = p[i][k] * v[k+1][i] + q[i][k];
 ///    }
 ///  }
+///  //Row Sweep
+///  for (i=1; i<N-1; i++) {
+///    u[i][0] = 1.0;
+///    p[i][0] = 0.0;
+///    q[i][0] = u[i][0];
+///    for (j=1; j<N-1; j++) {
+///      p[i][j] = -f / (d*p[i][j-1]+e);
+///      q[i][j] = (-a*v[i-1][j]+(1.0+2.0*a)*v[i][j] -
+///                c*v[i+1][j]-d*q[i][j-1]) / (d*p[i][j-1]+e);
+///    }
+///    u[i][N-1] = 1.0;
+///    for (k=N-2; k>=1; k--) {
+///      u[i][k] = p[i][k] * u[i][k+1] + q[i][k];
+///    }
+///  }
+///  // removed end loop
 
 
 
@@ -66,11 +67,10 @@
 
 #define POLYBENCH_ADI_DATA_SETUP \
   const Index_type n = m_n; \
-  const Index_type tsteps = m_tsteps; \
 \
   Real_type DX = 1.0/(Real_type)n; \
   Real_type DY = 1.0/(Real_type)n; \
-  Real_type DT = 1.0/(Real_type)tsteps; \
+  Real_type DT = 1.0/(Real_type)m_tsteps; \
   Real_type B1 = 2.0; \
   Real_type B2 = 1.0; \
   Real_type mul1 = B1 * DT / (DX * DX); \
@@ -186,20 +186,21 @@ public:
 
   ~POLYBENCH_ADI();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);

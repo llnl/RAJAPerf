@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,6 +19,16 @@
 #include <regex>
 
 namespace rajaperf {
+
+//
+// Static method to set whether kernels are used for warmup purposes or not
+//
+bool KernelBase::setWarmupRun(bool warmup_run)
+{
+  bool previous_state = s_warmup_run;
+  s_warmup_run = warmup_run;
+  return previous_state;
+}
 
 KernelBase::KernelBase(KernelID kid, const RunParams& params)
   : run_params(params)
@@ -38,60 +49,81 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
     uses_feature[fid] = false;
   }
 
+  checksum_consistency = ChecksumConsistency::NumChecksumConsistencies;
+
   complexity = Complexity::NumComplexities;
 
   its_per_rep = -1;
   kernels_per_rep = -1;
+  bytes_allocated_per_rep = -1;
   bytes_read_per_rep = -1;
   bytes_written_per_rep = -1;
+  bytes_modify_written_per_rep = -1;
   bytes_atomic_modify_written_per_rep = -1;
   FLOPs_per_rep = -1;
 
   running_variant = NumVariants;
   running_tuning = getUnknownTuningIdx();
 
-  checksum_scale_factor = 1.0;
+  checksum_reference = 0.0;
+  checksum_reference_variant = NumVariants;
+  checksum_reference_tuning = getUnknownTuningIdx();
+  checksum_reference_tuning_attributes = TuningAttribute::none;
+
+  checksum_tolerance = ChecksumTolerance::normal;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   // Init Caliper column metadata attributes
   // Aggregatable attributes need to be initialized before manager.start()
-  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_DOUBLE,
+  ProblemSize_attr = cali_create_attribute("ProblemSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_DOUBLE,
+  Reps_attr = cali_create_attribute("Reps", CALI_TYPE_INT,
                                     CALI_ATTR_ASVALUE |
                                     CALI_ATTR_AGGREGATABLE |
                                     CALI_ATTR_SKIP_EVENTS);
-  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_DOUBLE,
+  Iters_Rep_attr = cali_create_attribute("Iterations/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_DOUBLE,
+  Kernels_Rep_attr = cali_create_attribute("Kernels/Rep", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
-  Bytes_Rep_attr = cali_create_attribute("Bytes/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Allocated_Rep_attr = cali_create_attribute("BytesAllocated/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_DOUBLE,
-                                              CALI_ATTR_ASVALUE |
-                                              CALI_ATTR_AGGREGATABLE |
-                                              CALI_ATTR_SKIP_EVENTS);
-  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Moved_Rep_attr = cali_create_attribute("BytesMoved/Rep", CALI_TYPE_INT,
+                                         CALI_ATTR_ASVALUE |
+                                         CALI_ATTR_AGGREGATABLE |
+                                         CALI_ATTR_SKIP_EVENTS);
+  Bytes_Touched_Rep_attr = cali_create_attribute("BytesTouched/Rep", CALI_TYPE_INT,
                                                  CALI_ATTR_ASVALUE |
                                                  CALI_ATTR_AGGREGATABLE |
                                                  CALI_ATTR_SKIP_EVENTS);
-  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_DOUBLE,
+  Bytes_Read_Rep_attr = cali_create_attribute("BytesRead/Rep", CALI_TYPE_INT,
+                                              CALI_ATTR_ASVALUE |
+                                              CALI_ATTR_AGGREGATABLE |
+                                              CALI_ATTR_SKIP_EVENTS);
+  Bytes_Written_Rep_attr = cali_create_attribute("BytesWritten/Rep", CALI_TYPE_INT,
+                                                 CALI_ATTR_ASVALUE |
+                                                 CALI_ATTR_AGGREGATABLE |
+                                                 CALI_ATTR_SKIP_EVENTS);
+  Bytes_ModifyWritten_Rep_attr = cali_create_attribute("BytesModifyWritten/Rep", CALI_TYPE_INT,
+                                                       CALI_ATTR_ASVALUE |
+                                                       CALI_ATTR_AGGREGATABLE |
+                                                       CALI_ATTR_SKIP_EVENTS);
+  Bytes_AtomicModifyWritten_Rep_attr = cali_create_attribute("BytesAtomicModifyWritten/Rep", CALI_TYPE_INT,
                                                              CALI_ATTR_ASVALUE |
                                                              CALI_ATTR_AGGREGATABLE |
                                                              CALI_ATTR_SKIP_EVENTS);
-  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_DOUBLE,
+  Flops_Rep_attr = cali_create_attribute("Flops/Rep", CALI_TYPE_INT,
                                          CALI_ATTR_ASVALUE |
                                          CALI_ATTR_AGGREGATABLE |
                                          CALI_ATTR_SKIP_EVENTS);
-  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_DOUBLE,
+  BlockSize_attr = cali_create_attribute("BlockSize", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
@@ -103,7 +135,17 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                               CALI_ATTR_AGGREGATABLE |
                                               CALI_ATTR_SKIP_EVENTS);
   }
+  ChecksumConsistency_attr = cali_create_attribute("ChecksumConsistency", CALI_TYPE_STRING,
+                                                   CALI_ATTR_SKIP_EVENTS);
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
+                                           CALI_ATTR_SKIP_EVENTS);
+  MaxPerfectLoopDimensions_attr = cali_create_attribute("MaxPerfectLoopDimensions", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
+                                           CALI_ATTR_SKIP_EVENTS);
+  ProblemDimensionality_attr = cali_create_attribute("ProblemDimensionality", CALI_TYPE_INT,
+                                           CALI_ATTR_ASVALUE |
+                                           CALI_ATTR_AGGREGATABLE |
                                            CALI_ATTR_SKIP_EVENTS);
 #endif
 }
@@ -114,123 +156,25 @@ KernelBase::~KernelBase()
 }
 
 
-Index_type KernelBase::getTargetProblemSize() const
-{
-  Index_type target_size = static_cast<Index_type>(0);
-  if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Factor) {
-    target_size =
-      static_cast<Index_type>(default_prob_size*run_params.getSizeFactor());
-  } else if (run_params.getSizeMeaning() == RunParams::SizeMeaning::Direct) {
-    target_size = static_cast<Index_type>(run_params.getSize());
-  }
-  return target_size;
-}
-
-Index_type KernelBase::getRunReps() const
-{
-  Index_type run_reps = static_cast<Index_type>(0);
-  if (run_params.getInputState() == RunParams::CheckRun) {
-    run_reps = static_cast<Index_type>(run_params.getCheckRunReps());
-  } else {
-    run_reps = static_cast<Index_type>(default_reps*run_params.getRepFactor());
-  }
-  return run_reps;
-}
-
-void KernelBase::setVariantDefined(VariantID vid)
+void KernelBase::addVariantTuning(VariantID vid, std::string name,
+                                  TuningAttribute attrs,
+                                  variant_tuning_method_pointer method)
 {
   if (!isVariantAvailable(vid)) return;
 
-  switch ( vid ) {
-
-    case Base_Seq :
-    {
-      setSeqTuningDefinitions(vid);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      setSeqTuningDefinitions(vid);
+  variant_tuning_names[vid].emplace_back(std::move(name));
+  variant_tuning_attrs[vid].emplace_back(std::move(attrs));
+  variant_tuning_methods[vid].emplace_back(method);
+  checksum_min[vid].emplace_back(std::numeric_limits<Checksum_type>::max());
+  checksum_max[vid].emplace_back(-std::numeric_limits<Checksum_type>::max());
+  checksum_sum[vid].emplace_back(0.0);
+  num_exec[vid].emplace_back(0);
+  min_time[vid].emplace_back(std::numeric_limits<double>::max());
+  max_time[vid].emplace_back(-std::numeric_limits<double>::max());
+  tot_time[vid].emplace_back(0.0);
+#if defined(RAJA_PERFSUITE_USE_CALIPER)
+  doCaliMetaOnce[vid].emplace_back(true);
 #endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      setOpenMPTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      setOpenMPTargetTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      setCudaTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      setHipTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      setSyclTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-// Required for running Kokkos
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      setKokkosTuningDefinitions(vid);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-  }
-
-  checksum[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  num_exec[vid].resize(variant_tuning_names[vid].size(), 0);
-  min_time[vid].resize(variant_tuning_names[vid].size(), std::numeric_limits<double>::max());
-  max_time[vid].resize(variant_tuning_names[vid].size(), -std::numeric_limits<double>::max());
-  tot_time[vid].resize(variant_tuning_names[vid].size(), 0.0);
-  #if defined(RAJA_PERFSUITE_USE_CALIPER)
-    doCaliMetaOnce[vid].resize(variant_tuning_names[vid].size(), true);
-  #endif
 }
 
 Size_type KernelBase::getDataAlignment() const
@@ -238,7 +182,7 @@ Size_type KernelBase::getDataAlignment() const
   return run_params.getDataAlignment();
 }
 
-Size_type KernelBase::getSizePaddedToDataAlignment(Size_type size) const
+Size_type KernelBase::getNBytesPaddedToDataAlignment(Size_type size) const
 {
   Size_type misalignment = size % run_params.getDataAlignment();
   if (misalignment) {
@@ -371,6 +315,7 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
 {
   running_variant = vid;
   running_tuning = tune_idx;
+  TuningAttribute running_attrs = getTuningAttributes(vid, tune_idx);
 
   resetTimer();
 
@@ -379,7 +324,24 @@ void KernelBase::execute(VariantID vid, size_t tune_idx)
 
   this->runKernel(vid, tune_idx);
 
+  checksum.reset();
   this->updateChecksum(vid, tune_idx);
+  Checksum_type new_checksum = getLastChecksum();
+
+  checksum_min[vid].at(tune_idx) = std::min(new_checksum, checksum_min[vid].at(tune_idx));
+  checksum_max[vid].at(tune_idx) = std::max(new_checksum, checksum_max[vid].at(tune_idx));
+  checksum_sum[vid].at(tune_idx) += new_checksum;
+
+  if ( checksum_reference_variant == NumVariants ||
+       ( !hasTuningAttribute(checksum_reference_tuning_attributes, TuningAttribute::preferred_checksum) &&
+         hasTuningAttribute(running_attrs, TuningAttribute::preferred_checksum) ) ) {
+    // use first run variant tuning as checksum reference
+    // or the first run variant tuning with preferred_checksum
+    checksum_reference = new_checksum;
+    checksum_reference_variant = vid;
+    checksum_reference_tuning = tune_idx;
+    checksum_reference_tuning_attributes = running_attrs;
+  }
 
   this->tearDown(vid, tune_idx);
 
@@ -411,87 +373,8 @@ void KernelBase::runKernel(VariantID vid, size_t tune_idx)
   }
 #endif
 
-  switch ( vid ) {
+  (this->*(variant_tuning_methods[vid].at(tune_idx)))(vid);
 
-    case Base_Seq :
-    {
-      runSeqVariant(vid, tune_idx);
-      break;
-    }
-
-    case Lambda_Seq :
-    case RAJA_Seq :
-    {
-#if defined(RUN_RAJA_SEQ)
-      runSeqVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMP :
-    case Lambda_OpenMP :
-    case RAJA_OpenMP :
-    {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
-      runOpenMPVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-      runOpenMPTargetVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_CUDA :
-    case Lambda_CUDA :
-    case RAJA_CUDA :
-    {
-#if defined(RAJA_ENABLE_CUDA)
-      runCudaVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_HIP :
-    case Lambda_HIP :
-    case RAJA_HIP :
-    {
-#if defined(RAJA_ENABLE_HIP)
-      runHipVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Base_SYCL:
-    case RAJA_SYCL:
-    {
-#if defined(RAJA_ENABLE_SYCL)
-      runSyclVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    case Kokkos_Lambda :
-    {
-#if defined(RUN_KOKKOS)
-      runKokkosVariant(vid, tune_idx);
-#endif
-      break;
-    }
-
-    default : {
-#if 0
-      getCout() << "\n  " << getName()
-                << " : Unknown variant id = " << vid << std::endl;
-#endif
-    }
-
-  }
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   if (doCaliperTiming) {
     KernelBase::setCaliperMgrStop(vid, getVariantTuningName(vid, tune_idx));
@@ -511,7 +394,10 @@ void KernelBase::print(std::ostream& os) const
     os << "\t\t\t\t" << getFeatureName(static_cast<FeatureID>(j))
                      << " : " << uses_feature[j] << std::endl;
   }
+  os << "\t\t\t checksum_consistency = " << getChecksumConsistencyName(checksum_consistency) << std::endl;
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
+  os << "\t\t\t number_max_nested_perfect_loop_levels = " << num_nested_perfect_loops << std::endl;
+  os << "\t\t\t problem_dimensionality = " << problem_dimensionality << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
@@ -521,10 +407,21 @@ void KernelBase::print(std::ostream& os) const
                          << std::endl;
     }
   }
+  os << "\t\t\t variant_tuning_attrs: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < variant_tuning_attrs[j].size(); ++t) {
+      os << "\t\t\t\t\t" << getTuningAttributeName(getTuningAttributes(static_cast<VariantID>(j), t))
+                         << std::endl;
+    }
+  }
   os << "\t\t\t its_per_rep = " << its_per_rep << std::endl;
   os << "\t\t\t kernels_per_rep = " << kernels_per_rep << std::endl;
+  os << "\t\t\t bytes_allocated_per_rep = " << bytes_allocated_per_rep << std::endl;
   os << "\t\t\t bytes_read_per_rep = " << bytes_read_per_rep << std::endl;
   os << "\t\t\t bytes_written_per_rep = " << bytes_written_per_rep << std::endl;
+  os << "\t\t\t bytes_modify_written_per_rep = " << bytes_modify_written_per_rep << std::endl;
   os << "\t\t\t bytes_atomic_modify_written_per_rep = " << bytes_atomic_modify_written_per_rep << std::endl;
   os << "\t\t\t FLOPs_per_rep = " << FLOPs_per_rep << std::endl;
   os << "\t\t\t num_exec: " << std::endl;
@@ -559,12 +456,32 @@ void KernelBase::print(std::ostream& os) const
       os << "\t\t\t\t\t" << tot_time[j][t] << std::endl;
     }
   }
-  os << "\t\t\t checksum: " << std::endl;
+  os << "\t\t\t checksum_reference_variant = " << getVariantName(checksum_reference_variant) << std::endl;
+  os << "\t\t\t checksum_reference_tuning = " << checksum_reference_tuning << std::endl;
+  os << "\t\t\t checksum_reference_tuning_attributes = " << getTuningAttributeName(checksum_reference_tuning_attributes) << std::endl;
+  os << "\t\t\t checksum_reference = " << checksum_reference << std::endl;
+  os << "\t\t\t checksum_min: " << std::endl;
   for (unsigned j = 0; j < NumVariants; ++j) {
     os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
                      << " :" << std::endl;
-    for (size_t t = 0; t < checksum[j].size(); ++t) {
-      os << "\t\t\t\t\t" << checksum[j][t] << std::endl;
+    for (size_t t = 0; t < checksum_min[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_min[j][t] << std::endl;
+    }
+  }
+  os << "\t\t\t checksum_max: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < checksum_max[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_max[j][t] << std::endl;
+    }
+  }
+  os << "\t\t\t checksum_sum: " << std::endl;
+  for (unsigned j = 0; j < NumVariants; ++j) {
+    os << "\t\t\t\t" << getVariantName(static_cast<VariantID>(j))
+                     << " :" << std::endl;
+    for (size_t t = 0; t < checksum_sum[j].size(); ++t) {
+      os << "\t\t\t\t\t" << checksum_sum[j][t].get() << std::endl;
     }
   }
   os << std::endl;
@@ -574,22 +491,35 @@ void KernelBase::print(std::ostream& os) const
 void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
 {
   if(doCaliMetaOnce[vid].at(tune_idx)) {
-    // attributes are class variables initialized in ctor
-    cali_set_double(ProblemSize_attr,(double)getActualProblemSize());
-    cali_set_double(Reps_attr,(double)getRunReps());
-    cali_set_double(Iters_Rep_attr,(double)getItsPerRep());
-    cali_set_double(Kernels_Rep_attr,(double)getKernelsPerRep());
-    cali_set_double(Bytes_Rep_attr,(double)getBytesPerRep());
-    cali_set_double(Bytes_Read_Rep_attr,(double)getBytesReadPerRep());
-    cali_set_double(Bytes_Written_Rep_attr,(double)getBytesWrittenPerRep());
-    cali_set_double(Bytes_AtomicModifyWritten_Rep_attr,(double)getBytesAtomicModifyWrittenPerRep());
-    cali_set_double(Flops_Rep_attr,(double)getFLOPsPerRep());
-    cali_set_double(BlockSize_attr, getBlockSize());
+    // Set values for Index_type.
+    // Some of these may overflow if using "cali_set_int"
+    auto cali_set_helper = [](cali_id_t const& attr, Index_type val) {
+      cali_set(attr, &val, sizeof(Index_type));
+    };
+    cali_set_helper(ProblemSize_attr, getActualProblemSize());
+    cali_set_helper(Reps_attr, getRunReps());
+    cali_set_helper(Iters_Rep_attr, getItsPerRep());
+    cali_set_helper(Kernels_Rep_attr, getKernelsPerRep());
+    cali_set_helper(Bytes_Allocated_Rep_attr, getBytesAllocatedPerRep());
+    cali_set_helper(Bytes_Moved_Rep_attr, getBytesMovedPerRep());
+    cali_set_helper(Bytes_Touched_Rep_attr, getBytesTouchedPerRep());
+    cali_set_helper(Bytes_Read_Rep_attr, getBytesReadPerRep());
+    cali_set_helper(Bytes_Written_Rep_attr, getBytesWrittenPerRep());
+    cali_set_helper(Bytes_ModifyWritten_Rep_attr, getBytesModifyWrittenPerRep());
+    cali_set_helper(Bytes_AtomicModifyWritten_Rep_attr, getBytesAtomicModifyWrittenPerRep());
+    cali_set_helper(Flops_Rep_attr, getFLOPsPerRep());
+    cali_set_helper(BlockSize_attr, getBlockSize());
+    cali_set_helper(MaxPerfectLoopDimensions_attr, getMaxPerfectLoopDimensions());
+    cali_set_helper(ProblemDimensionality_attr, getProblemDimensionality());
+
+    // Feature values will be either (0, 1)
     for (unsigned i = 0; i < FeatureID::NumFeatures; ++i) {
         FeatureID fid = static_cast<FeatureID>(i);
         std::string feature = getFeatureName(fid);
         cali_set_int(Feature_attrs[feature], usesFeature(fid));
     }
+
+    cali_set_string(ChecksumConsistency_attr, getChecksumConsistencyName(getChecksumConsistency()).c_str());
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
   }
 }
@@ -627,9 +557,11 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Reps)", "as": "Reps" },
           { "expr": "any(max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
+          { "expr": "any(max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(max#BlockSize)", "as": "BlockSize" },
@@ -643,8 +575,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(max#View)", "as": "FeatureView" },
           { "expr": "any(max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
+          { "expr": "any(max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
-        "group by": ["Complexity"],
+        "group by": ["Complexity", "ChecksumConsistency"],
       },
       {
         "level"  : "cross",
@@ -654,9 +588,11 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Reps)", "as": "Reps" },
           { "expr": "any(any#max#Iterations/Rep)", "as": "Iterations/Rep" },
           { "expr": "any(any#max#Kernels/Rep)", "as": "Kernels/Rep" },
-          { "expr": "any(any#max#Bytes/Rep)", "as": "Bytes/Rep" },
+          { "expr": "any(any#max#BytesMoved/Rep)", "as": "BytesMoved/Rep" },
+          { "expr": "any(any#max#BytesTouched/Rep)", "as": "BytesTouched/Rep" },
           { "expr": "any(any#max#BytesRead/Rep)", "as": "BytesRead/Rep" },
           { "expr": "any(any#max#BytesWritten/Rep)", "as": "BytesWritten/Rep" },
+          { "expr": "any(any#max#BytesModifyWritten/Rep)", "as": "BytesModifyWritten/Rep" },
           { "expr": "any(any#max#BytesAtomicModifyWritten/Rep)", "as": "BytesAtomicModifyWritten/Rep" },
           { "expr": "any(any#max#Flops/Rep)", "as": "Flops/Rep" },
           { "expr": "any(any#max#BlockSize)", "as": "BlockSize" },
@@ -670,8 +606,10 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#Atomic)", "as": "FeatureAtomic" },
           { "expr": "any(any#max#View)", "as": "FeatureView" },
           { "expr": "any(any#max#MPI)", "as": "FeatureMPI" },
+          { "expr": "any(any#max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
+          { "expr": "any(any#max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
-        "group by": ["Complexity"],
+        "group by": ["Complexity", "ChecksumConsistency"],
       }
     ]
   }
@@ -727,7 +665,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     std::string check_profile;
     // If both not empty
     if (!updatedSpotConfig.empty() && !updatedCaliConfig.empty()) {
-      check_profile = "spot(" + updatedSpotConfig + ")," + updatedCaliConfig;
+      check_profile = updatedCaliConfig + ",spot(" + updatedSpotConfig + ")";
     }
     else if (!updatedSpotConfig.empty()) {
       check_profile = "spot(" + updatedSpotConfig + ")";
@@ -753,24 +691,27 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
     cali::ConfigManager m;
     mgr[vid][tstr] = m;
     std::string vstr = getVariantName(vid);
-    std::string profile;
+    std::string profile = "";
+    std::string sprofile = "";
+    std::string ccprofile = "";
+    if (!updatedCaliConfig.empty()) {
+      ccprofile += updatedCaliConfig + ",";
+    }
     // If --outfile not provided, give generic name
     if (outfile == "RAJAPerf") {
-      profile = "spot(output=" + vstr + "-" + tstr + ".cali";
+      sprofile = "spot(output=" + vstr + "-" + tstr + ".cali";
     }
     else {
       // Ensure cali files for each variant/tuning are not same file name
       if (num_variants_tunings > 1)
         throw std::runtime_error("Error: Cannot use '--outfile' with Caliper if running multiple variants/tunings. Must be running single variant & tuning.");
-      profile = "spot(output=" + outfile + ".cali";
+      sprofile = "spot(output=" + outfile + ".cali";
     }
     if(!updatedSpotConfig.empty()) {
-      profile += "," + updatedSpotConfig;
+      sprofile += "," + updatedSpotConfig;
     }
-    profile += ")";
-    if (!updatedCaliConfig.empty()) {
-      profile += "," + updatedCaliConfig;
-    }
+    sprofile += ")";
+    profile = ccprofile + sprofile;
     std::cout << "Profile: " << profile << std::endl;
     mgr[vid][tstr].add_option_spec(kernel_info_spec);
     mgr[vid][tstr].set_default_parameter("rajaperf_kernel_info", "true");

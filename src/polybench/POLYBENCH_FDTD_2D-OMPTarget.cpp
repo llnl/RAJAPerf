@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -26,7 +27,7 @@ namespace polybench
   //
   const size_t threads_per_team = 256;
 
-void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -35,42 +36,40 @@ void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (t = 0; t < tsteps; ++t) {
+      #pragma omp target is_device_ptr(ey,fict) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type j = 0; j < ny; j++) {
+        POLYBENCH_FDTD_2D_BODY1;
+      }
 
-        #pragma omp target is_device_ptr(ey,fict) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      #pragma omp target is_device_ptr(ey,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 1; i < nx; i++) {
         for (Index_type j = 0; j < ny; j++) {
-          POLYBENCH_FDTD_2D_BODY1;
+          POLYBENCH_FDTD_2D_BODY2;
         }
+      }
 
-        #pragma omp target is_device_ptr(ey,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 1; i < nx; i++) {
-          for (Index_type j = 0; j < ny; j++) {
-            POLYBENCH_FDTD_2D_BODY2;
-          }
+      #pragma omp target is_device_ptr(ex,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 0; i < nx; i++) {
+        for (Index_type j = 1; j < ny; j++) {
+          POLYBENCH_FDTD_2D_BODY3;
         }
+      }
 
-        #pragma omp target is_device_ptr(ex,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 0; i < nx; i++) {
-          for (Index_type j = 1; j < ny; j++) {
-            POLYBENCH_FDTD_2D_BODY3;
-          }
+      #pragma omp target is_device_ptr(ex,ey,hz) device( did )
+      #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
+      for (Index_type i = 0; i < nx - 1; i++) {
+        for (Index_type j = 0; j < ny - 1; j++) {
+          POLYBENCH_FDTD_2D_BODY4;
         }
+      }
 
-        #pragma omp target is_device_ptr(ex,ey,hz) device( did )
-        #pragma omp teams distribute parallel for schedule(static, 1) collapse(2)
-        for (Index_type i = 0; i < nx - 1; i++) {
-          for (Index_type j = 0; j < ny - 1; j++) {
-            POLYBENCH_FDTD_2D_BODY4;
-          }
-        }
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     }
     stopTimer();
 
@@ -91,44 +90,42 @@ void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
       >;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (t = 0; t < tsteps; ++t) {
+      RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
+       [=] (Index_type j) {
+         POLYBENCH_FDTD_2D_BODY1_RAJA;
+      });
 
-        RAJA::forall<EXEC_POL1>( res, RAJA::RangeSegment(0, ny),
-         [=] (Index_type j) {
-           POLYBENCH_FDTD_2D_BODY1_RAJA;
-        });
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, nx},
+                         RAJA::RangeSegment{0, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY2_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, nx},
-                           RAJA::RangeSegment{0, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY2_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx},
+                         RAJA::RangeSegment{1, ny}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY3_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx},
-                           RAJA::RangeSegment{1, ny}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY3_RAJA;
-          }
-        );
+      RAJA::kernel_resource<EXEC_POL234>(
+        RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
+                         RAJA::RangeSegment{0, ny-1}),
+        res,
+        [=] (Index_type i, Index_type j) {
+          POLYBENCH_FDTD_2D_BODY4_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL234>(
-          RAJA::make_tuple(RAJA::RangeSegment{0, nx-1},
-                           RAJA::RangeSegment{0, ny-1}),
-          res,
-          [=] (Index_type i, Index_type j) {
-            POLYBENCH_FDTD_2D_BODY4_RAJA;
-          }
-        );
-
-      }  // tstep loop
-
+      t = (t+1) % m_tsteps;
     } // run_reps
     stopTimer();
 
@@ -137,6 +134,8 @@ void POLYBENCH_FDTD_2D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UN
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_FDTD_2D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

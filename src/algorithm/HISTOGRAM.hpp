@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -21,8 +22,8 @@
 #define HISTOGRAM_DATA_SETUP \
   Index_type num_bins = m_num_bins; \
   Index_ptr bins = m_bins; \
-  std::vector<Data_type>& counts_init = m_counts_init; \
-  std::vector<Data_type>& counts_final = m_counts_final;
+  Data_ptr counts_init = m_counts_init; \
+  Data_ptr counts_final = m_counts_final;
 
 #define HISTOGRAM_DATA_TEARDOWN
 
@@ -45,10 +46,12 @@
   }
 
 #define HISTOGRAM_INIT_COUNTS_RAJA(policy) \
-  RAJA::MultiReduceSum<policy, Data_type> counts(counts_init);
+  auto counts_init_container = RAJA::make_span(counts_init, num_bins); \
+  RAJA::MultiReduceSum<policy, Data_type> counts(counts_init_container);
 
 #define HISTOGRAM_FINALIZE_COUNTS_RAJA(policy) \
-  counts.get_all(counts_final);
+  auto counts_final_container = RAJA::make_span(counts_final, num_bins); \
+  counts.get_all(counts_final_container);
 
 #define HISTOGRAM_GPU_FINALIZE_COUNTS(hcounts, num_bins, replication) \
   for (Index_type b = 0; b < (num_bins); ++b) { \
@@ -59,18 +62,11 @@
     counts_final[b] = count_final; \
   }
 
-
-#define HISTOGRAM_BODY \
-  counts[bins[i]] += static_cast<Data_type>(1);
-
-#define HISTOGRAM_RAJA_BODY(policy) \
-  RAJA::atomicAdd<policy>(&counts[bins[i]], static_cast<Data_type>(1));
+#define HISTOGRAM_BODY(atomicAdd) \
+  atomicAdd(counts[bins[i]], static_cast<Data_type>(1));
 
 #define HISTOGRAM_GPU_BIN_INDEX(bin, offset, replication) \
   ((bin)*(replication) + ((offset)%(replication)))
-
-#define HISTOGRAM_GPU_RAJA_BODY(policy, counts, index, value) \
-  RAJA::atomicAdd<policy>(&(counts)[(index)], (value));
 
 
 #include "common/KernelBase.hpp"
@@ -92,18 +88,20 @@ public:
 
   ~HISTOGRAM();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineOpenMPTargetVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   void runCudaVariantLibrary(VariantID vid);
   void runHipVariantLibrary(VariantID vid);
@@ -136,8 +134,8 @@ private:
   Index_type m_num_bins;
   RunParams::BinAssignmentAlgorithm m_bin_assignment_algorithm;
   Index_ptr m_bins;
-  std::vector<Data_type> m_counts_init;
-  std::vector<Data_type> m_counts_final;
+  Data_ptr m_counts_init;
+  Data_ptr m_counts_final;
 };
 
 } // end namespace algorithm

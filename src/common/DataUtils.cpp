@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -14,6 +15,7 @@
 
 #include "KernelBase.hpp"
 
+#include "RAJA/util/reduce.hpp"
 #include "RAJA/internal/MemUtils_CPU.hpp"
 
 #include <cstdlib>
@@ -514,30 +516,6 @@ void initData(Real_ptr& ptr, Size_type len)
 }
 
 /*
- * Initialize Real_type data array to constant values.
- */
-void initDataConst(Real_ptr& ptr, Size_type len, Real_type val)
-{
-  for (Size_type i = 0; i < len; ++i) {
-    ptr[i] = val;
-  };
-
-  incDataInitCount();
-}
-
-/*
- * Initialize Index_type data array to constant values.
- */
-void initDataConst(Index_type*& ptr, Size_type len, Index_type val)
-{
-  for (Size_type i = 0; i < len; ++i) {
-    ptr[i] = val;
-  };
-
-  incDataInitCount();
-}
-
-/*
  * Initialize Real_type data array with random sign.
  */
 void initDataRandSign(Real_ptr& ptr, Size_type len)
@@ -595,62 +573,84 @@ void initData(Real_type& d)
   incDataInitCount();
 }
 
+// _calc_checksum_impl_start
+/*
+ * Calculate a different multiplier for each index.
+ * The multiplier is in the range [0.5, 1.5]
+ */
+Checksum_type calcMultiplier(double index, double offset)
+{
+  static constexpr double pi_inv = 0.3183098861837906715377675267450287240689L;
+  static constexpr double half = 0.5;
+
+  double val = (index + offset) * pi_inv;
+
+  double mult = val - std::floor(val) + half;
+
+  return mult;
+}
+
 /*
  * Calculate and return checksum for data arrays.
  */
 template < typename Data_getter >
-long double calcChecksumImpl(Data_getter data, Size_type len,
-                             Real_type scale_factor)
+Checksum_type calcChecksumImpl(Data_getter data, Size_type len)
 {
-  long double tchk = 0.0;
-  long double ckahan = 0.0;
+  static constexpr Checksum_type zero = 0.0;
+
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
   for (Size_type j = 0; j < len; ++j) {
-    long double x = (std::abs(std::sin(j+1.0))+0.5) * data(j);
-    long double y = x - ckahan;
-    volatile long double t = tchk + y;
-    volatile long double z = t - tchk;
-    ckahan = z - y;
-    tchk = t;
-#if 0 // RDH DEBUG
-    if ( (j % 10000000) == 0 ) {
-      getCout() << "j : tchk = " << std::setprecision(std::numeric_limits<double>::max_digits10) << j << " : " << tchk << std::endl;
-    }
-#endif
+
+    Checksum_type val = data(j);
+
+    chk += calcMultiplier(j, (val >= zero) ? 1.0 : 0.5) * std::abs(val);
+
   }
-  tchk *= scale_factor;
-  return tchk;
-}
 
-long double calcChecksum(Int_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+  return chk.get();
+}
+// _calc_checksum_impl_end
+
+Checksum_type calcChecksum(Int_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(unsigned long long* ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(unsigned long long* ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Real_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Real_ptr ptr, Size_type len)
 {
   return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(ptr[j]);
-  }, len, scale_factor);
+    return static_cast<Checksum_type>(ptr[j]);
+  }, len);
 }
 
-long double calcChecksum(Complex_ptr ptr, Size_type len,
-                         Real_type scale_factor)
+Checksum_type calcChecksum(Complex_ptr ptr, Size_type len)
 {
-  return calcChecksumImpl([=](Size_type j) {
-    return static_cast<long double>(real(ptr[j])+imag(ptr[j]));
-  }, len, scale_factor);
+  static constexpr Checksum_type zero = 0.0;
+
+  RAJA::KahanSum<Checksum_type> chk(0.0);
+
+  for (Size_type j = 0; j < len; ++j) {
+
+    Checksum_type rval = real(ptr[j]);
+
+    chk += calcMultiplier(j, (rval >= zero) ? 1.00 : 0.50) * std::abs(rval);
+
+    Checksum_type ival = imag(ptr[j]);
+
+    chk += calcMultiplier(j, (ival >= zero) ? 1.25 : 0.75) * std::abs(ival);
+
+  }
+  return chk.get();
 }
 
 }  // closing brace for detail namespace

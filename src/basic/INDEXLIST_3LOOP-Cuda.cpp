@@ -21,18 +21,11 @@ namespace rajaperf
 namespace basic
 {
 
-#define INDEXLIST_3LOOP_DATA_SETUP_CUDA \
-  Index_type* counts; \
-  allocData(DataSpace::CudaDevice, counts, iend+1);
-
-#define INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA \
-  deallocData(DataSpace::CudaDevice, counts);
-
 
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_conditional(Real_ptr x,
-                                      Index_type* counts,
+                                      Index_ptr counts,
                                       Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -44,8 +37,8 @@ __global__ void indexlist_conditional(Real_ptr x,
 template < size_t block_size >
 __launch_bounds__(block_size)
 __global__ void indexlist_make_list(Int_ptr list,
-                                    Index_type* counts,
-                                    Index_type* len,
+                                    Index_ptr counts,
+                                    Index_ptr len,
                                     Index_type iend)
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
@@ -61,6 +54,8 @@ __global__ void indexlist_make_list(Int_ptr list,
 template < size_t block_size >
 void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -71,9 +66,9 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
   if ( vid == Base_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
 
     cudaStream_t stream = res.get_stream();
@@ -83,21 +78,22 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     int scan_size = iend+1 - ibegin;
     void* d_temp_storage = nullptr;
     size_t temp_storage_bytes = 0;
-    cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                temp_storage_bytes,
-                                                counts+ibegin,
-                                                counts+ibegin,
-                                                binary_op,
-                                                init_val,
-                                                scan_size,
-                                                stream));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+        d_temp_storage, temp_storage_bytes,
+        counts+ibegin,
+        counts+ibegin,
+        binary_op,
+        init_val,
+        scan_size,
+        stream);
 
     unsigned char* temp_storage;
     allocData(DataSpace::CudaDevice, temp_storage, temp_storage_bytes);
     d_temp_storage = temp_storage;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -107,21 +103,21 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
                           shmem, stream,
                           x, counts, iend );
 
-      cudaErrchk(::cub::DeviceScan::ExclusiveScan(d_temp_storage,
-                                                  temp_storage_bytes,
-                                                  counts+ibegin,
-                                                  counts+ibegin,
-                                                  binary_op,
-                                                  init_val,
-                                                  scan_size,
-                                                  stream));
+      CAMP_CUDA_API_INVOKE_AND_CHECK(::cub::DeviceScan::ExclusiveScan,
+          d_temp_storage, temp_storage_bytes,
+          counts+ibegin,
+          counts+ibegin,
+          binary_op,
+          init_val,
+          scan_size,
+          stream);
 
       RPlaunchCudaKernel( (indexlist_make_list<block_size>),
                           grid_size, block_size,
                           shmem, stream,
                           list, counts, len, iend );
 
-      cudaErrchk( cudaStreamSynchronize(stream) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, stream );
       m_len = *len;
 
     }
@@ -130,17 +126,18 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
     deallocData(DataSpace::CudaDevice, temp_storage);
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else if ( vid == RAJA_CUDA ) {
 
-    INDEXLIST_3LOOP_DATA_SETUP_CUDA;
+    INDEXLIST_3LOOP_COUNTS_SETUP(DataSpace::CudaDevice);
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend),
@@ -172,14 +169,14 @@ void INDEXLIST_3LOOP::runCudaVariantImpl(VariantID vid)
 
     deallocData(DataSpace::CudaPinned, len);
 
-    INDEXLIST_3LOOP_DATA_TEARDOWN_CUDA;
+    INDEXLIST_3LOOP_COUNTS_TEARDOWN(DataSpace::CudaDevice);
 
   } else {
     getCout() << "\n  INDEXLIST_3LOOP : Unknown variant id = " << vid << std::endl;
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(INDEXLIST_3LOOP, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

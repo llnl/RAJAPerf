@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -47,15 +48,15 @@
   HALO_BASE_DATA_SETUP \
   \
   Index_type num_vars = m_num_vars; \
-  std::vector<Real_ptr> vars = m_vars; \
+  Real_ptr_ptr vars = m_vars; \
   \
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy); \
   \
-  std::vector<Real_ptr> pack_buffers = m_pack_buffers; \
-  std::vector<Real_ptr> unpack_buffers = m_unpack_buffers; \
+  Real_ptr_ptr pack_buffers = m_pack_buffers; \
+  Real_ptr_ptr unpack_buffers = m_unpack_buffers; \
   \
-  std::vector<Real_ptr> send_buffers = m_send_buffers; \
-  std::vector<Real_ptr> recv_buffers = m_recv_buffers;
+  Real_ptr_ptr send_buffers = m_send_buffers; \
+  Real_ptr_ptr recv_buffers = m_recv_buffers;
 
 
 #include "HALO_base.hpp"
@@ -77,18 +78,21 @@ public:
 
   ~HALO_PACKING();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
+
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
   template < size_t block_size >
@@ -101,7 +105,7 @@ private:
   Index_type m_num_vars;
   Index_type m_var_size;
 
-  std::vector<Real_ptr> m_vars;
+  Real_ptr_ptr m_vars;
 };
 
 } // end namespace comm

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -26,7 +27,7 @@ namespace polybench
   //
   const size_t threads_per_team = 256;
 
-void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -35,21 +36,19 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        POLYBENCH_JACOBI_1D_BODY1;
+      }
 
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          POLYBENCH_JACOBI_1D_BODY1;
-        }
-
-        #pragma omp target is_device_ptr(A,B) device( did )
-        #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
-        for (Index_type i = 1; i < N-1; ++i ) {
-          POLYBENCH_JACOBI_1D_BODY2;
-        }
+      #pragma omp target is_device_ptr(A,B) device( did )
+      #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
+      for (Index_type i = 1; i < N-1; ++i ) {
+        POLYBENCH_JACOBI_1D_BODY2;
       }
 
     }
@@ -60,21 +59,18 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
+        RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY1;
+      });
 
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
-          RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY1;
-        });
-
-        RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
-          RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
-            POLYBENCH_JACOBI_1D_BODY2;
-        });
-
-      }
+      RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>> ( res,
+        RAJA::RangeSegment{1, N-1}, [=] (Index_type i) {
+          POLYBENCH_JACOBI_1D_BODY2;
+      });
 
     }
     stopTimer();
@@ -84,6 +80,8 @@ void POLYBENCH_JACOBI_1D::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_1D, OpenMPTarget, Base_OpenMPTarget, RAJA_OpenMPTarget)
 
 } // end namespace polybench
 } // end namespace rajaperf

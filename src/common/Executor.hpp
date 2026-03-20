@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -53,10 +54,7 @@ public:
 private:
   Executor() = delete;
 
-  bool haveReferenceVariant() { return reference_vid < NumVariants; }
-
-  template < typename Kernel >
-  KernelBase* makeKernel();
+  bool haveReferenceVariant() const { return reference_vid < NumVariants; }
 
   void runKernel(KernelBase* kern, bool print_kernel_name);
 
@@ -75,19 +73,33 @@ private:
 
   std::unique_ptr<std::ostream> openOutputFile(const std::string& filename) const;
 
-  void writeKernelInfoSummary(std::ostream& str, bool to_file) const;
+  void writeSeparator(std::ostream& file);
 
-  void writeCSVReport(std::ostream& file, CSVRepMode mode,
-                      RunParams::CombinerOpt combiner, size_t prec);
-  std::string getReportTitle(CSVRepMode mode, RunParams::CombinerOpt combiner);
+  void writeKernelInfoSummary(std::ostream& str,
+                              std::vector<KernelBase*> const& kernels,
+                              bool to_file) const;
+
+  void writeKernelRunDataSummary(std::ostream& str,
+                                 std::vector<KernelBase*> const& kernels) const;
+
+  void writeCSVReport(std::ostream& file,
+                      std::vector<KernelBase*> const& kernels,
+                      CSVRepMode mode,
+                      RunParams::CombinerOpt combiner,
+                      size_t prec);
+  std::string getReportTitle(CSVRepMode mode,
+                             RunParams::CombinerOpt combiner);
   long double getReportDataEntry(CSVRepMode mode, 
                                  RunParams::CombinerOpt combiner,
                                  KernelBase* kern, VariantID vid, 
-                                 size_t tune_idx);
+                                 size_t tune_idx) const;
 
-  void writeChecksumReport(std::ostream& file);
+  void writeChecksumReport(std::ostream& file,
+                           std::vector<KernelBase*> const& kernels);
 
-  void writeFOMReport(std::ostream& file, std::vector<FOMGroup>& fom_groups);
+  void writeFOMReport(std::ostream& file,
+                      std::vector<KernelBase*> const& kernels,
+                      std::vector<FOMGroup>& fom_groups);
   void getFOMGroups(std::vector<FOMGroup>& fom_groups);
 
   RunParams run_params;

@@ -1,27 +1,42 @@
 #!/usr/bin/env bash
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-# and RAJA project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
 
+# Default CMake version if not provided
+DEFAULT_CMAKE_VER=3.24.2
+
 if [[ $# -lt 2 ]]; then
   echo
-  echo "You must pass 2 or more arguments to the script (in this order): "
+  echo "You must pass 2 or more arguments to the script (in the following order): "
   echo "   1) compiler version number"
   echo "   2) HIP compute architecture"
-  echo "   3...) optional arguments to cmake"
+  echo "   3) optional CMake version to load."
   echo
   echo "For example: "
-  echo "    toss4_amdclang_asan.sh 5.7.0 gfx90a"
-  exit
+  echo "    toss4_amdclang.sh 4.1.0 gfx906 [3.27.4]"
+  echo "If no CMake version is provided, version ${DEFAULT_CMAKE_VER} will be used."
+  exit 1
 fi
 
 COMP_VER=$1
 COMP_ARCH=$2
-shift 2
+
+# Detect optional third positional argument as a CMake version if it looks like N.M or N.M.P
+# Otherwise, treat it as a normal CMake argument.
+if [ -n "$3" ] && [[ "$3" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+  CMAKE_VER=$3
+  shift 3
+else
+  CMAKE_VER=$DEFAULT_CMAKE_VER
+  shift 2
+fi
 
 HOSTCONFIG="hip_3_X"
 
@@ -41,6 +56,7 @@ RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/lc-builds/toss4/${HOSTCONFIG}.cmake
 
 echo
 echo "Creating build directory build_${BUILD_SUFFIX} and generating configuration in it"
+echo "Using CMake version: ${CMAKE_VER}"
 echo "Configuration extra arguments:"
 echo "   $@"
 echo
@@ -55,7 +71,7 @@ rm -rf build_${BUILD_SUFFIX} >/dev/null
 mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
 
-module load cmake/3.24.2
+module load cmake/${CMAKE_VER}
 
 # unload rocm to avoid configuration problems where the loaded rocm and COMP_VER
 # are inconsistent causing the rocprim from the module to be used unexpectedly
@@ -86,7 +102,7 @@ cmake \
   -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan" \
   -DCMAKE_HIP_FLAGS="-fsanitize=address -fsanitize=undefined -shared-libsan -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
   -DCMAKE_EXE_LINKER_FLAGS="-L/opt/rocm-${COMP_HIP_VER}/lib/asan/ -L/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan -Wl,-rpath,/opt/rocm-${COMP_HIP_VER}/lib/asan/:/opt/rocm-${COMP_HIP_VER}/llvm/lib/asan:/opt/rocm-${COMP_HIP_VER}/lib/llvm/lib/clang/${COMP_CLANG_MAJOR_VER}/lib/linux -fgpu-rdc --hip-version=${COMP_HIP_VER}" \
-  -DBLT_CXX_STD=c++14 \
+  -DBLT_CXX_STD=c++17 \
   -C ${RAJA_HOSTCONFIG} \
   -DENABLE_HIP=ON \
   -DENABLE_OPENMP=ON \

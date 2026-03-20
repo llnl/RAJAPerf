@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -44,29 +45,17 @@
 #define NODAL_ACCUMULATION_3D_BODY_INDEX \
   Index_type i = real_zones[ii];
 
-#define NODAL_ACCUMULATION_3D_BODY \
+#define NODAL_ACCUMULATION_3D_BODY(atomicAdd) \
   Real_type val = 0.125 * vol[i]; \
   \
-  x0[i] += val; \
-  x1[i] += val; \
-  x2[i] += val; \
-  x3[i] += val; \
-  x4[i] += val; \
-  x5[i] += val; \
-  x6[i] += val; \
-  x7[i] += val;
-
-#define NODAL_ACCUMULATION_3D_RAJA_ATOMIC_BODY(policy) \
-  Real_type val = 0.125 * vol[i]; \
-  \
-  RAJA::atomicAdd<policy>(&x0[i], val); \
-  RAJA::atomicAdd<policy>(&x1[i], val); \
-  RAJA::atomicAdd<policy>(&x2[i], val); \
-  RAJA::atomicAdd<policy>(&x3[i], val); \
-  RAJA::atomicAdd<policy>(&x4[i], val); \
-  RAJA::atomicAdd<policy>(&x5[i], val); \
-  RAJA::atomicAdd<policy>(&x6[i], val); \
-  RAJA::atomicAdd<policy>(&x7[i], val);
+  atomicAdd(x0[i], val); \
+  atomicAdd(x1[i], val); \
+  atomicAdd(x2[i], val); \
+  atomicAdd(x3[i], val); \
+  atomicAdd(x4[i], val); \
+  atomicAdd(x5[i], val); \
+  atomicAdd(x6[i], val); \
+  atomicAdd(x7[i], val);
 
 
 
@@ -88,18 +77,22 @@ public:
 
   ~NODAL_ACCUMULATION_3D();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineKokkosVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
+  void runKokkosVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
@@ -113,7 +106,7 @@ private:
   Real_ptr m_x;
   Real_ptr m_vol;
 
-  ADomain* m_domain;
+  std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_nodal_array_length;
   Index_type m_zonal_array_length;

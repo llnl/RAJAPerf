@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -49,6 +50,8 @@ __global__ void halo_packing_unpack(Real_ptr buffer, Int_ptr list, Real_ptr var,
 template < size_t block_size >
 void HALO_PACKING::runHipVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -58,7 +61,8 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];
@@ -77,12 +81,12 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
         }
 
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(send_buffers[l], pack_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
-        hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+        CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
       }
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
@@ -90,9 +94,9 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(unpack_buffers[l], recv_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -107,7 +111,7 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
           buffer += len;
         }
       }
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize, res.get_stream() );
 
     }
     stopTimer();
@@ -117,7 +121,8 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::hip_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Real_ptr buffer = pack_buffers[l];
@@ -170,7 +175,7 @@ void HALO_PACKING::runHipVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Hip)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_PACKING, Hip, Base_HIP, RAJA_HIP)
 
 } // end namespace comm
 } // end namespace rajaperf

@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -49,6 +50,8 @@ __global__ void halo_exchange_unpack(Real_ptr buffer, Int_ptr list, Real_ptr var
 template < size_t block_size >
 void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -58,7 +61,8 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -83,12 +87,12 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
         }
 
         if (separate_buffers) {
-          cudaErrchk( cudaMemcpyAsync(send_buffers[l], pack_buffers[l],
-                                      len*num_vars*sizeof(Real_type),
-                                      cudaMemcpyDefault, res.get_stream()) );
+          CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemcpyAsync,
+              send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type),
+              cudaMemcpyDefault, res.get_stream() );
         }
 
-        cudaErrchk( cudaStreamSynchronize( res.get_stream() ) );
+        CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, res.get_stream() );
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
             mpi_ranks[l], send_tags[l], MPI_COMM_WORLD, &pack_mpi_requests[l]);
       }
@@ -101,9 +105,9 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          cudaErrchk( cudaMemcpyAsync(unpack_buffers[l], recv_buffers[l],
-                                      len*num_vars*sizeof(Real_type),
-                                      cudaMemcpyDefault, res.get_stream()) );
+          CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemcpyAsync,
+              unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type),
+              cudaMemcpyDefault, res.get_stream() );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -118,7 +122,7 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
           buffer += len;
         }
       }
-      cudaErrchk( cudaStreamSynchronize( res.get_stream() ) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, res.get_stream() );
 
       MPI_Waitall(num_neighbors, pack_mpi_requests.data(), MPI_STATUSES_IGNORE);
 
@@ -130,7 +134,8 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
     using EXEC_POL = RAJA::cuda_exec<block_size, true /*async*/>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -196,7 +201,7 @@ void HALO_EXCHANGE::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(HALO_EXCHANGE, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace comm
 } // end namespace rajaperf

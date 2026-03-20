@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -24,43 +25,37 @@ INIT_VIEW1D::INIT_VIEW1D(const RunParams& params)
   setDefaultProblemSize(1000000);
   setDefaultReps(2500);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 0 );
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize()  );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(1 * getActualProblemSize());
+  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumTolerance(ChecksumTolerance::tight);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(View);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
+  addVariantTunings();
+}
 
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
+void INIT_VIEW1D::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
 
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( Lambda_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( Lambda_HIP );
-  setVariantDefined( RAJA_HIP );
-
-  setVariantDefined( Base_SYCL );
-  setVariantDefined( RAJA_SYCL );
-
-  setVariantDefined( Kokkos_Lambda );
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesReadPerRep( 0 );
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * getActualProblemSize() ); // a
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(1 * getActualProblemSize());
 }
 
 INIT_VIEW1D::~INIT_VIEW1D()
@@ -73,14 +68,13 @@ void INIT_VIEW1D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   m_val = 0.00000123;
 }
 
-void INIT_VIEW1D::updateChecksum(VariantID vid, size_t tune_idx)
+void INIT_VIEW1D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += calcChecksum(m_a, getActualProblemSize(), vid);
+  addToChecksum(m_a, getActualProblemSize(), vid);
 }
 
 void INIT_VIEW1D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_a, vid);
 }
 

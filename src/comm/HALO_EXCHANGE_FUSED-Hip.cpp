@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -91,6 +92,8 @@ __global__ void halo_exchange_fused_unpack(Real_ptr* unpack_buffer_ptrs, Int_ptr
 template < size_t block_size >
 void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -102,7 +105,8 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
     HALO_EXCHANGE_FUSED_MANUAL_FUSER_SETUP_HIP;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       constexpr size_t shmem = 0;
 
@@ -143,12 +147,12 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
       if (separate_buffers) {
         for (Index_type l = 0; l < num_neighbors; ++l) {
           Index_type len = pack_index_list_lengths[l];
-          hipErrchk( hipMemcpyAsync(send_buffers[l], pack_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              send_buffers[l], pack_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
       }
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize,  res.get_stream() );
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = pack_index_list_lengths[l];
         MPI_Isend(send_buffers[l], len*num_vars, Real_MPI_type,
@@ -165,9 +169,9 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
         Int_ptr list = unpack_index_lists[l];
         Index_type len = unpack_index_list_lengths[l];
         if (separate_buffers) {
-          hipErrchk( hipMemcpyAsync(unpack_buffers[l], recv_buffers[l],
-                                    len*num_vars*sizeof(Real_type),
-                                    hipMemcpyDefault, res.get_stream()) );
+          CAMP_HIP_API_INVOKE_AND_CHECK( hipMemcpyAsync,
+              unpack_buffers[l], recv_buffers[l], len*num_vars*sizeof(Real_type),
+              hipMemcpyDefault, res.get_stream() );
         }
 
         for (Index_type v = 0; v < num_vars; ++v) {
@@ -191,7 +195,7 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
                          unpack_list_ptrs,
                          unpack_var_ptrs,
                          unpack_len_ptrs);
-      hipErrchk( hipStreamSynchronize( res.get_stream() ) );
+      CAMP_HIP_API_INVOKE_AND_CHECK( hipStreamSynchronize,  res.get_stream() );
 
       MPI_Waitall(num_neighbors, pack_mpi_requests.data(), MPI_STATUSES_IGNORE);
 
@@ -208,6 +212,8 @@ void HALO_EXCHANGE_FUSED::runHipVariantDirect(VariantID vid)
 template < size_t block_size, typename dispatch_helper >
 void HALO_EXCHANGE_FUSED::runHipVariantWorkGroup(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getHipResource()};
@@ -254,7 +260,8 @@ void HALO_EXCHANGE_FUSED::runHipVariantWorkGroup(VariantID vid)
     pool_unpack.reserve(num_neighbors * num_vars, 1024ull*1024ull);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       for (Index_type l = 0; l < num_neighbors; ++l) {
         Index_type len = unpack_index_list_lengths[l];
@@ -318,92 +325,52 @@ void HALO_EXCHANGE_FUSED::runHipVariantWorkGroup(VariantID vid)
 }
 
 
-void HALO_EXCHANGE_FUSED::runHipVariant(VariantID vid, size_t tune_idx)
+void HALO_EXCHANGE_FUSED::defineHipVariantTunings()
 {
-  size_t t = 0;
 
-  if (vid == Base_HIP) {
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    if (vid == Base_HIP) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-        if (tune_idx == t) {
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-          runHipVariantDirect<block_size>(vid);
+          addVariantTuning<&HALO_EXCHANGE_FUSED::runHipVariantDirect<
+                               block_size>>(
+              vid, "direct_"+std::to_string(block_size));
 
         }
 
-        t += 1;
+      });
 
-      }
+    }
 
-    });
+    if (vid == RAJA_HIP) {
 
-  }
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-  if (vid == RAJA_HIP) {
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+          seq_for(hip_workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+            addVariantTuning<&HALO_EXCHANGE_FUSED::runHipVariantWorkGroup<
+                                 decltype(block_size){},
+                                 decltype(dispatch_helper)>>(
+                vid, decltype(dispatch_helper)::get_name()+"_"+std::to_string(block_size));
 
-        seq_for(hip_workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
+          });
 
-          if (tune_idx == t) {
+        }
 
-            runHipVariantWorkGroup<decltype(block_size){}, decltype(dispatch_helper)>(vid);
+      });
 
-          }
-
-          t += 1;
-
-        });
-
-      }
-
-    });
-
-  }
-}
-
-void HALO_EXCHANGE_FUSED::setHipTuningDefinitions(VariantID vid)
-{
-  if (vid == Base_HIP) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        addVariantTuningName(vid, "direct_"+std::to_string(block_size));
-
-      }
-
-    });
+    }
 
   }
 
-  if (vid == RAJA_HIP) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(hip_workgroup_dispatch_helpers{}, [&](auto dispatch_helper) {
-
-          addVariantTuningName(vid, decltype(dispatch_helper)::get_name()+"_"+std::to_string(block_size));
-
-        });
-
-      }
-
-    });
-
-  }
 }
 
 } // end namespace comm

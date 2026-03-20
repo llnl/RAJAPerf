@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -17,8 +18,8 @@ namespace rajaperf
 namespace stream
 {
 
-
-void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void DOT::runSeqVariant(VariantID vid)
 {
 #if !defined(RUN_RAJA_SEQ)
   RAJA_UNUSED_VAR(tune_idx);
@@ -33,19 +34,58 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
 
     case Base_Seq : {
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      if constexpr (tune_idx == 0) {
 
-        Real_type dot = m_dot_init;
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type i = ibegin; i < iend; ++i ) {
-          DOT_BODY;
+          Real_type dot = m_dot_init;
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot;
+
         }
+        stopTimer();
 
-         m_dot += dot;
+      } else if constexpr (tune_idx == 1) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::KahanSum<Real_type> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
+
+      } else if constexpr (tune_idx == 2) {
+
+        startTimer();
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+          RAJA::BinaryTreeReduce<Real_type, RAJA::operators::plus<Real_type>> dot(m_dot_init);
+
+          for (Index_type i = ibegin; i < iend; ++i ) {
+            DOT_BODY;
+          }
+
+          m_dot += dot.get();
+
+        }
+        stopTimer();
 
       }
-      stopTimer();
 
       break;
     }
@@ -58,7 +98,8 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
                           };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type dot = m_dot_init;
 
@@ -78,10 +119,11 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           RAJA::ReduceSum<RAJA::seq_reduce, Real_type> dot(m_dot_init);
   
@@ -95,10 +137,11 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           Real_type tdot = m_dot_init;
 
@@ -132,12 +175,34 @@ void DOT::runSeqVariant(VariantID vid, size_t tune_idx)
 
 }
 
-void DOT::setSeqTuningDefinitions(VariantID vid)
+
+void DOT::defineSeqVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_Seq) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_Seq, Lambda_Seq, RAJA_Seq}) {
+
+    addVariantTuning<&DOT::runSeqVariant<0>>(
+        vid, "default");
+
+    if (vid == Base_Seq) {
+
+      addVariantTuning<&DOT::runSeqVariant<1>>(
+          vid, "kahan", TuningAttribute::preferred_checksum);
+
+      addVariantTuning<&DOT::runSeqVariant<2>>(
+          vid, "cascade", TuningAttribute::preferred_checksum);
+
+    }
+
+    if (vid == RAJA_Seq) {
+
+      addVariantTuning<&DOT::runSeqVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace stream

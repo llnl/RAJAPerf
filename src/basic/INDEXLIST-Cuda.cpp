@@ -32,10 +32,10 @@ template < size_t block_size, size_t items_per_thread >
 __launch_bounds__(block_size)
 __global__ void indexlist_custom(Real_ptr x,
                                  Int_ptr list,
-                                 Index_type* block_counts,
-                                 Index_type* grid_counts,
+                                 Index_ptr block_counts,
+                                 Index_ptr grid_counts,
                                  unsigned* block_readys,
-                                 Index_type* len,
+                                 Index_ptr len,
                                  Index_type iend)
 {
   // blocks do start running in order in cuda, so a block with a higher
@@ -80,6 +80,8 @@ __global__ void indexlist_custom(Real_ptr x,
 template < size_t block_size, size_t items_per_thread >
 void INDEXLIST::runCudaVariantCustom(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -93,20 +95,21 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
     const size_t grid_size = RAJA_DIVIDE_CEILING_INT((iend-ibegin), block_size*items_per_thread);
     const size_t shmem_size = 0;
 
-    Index_type* len;
+    Index_ptr len;
     allocData(DataSpace::CudaPinned, len, 1);
-    Index_type* block_counts;
+    Index_ptr block_counts;
     allocData(DataSpace::CudaDevice, block_counts, grid_size);
-    Index_type* grid_counts;
+    Index_ptr grid_counts;
     allocData(DataSpace::CudaDevice, grid_counts, grid_size);
     unsigned* block_readys;
     allocData(DataSpace::CudaDevice, block_readys, grid_size);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      cudaErrchk( cudaMemsetAsync(block_readys, 0, sizeof(unsigned)*grid_size, 
-                                  res.get_stream()) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaMemsetAsync,
+          block_readys, 0, sizeof(unsigned)*grid_size, res.get_stream() );
       RPlaunchCudaKernel( (indexlist_custom<block_size, items_per_thread>),
                           grid_size, block_size,
                           shmem_size, res.get_stream(),
@@ -114,7 +117,7 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
                           block_counts, grid_counts, block_readys,
                           len, iend-ibegin );
 
-      cudaErrchk( cudaStreamSynchronize( res.get_stream() ) );
+      CAMP_CUDA_API_INVOKE_AND_CHECK( cudaStreamSynchronize, res.get_stream() );
       m_len = *len;
 
     }
@@ -131,96 +134,54 @@ void INDEXLIST::runCudaVariantCustom(VariantID vid)
 }
 
 
-void INDEXLIST::runCudaVariant(VariantID vid, size_t tune_idx)
+void INDEXLIST::defineCudaVariantTunings()
 {
-  size_t t = 0;
 
-  if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
+  for (VariantID vid : {Base_CUDA}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+      seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
-        using cuda_items_per_thread = cuda_items_per_thread_type<block_size>;
+        if (run_params.numValidGPUBlockSize() == 0u ||
+            run_params.validGPUBlockSize(block_size)) {
 
-        if (camp::size<cuda_items_per_thread>::value == 0) {
+          using cuda_items_per_thread = cuda_items_per_thread_type<block_size>;
 
-          if (tune_idx == t) {
+          if (camp::size<cuda_items_per_thread>::value == 0) {
 
-            runCudaVariantCustom<decltype(block_size)::value,
-                               detail::cuda::grid_scan_default_items_per_thread<
-                                  Real_type, block_size, RAJA_PERFSUITE_TUNING_CUDA_ARCH>::value
-                               >(vid);
+            addVariantTuning<&INDEXLIST::runCudaVariantCustom<
+                                 decltype(block_size)::value,
+                                 detail::cuda::grid_scan_default_items_per_thread<
+                                     Real_type, block_size,
+                                     RAJA_PERFSUITE_TUNING_CUDA_ARCH>::value>>(
+                vid, "block_"+std::to_string(block_size));
 
           }
 
-          t += 1;
+          seq_for(cuda_items_per_thread{}, [&](auto items_per_thread) {
 
-        }
+            if (run_params.numValidItemsPerThread() == 0u ||
+                run_params.validItemsPerThread(block_size)) {
 
-        seq_for(cuda_items_per_thread{}, [&](auto items_per_thread) {
-
-          if (run_params.numValidItemsPerThread() == 0u ||
-              run_params.validItemsPerThread(block_size)) {
-
-            if (tune_idx == t) {
-
-              runCudaVariantCustom<decltype(block_size)::value, items_per_thread>(vid);
+              addVariantTuning<&INDEXLIST::runCudaVariantCustom<
+                                   decltype(block_size)::value,
+                                   items_per_thread>>(
+                  vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
+                       "block_"+std::to_string(block_size));
 
             }
 
-            t += 1;
-
-          }
-
-        });
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  INDEXLIST : Unknown Cuda variant id = " << vid << std::endl;
-
-  }
-}
-
-void INDEXLIST::setCudaTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_CUDA && run_params.getEnableCustomScan() ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        using cuda_items_per_thread = cuda_items_per_thread_type<block_size>;
-
-        if (camp::size<cuda_items_per_thread>::value == 0) {
-
-          addVariantTuningName(vid, "block_"+std::to_string(block_size));
+          });
 
         }
 
-        seq_for(cuda_items_per_thread{}, [&](auto items_per_thread) {
+      });
 
-          if (run_params.numValidItemsPerThread() == 0u ||
-              run_params.validItemsPerThread(block_size)) {
-
-            addVariantTuningName(vid, "itemsPerThread<"+std::to_string(items_per_thread)+">_"
-                                      "block_"+std::to_string(block_size));
-
-          }
-
-        });
-
-      }
-
-    });
+    }
 
   }
+
 }
 
 } // end namespace basic

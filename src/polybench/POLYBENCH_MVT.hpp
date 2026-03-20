@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,15 +10,22 @@
 ///
 /// POLYBENCH_MVT kernel reference implementation:
 ///
+/// Note: The dot products are initialized to 0 to avoid
+///       excessively large checksums
+///
 /// for (int i = 0; i < N; i++) {
+///   Real_type dot = 0.0;
 ///   for (int j = 0; j < N; j++) {
-///     x1[i] += A[i][j] * y1[j];
+///     dot += A[i][j] * y1[j];
 ///   }
+///   x1[i] = dot;
 /// }
 /// for (int i = 0; i < N; i++) {
+///   Real_type dot = 0.0;
 ///   for (int j = 0; j < N; j++) {
-///     x2[i] += A[j][i] * y2[i];
+///     dot += A[j][i] * y2[i];
 ///   }
+///   x2[i] = dot;
 /// }
 
 
@@ -40,7 +48,7 @@
   dot += A[j + i*N] * y1[j];
 
 #define POLYBENCH_MVT_BODY3 \
-  x1[i] += dot;
+  x1[i] = dot;
 
 #define POLYBENCH_MVT_BODY4 \
   Real_type dot = 0.0;
@@ -49,7 +57,7 @@
   dot += A[i + j*N] * y2[i];
 
 #define POLYBENCH_MVT_BODY6 \
-  x2[i] += dot;
+  x2[i] = dot;
 
 
 #define POLYBENCH_MVT_BODY1_RAJA \
@@ -59,7 +67,7 @@
   dot += Aview(i, j) * y1view(j);
 
 #define POLYBENCH_MVT_BODY3_RAJA \
-  x1view(i) += dot;
+  x1view(i) = dot;
 
 #define POLYBENCH_MVT_BODY4_RAJA \
   dot = 0.0;
@@ -68,7 +76,7 @@
   dot += Aview(j, i) * y2view(i);
 
 #define POLYBENCH_MVT_BODY6_RAJA \
-  x2view(i) += dot;
+  x2view(i) = dot;
 
 
 #define POLYBENCH_MVT_VIEWS_RAJA \
@@ -103,20 +111,21 @@ public:
 
   ~POLYBENCH_MVT();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);

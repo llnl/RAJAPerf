@@ -1,14 +1,17 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///
 /// LTIMES_NOVIEW kernel reference implementation:
-///
+/// actual order of phi is gmz
+/// actual order of ell is md
+/// actual order of psi is gdz
 /// for (Index_type z = 0; z < num_z; ++z ) {
 ///   for (Index_type g = 0; g < num_g; ++g ) {
 ///     for (Index_type m = 0; m < num_m; ++m ) {
@@ -57,30 +60,30 @@ public:
 
   ~LTIMES_NOVIEW();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setSeqTuningDefinitions(VariantID vid);
-  void setOpenMPTuningDefinitions(VariantID vid);
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setOpenMPTargetTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  template < size_t tune_idx >
+  void runSeqVariant(VariantID vid);
+  template < size_t tune_idx >
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
-  template < size_t block_size >
-  void runCudaVariantImpl(VariantID vid, size_t tune_idx);
-  template < size_t block_size >
-  void runHipVariantImpl(VariantID vid, size_t tune_idx);
-  template < size_t work_group_size >
-  void runSyclVariantImpl(VariantID vid, size_t tune_idx);
+  template < size_t block_size, size_t tune_idx >
+  void runCudaVariantImpl(VariantID vid);
+  template < size_t block_size, size_t tune_idx >
+  void runHipVariantImpl(VariantID vid);
+  template < size_t work_group_size, size_t tune_idx >
+  void runSyclVariantImpl(VariantID vid);
 
 private:
   static const size_t default_gpu_block_size = 256;

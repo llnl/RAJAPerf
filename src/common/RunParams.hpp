@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -76,12 +77,14 @@ public:
   }
 
   /*!
-   * \brief Enumeration indicating how to interpret size input
+   * \brief Enumeration indicating how to use input variables to generate
+   *        problem size(s)
    */
-  enum SizeMeaning {
+  enum struct SizeMeaning {
     Unset,    /*!< indicates value is unset */
-    Factor,   /*!< multiplier on default kernel iteration space */
-    Direct,   /*!< directly use as kernel iteration space */
+    Default,  /*!< Use default kernel iteration space */
+    Direct,   /*!< directly use size as kernel iteration space */
+    Memory    /*!< directly use memory based on memory_meaning */
   };
 
   /*!
@@ -92,10 +95,41 @@ public:
     switch (sm) {
       case SizeMeaning::Unset:
         return "Unset";
-      case SizeMeaning::Factor:
-        return "Factor";
+      case SizeMeaning::Default:
+        return "Default";
       case SizeMeaning::Direct:
         return "Direct";
+      case SizeMeaning::Memory:
+        return "Memory";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
+   * \brief Enumeration indicating how to interpret memory input
+   */
+  enum struct MemoryMeaning {
+    Unset,    /*!< indicates value is unset */
+    Moved,    /*!< Find problem size that matches bytesMoved/rep */
+    Touched,  /*!< Find problem size that matches bytesTouched/rep */
+    Allocated /*!< Find problem size that matches bytesAllocated/rep */
+  };
+
+  /*!
+   * \brief Translate MemoryMeaning enum value to string
+   */
+  static std::string MemoryMeaningToStr(MemoryMeaning sm)
+  {
+    switch (sm) {
+      case MemoryMeaning::Unset:
+        return "Unset";
+      case MemoryMeaning::Moved:
+        return "Moved";
+      case MemoryMeaning::Touched:
+        return "Touched";
+      case MemoryMeaning::Allocated:
+        return "Allocated";
       default:
         return "Unknown";
     }
@@ -133,6 +167,35 @@ public:
   }
 
   /*!
+   * \brief Enumeration indicating how to run warmup kernels
+   */
+  enum WarmupMode {
+    Disable,       /*!< no warmup kernels will be run */
+    Default,       /*!< run minimal set of warmup kernels based kernels to run */
+    PerfRunSame,   /*!< run warmup pass of each kernel to run */
+    Explicit,      /*!< run warmup pass of each kernel explicitly named for warmup in input */
+  };
+
+  /*!
+   * \brief Translate WarmupMode enum value to string
+   */
+  static std::string WarmupModeToStr(WarmupMode wm)
+  {
+    switch (wm) {
+      case WarmupMode::Disable:
+        return "Disable";
+      case WarmupMode::Default:
+        return "Default";
+      case WarmupMode::PerfRunSame:
+        return "PerfRunSame";
+      case WarmupMode::Explicit:
+        return "Explicit";
+      default:
+        return "Unknown";
+    }
+  }
+
+  /*!
    * \brief Return state of input parsed to this point.
    */
   InputOpt getInputState() const { return input_state; }
@@ -152,9 +215,44 @@ public:
 
   SizeMeaning getSizeMeaning() const { return size_meaning; }
 
+  double getSizeFactor() const { return size_factor; }
+
   double getSize() const { return size; }
 
-  double getSizeFactor() const { return size_factor; }
+  MemoryMeaning getMemoryMeaning() const { return memory_meaning; }
+
+  double getMemory() const { return memory; }
+
+  double getMinSize() const { return min_size; }
+
+  Index_type getTargetSize(Index_type default_prob_size) const
+  {
+    Index_type target_size = static_cast<Index_type>(0);
+    if (size_meaning == RunParams::SizeMeaning::Default) {
+      target_size = default_prob_size;
+    } else if (size_meaning == RunParams::SizeMeaning::Direct) {
+      target_size = static_cast<Index_type>(size);
+    } else if (size_meaning == RunParams::SizeMeaning::Memory) {
+      // This will be fixed up on a per kernel basis later
+      target_size = static_cast<Index_type>(memory);
+    }
+    if (target_size < min_size) {
+      target_size = static_cast<Index_type>(min_size);
+    }
+    target_size = static_cast<Index_type>(target_size*size_factor);
+    return target_size;
+  }
+
+  Index_type getReps(Index_type default_reps) const
+  {
+    Index_type run_reps = static_cast<Index_type>(0);
+    if (input_state == RunParams::CheckRun) {
+      run_reps = static_cast<Index_type>(checkrun_reps);
+    } else {
+      run_reps = static_cast<Index_type>(default_reps*rep_fact);
+    }
+    return run_reps;
+  }
 
   Size_type getDataAlignment() const { return data_alignment; }
 
@@ -164,6 +262,25 @@ public:
   Index_type getLtimesNumD() const { return ltimes_num_d; }
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
+
+  Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
+  Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
+  Index_type getFemsweepGroups() const { return femsweep_groups; }
+  Index_type getFemsweepX() const { return femsweep_mesh_dims[0]; }
+  Index_type getFemsweepY() const { return femsweep_mesh_dims[1]; }
+  Index_type getFemsweepZ() const { return femsweep_mesh_dims[2]; }
+  bool useFemsweepMeshDims() const { return use_femsweep_mesh_dims; }
+
+  size_t numValidFemsweepMeshDims() const { return femsweep_mesh_dims.size(); }
+  bool validFemsweepMeshDims(Index_type femsweep_mesh_dim) const
+  {
+    for (Index_type valid_femsweep_mesh_dims : femsweep_mesh_dims) {
+      if (valid_femsweep_mesh_dims == femsweep_mesh_dim) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   Index_type getArrayOfPtrsArraySize() const { return array_of_ptrs_array_size; }
 
@@ -252,9 +369,10 @@ public:
   const std::string& getAddToCaliperConfig() const { return add_to_cali_config; }
 #endif
 
-  bool getDisableWarmup() const { return disable_warmup; }
+  WarmupMode getWarmupMode() const { return warmup_mode; }
 
-  const std::set<KernelID>& getWarmupKernelIDsToRun() const { return run_warmup_kernels; }
+  const std::set<KernelID>& getSpecifiedWarmupKernelIDs() const
+    { return specified_warmup_kernel_ids; }
   const std::set<KernelID>& getKernelIDsToRun() const { return run_kernels; }
   const std::set<VariantID>& getVariantIDsToRun() const { return run_variants; }
   VariantID getReferenceVariantID() const { return reference_vid; }
@@ -278,10 +396,14 @@ private:
   void printKernelNames(std::ostream& str) const;
   void printVariantNames(std::ostream& str) const;
   void printDataSpaceNames(std::ostream& str) const;
-  void printGroupNames(std::ostream& str) const;
+  void printKernelGroupNames(std::ostream& str) const;
+  void printVariantSetNames(std::ostream& str) const;
   void printFeatureNames(std::ostream& str) const;
   void printFeatureKernels(std::ostream& str) const;
   void printKernelFeatures(std::ostream& str) const;
+  void printChecksumConsistencyNames(std::ostream& str) const;
+  void printChecksumConsistencyKernels(std::ostream& str) const;
+  void printKernelChecksumConsistencies(std::ostream& str) const;
   void printComplexityNames(std::ostream& str) const;
   void printComplexityKernels(std::ostream& str) const;
   void printKernelComplexities(std::ostream& str) const;
@@ -304,8 +426,11 @@ private:
   double rep_fact;       /*!< pct of default kernel reps to run */
 
   SizeMeaning size_meaning; /*!< meaning of size value */
-  double size;           /*!< kernel size to run (input option) */
   double size_factor;    /*!< default kernel size multipier (input option) */
+  double size;           /*!< kernel size to run (input option) */
+  MemoryMeaning memory_meaning; /*!< meaning of memory value */
+  double memory;           /*!< memory size to run (input option) */
+  double min_size;           /*!< minimum kernel size to run (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */
@@ -314,6 +439,12 @@ private:
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
+
+  Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
+  Index_type femsweep_angles_azim; /*!< azimuthal angles used in femsweep kernel (input option) */
+  Index_type femsweep_groups; /*!< groups used in femsweep kernel (input option) */
+  std::vector<Index_type> femsweep_mesh_dims; /*!< mesh dimensions x, y, and z used in femsweep kernel (input option) */
+  bool use_femsweep_mesh_dims; /*!< enable user input of femsweep mesh dimensions x, y, and z in femsweep kernel (true if vector femsweep_mesh_dims is properly passed on command line) */
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 
@@ -364,6 +495,8 @@ private:
   DataSpace syclMPIDataSpace = DataSpace::SyclPinned;
   DataSpace kokkosMPIDataSpace = DataSpace::Copy;
 
+  WarmupMode warmup_mode;
+
   //
   // Arrays to hold input strings for valid/invalid input. Helpful for
   // debugging command line args.
@@ -398,9 +531,7 @@ private:
   std::string add_to_cali_config;
 #endif
 
-  bool disable_warmup;
-
-  std::set<KernelID>  run_warmup_kernels;
+  std::set<KernelID>  specified_warmup_kernel_ids;
   std::set<KernelID>  run_kernels;
   std::set<VariantID> run_variants;
 

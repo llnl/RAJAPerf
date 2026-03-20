@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace basic
 {
 
 
-void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
@@ -37,7 +38,8 @@ void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -53,7 +55,8 @@ void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
     case Lambda_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         #pragma omp parallel for
         for (Index_type i = ibegin; i < iend; ++i ) {
@@ -71,7 +74,8 @@ void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
       auto res{getHostResource()};
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::forall<RAJA::omp_parallel_for_exec>( res,
           RAJA::RangeSegment(ibegin, iend), array_of_ptrs_lam);
@@ -92,6 +96,8 @@ void ARRAY_OF_PTRS::runOpenMPVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(t
   RAJA_UNUSED_VAR(vid);
 #endif
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(ARRAY_OF_PTRS, OpenMP, Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP)
 
 } // end namespace basic
 } // end namespace rajaperf

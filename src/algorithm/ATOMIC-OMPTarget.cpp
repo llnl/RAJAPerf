@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -38,13 +39,13 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
   if ( vid == Base_OpenMPTarget ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       #pragma omp target is_device_ptr(atomic)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        #pragma omp atomic
-        ATOMIC_BODY(i, ATOMIC_VALUE);
+        ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_OMP, i, ATOMIC_VALUE);
       }
 
     }
@@ -55,11 +56,12 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
     auto res{getOmpTargetResource()};
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall<RAJA::omp_target_parallel_for_exec<threads_per_team>>( res,
         RAJA::RangeSegment(ibegin, iend), [=](Index_type i) {
-          ATOMIC_RAJA_BODY(RAJA::omp_atomic, i, ATOMIC_VALUE);
+          ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_OMP, i, ATOMIC_VALUE);
       });
 
     }
@@ -73,47 +75,19 @@ void ATOMIC::runOpenMPTargetVariantReplicate(VariantID vid)
 
 }
 
-void ATOMIC::runOpenMPTargetVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  if ( vid == Base_OpenMPTarget || vid == RAJA_OpenMPTarget ) {
+void ATOMIC::defineOpenMPTargetVariantTunings()
+{
+
+  for (VariantID vid : {Base_OpenMPTarget, RAJA_OpenMPTarget}) {
 
     seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
 
       if (run_params.numValidAtomicReplication() == 0u ||
           run_params.validAtomicReplication(replication)) {
 
-        if (tune_idx == t) {
-
-          runOpenMPTargetVariantReplicate<replication>(vid);
-
-        }
-
-        t += 1;
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  ATOMIC : Unknown OMP Target variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void ATOMIC::setOpenMPTargetTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_OpenMPTarget || vid == RAJA_OpenMPTarget ) {
-
-    seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-      if (run_params.numValidAtomicReplication() == 0u ||
-          run_params.validAtomicReplication(replication)) {
-
-        addVariantTuningName(vid, "replicate_"+std::to_string(replication));
+        addVariantTuning<&ATOMIC::runOpenMPTargetVariantReplicate<replication>>(
+            vid, "replicate_"+std::to_string(replication));
 
       }
 

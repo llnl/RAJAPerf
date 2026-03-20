@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,6 +10,8 @@
 #include "REDUCE_STRUCT.hpp"
 
 #include "RAJA/RAJA.hpp"
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
 #include <limits>
 #include <iostream>
@@ -18,10 +21,9 @@ namespace rajaperf
 namespace basic
 {
 
-
-void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void REDUCE_STRUCT::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -34,7 +36,8 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -66,15 +69,16 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Lambda_OpenMP : {
 
       auto reduce_struct_x_base_lam = [=](Index_type i) -> Real_type {
-                                   return points.x[i];
+                                   return x[i];
                                  };
 
       auto reduce_struct_y_base_lam = [=](Index_type i) -> Real_type {
-                                   return points.y[i];
+                                   return y[i];
                                  };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Real_type xsum = m_init_sum; Real_type ysum = m_init_sum;
         Real_type xmin = m_init_min; Real_type ymin = m_init_min;
@@ -112,10 +116,11 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
  
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> xsum(m_init_sum);
           RAJA::ReduceSum<RAJA::omp_reduce, Real_type> ysum(m_init_sum);
@@ -140,10 +145,11 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           Real_type txsum = m_init_sum;
           Real_type tysum = m_init_sum;
@@ -195,19 +201,28 @@ void REDUCE_STRUCT::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
   }
 
-#else 
-  RAJA_UNUSED_VAR(vid);
-  RAJA_UNUSED_VAR(tune_idx);
-#endif
 }
 
-void REDUCE_STRUCT::setOpenMPTuningDefinitions(VariantID vid)
+void REDUCE_STRUCT::defineOpenMPVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_OpenMP) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
+
+    addVariantTuning<&REDUCE_STRUCT::runOpenMPVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_OpenMP) {
+
+      addVariantTuning<&REDUCE_STRUCT::runOpenMPVariant<1>>(
+          vid, "new");
+
+    }
+
   }
+
 }
 
 } // end namespace basic
 } // end namespace rajaperf
+
+#endif

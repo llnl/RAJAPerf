@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,37 +30,37 @@ REDUCE_STRUCT::REDUCE_STRUCT(const RunParams& params)
 // reduction performance issues
   setDefaultReps(50);
 
-  setActualProblemSize( getTargetProblemSize() );
+  setSize(params.getTargetSize(getDefaultProblemSize()),
+          params.getReps(getDefaultReps()));
 
-  setItsPerRep( getActualProblemSize() );
-  setKernelsPerRep(1);
-  setBytesReadPerRep( 6*sizeof(Real_type) +
-                      2*sizeof(Real_type) * getActualProblemSize() );
-  setBytesWrittenPerRep( 6*sizeof(Real_type) );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep(2 * getActualProblemSize() + 2);
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
+  setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+
+  setMaxPerfectLoopDimensions(1);
+  setProblemDimensionality(1);
 
   setUsesFeature(Forall);
   setUsesFeature(Reduction);
 
-  setVariantDefined( Base_Seq );
-  setVariantDefined( Lambda_Seq );
-  setVariantDefined( RAJA_Seq );
+  addVariantTunings();
+}
 
-  setVariantDefined( Base_OpenMP );
-  setVariantDefined( Lambda_OpenMP );
-  setVariantDefined( RAJA_OpenMP );
+void REDUCE_STRUCT::setSize(Index_type target_size, Index_type target_reps)
+{
+  setActualProblemSize( target_size );
+  setRunReps( target_reps );
 
-  setVariantDefined( Base_OpenMPTarget );
-  setVariantDefined( RAJA_OpenMPTarget );
+  setItsPerRep( getActualProblemSize() );
+  setKernelsPerRep(1);
 
-  setVariantDefined( Base_CUDA );
-  setVariantDefined( RAJA_CUDA );
-
-  setVariantDefined( Base_HIP );
-  setVariantDefined( RAJA_HIP );
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesReadPerRep( 2*sizeof(Real_type) * getActualProblemSize() ); // x, y
+  setBytesWrittenPerRep( 0 );
+  setBytesModifyWrittenPerRep( 0 );
+  setBytesAtomicModifyWrittenPerRep( 0 );
+  setFLOPsPerRep(2 * getActualProblemSize() + 2);
 }
 
 REDUCE_STRUCT::~REDUCE_STRUCT()
@@ -83,21 +84,20 @@ void REDUCE_STRUCT::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   }
 }
 
-void REDUCE_STRUCT::updateChecksum(VariantID vid, size_t tune_idx)
+void REDUCE_STRUCT::updateChecksum(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  checksum[vid][tune_idx] += m_points.GetCenter()[0];
-  checksum[vid][tune_idx] += m_points.GetXMin();
-  checksum[vid][tune_idx] += m_points.GetXMax();
-  checksum[vid][tune_idx] += m_points.GetCenter()[1];
-  checksum[vid][tune_idx] += m_points.GetYMin();
-  checksum[vid][tune_idx] += m_points.GetYMax();
+  addToChecksum(m_points.GetCenter()[0]);
+  addToChecksum(m_points.GetXMin());
+  addToChecksum(m_points.GetXMax());
+  addToChecksum(m_points.GetCenter()[1]);
+  addToChecksum(m_points.GetYMin());
+  addToChecksum(m_points.GetYMax());
 
   return;
 }
 
 void REDUCE_STRUCT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  (void) vid;
   deallocData(m_x, vid);
   deallocData(m_y, vid);
 }

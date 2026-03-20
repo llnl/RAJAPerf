@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace rajaperf
 namespace polybench
 {
 
-void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void POLYBENCH_ADI::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -29,33 +30,30 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
-
-          for (Index_type i = 1; i < n-1; ++i) {
-            POLYBENCH_ADI_BODY2;
-            for (Index_type j = 1; j < n-1; ++j) {
-              POLYBENCH_ADI_BODY3;
-            }
-            POLYBENCH_ADI_BODY4;
-            for (Index_type k = n-2; k >= 1; --k) {
-              POLYBENCH_ADI_BODY5;
-            }
+        for (Index_type i = 1; i < n-1; ++i) {
+          POLYBENCH_ADI_BODY2;
+          for (Index_type j = 1; j < n-1; ++j) {
+            POLYBENCH_ADI_BODY3;
           }
-
-          for (Index_type i = 1; i < n-1; ++i) {
-            POLYBENCH_ADI_BODY6;
-            for (Index_type j = 1; j < n-1; ++j) {
-              POLYBENCH_ADI_BODY7;
-            }
-            POLYBENCH_ADI_BODY8;
-            for (Index_type k = n-2; k >= 1; --k) {
-              POLYBENCH_ADI_BODY9;
-            }
+          POLYBENCH_ADI_BODY4;
+          for (Index_type k = n-2; k >= 1; --k) {
+            POLYBENCH_ADI_BODY5;
           }
+        }
 
-        }  // tstep loop
+        for (Index_type i = 1; i < n-1; ++i) {
+          POLYBENCH_ADI_BODY6;
+          for (Index_type j = 1; j < n-1; ++j) {
+            POLYBENCH_ADI_BODY7;
+          }
+          POLYBENCH_ADI_BODY8;
+          for (Index_type k = n-2; k >= 1; --k) {
+            POLYBENCH_ADI_BODY9;
+          }
+        }
 
       }
       stopTimer();
@@ -92,33 +90,30 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
                                 };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
-
-          for (Index_type i = 1; i < n-1; ++i) {
-            poly_adi_base_lam2(i);
-            for (Index_type j = 1; j < n-1; ++j) {
-              poly_adi_base_lam3(i, j);
-            }
-            poly_adi_base_lam4(i);
-            for (Index_type k = n-2; k >= 1; --k) {
-              poly_adi_base_lam5(i, k);
-            }
+        for (Index_type i = 1; i < n-1; ++i) {
+          poly_adi_base_lam2(i);
+          for (Index_type j = 1; j < n-1; ++j) {
+            poly_adi_base_lam3(i, j);
           }
-
-          for (Index_type i = 1; i < n-1; ++i) {
-            poly_adi_base_lam6(i);
-            for (Index_type j = 1; j < n-1; ++j) {
-              poly_adi_base_lam7(i, j);
-            }
-            poly_adi_base_lam8(i);
-            for (Index_type k = n-2; k >= 1; --k) {
-              poly_adi_base_lam9(i, k);
-            }
+          poly_adi_base_lam4(i);
+          for (Index_type k = n-2; k >= 1; --k) {
+            poly_adi_base_lam5(i, k);
           }
+        }
 
-        }  // tstep loop
+        for (Index_type i = 1; i < n-1; ++i) {
+          poly_adi_base_lam6(i);
+          for (Index_type j = 1; j < n-1; ++j) {
+            poly_adi_base_lam7(i, j);
+          }
+          poly_adi_base_lam8(i);
+          for (Index_type k = n-2; k >= 1; --k) {
+            poly_adi_base_lam9(i, k);
+          }
+        }
 
       }  // run_reps
       stopTimer();
@@ -172,37 +167,34 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
         >;
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        for (Index_type t = 1; t <= tsteps; ++t) {
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeStrideSegment{n-2, 0, -1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeStrideSegment{n-2, 0, -1}),
-            res,
+          poly_adi_lam2,
+          poly_adi_lam3,
+          poly_adi_lam4,
+          poly_adi_lam5
 
-            poly_adi_lam2,
-            poly_adi_lam3,
-            poly_adi_lam4,
-            poly_adi_lam5
+        );
 
-          );
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeSegment{1, n-1},
+                           RAJA::RangeStrideSegment{n-2, 0, -1}),
+          res,
 
-          RAJA::kernel_resource<EXEC_POL>(
-            RAJA::make_tuple(RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeSegment{1, n-1},
-                             RAJA::RangeStrideSegment{n-2, 0, -1}),
-            res,
+          poly_adi_lam6,
+          poly_adi_lam7,
+          poly_adi_lam8,
+          poly_adi_lam9
 
-            poly_adi_lam6,
-            poly_adi_lam7,
-            poly_adi_lam8,
-            poly_adi_lam9
-
-          );
-
-        }  // tstep loop
+        );
 
       } // run_reps
       stopTimer();
@@ -218,6 +210,8 @@ void POLYBENCH_ADI::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_ADI, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace polybench
 } // end namespace rajaperf

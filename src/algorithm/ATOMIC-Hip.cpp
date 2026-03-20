@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -33,7 +34,7 @@ __global__ void atomic_replicate_thread(Real_ptr atomic,
 {
   Index_type i = blockIdx.x * block_size + threadIdx.x;
   if (i < iend) {
-    ATOMIC_RAJA_BODY(RAJA::hip_atomic, i, ATOMIC_VALUE);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP, i, ATOMIC_VALUE);
   }
 }
 
@@ -53,7 +54,7 @@ __global__ void atomic_replicate_warp(Real_ptr atomic,
   __shared__ typename WarpReduce::storage_type warp_reduce_storage;
   WarpReduce().reduce(val, val, warp_reduce_storage);
   if ((threadIdx.x % warp_size) == 0) {
-    ATOMIC_RAJA_BODY(RAJA::hip_atomic, i/warp_size, val);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP, i/warp_size, val);
   }
 }
 
@@ -73,7 +74,7 @@ __global__ void atomic_replicate_block(Real_ptr atomic,
   __shared__ typename BlockReduce::storage_type block_reduce_storage;
   BlockReduce().reduce(val, val, block_reduce_storage);
   if (threadIdx.x == 0) {
-    ATOMIC_RAJA_BODY(RAJA::hip_atomic, blockIdx.x, val);
+    ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_HIP, blockIdx.x, val);
   }
 }
 
@@ -81,6 +82,8 @@ __global__ void atomic_replicate_block(Real_ptr atomic,
 template < size_t block_size, size_t replication >
 void ATOMIC::runHipVariantReplicateGlobal(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -92,7 +95,8 @@ void ATOMIC::runHipVariantReplicateGlobal(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -109,11 +113,12 @@ void ATOMIC::runHipVariantReplicateGlobal(VariantID vid)
   } else  if ( vid == RAJA_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall<RAJA::hip_exec<block_size, true /*async*/>>( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-          ATOMIC_RAJA_BODY(RAJA::hip_atomic, i, ATOMIC_VALUE);
+          ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_HIP, i, ATOMIC_VALUE);
       });
 
     }
@@ -129,6 +134,8 @@ void ATOMIC::runHipVariantReplicateGlobal(VariantID vid)
 template < size_t block_size, size_t replication >
 void ATOMIC::runHipVariantReplicateWarp(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -139,7 +146,8 @@ void ATOMIC::runHipVariantReplicateWarp(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -163,6 +171,8 @@ void ATOMIC::runHipVariantReplicateWarp(VariantID vid)
 template < size_t block_size, size_t replication >
 void ATOMIC::runHipVariantReplicateBlock(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type iend = getActualProblemSize();
 
@@ -173,7 +183,8 @@ void ATOMIC::runHipVariantReplicateBlock(VariantID vid)
   if ( vid == Base_HIP ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -194,11 +205,11 @@ void ATOMIC::runHipVariantReplicateBlock(VariantID vid)
   ATOMIC_DATA_TEARDOWN(replication);
 }
 
-void ATOMIC::runHipVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
+void ATOMIC::defineHipVariantTunings()
+{
+
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -210,14 +221,9 @@ void ATOMIC::runHipVariant(VariantID vid, size_t tune_idx)
           if (run_params.numValidAtomicReplication() == 0u ||
               run_params.validAtomicReplication(replication)) {
 
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runHipVariantReplicateGlobal<block_size, replication>(vid);
-
-            }
-
-            t += 1;
+            addVariantTuning<&ATOMIC::runHipVariantReplicateGlobal<block_size, replication>>(
+                vid, "replicate_"+std::to_string(replication)+
+                     "_global_"+std::to_string(block_size));
 
           }
 
@@ -230,14 +236,9 @@ void ATOMIC::runHipVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidAtomicReplication() == 0u ||
                 run_params.validAtomicReplication(replication)) {
 
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runHipVariantReplicateWarp<block_size, replication>(vid);
-
-              }
-
-              t += 1;
+              addVariantTuning<&ATOMIC::runHipVariantReplicateWarp<block_size, replication>>(
+                  vid, "replicate_"+std::to_string(replication)+
+                       "_warp_"+std::to_string(block_size));
 
             }
 
@@ -248,75 +249,9 @@ void ATOMIC::runHipVariant(VariantID vid, size_t tune_idx)
             if (run_params.numValidAtomicReplication() == 0u ||
                 run_params.validAtomicReplication(replication)) {
 
-              if (tune_idx == t) {
-
-                setBlockSize(block_size);
-                runHipVariantReplicateBlock<block_size, replication>(vid);
-
-              }
-
-              t += 1;
-
-            }
-
-          });
-
-        }
-
-      }
-
-    });
-
-  } else {
-
-    getCout() << "\n  ATOMIC : Unknown Hip variant id = " << vid << std::endl;
-
-  }
-
-}
-
-void ATOMIC::setHipTuningDefinitions(VariantID vid)
-{
-  if ( vid == Base_HIP || vid == RAJA_HIP ) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-          if (run_params.numValidAtomicReplication() == 0u ||
-              run_params.validAtomicReplication(replication)) {
-
-            addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                      "_global_"+std::to_string(block_size));
-
-          }
-
-        });
-
-        if ( vid == Base_HIP ) {
-
-          seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-            if (run_params.numValidAtomicReplication() == 0u ||
-                run_params.validAtomicReplication(replication)) {
-
-              addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                        "_warp_"+std::to_string(block_size));
-
-            }
-
-          });
-
-          seq_for(gpu_atomic_replications_type{}, [&](auto replication) {
-
-            if (run_params.numValidAtomicReplication() == 0u ||
-                run_params.validAtomicReplication(replication)) {
-
-              addVariantTuningName(vid, "replicate_"+std::to_string(replication)+
-                                        "_block_"+std::to_string(block_size));
+              addVariantTuning<&ATOMIC::runHipVariantReplicateBlock<block_size, replication>>(
+                  vid, "replicate_"+std::to_string(replication)+
+                       "_block_"+std::to_string(block_size));
 
             }
 

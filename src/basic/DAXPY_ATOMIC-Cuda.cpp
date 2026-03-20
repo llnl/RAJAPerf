@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -29,7 +30,7 @@ __global__ void daxpy_atomic(Real_ptr y, Real_ptr x,
 {
    Index_type i = blockIdx.x * blockDim.x + threadIdx.x;
    if (i < iend) {
-     DAXPY_ATOMIC_RAJA_BODY(RAJA::cuda_atomic);
+     DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA);
    }
 }
 
@@ -37,6 +38,8 @@ __global__ void daxpy_atomic(Real_ptr y, Real_ptr x,
 template < size_t block_size >
 void DAXPY_ATOMIC::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -48,7 +51,8 @@ void DAXPY_ATOMIC::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
       constexpr size_t shmem = 0;
@@ -64,10 +68,11 @@ void DAXPY_ATOMIC::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       auto daxpy_atomic_lambda = [=] __device__ (Index_type i) {
-        DAXPY_ATOMIC_RAJA_BODY(RAJA::cuda_atomic);
+        DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_CUDA);
       }; 
 
       const size_t grid_size = RAJA_DIVIDE_CEILING_INT(iend, block_size);
@@ -85,11 +90,12 @@ void DAXPY_ATOMIC::runCudaVariantImpl(VariantID vid)
   } else if ( vid == RAJA_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-        DAXPY_ATOMIC_RAJA_BODY(RAJA::cuda_atomic);
+        DAXPY_ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_RAJA_CUDA);
       });
 
     }
@@ -100,7 +106,7 @@ void DAXPY_ATOMIC::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DAXPY_ATOMIC, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(DAXPY_ATOMIC, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace basic
 } // end namespace rajaperf

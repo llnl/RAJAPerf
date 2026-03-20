@@ -7,8 +7,10 @@ then
 fi
 
 ###############################################################################
-# Copyright (c) 2017-25, Lawrence Livermore National Security, LLC and RAJA
-# project contributors. See the RAJAPerf/LICENSE file for details.
+# Copyright (c) Lawrence Livermore National Security, LLC and other
+# RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+# files for dates and other details. No copyright assignment is required
+# to contribute to RAJA Performance Suite.
 #
 # SPDX-License-Identifier: (BSD-3-Clause)
 ###############################################################################
@@ -39,9 +41,9 @@ update_spack_upstream=${UPDATE_SPACK_UPSTREAM:-false}
 # REGISTRY_TOKEN allows you to provide your own personal access token to the CI
 # registry. Be sure to set the token with at least read access to the registry.
 registry_token=${REGISTRY_TOKEN:-""}
-ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
 ci_registry_image=${CI_REGISTRY_IMAGE:-"czregistry.llnl.gov:5050/radiuss/rajaperf"}
-ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
+export ci_registry_user=${CI_REGISTRY_USER:-"${USER}"}
+export ci_registry_token=${CI_JOB_TOKEN:-"${registry_token}"}
 
 timed_message ()
 {
@@ -145,7 +147,7 @@ then
     if [[ -n ${ci_registry_token} ]]
     then
         timed_message "GitLab registry as Spack Buildcache"
-        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username ${ci_registry_user} --oci-password ${ci_registry_token} gitlab_ci oci://${ci_registry_image}
+        ${spack_cmd} -D ${spack_env_path} mirror add --unsigned --oci-username-variable ci_registry_user --oci-password-variable ci_registry_token gitlab_ci oci://${ci_registry_image}
     fi
 
     timed_message "Spack build of dependencies"
@@ -211,7 +213,7 @@ then
     timed_message "Cleaning working directory"
 
     # Map CPU core allocations
-    declare -A core_counts=(["lassen"]=40 ["ruby"]=28 ["poodle"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32)
+    declare -A core_counts=(["lassen"]=40 ["poodle"]=28 ["dane"]=28 ["matrix"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
 
     # If using Multi-project, set up the submodule
     if [[ -n ${raja_version} ]]
@@ -231,16 +233,16 @@ then
     rm -rf ${build_dir} 2>/dev/null
     mkdir -p ${build_dir} && cd ${build_dir}
 
+    timed_message "Building RAJAPerf"
     # We set the MPI tests command to allow overlapping.
     # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
     # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
     cmake_options=""
-    if [[ "${truehostname}" == "ruby" || "${truehostname}" == "poodle" ]]
+    if [[ "${truehostname}" == "poodle" || "${truehostname}" == "dane" ]]
     then
         cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
     fi
 
-    date
     $cmake_exe \
       -C ${hostconfig_path} \
       ${cmake_options} \

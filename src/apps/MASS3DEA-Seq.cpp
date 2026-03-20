@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,8 +19,8 @@
 namespace rajaperf {
 namespace apps {
 
-void MASS3DEA::runSeqVariant(VariantID vid,
-                             size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MASS3DEA::runSeqVariant(VariantID vid)
+{
   const Index_type run_reps = getRunReps();
 
   MASS3DEA_DATA_SETUP;
@@ -29,31 +30,32 @@ void MASS3DEA::runSeqVariant(VariantID vid,
   case Base_Seq: {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (int e = 0; e < NE; ++e) {
+      for (Index_type e = 0; e < NE; ++e) {
 
         MASS3DEA_0_CPU
 
-        CPU_FOREACH(d, x, MEA_D1D) {
-          CPU_FOREACH(q, y, MEA_Q1D) {
+        CPU_FOREACH(d, x, mea::D1D) {
+          CPU_FOREACH(q, y, mea::Q1D) {
             MASS3DEA_1
           }
         }
 
         MASS3DEA_2_CPU
 
-        CPU_FOREACH(k1, x, MEA_Q1D) {
-          CPU_FOREACH(k2, y, MEA_Q1D) {
-            CPU_FOREACH(k3, z, MEA_Q1D) {
+        CPU_FOREACH(k1, x, mea::Q1D) {
+          CPU_FOREACH(k2, y, mea::Q1D) {
+            CPU_FOREACH(k3, z, mea::Q1D) {
               MASS3DEA_3
             }
           }
         }
 
-        CPU_FOREACH(i1, x, MEA_D1D) {
-          CPU_FOREACH(i2, y, MEA_D1D) {
-            CPU_FOREACH(i3, z, MEA_D1D) {
+        CPU_FOREACH(i1, x, mea::D1D) {
+          CPU_FOREACH(i2, y, mea::D1D) {
+            CPU_FOREACH(i3, z, mea::D1D) {
               MASS3DEA_4
             }
           }
@@ -83,23 +85,25 @@ void MASS3DEA::runSeqVariant(VariantID vid,
     using inner_z = RAJA::LoopPolicy<RAJA::seq_exec>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+      //clang-format off
       RAJA::launch<launch_policy>( res,
           RAJA::LaunchParams(),
           [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
-              [&](int e) {
+              [&](Index_type e) {
 
                   MASS3DEA_0
 
                   RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
-                    [&](int ) {
-                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                        [&](int d) {
-                          RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                            [&](int q) {
+                    [&](Index_type ) {
+                      RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                        [&](Index_type d) {
+                          RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                            [&](Index_type q) {
                               MASS3DEA_1
                             }
                           ); // RAJA::loop<inner_y>
@@ -110,12 +114,12 @@ void MASS3DEA::runSeqVariant(VariantID vid,
 
                   MASS3DEA_2
 
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                    [&](int k1) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                        [&](int k2) {
-                          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MEA_Q1D),
-                            [&](int k3) {
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                    [&](Index_type k1) {
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                        [&](Index_type k2) {
+                          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::Q1D),
+                            [&](Index_type k3) {
                               MASS3DEA_3
                             }
                           ); // RAJA::loop<inner_x>
@@ -126,12 +130,12 @@ void MASS3DEA::runSeqVariant(VariantID vid,
 
                   ctx.teamSync();
 
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                    [&](int i1) {
-                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                        [&](int i2) {
-                          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MEA_D1D),
-                            [&](int i3) {
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                    [&](Index_type i1) {
+                      RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                        [&](Index_type i2) {
+                          RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mea::D1D),
+                            [&](Index_type i3) {
                               MASS3DEA_4
                             }
                           ); // RAJA::loop<inner_x>
@@ -144,6 +148,7 @@ void MASS3DEA::runSeqVariant(VariantID vid,
             );    // RAJA::loop<outer_x>
           }       // outer lambda (ctx)
       );          // RAJA::launch
+      //clang-format on
 
     } // loop over kernel reps
     stopTimer();
@@ -156,6 +161,8 @@ void MASS3DEA::runSeqVariant(VariantID vid,
     getCout() << "\n MASS3DEA : Unknown Seq variant id = " << vid << std::endl;
   }
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MASS3DEA, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

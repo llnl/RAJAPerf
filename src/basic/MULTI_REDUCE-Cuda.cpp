@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -47,7 +48,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
       Index_type i = blockIdx.x * block_size + threadIdx.x;
       for ( ; i < iend ; i += gridDim.x * block_size ) {
         Index_type offset = bins[i] * shared_replication + RAJA::power_of_2_mod(Index_type{threadIdx.x}, shared_replication);
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&shared_values[offset], data[i]);
+        RAJAPERF_ATOMIC_ADD_CUDA(shared_values[offset], data[i]);
       }
     }
 
@@ -59,7 +60,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
       }
       if (block_sum != MULTI_REDUCE::Data_type(0)) {
         Index_type offset = bin + RAJA::power_of_2_mod(Index_type{blockIdx.x}, global_replication) * num_bins;
-        RAJA::atomicAdd<RAJA::cuda_atomic>(&global_values[offset], block_sum);
+        RAJAPERF_ATOMIC_ADD_CUDA(global_values[offset], block_sum);
       }
     }
 
@@ -69,7 +70,7 @@ __global__ void multi_reduce_atomic_runtime(MULTI_REDUCE::Data_ptr global_values
     Index_type warp = i / warp_size;
     for ( ; i < iend ; i += gridDim.x * block_size ) {
       Index_type offset = bins[i] + RAJA::power_of_2_mod(warp, global_replication) * num_bins;
-      RAJA::atomicAdd<RAJA::cuda_atomic>(&global_values[offset], data[i]);
+      RAJAPERF_ATOMIC_ADD_CUDA(global_values[offset], data[i]);
     }
   }
 }
@@ -80,6 +81,8 @@ template < Index_type block_size,
            typename MappingHelper >
 void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
@@ -93,7 +96,7 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
     auto* func = &multi_reduce_atomic_runtime<block_size>;
 
     cudaFuncAttributes func_attr;
-    cudaErrchk(cudaFuncGetAttributes(&func_attr, (const void*)func));
+    CAMP_CUDA_API_INVOKE_AND_CHECK(cudaFuncGetAttributes, &func_attr, (const void*)func);
     const Index_type max_shmem_per_block_in_bytes = func_attr.maxDynamicSharedSizeBytes;
     const Index_type max_shared_replication = max_shmem_per_block_in_bytes / sizeof(Data_type) / num_bins;
 
@@ -110,7 +113,8 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
     RAJAPERF_CUDA_REDUCER_SETUP(Data_ptr, values, hvalues, num_bins, global_replication);
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RAJAPERF_CUDA_REDUCER_INITIALIZE(values_init, values, hvalues, num_bins, global_replication);
 
@@ -161,14 +165,15 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
             RAJA::GetOffsetLeft<int>>>>;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       MULTI_REDUCE_INIT_VALUES_RAJA(multi_reduce_policy);
 
       RAJA::forall<exec_policy>( res,
           RAJA::RangeSegment(ibegin, iend),
           [=] __device__ (Index_type i) {
-        MULTI_REDUCE_BODY;
+        MULTI_REDUCE_BODY(RAJAPERF_ADD);
       });
 
       MULTI_REDUCE_FINALIZE_VALUES_RAJA(multi_reduce_policy);
@@ -182,11 +187,11 @@ void MULTI_REDUCE::runCudaVariantAtomicRuntime(VariantID vid)
 
 }
 
-void MULTI_REDUCE::runCudaVariant(VariantID vid, size_t tune_idx)
-{
-  size_t t = 0;
 
-  if ( vid == Base_CUDA || vid == RAJA_CUDA ) {
+void MULTI_REDUCE::defineCudaVariantTunings()
+{
+
+  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
 
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
 
@@ -198,17 +203,13 @@ void MULTI_REDUCE::runCudaVariant(VariantID vid, size_t tune_idx)
           if (camp::size<cuda_atomic_global_replications_type>::value == 0 &&
               camp::size<cuda_atomic_shared_replications_type>::value == 0 ) {
 
-            if (tune_idx == t) {
-
-              setBlockSize(block_size);
-              runCudaVariantAtomicRuntime<decltype(block_size)::value,
-                                          default_cuda_atomic_global_replication,
-                                          default_cuda_atomic_shared_replication,
-                                          decltype(mapping_helper)>(vid);
-
-            }
-
-            t += 1;
+            addVariantTuning<&MULTI_REDUCE::runCudaVariantAtomicRuntime<
+                                 decltype(block_size)::value,
+                                 default_cuda_atomic_global_replication,
+                                 default_cuda_atomic_shared_replication,
+                                 decltype(mapping_helper)>>(
+                vid, "atomic_"+decltype(mapping_helper)::get_name()+"_"+
+                     std::to_string(block_size));
 
           }
 
@@ -219,17 +220,16 @@ void MULTI_REDUCE::runCudaVariant(VariantID vid, size_t tune_idx)
 
               seq_for(cuda_atomic_shared_replications_type{}, [&](auto shared_replication) {
 
-                if (tune_idx == t) {
-
-                  setBlockSize(block_size);
-                  runCudaVariantAtomicRuntime<decltype(block_size)::value,
-                                              decltype(global_replication)::value,
-                                              decltype(shared_replication)::value,
-                                              decltype(mapping_helper)>(vid);
-
-                }
-
-                t += 1;
+                addVariantTuning<&MULTI_REDUCE::runCudaVariantAtomicRuntime<
+                                     decltype(block_size)::value,
+                                     decltype(global_replication)::value,
+                                     decltype(shared_replication)::value,
+                                     decltype(mapping_helper)>>(
+                    vid, "atomic_"
+                         "shared("+std::to_string(shared_replication)+")_"+
+                         "global("+std::to_string(global_replication)+")_"+
+                         decltype(mapping_helper)::get_name()+"_"+
+                         std::to_string(block_size));
 
               });
 
@@ -243,56 +243,7 @@ void MULTI_REDUCE::runCudaVariant(VariantID vid, size_t tune_idx)
 
     });
 
-  } else {
-
-    getCout() << "\n  MULTI_REDUCE : Unknown Cuda variant id = " << vid << std::endl;
-
   }
-
-}
-
-void MULTI_REDUCE::setCudaTuningDefinitions(VariantID vid)
-{
-  seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
-
-      seq_for(gpu_mapping::reducer_helpers{}, [&](auto mapping_helper) {
-
-        if (camp::size<cuda_atomic_global_replications_type>::value == 0 &&
-            camp::size<cuda_atomic_shared_replications_type>::value == 0 ) {
-
-          addVariantTuningName(vid, "atomic_"+
-                                    decltype(mapping_helper)::get_name()+"_"+
-                                    std::to_string(block_size));
-
-        }
-
-        seq_for(cuda_atomic_global_replications_type{}, [&](auto global_replication) {
-
-          if (run_params.numValidAtomicReplication() == 0u ||
-              run_params.validAtomicReplication(global_replication)) {
-
-            seq_for(cuda_atomic_shared_replications_type{}, [&](auto shared_replication) {
-
-              addVariantTuningName(vid, "atomic_"
-                                        "shared("+std::to_string(shared_replication)+")_"+
-                                        "global("+std::to_string(global_replication)+")_"+
-                                        decltype(mapping_helper)::get_name()+"_"+
-                                        std::to_string(block_size));
-
-            });
-
-          }
-
-        });
-
-      });
-
-    }
-
-  });
 
 }
 

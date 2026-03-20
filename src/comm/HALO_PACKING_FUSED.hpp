@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -47,32 +48,31 @@
   HALO_BASE_DATA_SETUP \
   \
   Index_type num_vars = m_num_vars; \
-  std::vector<Real_ptr> vars = m_vars; \
+  Real_ptr_ptr vars = m_vars; \
   \
   const bool separate_buffers = (getMPIDataSpace(vid) == DataSpace::Copy); \
   \
-  std::vector<Real_ptr> pack_buffers = m_pack_buffers; \
-  std::vector<Real_ptr> unpack_buffers = m_unpack_buffers; \
+  Real_ptr_ptr pack_buffers = m_pack_buffers; \
+  Real_ptr_ptr unpack_buffers = m_unpack_buffers; \
   \
-  std::vector<Real_ptr> send_buffers = m_send_buffers; \
-  std::vector<Real_ptr> recv_buffers = m_recv_buffers;
+  Real_ptr_ptr send_buffers = m_send_buffers; \
+  Real_ptr_ptr recv_buffers = m_recv_buffers;
 
 #define HALO_PACKING_FUSED_MANUAL_FUSER_SETUP \
-  struct ptr_holder { \
-    Real_ptr buffer; \
-    Int_ptr  list; \
-    Real_ptr var; \
-  }; \
-  ptr_holder* pack_ptr_holders = new ptr_holder[num_neighbors * num_vars]; \
-  Index_type* pack_lens        = new Index_type[num_neighbors * num_vars]; \
-  ptr_holder* unpack_ptr_holders = new ptr_holder[num_neighbors * num_vars]; \
-  Index_type* unpack_lens        = new Index_type[num_neighbors * num_vars];
+  ptr_holder* pack_ptr_holders = nullptr; \
+  Index_ptr pack_lens = nullptr; \
+  ptr_holder* unpack_ptr_holders = nullptr; \
+  Index_ptr unpack_lens = nullptr; \
+  allocData(DataSpace::Host, pack_ptr_holders, num_neighbors * num_vars); \
+  allocData(DataSpace::Host, pack_lens, num_neighbors * num_vars); \
+  allocData(DataSpace::Host, unpack_ptr_holders, num_neighbors * num_vars); \
+  allocData(DataSpace::Host, unpack_lens, num_neighbors * num_vars);
 
 #define HALO_PACKING_FUSED_MANUAL_FUSER_TEARDOWN \
-  delete[] pack_ptr_holders; \
-  delete[] pack_lens; \
-  delete[] unpack_ptr_holders; \
-  delete[] unpack_lens;
+  deallocData(DataSpace::Host, pack_ptr_holders); \
+  deallocData(DataSpace::Host, pack_lens); \
+  deallocData(DataSpace::Host, unpack_ptr_holders); \
+  deallocData(DataSpace::Host, unpack_lens);
 
 
 #define HALO_PACKING_FUSED_MANUAL_LAMBDA_FUSER_SETUP \
@@ -82,31 +82,31 @@
     }; \
   }; \
   using pack_lambda_type = decltype(make_pack_lambda(Real_ptr(), Int_ptr(), Real_ptr())); \
-  pack_lambda_type* pack_lambdas = reinterpret_cast<pack_lambda_type*>( \
-      malloc(sizeof(pack_lambda_type) * (num_neighbors * num_vars))); \
-  Index_type* pack_lens = new Index_type[num_neighbors * num_vars]; \
+  pack_lambda_type* pack_lambdas = nullptr; \
+  Index_ptr pack_lens = nullptr; \
+  allocData(DataSpace::Host, pack_lambdas, num_neighbors * num_vars); \
+  allocData(DataSpace::Host, pack_lens, num_neighbors * num_vars); \
   auto make_unpack_lambda = [](Real_ptr buffer, Int_ptr list, Real_ptr var) { \
     return [=](Index_type i) { \
       HALO_UNPACK_BODY; \
     }; \
   }; \
   using unpack_lambda_type = decltype(make_unpack_lambda(Real_ptr(), Int_ptr(), Real_ptr())); \
-  unpack_lambda_type* unpack_lambdas = reinterpret_cast<unpack_lambda_type*>( \
-      malloc(sizeof(unpack_lambda_type) * (num_neighbors * num_vars))); \
-  Index_type* unpack_lens = new Index_type[num_neighbors * num_vars];
+  unpack_lambda_type* unpack_lambdas = nullptr; \
+  Index_ptr unpack_lens = nullptr; \
+  allocData(DataSpace::Host, unpack_lambdas, num_neighbors * num_vars); \
+  allocData(DataSpace::Host, unpack_lens, num_neighbors * num_vars);
 
 #define HALO_PACKING_FUSED_MANUAL_LAMBDA_FUSER_TEARDOWN \
-  free(pack_lambdas); \
-  delete[] pack_lens; \
-  free(unpack_lambdas); \
-  delete[] unpack_lens;
+  deallocData(DataSpace::Host, pack_lambdas); \
+  deallocData(DataSpace::Host, pack_lens); \
+  deallocData(DataSpace::Host, unpack_lambdas); \
+  deallocData(DataSpace::Host, unpack_lens);
 
 
 #include "HALO_base.hpp"
 
 #include "RAJA/RAJA.hpp"
-
-#include <vector>
 
 namespace rajaperf
 {
@@ -118,26 +118,26 @@ namespace comm
 class HALO_PACKING_FUSED : public HALO_base
 {
 public:
+  struct ptr_holder {
+    Real_ptr buffer;
+    Int_ptr  list;
+    Real_ptr var;
+  };
 
   HALO_PACKING_FUSED(const RunParams& params);
 
   ~HALO_PACKING_FUSED();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-
-  void setSeqTuningDefinitions(VariantID vid);
-  void setOpenMPTuningDefinitions(VariantID vid);
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setOpenMPTargetTuningDefinitions(VariantID vid);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineOpenMPTargetVariantTunings();
 
   void runSeqVariantDirect(VariantID vid);
   void runOpenMPVariantDirect(VariantID vid);
@@ -165,7 +165,7 @@ private:
   Index_type m_num_vars;
   Index_type m_var_size;
 
-  std::vector<Real_ptr> m_vars;
+  Real_ptr_ptr m_vars;
 };
 
 } // end namespace comm

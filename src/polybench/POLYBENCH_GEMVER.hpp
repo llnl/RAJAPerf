@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,14 +10,15 @@
 ///
 /// POLYBENCH_GEMVER kernel reference implementation:
 ///
+/// Note: The dot products are initialized to 0 to avoid
+///       excessively large checksums
+///
 /// for (Index_type i = 0; i < N; i++) {
 ///   for (Index_type j = 0; j < N; j++) {
-///     A[i][j] = A[i][j] + u1[i] * v1[j] + u2[i] * v2[j];
+///     A[i][j] += u1[i] * v1[j] + u2[i] * v2[j];
 ///   }
 /// }
 ///
-/// Note: this part of the kernel is modified to avoid
-///       excessively large checksums
 /// for (Index_type i = 0; i < N; i++) {
 ///   Real_type dot = 0.0;
 ///   for (Index_type j = 0; j < N; j++) {
@@ -26,13 +28,15 @@
 /// }
 ///
 /// for (Index_type i = 0; i < N; i++) {
-///   x[i] = x[i] + z[i];
+///   x[i] += z[i];
 /// }
 ///
 /// for (Index_type i = 0; i < N; i++) {
+///   Real_type dot = 0.0;
 ///   for (Index_type j = 0; j < N; j++) {
-///     w[i] = w[i] +  alpha * A[i][j] * x[j];
+///     dot += alpha * A[i][j] * x[j];
 ///   }
+///   w[i] = dot;
 /// }
 ///
 
@@ -64,10 +68,10 @@
   Real_type dot = 0.0;
 
 #define POLYBENCH_GEMVER_BODY3 \
-  dot +=  beta * A[i + j*n] * y[j];
+  dot += beta * A[i + j*n] * y[j];
 
 #define POLYBENCH_GEMVER_BODY4 \
-  x[i] += dot;
+  x[i] = dot;
 
 #define POLYBENCH_GEMVER_BODY5 \
   x[i] += z[i];
@@ -76,7 +80,7 @@
   Real_type dot = w[i];
 
 #define POLYBENCH_GEMVER_BODY7 \
-  dot +=  alpha * A[j + i*n] * x[j];
+  dot += alpha * A[j + i*n] * x[j];
 
 #define POLYBENCH_GEMVER_BODY8 \
   w[i] = dot;
@@ -89,10 +93,10 @@
   dot = 0.0;
 
 #define POLYBENCH_GEMVER_BODY3_RAJA \
-  dot +=  beta * Aview(j,i) * yview(j);
+  dot += beta * Aview(j,i) * yview(j);
 
 #define POLYBENCH_GEMVER_BODY4_RAJA \
-  xview(i) += dot;
+  xview(i) = dot;
 
 #define POLYBENCH_GEMVER_BODY5_RAJA \
   xview(i) += zview(i);
@@ -101,7 +105,7 @@
   dot = wview(i);
 
 #define POLYBENCH_GEMVER_BODY7_RAJA \
-  dot +=  alpha * Aview(i,j) * xview(j);
+  dot += alpha * Aview(i,j) * xview(j);
 
 #define POLYBENCH_GEMVER_BODY8_RAJA \
   wview(i) = dot;
@@ -143,20 +147,21 @@ public:
 
   ~POLYBENCH_GEMVER();
 
+  void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
 
-  void runSeqVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPVariant(VariantID vid, size_t tune_idx);
-  void runCudaVariant(VariantID vid, size_t tune_idx);
-  void runHipVariant(VariantID vid, size_t tune_idx);
-  void runOpenMPTargetVariant(VariantID vid, size_t tune_idx);
-  void runSyclVariant(VariantID vid, size_t tune_idx);
+  void defineSeqVariantTunings();
+  void defineOpenMPVariantTunings();
+  void defineOpenMPTargetVariantTunings();
+  void defineCudaVariantTunings();
+  void defineHipVariantTunings();
+  void defineSyclVariantTunings();
 
-  void setCudaTuningDefinitions(VariantID vid);
-  void setHipTuningDefinitions(VariantID vid);
-  void setSyclTuningDefinitions(VariantID vid);
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
+  void runOpenMPTargetVariant(VariantID vid);
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);

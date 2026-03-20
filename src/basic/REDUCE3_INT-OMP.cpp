@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -9,6 +10,8 @@
 #include "REDUCE3_INT.hpp"
 
 #include "RAJA/RAJA.hpp"
+
+#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
 #include <limits>
 #include <iostream>
@@ -18,10 +21,9 @@ namespace rajaperf
 namespace basic
 {
 
-
-void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
+template < size_t tune_idx >
+void REDUCE3_INT::runOpenMPVariant(VariantID vid)
 {
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
 
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -34,7 +36,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
     case Base_OpenMP : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Int_type vsum = m_vsum_init;
         Int_type vmin = m_vmin_init;
@@ -47,9 +50,9 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
           REDUCE3_INT_BODY;
         }
 
-        m_vsum += vsum;
-        m_vmin = RAJA_MIN(m_vmin, vmin);
-        m_vmax = RAJA_MAX(m_vmax, vmax);
+        m_vsum = vsum;
+        m_vmin = vmin;
+        m_vmax = vmax;
 
       }
       stopTimer();
@@ -64,7 +67,8 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
                                  };
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         Int_type vsum = m_vsum_init;
         Int_type vmin = m_vmin_init;
@@ -79,9 +83,9 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
           vmax = RAJA_MAX(vmax, reduce3int_base_lam(i));
         }
 
-        m_vsum += vsum;
-        m_vmin = RAJA_MIN(m_vmin, vmin);
-        m_vmax = RAJA_MAX(m_vmax, vmax);
+        m_vsum = vsum;
+        m_vmin = vmin;
+        m_vmax = vmax;
 
       }
       stopTimer();
@@ -93,10 +97,11 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
       auto res{getHostResource()};
 
-      if (tune_idx == 0) {
+      if constexpr (tune_idx == 0) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           RAJA::ReduceSum<RAJA::omp_reduce, Int_type> vsum(m_vsum_init);
           RAJA::ReduceMin<RAJA::omp_reduce, Int_type> vmin(m_vmin_init);
@@ -107,17 +112,18 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
             REDUCE3_INT_BODY_RAJA;
           });
 
-          m_vsum += static_cast<Int_type>(vsum.get());
-          m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(vmin.get()));
-          m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(vmax.get()));
+          m_vsum = static_cast<Int_type>(vsum.get());
+          m_vmin = static_cast<Int_type>(vmin.get());
+          m_vmax = static_cast<Int_type>(vmax.get());
 
         }
         stopTimer();
 
-      } else if (tune_idx == 1) {
+      } else if constexpr (tune_idx == 1) {
 
         startTimer();
-        for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        // Loop counter increment uses macro to quiet C++20 compiler warning
+        for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
           Int_type tvsum = m_vsum_init;
           Int_type tvmin = m_vmin_init;
@@ -136,9 +142,9 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
             }
           );
 
-          m_vsum += static_cast<Int_type>(tvsum);
-          m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(tvmin));
-          m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(tvmax));
+          m_vsum = static_cast<Int_type>(tvsum);
+          m_vmin = static_cast<Int_type>(tvmin);
+          m_vmax = static_cast<Int_type>(tvmax);
 
         }
         stopTimer();
@@ -156,19 +162,27 @@ void REDUCE3_INT::runOpenMPVariant(VariantID vid, size_t tune_idx)
 
   }
 
-#else
-  RAJA_UNUSED_VAR(vid);
-  RAJA_UNUSED_VAR(tune_idx);
-#endif
 }
 
-void REDUCE3_INT::setOpenMPTuningDefinitions(VariantID vid)
+void REDUCE3_INT::defineOpenMPVariantTunings()
 {
-  addVariantTuningName(vid, "default");
-  if (vid == RAJA_OpenMP) {
-    addVariantTuningName(vid, "new");
+
+  for (VariantID vid : {Base_OpenMP, Lambda_OpenMP, RAJA_OpenMP}) {
+
+    addVariantTuning<&REDUCE3_INT::runOpenMPVariant<0>>(
+        vid, "default");
+
+    if (vid == RAJA_OpenMP) {
+
+      addVariantTuning<&REDUCE3_INT::runOpenMPVariant<1>>(
+          vid, "new");
+
+    }
+
   }
 }
 
 } // end namespace basic
 } // end namespace rajaperf
+
+#endif

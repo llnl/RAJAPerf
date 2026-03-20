@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -18,7 +19,7 @@ namespace apps
 {
 
 
-void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void FEMSWEEP::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
@@ -29,12 +30,26 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
     case Base_Seq : {
 
       startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-         for (int ag = 0; ag < na * ng; ++ag)
-         {
-            FEMSWEEP_KERNEL;
-         }
+        for (Index_type a = 0; a < na; ++a)
+        {
+          for (Index_type g = 0; g < ng; ++g)
+          {
+            FEMSWEEP_KERNEL_SETUP;
+            Index_type nehp_pos = 0;
+            for (Index_type hp = 0; hp < nhp; ++hp)
+            {
+              const Index_type nehp = phpaa_r[ohp + hp];
+              for (Index_type k = 0; k < nehp; ++k)
+              {
+                FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+              }
+              nehp_pos += nehp;
+            }
+          }
+        }
 
       }
       stopTimer();
@@ -52,17 +67,38 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
       using outer_x =
           RAJA::LoopPolicy<RAJA::seq_exec>;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      using outer_y =
+          RAJA::LoopPolicy<RAJA::seq_exec>;
 
-         RAJA::launch<launch_policy>( res,
-             RAJA::LaunchParams(),
-             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
-             RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, na * ng),
-               [&](int ag) {
-                 FEMSWEEP_KERNEL;
-               });
-         });
+      using inner_x =
+          RAJA::LoopPolicy<RAJA::seq_exec>;
+
+      startTimer();
+      // Loop counter increment uses macro to quiet C++20 compiler warning
+      for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+
+        RAJA::launch<launch_policy>( res,
+            RAJA::LaunchParams(),
+            [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
+          RAJA::loop<outer_y>(ctx, RAJA::RangeSegment(0, na),
+              [&](Index_type a) {
+            RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, ng),
+                [&](Index_type g) {
+               FEMSWEEP_KERNEL_SETUP;
+               Index_type nehp_pos = 0;
+               for (Index_type hp = 0; hp < nhp; ++hp)
+               {
+                 const Index_type nehp = phpaa_r[ohp + hp];
+                 RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
+                     [&](Index_type k) {
+                   FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                 });  // k loop
+                 ctx.teamSync();
+                 nehp_pos += nehp;
+               }
+             });  // g loop
+           });  // a loop
+        });
 
       }
       stopTimer();
@@ -77,6 +113,8 @@ void FEMSWEEP::runSeqVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
   }
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Seq, Base_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf

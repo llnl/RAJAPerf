@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -27,7 +28,7 @@ namespace basic
   const size_t threads_per_team = 256;
 
 
-void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -40,18 +41,18 @@ void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
     MULTI_REDUCE_SETUP_VALUES;
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      initOpenMPDeviceData(values, values_init.data(), num_bins);
+      initOpenMPDeviceData(values, values_init, num_bins);
 
       #pragma omp target is_device_ptr(values, bins, data)
       #pragma omp teams distribute parallel for thread_limit(threads_per_team) schedule(static, 1)
       for (Index_type i = ibegin; i < iend; ++i ) {
-        #pragma omp atomic
-        MULTI_REDUCE_BODY;
+        MULTI_REDUCE_BODY(RAJAPERF_ATOMIC_ADD_OMP);
       }
 
-      getOpenMPDeviceData(values_final.data(), values, num_bins);
+      getOpenMPDeviceData(values_final, values, num_bins);
 
     }
     stopTimer();
@@ -65,6 +66,8 @@ void MULTI_REDUCE::runOpenMPTargetVariant(VariantID vid, size_t RAJAPERF_UNUSED_
   MULTI_REDUCE_DATA_TEARDOWN;
 
 }
+
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MULTI_REDUCE, OpenMPTarget, Base_OpenMPTarget)
 
 } // end namespace basic
 } // end namespace rajaperf

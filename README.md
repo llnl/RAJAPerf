@@ -1,21 +1,23 @@
 [comment]: # (#################################################################)
-[comment]: # (Copyright 2017-25, Lawrence Livermore National Security, LLC)
-[comment]: # (and RAJA Performance Suite project contributors.)
-[comment]: # (See the RAJAPerf/LICENSE file for details.)
+[comment]: # (Copyright Lawrence Livermore National Security, LLC and other)
+[comment]: # (RAJA Project Developers. See top-level LICENSE and COPYRIGHT)
+[comment]: # (files for dates and other details. No copyright assignment is)
+[comment]: # (required to contribute to RAJA Performance Suite.)
 [comment]: #
 [comment]: # (# SPDX-License-Identifier: BSD-3-Clause)
 [comment]: # (#################################################################)
 
-# <img src="/tpl/RAJA/share/raja/logo/RAJA_LOGO_Color.png?raw=true" width="128" valign="middle" alt="RAJA"/>
+# <img src="/share/raja/logo/RAJA_LOGO_Color.png?raw=true" width="128" valign="middle" alt="RAJA"/>
 
 RAJA Performance Suite
 ======================
 
-[![Azure Piepline Build Status](https://dev.azure.com/llnl/RAJAPerf/_apis/build/status/LLNL.RAJAPerf?branchName=develop)](https://dev.azure.com/llnl/RAJAPerf/_build/latest?definitionId=1&branchName=develop)
+[![Build Status](https://github.com/llnl/RAJAPerf/actions/workflows/build.yml/badge.svg)](https://github.com/llnl/RAJAPerf/actions/workflows/build.yml)
 [![Documentation Status](https://readthedocs.org/projects/rajaperf/badge/?version=develop)](https://raja.readthedocs.io/en/develop/?badge=develop)
+[![GitHub release](https://img.shields.io/github/release/llnl/RAJAPerf.svg)](https://github.com/llnl/RAJAPerf/releases/latest)
 
 The RAJA Performance Suite is a companion project to the [RAJA] C++ performance
-portability abstraction library. The Performance Suite designed to eplore
+portability abstraction library. The Performance Suite designed to explore
 performance of loop-based computational kernels found in HPC applications.
 Specifically, it is used to assess and monitor runtime performance of kernels 
 implemented using [RAJA] compare those to variants implemented using common 
@@ -66,17 +68,16 @@ License
 The RAJA Performance Suite is licensed under the BSD 3-Clause license,
 (BSD-3-Clause or https://opensource.org/licenses/BSD-3-Clause).
 
-Copyrights and patents in the RAJAPerf project are retained by contributors.
-No copyright assignment is required to contribute to RAJAPerf.
-
 Unlimited Open Source - BSD 3-clause Distribution
 `LLNL-CODE-738930`  `OCEC-17-159`
 
+Copyrights and patents in the RAJAPerf project are retained by contributors.
+No copyright assignment is required to contribute to RAJAPerf.
+
 For release details and restrictions, please see the information in the
 following:
-- [RELEASE](./RELEASE)
+- [COPYRIGHT](./COPYRIGHT)
 - [LICENSE](./LICENSE)
-- [NOTICE](./NOTICE)
 
 SPDX Usage
 -----------
@@ -85,7 +86,7 @@ Individual files contain SPDX tags instead of the full license text.
 This enables machine processing of license information based on the SPDX
 License Identifiers that are available here: https://spdx.org/licenses/
 
-Files that are licensed as BSD 3-Clause contain the following
+For example, files that are licensed as BSD 3-Clause contain the following
 text in the license header:
 
     SPDX-License-Identifier: (BSD-3-Clause)

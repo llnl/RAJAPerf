@@ -1,7 +1,8 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-25, Lawrence Livermore National Security, LLC
-// and RAJA Performance Suite project contributors.
-// See the RAJAPerf/LICENSE file for details.
+// Copyright (c) Lawrence Livermore National Security, LLC and other 
+// RAJA Project Developers. See top-level LICENSE and COPYRIGHT
+// files for dates and other details. No copyright assignment is required
+// to contribute to RAJA Performance Suite.
 //
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
@@ -83,6 +84,8 @@ __global__ void poly_heat_3D_lam(Index_type N, Lambda body)
 template < size_t block_size >
 void POLYBENCH_HEAT_3D::runCudaVariantImpl(VariantID vid)
 {
+  setBlockSize(block_size);
+
   const Index_type run_reps = getRunReps();
 
   auto res{getCudaResource()};
@@ -92,27 +95,24 @@ void POLYBENCH_HEAT_3D::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      HEAT_3D_THREADS_PER_BLOCK_CUDA;
+      HEAT_3D_NBLOCKS_CUDA;
+      constexpr size_t shmem = 0;
 
-        HEAT_3D_THREADS_PER_BLOCK_CUDA;
-        HEAT_3D_NBLOCKS_CUDA;
-        constexpr size_t shmem = 0;
+      RPlaunchCudaKernel(
+        (poly_heat_3D_1<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        nblocks, nthreads_per_block,
+        shmem, res.get_stream(),
+        A, B, N );
 
-        RPlaunchCudaKernel(
-          (poly_heat_3D_1<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          A, B, N );
-
-        RPlaunchCudaKernel(
-          (poly_heat_3D_2<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          A, B, N );
-
-      }
+      RPlaunchCudaKernel(
+        (poly_heat_3D_2<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        nblocks, nthreads_per_block,
+        shmem, res.get_stream(),
+        A, B, N );
 
     }
     stopTimer();
@@ -120,41 +120,38 @@ void POLYBENCH_HEAT_3D::runCudaVariantImpl(VariantID vid)
   } else if ( vid == Lambda_CUDA ) {
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      HEAT_3D_THREADS_PER_BLOCK_CUDA;
+      HEAT_3D_NBLOCKS_CUDA;
+      constexpr size_t shmem = 0;
 
-        HEAT_3D_THREADS_PER_BLOCK_CUDA;
-        HEAT_3D_NBLOCKS_CUDA;
-        constexpr size_t shmem = 0;
+      auto poly_heat_3D_1_lambda = [=] __device__ (Index_type i,
+                                                   Index_type j,
+                                                   Index_type k) {
+        POLYBENCH_HEAT_3D_BODY1;
+      };
 
-        auto poly_heat_3D_1_lambda = [=] __device__ (Index_type i,
-                                                     Index_type j,
-                                                     Index_type k) {
-          POLYBENCH_HEAT_3D_BODY1;
-        };
+      RPlaunchCudaKernel(
+        (poly_heat_3D_lam<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
+                          decltype(poly_heat_3D_1_lambda)>),
+        nblocks, nthreads_per_block,
+        shmem, res.get_stream(),
+        N, poly_heat_3D_1_lambda );
 
-        RPlaunchCudaKernel(
-          (poly_heat_3D_lam<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                            decltype(poly_heat_3D_1_lambda)>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          N, poly_heat_3D_1_lambda );
+      auto poly_heat_3D_2_lambda = [=] __device__ (Index_type i,
+                                                   Index_type j,
+                                                   Index_type k) {
+        POLYBENCH_HEAT_3D_BODY2;
+      };
 
-        auto poly_heat_3D_2_lambda = [=] __device__ (Index_type i,
-                                                     Index_type j,
-                                                     Index_type k) {
-          POLYBENCH_HEAT_3D_BODY2;
-        };
-
-        RPlaunchCudaKernel(
-          (poly_heat_3D_lam<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                            decltype(poly_heat_3D_2_lambda)>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          N, poly_heat_3D_2_lambda );
-
-      }
+      RPlaunchCudaKernel(
+        (poly_heat_3D_lam<HEAT_3D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
+                          decltype(poly_heat_3D_2_lambda)>),
+        nblocks, nthreads_per_block,
+        shmem, res.get_stream(),
+        N, poly_heat_3D_2_lambda );
 
     }
     stopTimer();
@@ -178,31 +175,28 @@ void POLYBENCH_HEAT_3D::runCudaVariantImpl(VariantID vid)
 
 
     startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    // Loop counter increment uses macro to quiet C++20 compiler warning
+    for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      for (Index_type t = 0; t < tsteps; ++t) {
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] __device__ (Index_type i, Index_type j, Index_type k) {
+          POLYBENCH_HEAT_3D_BODY1_RAJA;
+        }
+      );
 
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] __device__ (Index_type i, Index_type j, Index_type k) {
-            POLYBENCH_HEAT_3D_BODY1_RAJA;
-          }
-        );
-
-        RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
-          res,
-          [=] __device__ (Index_type i, Index_type j, Index_type k) {
-            POLYBENCH_HEAT_3D_BODY2_RAJA;
-          }
-        );
-
-      }
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
+        [=] __device__ (Index_type i, Index_type j, Index_type k) {
+          POLYBENCH_HEAT_3D_BODY2_RAJA;
+        }
+      );
 
     }
     stopTimer();
@@ -212,7 +206,7 @@ void POLYBENCH_HEAT_3D::runCudaVariantImpl(VariantID vid)
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, Cuda)
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_HEAT_3D, Cuda, Base_CUDA, Lambda_CUDA, RAJA_CUDA)
 
 } // end namespace polybench
 } // end namespace rajaperf
