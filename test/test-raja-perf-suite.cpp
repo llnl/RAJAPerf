@@ -150,12 +150,15 @@ TEST(ShortSuiteTest, Basic)
           rajaperf::Checksum_type cksum_rel_diff =
               kernel->getChecksumMaxRelativeAbsoluteDifference(vid, tune_idx);
 
-          // Print kernel information when running test manually
-          std::cout << "Check kernel, variant, tuning : "
-                    << kernel->getName() << " , "
-                    << rajaperf::getVariantName(vid) << " , "
-                    << kernel->getVariantTuningName(vid, tune_idx) 
-                    << std::endl;
+          bool test_passed = (rtime > 0.0) && (cksum_rel_diff <= cksum_tol);
+          if (!test_passed) {
+            // Print kernel information for failing tests
+            std::cout << "Check kernel, variant, tuning : "
+                      << kernel->getName() << " , "
+                      << rajaperf::getVariantName(vid) << " , "
+                      << kernel->getVariantTuningName(vid, tune_idx)
+                      << std::endl;
+          }
           EXPECT_GT(rtime, 0.0);
           EXPECT_LE(cksum_rel_diff, cksum_tol);
           
