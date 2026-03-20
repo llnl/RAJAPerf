@@ -269,23 +269,26 @@ struct Wrapper
 
   // copy and move constructors
   Wrapper(Wrapper const& rhs)
-  requires(!(is_val && is_array))
+  requires(is_val && !is_array)
     : m_value(rhs.get_native())
     , m_allocation(rhs.m_allocation)
   {
-    if constexpr (is_val) {
-      this->count(Operation::copy, 1);
-    }
+    this->count(Operation::copy, 1);
   }
   ///
   Wrapper(Wrapper && rhs)
-  requires(!(is_val && is_array))
+  requires(is_val && !is_array)
     : m_value(std::move(rhs).get_native())
     , m_allocation(rhs.m_allocation)
   {
-    if constexpr (is_val) {
-      this->count(Operation::copy, 1);
-    }
+    this->count(Operation::copy, 1);
+  }
+  ///
+  Wrapper(Wrapper const& rhs)
+  requires(is_ref)
+    : m_value(rhs.m_value)
+    , m_allocation(rhs.m_allocation)
+  {
   }
 
   // count assignments from non-wrapped values
@@ -551,31 +554,46 @@ struct Wrapper
   }
 
   operator auto() const
+  requires(!is_array)
   {
-    if constexpr (!is_array) {
-      this->count(Operation::copy, 1);
-      return this->get_native();
-    }
+    this->count(Operation::copy, 1);
+    return this->get_native();
   }
-  ///
+  /// explicit to avoid issues in ternary operators where value wrappers -> reference wrappers and vice-versa
   explicit operator Wrapper<wrapped_type&>()
-  requires(is_val)
+  requires(is_val && !(is_array || is_ptr))
   {
-    if constexpr (is_array) {
-      return Wrapper<wrapped_type&>(m_allocation, &m_value);
-    } else {
-      return Wrapper<wrapped_type&>(nullptr, &m_value);
-    }
+    return Wrapper<wrapped_type&>(nullptr, &m_value);
+  }
+  /// explicit to avoid issues in ternary operators where value wrappers -> reference wrappers and vice-versa
+  explicit operator Wrapper<wrapped_type const&>() const
+  requires(is_val && !(is_array || is_ptr))
+  {
+    return Wrapper<wrapped_type const&>(nullptr, &m_value);
   }
   ///
-  explicit operator Wrapper<wrapped_type const&>() const
-  requires(is_val)
+  operator Wrapper<wrapped_type&>()
+  requires(is_val && (is_array || is_ptr))
   {
-    if constexpr (is_array) {
-      return Wrapper<wrapped_type const&>(m_allocation, &m_value);
-    } else {
-      return Wrapper<wrapped_type const&>(nullptr, &m_value);
-    }
+    return Wrapper<wrapped_type&>(m_allocation, &m_value);
+  }
+  ///
+  operator Wrapper<wrapped_type const&>() const
+  requires(is_val && (is_array || is_ptr))
+  {
+    return Wrapper<wrapped_type const&>(m_allocation, &m_value);
+  }
+  ///
+  operator Wrapper<wrapped_type const&>() const
+  requires(is_ref && !(is_array || is_ptr))
+  {
+    return Wrapper<wrapped_type const&>(nullptr, m_value);
+  }
+  ///
+  operator Wrapper<wrapped_type const&>() const
+  requires(is_ref && (is_array || is_ptr))
+  {
+    return Wrapper<wrapped_type const&>(m_allocation, m_value);
   }
 
   void swap(Wrapper& rhs)
