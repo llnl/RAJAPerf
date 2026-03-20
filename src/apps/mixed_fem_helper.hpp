@@ -7,21 +7,13 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#ifndef MIXED_FEM_HELPER
-#define MIXED_FEM_HELPER
+#ifndef RAJAPerf_Apps_MIXED_FEM_HELPER
+#define RAJAPerf_Apps_MIXED_FEM_HELPER
 
-#include "RAJA/RAJA.hpp"
+namespace rajaperf
+{
 
-#include "common/RPTypes.hpp"
-
-#include <cmath>
-
-#define NB 8
-#define EB 12
-#define FB 6
-#define MAX_QUAD_ORDER 5
-
-constexpr rajaperf::Real_type ptiny = 1.0e-50;
+constexpr Real_type_t ptiny = 1.0e-50;
 
 //
 // Common FEM functions
@@ -29,15 +21,14 @@ constexpr rajaperf::Real_type ptiny = 1.0e-50;
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void LinAlg_qrule_Lobatto(
-  rajaperf::Int_type    order,
-  rajaperf::Real_type *qpts1D,
-  rajaperf::Real_type *wgts1D)
+  Int_type    order,
+  Real_ptr qpts1D,
+  Real_ptr wgts1D)
 {
   // Define the Gauss-Lobatto quadrature points and weights over the
   // 1D domain [0,1] for rules up to order 5
-  switch( order ) {
 
-  case 1 :
+  if (order == 1) {
 
     // Order 1 Gauss-Lobatto Points
     qpts1D[0] = 0.5;
@@ -45,9 +36,7 @@ RAJA_INLINE void LinAlg_qrule_Lobatto(
     // Order 1 Gauss-Lobatto Weights
     wgts1D[0] = 1.0;
 
-    break;
-
-  case 2 :
+  } else if (order == 2) {
 
     // Order 2 Gauss-Lobatto Points
     qpts1D[0] = 0.0;
@@ -57,9 +46,7 @@ RAJA_INLINE void LinAlg_qrule_Lobatto(
     wgts1D[0] = 0.5;
     wgts1D[1] = 0.5;
 
-    break;
-
-  case 3 :
+  } else if (order == 3) {
 
     // Order 3 Gauss-Lobatto Points
     qpts1D[0] = 0.0;
@@ -71,9 +58,7 @@ RAJA_INLINE void LinAlg_qrule_Lobatto(
     wgts1D[1] = 0.666666666666666667;
     wgts1D[2] = 0.166666666666666667;
 
-    break;
-
-  case 4 :
+  } else if (order == 4) {
 
     // Order 4 Gauss-Lobatto Points
     qpts1D[0] = 0.0;
@@ -87,9 +72,7 @@ RAJA_INLINE void LinAlg_qrule_Lobatto(
     wgts1D[2] = 0.416666666666666667;
     wgts1D[3] = 0.0833333333333333333;
 
-    break;
-
-  case 5 :
+  } else if (order == 5) {
 
     // Order 5 Gauss-Lobatto Points
     qpts1D[0] = 0.0;
@@ -105,23 +88,19 @@ RAJA_INLINE void LinAlg_qrule_Lobatto(
     wgts1D[3] = 0.272222222222222222;
     wgts1D[4] = 0.05;
 
-    break;
-
   }
 
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void LinAlg_qrule_Legendre(
-  rajaperf::Int_type    order,
-  rajaperf::Real_type *qpts1D,
-  rajaperf::Real_type *wgts1D)
+  Int_type    order,
+  Real_ptr qpts1D,
+  Real_ptr wgts1D)
 {
   // Define the Gauss-Legendre quadrature points and weights over the
   // 1D domain [0,1] for rules up to order 5
-  switch( order ) {
-
-  case 1 :
+  if (order == 1) {
 
     // Order 1 Gauss-Legendre Points
     qpts1D[0] = 0.5;
@@ -129,9 +108,7 @@ RAJA_INLINE void LinAlg_qrule_Legendre(
     // Order 1 Gauss-Legendre Weights
     wgts1D[0] = 1.0;
 
-    break;
-
-  case 2 :
+  } else if (order == 2) {
 
     // Order 2 Gauss-Legendre Points
     qpts1D[0] = 0.211324865405187118;
@@ -141,9 +118,7 @@ RAJA_INLINE void LinAlg_qrule_Legendre(
     wgts1D[0] = 0.5;
     wgts1D[1] = 0.5;
 
-    break;
-
-  case 3 :
+  } else if (order == 3) {
 
     // Order 3 Gauss-Legendre Points
     qpts1D[0] = 0.112701665379258311;
@@ -155,9 +130,7 @@ RAJA_INLINE void LinAlg_qrule_Legendre(
     wgts1D[1] = 0.444444444444444444;
     wgts1D[2] = 0.277777777777777778;
 
-    break;
-
-  case 4 :
+  } else if (order == 4) {
 
     // Order 4 Gauss-Legendre Points
     qpts1D[0] = 0.0694318442029737124;
@@ -171,9 +144,7 @@ RAJA_INLINE void LinAlg_qrule_Legendre(
     wgts1D[2] = 0.326072577431273071;
     wgts1D[3] = 0.173927422568726929;
 
-    break;
-
-  case 5 :
+  } else if (order == 5) {
 
     // Order 5 Gauss-Legendre Points
     qpts1D[0] = 0.0469100770306680036;
@@ -189,76 +160,72 @@ RAJA_INLINE void LinAlg_qrule_Legendre(
     wgts1D[3] = 0.239314335249683234;
     wgts1D[4] = 0.118463442528094544;
 
-    break;
-
   }
 
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void get_quadrature_rule(
-  const rajaperf::Int_type    quad_type,
-  const rajaperf::Int_type    quad_order,
-  rajaperf::Real_type       (&qpts_1d)[MAX_QUAD_ORDER],
-  rajaperf::Real_type       (&wgts_1d)[MAX_QUAD_ORDER])
+  const Int_type    quad_type,
+  const Int_type    quad_order,
+  Real_array_ref<MAX_QUAD_ORDER> qpts_1d,
+  Real_array_ref<MAX_QUAD_ORDER> wgts_1d)
 {
   // Generate the 1D set of points and weights over the interval [0,1]
-  switch( quad_type ) {
+  if (quad_type == 0) {
 
-  case 0 :
     LinAlg_qrule_Lobatto(quad_order, qpts_1d, wgts_1d);
-    break;
 
-  case 1 :
+  } else if (quad_type == 1) {
+
     LinAlg_qrule_Legendre(quad_order, qpts_1d, wgts_1d);
-    break;
 
   }
 }
 
-constexpr rajaperf::Int_type flops_compute_detj()
+inline Int_type flops_compute_detj()
 {
   return 17;
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type compute_detj(
-  const rajaperf::Real_type jxx,
-  const rajaperf::Real_type jxy,
-  const rajaperf::Real_type jxz,
-  const rajaperf::Real_type jyx,
-  const rajaperf::Real_type jyy,
-  const rajaperf::Real_type jyz,
-  const rajaperf::Real_type jzx,
-  const rajaperf::Real_type jzy,
-  const rajaperf::Real_type jzz)
+inline Real_type compute_detj(
+  const Real_type jxx,
+  const Real_type jxy,
+  const Real_type jxz,
+  const Real_type jyx,
+  const Real_type jyy,
+  const Real_type jyz,
+  const Real_type jzx,
+  const Real_type jzy,
+  const Real_type jzz)
 {
   return
     jxy*jyz*jzx - jxz*jyy*jzx + jxz*jyx*jzy -
     jxx*jyz*jzy - jxy*jyx*jzz + jxx*jyy*jzz;
 }
 
-template<rajaperf::Int_type M>
+template<Int_type_t M>
 RAJA_HOST_DEVICE
-constexpr void transform_basis(
-  const rajaperf::Real_type txx,
-  const rajaperf::Real_type txy,
-  const rajaperf::Real_type txz,
-  const rajaperf::Real_type tyx,
-  const rajaperf::Real_type tyy,
-  const rajaperf::Real_type tyz,
-  const rajaperf::Real_type tzx,
-  const rajaperf::Real_type tzy,
-  const rajaperf::Real_type tzz,
-  const rajaperf::Real_type (&basis_x)[M],
-  const rajaperf::Real_type (&basis_y)[M],
-  const rajaperf::Real_type (&basis_z)[M],
-  rajaperf::Real_type (&tbasis_x)[M],
-  rajaperf::Real_type (&tbasis_y)[M],
-  rajaperf::Real_type (&tbasis_z)[M])
+inline void transform_basis(
+  const Real_type txx,
+  const Real_type txy,
+  const Real_type txz,
+  const Real_type tyx,
+  const Real_type tyy,
+  const Real_type tyz,
+  const Real_type tzx,
+  const Real_type tzy,
+  const Real_type tzz,
+  Real_array_const_ref<M> basis_x,
+  Real_array_const_ref<M> basis_y,
+  Real_array_const_ref<M> basis_z,
+  Real_array_ref<M> tbasis_x,
+  Real_array_ref<M> tbasis_y,
+  Real_array_ref<M> tbasis_z)
 {
   // Compute transformed basis function gradients
-  for (rajaperf::Int_type m = 0; m < M; m++)
+  for (Int_type m = 0; m < M; m++)
   {
     tbasis_x[m] = txx*basis_x[m] + txy*basis_y[m] + txz*basis_z[m];
     tbasis_y[m] = tyx*basis_x[m] + tyy*basis_y[m] + tyz*basis_z[m];
@@ -266,39 +233,39 @@ constexpr void transform_basis(
   }
 }
 
-template<rajaperf::Int_type M, rajaperf::Int_type P>
-constexpr rajaperf::Int_type flops_inner_product(const bool is_symmetric)
+template<Int_type_t M, Int_type_t P>
+inline Int_type flops_inner_product(const bool is_symmetric)
 {
   return is_symmetric ? 7*P*(M+1)/2 : 7*P*M;
 }
 
-template<rajaperf::Int_type M, rajaperf::Int_type P>
+template<Int_type_t M, Int_type_t P>
 RAJA_HOST_DEVICE
-constexpr void inner_product(
-  const rajaperf::Real_type weight,
-  const rajaperf::Real_type (&basis_1_x)[M],
-  const rajaperf::Real_type (&basis_1_y)[M],
-  const rajaperf::Real_type (&basis_1_z)[M],
-  const rajaperf::Real_type (&basis_2_x)[P],
-  const rajaperf::Real_type (&basis_2_y)[P],
-  const rajaperf::Real_type (&basis_2_z)[P],
-  rajaperf::Real_type (&matrix)[P][M],
+inline void inner_product(
+  const Real_type weight,
+  Real_array_const_ref<M> basis_1_x,
+  Real_array_const_ref<M> basis_1_y,
+  Real_array_const_ref<M> basis_1_z,
+  Real_array_const_ref<P> basis_2_x,
+  Real_array_const_ref<P> basis_2_y,
+  Real_array_const_ref<P> basis_2_z,
+  Real_array2_ref<P, M> matrix,
   const bool is_symmetric)
 {
   // inner product is <basis_2, basis_1>
-  for (rajaperf::Int_type p = 0; p < P; p++) {
+  for (Int_type p = 0; p < P; p++) {
 
-    const rajaperf::Real_type txi = basis_2_x[p];
-    const rajaperf::Real_type tyi = basis_2_y[p];
-    const rajaperf::Real_type tzi = basis_2_z[p];
+    const Real_type txi = basis_2_x[p];
+    const Real_type tyi = basis_2_y[p];
+    const Real_type tzi = basis_2_z[p];
 
-    const rajaperf::Int_type m0 = (is_symmetric && (M == P)) ? p : 0;
+    const Int_type m0 = (is_symmetric && (M == P)) ? p : Int_type{0};
 
-    for (rajaperf::Int_type m = m0; m < M; m++) {
+    for (Int_type m = m0; m < M; m++) {
 
-      const rajaperf::Real_type txj = basis_1_x[m];
-      const rajaperf::Real_type tyj = basis_1_y[m];
-      const rajaperf::Real_type tzj = basis_1_z[m];
+      const Real_type txj = basis_1_x[m];
+      const Real_type tyj = basis_1_y[m];
+      const Real_type tzj = basis_1_z[m];
 
       matrix[p][m] += weight*(txi*txj + tyi*tyj + tzi*tzj);
 
@@ -310,19 +277,19 @@ constexpr void inner_product(
   }
 }
 
-constexpr rajaperf::Int_type flops_bad_zone_algorithm()
+inline Int_type flops_bad_zone_algorithm()
 {
   return 3;
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void bad_zone_algorithm(
-  const rajaperf::Real_type detj_unfixed,
-  const rajaperf::Real_type detj_cc,
-  const rajaperf::Real_type detj_tol,
-  rajaperf::Real_type& detj,
-  rajaperf::Real_type& abs_detj,
-  rajaperf::Real_type& inv_detj)
+  const Real_type detj_unfixed,
+  const Real_type detj_cc,
+  const Real_type detj_tol,
+  Real_type& detj,
+  Real_type& abs_detj,
+  Real_type& inv_detj)
 {
   detj = (fabs( detj_unfixed/detj_cc ) < detj_tol) ?
                                detj_cc : detj_unfixed ;
@@ -333,37 +300,37 @@ RAJA_INLINE void bad_zone_algorithm(
   inv_detj = 1.0/(detj + ptiny);
 }
 
-constexpr rajaperf::Int_type flops_jacobian_inv()
+inline Int_type flops_jacobian_inv()
 {
   return flops_compute_detj() + flops_bad_zone_algorithm() + 4*9;
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void jacobian_inv(
-  const rajaperf::Real_type jxx,
-  const rajaperf::Real_type jxy,
-  const rajaperf::Real_type jxz,
-  const rajaperf::Real_type jyx,
-  const rajaperf::Real_type jyy,
-  const rajaperf::Real_type jyz,
-  const rajaperf::Real_type jzx,
-  const rajaperf::Real_type jzy,
-  const rajaperf::Real_type jzz,
-  const rajaperf::Real_type detj_cc,
-  const rajaperf::Real_type detj_tol,
-  rajaperf::Real_type &jinvxx,
-  rajaperf::Real_type &jinvxy,
-  rajaperf::Real_type &jinvxz,
-  rajaperf::Real_type &jinvyx,
-  rajaperf::Real_type &jinvyy,
-  rajaperf::Real_type &jinvyz,
-  rajaperf::Real_type &jinvzx,
-  rajaperf::Real_type &jinvzy,
-  rajaperf::Real_type &jinvzz,
-  rajaperf::Real_type &detj_unfixed,
-  rajaperf::Real_type &detj,
-  rajaperf::Real_type &abs_detj,
-  rajaperf::Real_type &inv_detj)
+  const Real_type jxx,
+  const Real_type jxy,
+  const Real_type jxz,
+  const Real_type jyx,
+  const Real_type jyy,
+  const Real_type jyz,
+  const Real_type jzx,
+  const Real_type jzy,
+  const Real_type jzz,
+  const Real_type detj_cc,
+  const Real_type detj_tol,
+  Real_type &jinvxx,
+  Real_type &jinvxy,
+  Real_type &jinvxz,
+  Real_type &jinvyx,
+  Real_type &jinvyy,
+  Real_type &jinvyz,
+  Real_type &jinvzx,
+  Real_type &jinvzy,
+  Real_type &jinvzz,
+  Real_type &detj_unfixed,
+  Real_type &detj,
+  Real_type &abs_detj,
+  Real_type &inv_detj)
 {
   // Compute determinant of Jacobian matrix at this quadrature point
   detj_unfixed = compute_detj(jxx, jxy, jxz,
@@ -386,14 +353,14 @@ RAJA_INLINE void jacobian_inv(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jzx(
-  const rajaperf::Real_type  (&x)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpxy,
-  const rajaperf::Real_type  xloctmpy,
-  const rajaperf::Real_type  xyloc,
-  const rajaperf::Real_type  tmpxyloc)
+inline Real_type Jzx(
+  Real_array_const_ref<NB> x,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpxy,
+  const Real_type  xloctmpy,
+  const Real_type  xyloc,
+  const Real_type  tmpxyloc)
 {
   return (x[4] - x[0])*tmpxy    +
          (x[5] - x[1])*xloctmpy +
@@ -402,14 +369,14 @@ constexpr rajaperf::Real_type Jzx(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jzy(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&y)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpxy,
-  const rajaperf::Real_type  xloctmpy,
-  const rajaperf::Real_type  xyloc,
-  const rajaperf::Real_type  tmpxyloc)
+inline Real_type Jzy(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> y,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpxy,
+  const Real_type  xloctmpy,
+  const Real_type  xyloc,
+  const Real_type  tmpxyloc)
 {
   return (y[4] - y[0])*tmpxy    +
          (y[5] - y[1])*xloctmpy +
@@ -418,14 +385,14 @@ constexpr rajaperf::Real_type Jzy(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jzz(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&z)[NB],
-  const rajaperf::Real_type  tmpxy,
-  const rajaperf::Real_type  xloctmpy,
-  const rajaperf::Real_type  xyloc,
-  const rajaperf::Real_type  tmpxyloc)
+inline Real_type Jzz(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> z,
+  const Real_type  tmpxy,
+  const Real_type  xloctmpy,
+  const Real_type  xyloc,
+  const Real_type  tmpxyloc)
 {
   return (z[4] - z[0])*tmpxy    +
          (z[5] - z[1])*xloctmpy +
@@ -433,20 +400,20 @@ constexpr rajaperf::Real_type Jzz(
          (z[7] - z[3])*tmpxyloc;
 }
 
-constexpr rajaperf::Int_type flops_Jxx()
+inline Int_type flops_Jxx()
 {
   return 11;
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jxx(
-  const rajaperf::Real_type  (&x)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpyz,
-  const rajaperf::Real_type  yloctmpz,
-  const rajaperf::Real_type  tmpyzloc,
-  const rajaperf::Real_type  yzloc)
+inline Real_type Jxx(
+  Real_array_const_ref<NB> x,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpyz,
+  const Real_type  yloctmpz,
+  const Real_type  tmpyzloc,
+  const Real_type  yzloc)
 {
   return (x[1] - x[0])*tmpyz   +
          (x[2] - x[3])*yloctmpz +
@@ -455,14 +422,14 @@ constexpr rajaperf::Real_type Jxx(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jxy(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&y)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpyz,
-  const rajaperf::Real_type  yloctmpz,
-  const rajaperf::Real_type  tmpyzloc,
-  const rajaperf::Real_type  yzloc)
+inline Real_type Jxy(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> y,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpyz,
+  const Real_type  yloctmpz,
+  const Real_type  tmpyzloc,
+  const Real_type  yzloc)
 {
   return (y[1] - y[0])*tmpyz    +
          (y[2] - y[3])*yloctmpz +
@@ -471,14 +438,14 @@ constexpr rajaperf::Real_type Jxy(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jxz(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&z)[NB],
-  const rajaperf::Real_type  tmpyz,
-  const rajaperf::Real_type  yloctmpz,
-  const rajaperf::Real_type  tmpyzloc,
-  const rajaperf::Real_type  yzloc)
+inline Real_type Jxz(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> z,
+  const Real_type  tmpyz,
+  const Real_type  yloctmpz,
+  const Real_type  tmpyzloc,
+  const Real_type  yzloc)
 {
   return (z[1] - z[0])*tmpyz   +
          (z[2] - z[3])*yloctmpz +
@@ -487,14 +454,14 @@ constexpr rajaperf::Real_type Jxz(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jyx(
-  const rajaperf::Real_type  (&x)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpxz,
-  const rajaperf::Real_type  xloctmpz,
-  const rajaperf::Real_type  tmpxzloc,
-  const rajaperf::Real_type  xzloc)
+inline Real_type Jyx(
+  Real_array_const_ref<NB> x,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpxz,
+  const Real_type  xloctmpz,
+  const Real_type  tmpxzloc,
+  const Real_type  xzloc)
 {
   return (x[3] - x[0])*tmpxz    +
          (x[2] - x[1])*xloctmpz +
@@ -503,14 +470,14 @@ constexpr rajaperf::Real_type Jyx(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jyy(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&y)[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(z))[NB],
-  const rajaperf::Real_type  tmpxz,
-  const rajaperf::Real_type  xloctmpz,
-  const rajaperf::Real_type  tmpxzloc,
-  const rajaperf::Real_type  xzloc)
+inline Real_type Jyy(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> y,
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(z),
+  const Real_type  tmpxz,
+  const Real_type  xloctmpz,
+  const Real_type  tmpxzloc,
+  const Real_type  xzloc)
 {
   return (y[3] - y[0])*tmpxz    +
          (y[2] - y[1])*xloctmpz +
@@ -519,14 +486,14 @@ constexpr rajaperf::Real_type Jyy(
 }
 
 RAJA_HOST_DEVICE
-constexpr rajaperf::Real_type Jyz(
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(x))[NB],
-  const rajaperf::Real_type  (&RAJA_UNUSED_ARG(y))[NB],
-  const rajaperf::Real_type  (&z)[NB],
-  const rajaperf::Real_type  tmpxz,
-  const rajaperf::Real_type  xloctmpz,
-  const rajaperf::Real_type  tmpxzloc,
-  const rajaperf::Real_type  xzloc)
+inline Real_type Jyz(
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(x),
+  Real_array_const_ref<NB> RAJA_UNUSED_ARG(y),
+  Real_array_const_ref<NB> z,
+  const Real_type  tmpxz,
+  const Real_type  xloctmpz,
+  const Real_type  tmpxzloc,
+  const Real_type  xzloc)
 {
   return (z[3] - z[0])*tmpxz    +
          (z[2] - z[1])*xloctmpz +
@@ -538,14 +505,14 @@ constexpr rajaperf::Real_type Jyz(
 // Node basis
 //-----------------------------------------
 RAJA_HOST_DEVICE
-constexpr void nodebasis(
-  rajaperf::Real_type (&basis)[NB],
-  const rajaperf::Real_type tmpxy,
-  const rajaperf::Real_type xloctmpy,
-  const rajaperf::Real_type xyloc,
-  const rajaperf::Real_type tmpxyloc,
-  const rajaperf::Real_type zloc,
-  const rajaperf::Real_type tmpz)
+inline void nodebasis(
+  Real_array_ref<NB> basis,
+  const Real_type tmpxy,
+  const Real_type xloctmpy,
+  const Real_type xyloc,
+  const Real_type tmpxyloc,
+  const Real_type zloc,
+  const Real_type tmpz)
 {
   basis[0] = tmpxy*tmpz;
   basis[1] = xloctmpy*tmpz;
@@ -558,12 +525,12 @@ constexpr void nodebasis(
 }
 
 RAJA_HOST_DEVICE
-constexpr void dnodebasis_dx(
-  rajaperf::Real_type (&dbasis)[NB],
-  const rajaperf::Real_type tmpyz,
-  const rajaperf::Real_type yloctmpz,
-  const rajaperf::Real_type tmpyzloc,
-  const rajaperf::Real_type yzloc)
+inline void dnodebasis_dx(
+  Real_array_ref<NB> dbasis,
+  const Real_type tmpyz,
+  const Real_type yloctmpz,
+  const Real_type tmpyzloc,
+  const Real_type yzloc)
 {
   dbasis[0] = -tmpyz;
   dbasis[1] =  tmpyz;
@@ -576,12 +543,12 @@ constexpr void dnodebasis_dx(
 }
 
 RAJA_HOST_DEVICE
-constexpr void dnodebasis_dy(
-  rajaperf::Real_type (&dbasis)[NB],
-  const rajaperf::Real_type tmpxz,
-  const rajaperf::Real_type xloctmpz,
-  const rajaperf::Real_type tmpxzloc,
-  const rajaperf::Real_type xzloc)
+inline void dnodebasis_dy(
+  Real_array_ref<NB> dbasis,
+  const Real_type tmpxz,
+  const Real_type xloctmpz,
+  const Real_type tmpxzloc,
+  const Real_type xzloc)
 {
   dbasis[0] = -tmpxz;
   dbasis[1] = -xloctmpz;
@@ -594,12 +561,12 @@ constexpr void dnodebasis_dy(
 }
 
 RAJA_HOST_DEVICE
-constexpr void dnodebasis_dz(
-  rajaperf::Real_type (&dbasis)[NB],
-  const rajaperf::Real_type tmpxy,
-  const rajaperf::Real_type xloctmpy,
-  const rajaperf::Real_type xyloc,
-  const rajaperf::Real_type tmpxyloc)
+inline void dnodebasis_dz(
+  Real_array_ref<NB> dbasis,
+  const Real_type tmpxy,
+  const Real_type xloctmpy,
+  const Real_type xyloc,
+  const Real_type tmpxyloc)
 {
   dbasis[0] = -tmpxy;
   dbasis[1] = -xloctmpy;
@@ -612,22 +579,22 @@ constexpr void dnodebasis_dz(
 }
 
 RAJA_HOST_DEVICE
-constexpr void transform_node_dbasis(
-  const rajaperf::Real_type jinvxx,
-  const rajaperf::Real_type jinvxy,
-  const rajaperf::Real_type jinvxz,
-  const rajaperf::Real_type jinvyx,
-  const rajaperf::Real_type jinvyy,
-  const rajaperf::Real_type jinvyz,
-  const rajaperf::Real_type jinvzx,
-  const rajaperf::Real_type jinvzy,
-  const rajaperf::Real_type jinvzz,
-  rajaperf::Real_type (&basisx)[NB],
-  rajaperf::Real_type (&basisy)[NB],
-  rajaperf::Real_type (&basisz)[NB],
-  rajaperf::Real_type (&tbasisx)[NB],
-  rajaperf::Real_type (&tbasisy)[NB],
-  rajaperf::Real_type (&tbasisz)[NB])
+inline void transform_node_dbasis(
+  const Real_type jinvxx,
+  const Real_type jinvxy,
+  const Real_type jinvxz,
+  const Real_type jinvyx,
+  const Real_type jinvyy,
+  const Real_type jinvyz,
+  const Real_type jinvzx,
+  const Real_type jinvzy,
+  const Real_type jinvzz,
+  Real_array_const_ref<NB> basisx,
+  Real_array_const_ref<NB> basisy,
+  Real_array_const_ref<NB> basisz,
+  Real_array_ref<NB> tbasisx,
+  Real_array_ref<NB> tbasisy,
+  Real_array_ref<NB> tbasisz)
 {
   // Transform is:  Grad(w_i) <- J^{-1} Grad(w_i)
   transform_basis(
@@ -642,12 +609,12 @@ constexpr void transform_node_dbasis(
 // Edge basis
 //-----------------------------------------
 RAJA_HOST_DEVICE
-constexpr void edgebasis_x(
-  rajaperf::Real_type (&basisx)[EB],
-  const rajaperf::Real_type tmpyz,
-  const rajaperf::Real_type yloctmpz,
-  const rajaperf::Real_type tmpyzloc,
-  const rajaperf::Real_type yzloc)
+inline void edgebasis_x(
+  Real_array_ref<EB> basisx,
+  const Real_type tmpyz,
+  const Real_type yloctmpz,
+  const Real_type tmpyzloc,
+  const Real_type yzloc)
 {
   basisx[0]  = tmpyz;
   basisx[1]  = yloctmpz;
@@ -665,12 +632,12 @@ constexpr void edgebasis_x(
 
 // Evaluate basis with respect to y at this quadrature point
 RAJA_HOST_DEVICE
-constexpr void edgebasis_y(
-  rajaperf::Real_type (&basisy)[EB],
-  const rajaperf::Real_type tmpxz,
-  const rajaperf::Real_type xloctmpz,
-  const rajaperf::Real_type tmpxzloc,
-  const rajaperf::Real_type xzloc)
+inline void edgebasis_y(
+  Real_array_ref<EB> basisy,
+  const Real_type tmpxz,
+  const Real_type xloctmpz,
+  const Real_type tmpxzloc,
+  const Real_type xzloc)
 {
   basisy[0]  = 0.0;
   basisy[1]  = 0.0;
@@ -688,12 +655,12 @@ constexpr void edgebasis_y(
 
 // Evaluate basis with respect to z at this quadrature point
 RAJA_HOST_DEVICE
-constexpr void edgebasis_z(
-  rajaperf::Real_type (&basisz)[EB],
-  const rajaperf::Real_type tmpxy,
-  const rajaperf::Real_type xloctmpy,
-  const rajaperf::Real_type xyloc,
-  const rajaperf::Real_type tmpxyloc)
+inline void edgebasis_z(
+  Real_array_ref<EB> basisz,
+  const Real_type tmpxy,
+  const Real_type xloctmpy,
+  const Real_type xyloc,
+  const Real_type tmpxyloc)
 {
   basisz[0]  = 0.0;
   basisz[1]  = 0.0;
@@ -711,10 +678,10 @@ constexpr void edgebasis_z(
 
 // Differeniate basis with respect to x at this quadrature point
 RAJA_HOST_DEVICE
-constexpr void curl_edgebasis_x(
-  rajaperf::Real_type (&dbasisx)[EB],
-  const rajaperf::Real_type tmpx,
-  const rajaperf::Real_type xpt)
+inline void curl_edgebasis_x(
+  Real_array_ref<EB> dbasisx,
+  const Real_type tmpx,
+  const Real_type xpt)
 {
   dbasisx[0]  =  0.0;  //
   dbasisx[1]  =  0.0;  //
@@ -732,10 +699,10 @@ constexpr void curl_edgebasis_x(
 
 // Differeniate basis with respect to y at this quadrature point
 RAJA_HOST_DEVICE
-constexpr void curl_edgebasis_y(
-  rajaperf::Real_type (&dbasisy)[EB],
-  const rajaperf::Real_type tmpy,
-  const rajaperf::Real_type ypt)
+inline void curl_edgebasis_y(
+  Real_array_ref<EB> dbasisy,
+  const Real_type tmpy,
+  const Real_type ypt)
 {
   dbasisy[0]  = -tmpy; // -1*f2
   dbasisy[1]  = -ypt;  // -1*f3
@@ -753,10 +720,10 @@ constexpr void curl_edgebasis_y(
 
 // Differeniate basis with respect to z at this quadrature point
 RAJA_HOST_DEVICE
-constexpr void curl_edgebasis_z(
-  rajaperf::Real_type (&dbasisz)[EB],
-  const rajaperf::Real_type tmpz,
-  const rajaperf::Real_type zpt)
+inline void curl_edgebasis_z(
+  Real_array_ref<EB> dbasisz,
+  const Real_type tmpz,
+  const Real_type zpt)
 {
   dbasisz[0]  =  tmpz; // +1*f4
   dbasisz[1]  = -tmpz; // -1*f4
@@ -773,58 +740,58 @@ constexpr void curl_edgebasis_z(
 }
 
 RAJA_HOST_DEVICE
-constexpr void edgebasis(
-  const rajaperf::Real_type xloc,
-  const rajaperf::Real_type yloc,
-  const rajaperf::Real_type zloc,
-  rajaperf::Real_type (&ebasisx)[EB],
-  rajaperf::Real_type (&ebasisy)[EB],
-  rajaperf::Real_type (&ebasisz)[EB])
+inline void edgebasis(
+  const Real_type xloc,
+  const Real_type yloc,
+  const Real_type zloc,
+  Real_array_ref<EB> ebasisx,
+  Real_array_ref<EB> ebasisy,
+  Real_array_ref<EB> ebasisz)
 {
-  const rajaperf::Real_type tmpx = 1. - xloc;
-  const rajaperf::Real_type tmpy = 1. - yloc;
-  const rajaperf::Real_type tmpz = 1. - zloc;
+  const Real_type tmpx = 1. - xloc;
+  const Real_type tmpy = 1. - yloc;
+  const Real_type tmpz = 1. - zloc;
 
-  const rajaperf::Real_type tmpxy    = tmpx*tmpy;
-  const rajaperf::Real_type xyloc    = xloc*yloc;
-  const rajaperf::Real_type tmpxyloc = tmpx*yloc;
-  const rajaperf::Real_type xloctmpy = xloc*tmpy;
-  const rajaperf::Real_type tmpxz    = tmpx*tmpz;
-  const rajaperf::Real_type tmpyz    = tmpy*tmpz;
-  const rajaperf::Real_type xzloc    = xloc*zloc;
-  const rajaperf::Real_type yzloc    = yloc*zloc;
-  const rajaperf::Real_type tmpyzloc = tmpy*zloc;
-  const rajaperf::Real_type tmpxzloc = tmpx*zloc;
-  const rajaperf::Real_type yloctmpz = yloc*tmpz;
-  const rajaperf::Real_type xloctmpz = xloc*tmpz;
+  const Real_type tmpxy    = tmpx*tmpy;
+  const Real_type xyloc    = xloc*yloc;
+  const Real_type tmpxyloc = tmpx*yloc;
+  const Real_type xloctmpy = xloc*tmpy;
+  const Real_type tmpxz    = tmpx*tmpz;
+  const Real_type tmpyz    = tmpy*tmpz;
+  const Real_type xzloc    = xloc*zloc;
+  const Real_type yzloc    = yloc*zloc;
+  const Real_type tmpyzloc = tmpy*zloc;
+  const Real_type tmpxzloc = tmpx*zloc;
+  const Real_type yloctmpz = yloc*tmpz;
+  const Real_type xloctmpz = xloc*tmpz;
 
   edgebasis_x(ebasisx, tmpyz, yloctmpz, tmpyzloc, yzloc);
   edgebasis_y(ebasisy, tmpxz, xloctmpz, tmpxzloc, xzloc);
   edgebasis_z(ebasisz, tmpxy, xloctmpy, xyloc, tmpxyloc);
 }
 
-constexpr rajaperf::Int_type flops_transform_basis(int basis_size)
+inline Int_type flops_transform_basis(int basis_size)
 {
   return 3*5*basis_size;
 }
 
 RAJA_HOST_DEVICE
-constexpr void transform_edge_basis(
-  const rajaperf::Real_type jinvxx,
-  const rajaperf::Real_type jinvxy,
-  const rajaperf::Real_type jinvxz,
-  const rajaperf::Real_type jinvyx,
-  const rajaperf::Real_type jinvyy,
-  const rajaperf::Real_type jinvyz,
-  const rajaperf::Real_type jinvzx,
-  const rajaperf::Real_type jinvzy,
-  const rajaperf::Real_type jinvzz,
-  rajaperf::Real_type (&basisx)[EB],
-  rajaperf::Real_type (&basisy)[EB],
-  rajaperf::Real_type (&basisz)[EB],
-  rajaperf::Real_type (&tbasisx)[EB],
-  rajaperf::Real_type (&tbasisy)[EB],
-  rajaperf::Real_type (&tbasisz)[EB])
+inline void transform_edge_basis(
+  const Real_type jinvxx,
+  const Real_type jinvxy,
+  const Real_type jinvxz,
+  const Real_type jinvyx,
+  const Real_type jinvyy,
+  const Real_type jinvyz,
+  const Real_type jinvzx,
+  const Real_type jinvzy,
+  const Real_type jinvzz,
+  Real_array_const_ref<EB> basisx,
+  Real_array_const_ref<EB> basisy,
+  Real_array_const_ref<EB> basisz,
+  Real_array_ref<EB> tbasisx,
+  Real_array_ref<EB> tbasisy,
+  Real_array_ref<EB> tbasisz)
 {
   // Transform is:  w_i <- J^{-1} w_i
   transform_basis(
@@ -836,23 +803,23 @@ constexpr void transform_edge_basis(
 }
 
 RAJA_HOST_DEVICE
-constexpr void transform_curl_edge_basis(
-  const rajaperf::Real_type jxx,
-  const rajaperf::Real_type jxy,
-  const rajaperf::Real_type jxz,
-  const rajaperf::Real_type jyx,
-  const rajaperf::Real_type jyy,
-  const rajaperf::Real_type jyz,
-  const rajaperf::Real_type jzx,
-  const rajaperf::Real_type jzy,
-  const rajaperf::Real_type jzz,
-  const rajaperf::Real_type invdetj,
-  rajaperf::Real_type (&basisx)[EB],
-  rajaperf::Real_type (&basisy)[EB],
-  rajaperf::Real_type (&basisz)[EB],
-  rajaperf::Real_type (&tbasisx)[EB],
-  rajaperf::Real_type (&tbasisy)[EB],
-  rajaperf::Real_type (&tbasisz)[EB])
+inline void transform_curl_edge_basis(
+  const Real_type jxx,
+  const Real_type jxy,
+  const Real_type jxz,
+  const Real_type jyx,
+  const Real_type jyy,
+  const Real_type jyz,
+  const Real_type jzx,
+  const Real_type jzy,
+  const Real_type jzz,
+  const Real_type invdetj,
+  Real_array_const_ref<EB> basisx,
+  Real_array_const_ref<EB> basisy,
+  Real_array_const_ref<EB> basisz,
+  Real_array_ref<EB> tbasisx,
+  Real_array_ref<EB> tbasisy,
+  Real_array_ref<EB> tbasisz)
 {
   // Transform is:  Curl(w_i) <- (1/|J|)J^{T} Curl(w_i)
   transform_basis(
@@ -867,10 +834,10 @@ constexpr void transform_curl_edge_basis(
 // Face basis
 //-----------------------------------------
 RAJA_HOST_DEVICE
-constexpr void face_basis_x(
-  rajaperf::Real_type (&basisx)[FB],
-  const rajaperf::Real_type tmpx,
-  const rajaperf::Real_type xpt)
+inline void face_basis_x(
+  Real_array_ref<FB> basisx,
+  const Real_type tmpx,
+  const Real_type xpt)
 {
   basisx[0] = tmpx;
   basisx[1] = xpt;
@@ -881,10 +848,10 @@ constexpr void face_basis_x(
 }
 
 RAJA_HOST_DEVICE
-constexpr void face_basis_y(
-  rajaperf::Real_type (&basisy)[FB],
-  const rajaperf::Real_type tmpy,
-  const rajaperf::Real_type ypt)
+inline void face_basis_y(
+  Real_array_ref<FB> basisy,
+  const Real_type tmpy,
+  const Real_type ypt)
 {
   basisy[0] = 0.0;
   basisy[1] = 0.0;
@@ -895,10 +862,10 @@ constexpr void face_basis_y(
 }
 
 RAJA_HOST_DEVICE
-constexpr void face_basis_z(
-  rajaperf::Real_type (&basisz)[FB],
-  const rajaperf::Real_type tmpz,
-  const rajaperf::Real_type zpt)
+inline void face_basis_z(
+  Real_array_ref<FB> basisz,
+  const Real_type tmpz,
+  const Real_type zpt)
 {
   basisz[0] = 0.0;
   basisz[1] = 0.0;
@@ -909,23 +876,23 @@ constexpr void face_basis_z(
 }
 
 RAJA_HOST_DEVICE
-constexpr void transform_face_basis(
-  const rajaperf::Real_type jxx,
-  const rajaperf::Real_type jxy,
-  const rajaperf::Real_type jxz,
-  const rajaperf::Real_type jyx,
-  const rajaperf::Real_type jyy,
-  const rajaperf::Real_type jyz,
-  const rajaperf::Real_type jzx,
-  const rajaperf::Real_type jzy,
-  const rajaperf::Real_type jzz,
-  const rajaperf::Real_type invdetj,
-  rajaperf::Real_type (&basisx)[FB],
-  rajaperf::Real_type (&basisy)[FB],
-  rajaperf::Real_type (&basisz)[FB],
-  rajaperf::Real_type (&tbasisx)[FB],
-  rajaperf::Real_type (&tbasisy)[FB],
-  rajaperf::Real_type (&tbasisz)[FB])
+inline void transform_face_basis(
+  const Real_type jxx,
+  const Real_type jxy,
+  const Real_type jxz,
+  const Real_type jyx,
+  const Real_type jyy,
+  const Real_type jyz,
+  const Real_type jzx,
+  const Real_type jzy,
+  const Real_type jzz,
+  const Real_type invdetj,
+  Real_array_const_ref<FB> basisx,
+  Real_array_const_ref<FB> basisy,
+  Real_array_const_ref<FB> basisz,
+  Real_array_ref<FB> tbasisx,
+  Real_array_ref<FB> tbasisy,
+  Real_array_ref<FB> tbasisz)
 {
   // Transform is:  f_i <- (1/|J|)J^{T} f_i
   transform_basis(
@@ -935,5 +902,7 @@ constexpr void transform_face_basis(
     basisx, basisy, basisz,
     tbasisx, tbasisy, tbasisz);
 }
+
+} // namespace rajaperf
 
 #endif  // closing endif for header file include guard

@@ -52,9 +52,9 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
 
       qu->submit([&](::sycl::handler& h) {
 
-       ::sycl::local_accessor<double, 2> As(::sycl::range<2>(tile_size, tile_size), h);
-       ::sycl::local_accessor<double, 2> Bs(::sycl::range<2>(tile_size, tile_size), h);
-       ::sycl::local_accessor<double, 2> Cs(::sycl::range<2>(tile_size, tile_size), h);
+       ::sycl::local_accessor<Real_type, 2> As(::sycl::range<2>(tile_size, tile_size), h);
+       ::sycl::local_accessor<Real_type, 2> Bs(::sycl::range<2>(tile_size, tile_size), h);
+       ::sycl::local_accessor<Real_type, 2> Cs(::sycl::range<2>(tile_size, tile_size), h);
 
         h.parallel_for
           (::sycl::nd_range<3>(gridSize, workGroupSize),
@@ -73,7 +73,9 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
 
                  itm.barrier(::sycl::access::fence_space::local_space);
 
-                 MAT_MAT_SHARED_BODY_3(tile_size)
+                 for (Index_type n = 0; n < tile_size; ++n) {
+                    MAT_MAT_SHARED_BODY_3(tile_size)
+                 }
 
                  itm.barrier(::sycl::access::fence_space::local_space);
                }
@@ -93,7 +95,7 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
     constexpr bool async = true;
 
     const int local_mats = 3;
-    constexpr size_t shmem = tile_size * tile_size * local_mats * sizeof(double);
+    constexpr size_t shmem = tile_size * tile_size * local_mats * sizeof(Real_type);
 
     using launch_policy = RAJA::LaunchPolicy<RAJA::sycl_launch_t<async>>;
 
@@ -122,12 +124,12 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
                   //We only support dynamic shared memory in Sycl
                   //Thus requiring a different setup than other backends
                   //which use static shared memory
-                  double * As_ptr = ctx.getSharedMemory<double>(tile_size * tile_size);
-                  double * Bs_ptr = ctx.getSharedMemory<double>(tile_size * tile_size);
-                  double * Cs_ptr = ctx.getSharedMemory<double>(tile_size * tile_size);
-                  double (*As)[tile_size] = (double (*)[tile_size]) As_ptr;
-                  double (*Bs)[tile_size] = (double (*)[tile_size]) Bs_ptr;
-                  double (*Cs)[tile_size] = (double (*)[tile_size]) Cs_ptr;
+                  Real_type * As_ptr = ctx.getSharedMemory<Real_type>(tile_size * tile_size);
+                  Real_type * Bs_ptr = ctx.getSharedMemory<Real_type>(tile_size * tile_size);
+                  Real_type * Cs_ptr = ctx.getSharedMemory<Real_type>(tile_size * tile_size);
+                  Real_type (*As)[tile_size] = (Real_type (*)[tile_size]) As_ptr;
+                  Real_type (*Bs)[tile_size] = (Real_type (*)[tile_size]) Bs_ptr;
+                  Real_type (*Cs)[tile_size] = (Real_type (*)[tile_size]) Cs_ptr;
 
                   RAJA::loop<threads_y>(ctx, RAJA::RangeSegment(0, tile_size),
                     [&](Index_type ty) {
@@ -158,7 +160,9 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
                       [&](Index_type ty) {
                         RAJA::loop<threads_x>(ctx, RAJA::RangeSegment(0, tile_size),
                           [&](Index_type tx) {
-                            MAT_MAT_SHARED_BODY_3(tile_size)
+                            for (Index_type n = 0; n < tile_size; ++n) {
+                              MAT_MAT_SHARED_BODY_3(tile_size)
+                            }
                           }
                         );  // RAJA::loop<threads_x>
                       }

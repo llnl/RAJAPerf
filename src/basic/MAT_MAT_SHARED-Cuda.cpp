@@ -39,7 +39,9 @@ __global__ void mat_mat_shared(Index_type N, Real_ptr C, Real_ptr A,
 
     __syncthreads();
 
-    MAT_MAT_SHARED_BODY_3(tile_size)
+    for (Index_type n = 0; n < tile_size; ++n) {
+      MAT_MAT_SHARED_BODY_3(tile_size)
+    }
 
     __syncthreads();
   }
@@ -132,7 +134,11 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
               __syncthreads();
 
               auto inner_y_3 = [&](Index_type ty) {
-                auto inner_x_3 = [&](Index_type tx) { MAT_MAT_SHARED_BODY_3(tile_size) };
+                auto inner_x_3 = [&](Index_type tx) {
+                      for (Index_type n = 0; n < tile_size; ++n) {
+                        MAT_MAT_SHARED_BODY_3(tile_size)
+                      }
+                    };
 
                 {
                   Index_type tx = threadIdx.x;
@@ -246,7 +252,9 @@ void MAT_MAT_SHARED::runCudaVariantImpl(VariantID vid)
                       [&](Index_type ty) {
                         RAJA::loop<threads_x>(ctx, RAJA::RangeSegment(0, tile_size),
                           [&](Index_type tx) {
-                            MAT_MAT_SHARED_BODY_3(tile_size)
+                            for (Index_type n = 0; n < tile_size; ++n) {
+                              MAT_MAT_SHARED_BODY_3(tile_size)
+                            }
                           }
                         );  // RAJA::loop<threads_x>
                       }

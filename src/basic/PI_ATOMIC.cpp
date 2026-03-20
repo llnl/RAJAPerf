@@ -79,5 +79,60 @@ void PI_ATOMIC::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNU
 
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void PI_ATOMIC::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = getActualProblemSize();
+
+    PI_ATOMIC_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      *pi = m_pi_init;
+      );
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(
+        Real_type x = (Real_type(i) + 0.5) * dx;
+        RAJAPERF_ATOMIC_ADD_COUNTING(*pi, dx / (1.0 + x * x));
+        );
+      }
+
+      RAJAPERF_COUNTERS_PAR_SYNC();
+
+      RAJAPERF_COUNTERS_CODE_WRAPPER(
+      m_pi_final = *pi * 4.0;
+      );
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace basic
 } // end namespace rajaperf

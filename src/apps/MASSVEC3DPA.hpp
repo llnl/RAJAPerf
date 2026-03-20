@@ -159,34 +159,34 @@ constexpr RAJA::Index_type DIM = 3;
     mvpa::Q1D * mvpa::Q1D * mvpa::Q1D * e]
 
 #define MASSVEC3DPA_0_CPU                                                      \
-  constexpr Index_type MQ1 = mvpa::Q1D;                                        \
-  constexpr Index_type MD1 = mvpa::D1D;                                        \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  /*RAJA_TEAM_SHARED*/ Real_type smB[MQ1][MD1];                                \
-  /*RAJA_TEAM_SHARED*/ Real_type smBt[MD1][MQ1];                               \
-  /*RAJA_TEAM_SHARED*/ Real_type sm0[MDQ * MDQ * MDQ];                         \
-  /*RAJA_TEAM_SHARED*/ Real_type sm1[MDQ * MDQ * MDQ];                         \
-  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                     \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
-  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
+  constexpr auto MQ1 = mvpa::Q1D;                                              \
+  constexpr auto MD1 = mvpa::D1D;                                              \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  /*RAJA_TEAM_SHARED*/ Real_array2<MQ1, MD1> smB;                              \
+  /*RAJA_TEAM_SHARED*/ Real_array2<MD1, MQ1> smBt;                             \
+  /*RAJA_TEAM_SHARED*/ Real_array3<MDQ, MDQ, MDQ> sm0;                         \
+  /*RAJA_TEAM_SHARED*/ Real_array3<MDQ, MDQ, MDQ> sm1;                         \
+  Real_array3_ref<MDQ, MDQ, MDQ> smX(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD(sm1);
 
 #define MASSVEC3DPA_0_GPU                                                      \
-  constexpr Index_type MQ1 = mvpa::Q1D;                                        \
-  constexpr Index_type MD1 = mvpa::D1D;                                        \
-  constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
-  RAJA_TEAM_SHARED Real_type smB[MQ1][MD1];                                    \
-  RAJA_TEAM_SHARED Real_type smBt[MD1][MQ1];                                   \
-  RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                             \
-  RAJA_TEAM_SHARED Real_type sm1[MDQ * MDQ * MDQ];                             \
-  Real_type(*smX)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                     \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
-  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
+  constexpr auto MQ1 = mvpa::Q1D;                                              \
+  constexpr auto MD1 = mvpa::D1D;                                              \
+  constexpr auto MDQ = (MQ1 > MD1) ? MQ1 : MD1;                                \
+  RAJA_TEAM_SHARED Real_array2<MQ1, MD1> smB;                                  \
+  RAJA_TEAM_SHARED Real_array2<MD1, MQ1> smBt;                                 \
+  RAJA_TEAM_SHARED Real_array3<MDQ, MDQ, MDQ> sm0;                             \
+  RAJA_TEAM_SHARED Real_array3<MDQ, MDQ, MDQ> sm1;                             \
+  Real_array3_ref<MDQ, MDQ, MDQ> smX(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DDQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> DQQ(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQQ(sm1);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QQD(sm0);                                     \
+  Real_array3_ref<MDQ, MDQ, MDQ> QDD(sm1);
 
 #define MASSVEC3DPA_1                                                          \
   Real_type r_smB = MVPA_B(q, d);                                              \

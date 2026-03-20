@@ -124,5 +124,63 @@ void HYDRO_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   deallocData(m_zz, vid);
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void HYDRO_2D::setCountedAttributes()
+{
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type kbeg = 1;
+    const Index_type kend = m_kn - 1;
+    const Index_type jbeg = 1;
+    const Index_type jend = m_jn - 1;
+
+    HYDRO_2D_DATA_SETUP;
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type k = kbeg; k < kend; ++k )) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = jbeg; j < jend; ++j )) {
+          RAJAPERF_COUNTERS_LOOP_BODY(HYDRO_2D_BODY1);
+        }
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type k = kbeg; k < kend; ++k )) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = jbeg; j < jend; ++j )) {
+          RAJAPERF_COUNTERS_LOOP_BODY(HYDRO_2D_BODY2);
+        }
+      }
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type k = kbeg; k < kend; ++k )) {
+        RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type j = jbeg; j < jend; ++j )) {
+          RAJAPERF_COUNTERS_LOOP_BODY(HYDRO_2D_BODY3);
+        }
+      }
+
+    }
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace lcals
 } // end namespace rajaperf

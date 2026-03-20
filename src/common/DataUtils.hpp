@@ -254,95 +254,52 @@ inline void moveData(DataSpace new_dataSpace, DataSpace old_dataSpace,
 }
 
 
-template <typename T>
+template <typename Alloc, typename CopyFreeReassign>
 struct AutoDataMover
 {
-  AutoDataMover(DataSpace new_dataSpace, DataSpace old_dataSpace,
-                T*& ptr, Size_type len, Size_type align)
-    : m_ptr(&ptr)
-    , m_new_dataSpace(new_dataSpace)
-    , m_old_dataSpace(old_dataSpace)
-    , m_len(len)
-    , m_align(align)
+  using res_type = decltype(std::declval<Alloc>()());
+
+  AutoDataMover(Alloc alloc, CopyFreeReassign copyFreeReassign)
+    : m_alloc(std::move(alloc))
+    , m_copyFreeReassign(std::move(copyFreeReassign))
   { }
 
   AutoDataMover(AutoDataMover const&) = delete;
   AutoDataMover& operator=(AutoDataMover const&) = delete;
 
-  AutoDataMover(AutoDataMover&& rhs)
-    : m_ptr(std::exchange(rhs.m_ptr, nullptr))
-    , m_new_ptr(std::exchange(rhs.m_new_ptr, nullptr))
-    , m_new_dataSpace(rhs.m_new_dataSpace)
-    , m_old_dataSpace(rhs.m_old_dataSpace)
-    , m_len(rhs.m_len)
-    , m_align(rhs.m_align)
-  { }
-  AutoDataMover& operator=(AutoDataMover&& rhs)
-  {
-    finalize();
-    m_ptr = std::exchange(rhs.m_ptr, nullptr);
-    m_new_ptr = std::exchange(rhs.m_new_ptr, nullptr);
-    m_new_dataSpace = rhs.m_new_dataSpace;
-    m_old_dataSpace = rhs.m_old_dataSpace;
-    m_len = rhs.m_len;
-    m_align = rhs.m_align;
-    return *this;
-  }
+  AutoDataMover(AutoDataMover&& rhs) = delete;
+  AutoDataMover& operator=(AutoDataMover&& rhs) = delete;
 
   ~AutoDataMover()
   {
     finalize();
   }
 
-  // Get the pointer that will replace *m_ptr after finalize is called.
-  // Use this to populate pointers into the final data structure but do not
-  // dereference this pointer in setup code.
-  T* get_final_ptr()
+  [[nodiscard]] res_type get_final_ptr()
   {
-    if (m_ptr && !m_new_ptr) {
-
-      if (m_new_dataSpace != m_old_dataSpace) {
-
-        allocData(m_new_dataSpace, m_new_ptr, m_len, m_align);
-
-      } else {
-
-        m_new_ptr = *m_ptr;
-
-      }
+    if (!m_allocated) {
+      m_allocated = true;
+      m_res = m_alloc();
     }
 
-    return m_new_ptr;
+    return m_res;
   }
 
   void finalize()
   {
-    if (m_ptr) {
-
-      get_final_ptr();
-
-      if (m_new_dataSpace != m_old_dataSpace) {
-
-        copyData(m_new_dataSpace, m_new_ptr, m_old_dataSpace, *m_ptr, m_len);
-
-        deallocData(m_old_dataSpace, *m_ptr);
-
-        *m_ptr = m_new_ptr;
-
-      }
-
-      m_ptr = nullptr;
-      m_new_ptr = nullptr;
+    if (!m_finalized) {
+      m_finalized = true;
+      res_type res = get_final_ptr();
+      m_copyFreeReassign(res);
     }
   }
 
 private:
-  T** m_ptr;
-  T* m_new_ptr = nullptr;
-  DataSpace m_new_dataSpace;
-  DataSpace m_old_dataSpace;
-  Size_type m_len;
-  Size_type m_align;
+  Alloc m_alloc;
+  CopyFreeReassign m_copyFreeReassign;
+  bool m_allocated = false;
+  bool m_finalized = false;
+  res_type m_res;
 };
 
 /*!

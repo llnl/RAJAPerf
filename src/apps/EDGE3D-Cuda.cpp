@@ -13,6 +13,8 @@
 
 #if defined(RAJA_ENABLE_CUDA)
 
+#include "EDGE3D_HELPER.hpp"
+
 #include "common/CudaDataUtils.hpp"
 
 #include "AppsData.hpp"

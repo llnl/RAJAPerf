@@ -77,5 +77,53 @@ void ATOMIC::tearDown(VariantID RAJAPERF_UNUSED_ARG(vid), size_t RAJAPERF_UNUSED
 
 }
 
+
+// Only define setCountedAttributes functions past this point
+// BEWARE: data types (Index_type, Real_ptr, etc) become wrappers past this point
+#include "common/CountingMacros.hpp"
+
+void ATOMIC::setCountedAttributes()
+{
+  const size_t replication = getActualProblemSize();
+
+  VariantID vid = VariantID::Base_Seq;
+  size_t tune_idx = 0;
+
+  RAJAPERF_COUNTERS_INITIALIZE();
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  setUp(vid, tune_idx);
+  );
+
+  {
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    const Index_type ibegin = 0;
+    const Index_type iend = getActualProblemSize();
+
+    ATOMIC_DATA_SETUP(replication);
+    );
+
+    RAJAPERF_COUNTERS_REP_SCOPE()
+    {
+
+      RAJAPERF_COUNTERS_PAR_LOOP(for (Index_type i = ibegin; i < iend; ++i )) {
+        RAJAPERF_COUNTERS_LOOP_BODY(ATOMIC_BODY(RAJAPERF_ATOMIC_ADD_COUNTING, i, ATOMIC_VALUE));
+      }
+
+    }
+
+    RAJAPERF_COUNTERS_CODE_WRAPPER(
+    ATOMIC_DATA_TEARDOWN(replication);
+    );
+
+  }
+
+  RAJAPERF_COUNTERS_CODE_WRAPPER(
+  tearDown(vid, tune_idx);
+  );
+
+  RAJAPERF_COUNTERS_FINALIZE();
+}
+
 } // end namespace algorithm
 } // end namespace rajaperf

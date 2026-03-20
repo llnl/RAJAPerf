@@ -86,14 +86,14 @@ constexpr rajaperf::Index_type TL_SZ = 16;
  so it doesn't see these kind of problems.
  */
 #define MAT_MAT_SHARED_BODY_0_CLANG_HIP_CPU(tile_size)                         \
-  Real_type As[tile_size][tile_size];                                             \
-  Real_type Bs[tile_size][tile_size];                                             \
-  Real_type Cs[tile_size][tile_size];
+  Real_array2<tile_size, tile_size> As;                                        \
+  Real_array2<tile_size, tile_size> Bs;                                        \
+  Real_array2<tile_size, tile_size> Cs;
 
 #define MAT_MAT_SHARED_BODY_0(tile_size)                                       \
-  RAJA_TEAM_SHARED Real_type As[tile_size][tile_size];                            \
-  RAJA_TEAM_SHARED Real_type Bs[tile_size][tile_size];                            \
-  RAJA_TEAM_SHARED Real_type Cs[tile_size][tile_size];
+  RAJA_TEAM_SHARED Real_array2<tile_size, tile_size> As;                       \
+  RAJA_TEAM_SHARED Real_array2<tile_size, tile_size> Bs;                       \
+  RAJA_TEAM_SHARED Real_array2<tile_size, tile_size> Cs;
 
 #define MAT_MAT_SHARED_BODY_1(tile_size)        \
   Cs[ty][tx] = 0;
@@ -111,7 +111,6 @@ constexpr rajaperf::Index_type TL_SZ = 16;
     Bs[ty][tx] = 0.0;
 
 #define MAT_MAT_SHARED_BODY_3(tile_size)                                       \
-  for (Index_type n = 0; n < tile_size; ++n)                                   \
     Cs[ty][tx] += As[ty][n] * Bs[n][tx];
 
 #define MAT_MAT_SHARED_BODY_4(tile_size)                                       \
@@ -135,6 +134,7 @@ public:
   void setUp(VariantID vid, size_t tune_idx);
   void updateChecksum(VariantID vid, size_t tune_idx);
   void tearDown(VariantID vid, size_t tune_idx);
+  void setCountedAttributes();
 
   void defineSeqVariantTunings();
   void defineOpenMPVariantTunings();

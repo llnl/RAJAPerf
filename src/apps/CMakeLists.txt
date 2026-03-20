@@ -36,6 +36,7 @@ blt_add_library(
           EDGE3D-OMP.cpp
           EDGE3D-OMPTarget.cpp
           EDGE3D-Sycl.cpp
+          EDGE3D_COUNT.cpp
           ENERGY.cpp
           ENERGY-Seq.cpp
           ENERGY-Hip.cpp

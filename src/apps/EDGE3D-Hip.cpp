@@ -13,6 +13,8 @@
 
 #if defined(RAJA_ENABLE_HIP)
 
+#include "EDGE3D_HELPER.hpp"
+
 #include "common/HipDataUtils.hpp"
 
 #include "AppsData.hpp"
