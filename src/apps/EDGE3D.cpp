@@ -67,22 +67,22 @@ void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
 
-  constexpr size_t flops_k_loop = 15
-                                  + 6*flops_Jxx()
-                                  + flops_jacobian_inv()
-                                  + flops_transform_basis(EB) // flops for transform_edge_basis()
-                                  + flops_transform_basis(EB) + 9 // flops for transform_curl_edge_basis()
-                                  + 2*flops_inner_product<12, 12>(true);
+  const size_t flops_k_loop = 15
+                              + 6*flops_Jxx()
+                              + flops_jacobian_inv()
+                              + flops_transform_basis(EB) // flops for transform_edge_basis()
+                              + flops_transform_basis(EB) + 9 // flops for transform_curl_edge_basis()
+                              + 2*flops_inner_product<12, 12>(true);
 
-  constexpr size_t flops_j_loop = flops_k_loop*NQ_1D + 3*flops_Jxx() + 6;
-  constexpr size_t flops_i_loop = flops_j_loop*NQ_1D + 1;
+  const size_t flops_j_loop = flops_k_loop*NQ_1D + 3*flops_Jxx() + 6;
+  const size_t flops_i_loop = flops_j_loop*NQ_1D + 1;
 
-  constexpr size_t flops_edge_MpSmatrix = 9*flops_Jxx()
-                                          + flops_compute_detj()
-                                          + flops_i_loop*NQ_1D;
+  const size_t flops_edge_MpSmatrix = 9*flops_Jxx()
+                                      + flops_compute_detj()
+                                      + flops_i_loop*NQ_1D;
 
-  constexpr size_t flops_per_element = flops_edge_MpSmatrix
-                                       + (EB*EB + EB); // sum
+  const size_t flops_per_element = flops_edge_MpSmatrix
+                                   + (EB*EB + EB); // sum
 
   setFLOPsPerRep(number_of_elements * flops_per_element);
 }
