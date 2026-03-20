@@ -122,6 +122,8 @@ TEST(ShortSuiteTest, Basic)
   // STEP 4: Execute suite
   executor.runSuite();
 
+  std::cout << std::endl;
+
   // STEP 5: Access suite run data and run through checks
   std::vector<rajaperf::KernelBase*> kernels = executor.getKernels();
   std::vector<rajaperf::VariantID> variant_ids = executor.getVariantIDs();
