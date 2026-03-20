@@ -28,10 +28,15 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  setDefaultProblemSize(params.getFemsweepX() * params.getFemsweepY() * params.getFemsweepZ() * // mesh elements
-                        params.getFemsweepGroups() *  // energy groups
-                        8 * params.getFemsweepPolar() * params.getFemsweepAzim()  // angles
-                       );
+  // Use user parameters / default values
+  m_na = 8 * params.getFemsweepPolar() * params.getFemsweepAzim();
+  m_ng = params.getFemsweepGroups();
+  m_nx = params.getFemsweepX();
+  m_ny = params.getFemsweepY();
+  m_nz = params.getFemsweepZ();
+  m_ne = m_nx * m_ny * m_nz;
+
+  setDefaultProblemSize( m_ne * m_ng * m_na );
   setDefaultReps(1);
 
   setSize(params.getTargetSize(getDefaultProblemSize()),
@@ -54,32 +59,18 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
 
 void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
 {
-  // Set basic mesh parameters
-
-  // Always use user or default angles and groups.
-  m_na = 8 * this->run_params.getFemsweepPolar() * this->run_params.getFemsweepAzim();
-  m_ng = this->run_params.getFemsweepGroups();
-
-  if (!this->run_params.useFemsweepMeshDims())
+  if (!run_params.useFemsweepMeshDims())
   {
-    // Adapt mesh size to runtime memory requirements.
-    Index_type remainder = target_size / (m_na * m_ng);
+    // Use target_size
+    Real_type remainder = std::max(1.0, static_cast<Real_type>(target_size) / (m_na * m_ng));
 
-    // Use the rounded cube root, or the minimum of 1 in each dimension.
-    Index_type rounded_cube = std::max(1.0, std::round(std::cbrt(remainder)) );
+    Index_type rounded_cube = std::cbrt(remainder) + std::cbrt(3)-1.0;
     m_nx = rounded_cube;
     m_ny = rounded_cube;
     m_nz = rounded_cube;
 
+    m_ne = m_nx * m_ny * m_nz;
   }
-  else  // Using user or default parameters to set mesh size.
-  {
-    m_nx = this->run_params.getFemsweepX();
-    m_ny = this->run_params.getFemsweepY();
-    m_nz = this->run_params.getFemsweepZ();
-  }
-  
-  m_ne = m_nx * m_ny * m_nz;
 
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
@@ -94,7 +85,7 @@ void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
   m_M0len = ND * ND * m_ne;
   m_Xlen = ND * m_ne * m_ng * m_na;
 
-  setActualProblemSize( m_Xlen );
+  setActualProblemSize( m_ne * m_ng * m_na );
   setRunReps( target_reps );
 
   setItsPerRep(1);
@@ -159,7 +150,7 @@ void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
   allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
   allocAndInitDataRandValue (m_Sgdat    , m_Sglen     , vid);
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
-  allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
+  allocAndInitDataConst     (m_Xdat     , m_Xlen, 0.0 , vid);
 
   allocAndCopyHostData(m_nhpaa_r, m_meshgen->m_nhyperplanes_all_angles.Data(), m_meshgen->m_nhyperplanes_all_angles.Size(), vid);
 
