@@ -31,6 +31,14 @@ NVCC_COMP_VER=$2
 NVCC_COMP_ARCH=$3
 GCC_COMP_VER=$4
 
+# Pick a default C++ standard compatible with the CUDA toolchain.
+# CUDA 11.x does not support C++20 in NVCC mode (BLT enforces this).
+NVCC_MAJOR="${NVCC_COMP_VER%%.*}"
+BLT_CXX_STD="c++17"
+if [[ "${NVCC_MAJOR}" =~ ^[0-9]+$ && "${NVCC_MAJOR}" -ge 12 ]]; then
+  BLT_CXX_STD="c++20"
+fi
+
 # Detect optional fourth positional argument as a CMake version if it looks like N.M or N.M.P
 # Otherwise, treat it as a normal CMake argument.
 if [ -n "$5" ] && [[ "$5" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
@@ -65,7 +73,7 @@ cmake \
   -DCMAKE_CUDA_ARCHITECTURES="${NVCC_COMP_ARCH}" \
   -DCMAKE_C_COMPILER=/usr/tce/packages/gcc/gcc-${GCC_COMP_VER}/bin/gcc \
   -DCMAKE_CXX_COMPILER=/usr/tce/packages/gcc/gcc-${GCC_COMP_VER}/bin/g++ \
-  -DBLT_CXX_STD=c++20 \
+  -DBLT_CXX_STD=${BLT_CXX_STD} \
   -C ${RAJA_HOSTCONFIG} \
   -DENABLE_MPI=ON \
   -DENABLE_OPENMP=On \
