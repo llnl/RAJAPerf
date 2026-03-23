@@ -655,6 +655,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
+  Index_type kernsrep_width = 0;
   Index_type bytesMovedrep_width = 0;
   Index_type flopsrep_width = 0;
   Index_type bytesTouchedrep_width = 0;
@@ -675,6 +676,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
+    kernsrep_width = max(kernsrep_width, kernels[ik]->getKernelsPerRep());
     bytesMovedrep_width = max(bytesMovedrep_width, kernels[ik]->getBytesMovedPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
     bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
@@ -714,16 +716,16 @@ void Executor::writeKernelInfoSummary(ostream& str,
                       static_cast<Index_type>(irsize) ) + 3;
   dash_width += itsrep_width + static_cast<Index_type>(sepchr.size());
 
+  double krsize = log10( static_cast<double>(kernsrep_width) );
   string kernsrep_head("Kernels/rep");
-  Index_type kernsrep_width =
-    max( static_cast<Index_type>(kernsrep_head.size()),
-         static_cast<Index_type>(4) );
+  kernsrep_width = max( static_cast<Index_type>(kernsrep_head.size()),
+                        static_cast<Index_type>(krsize) ) + 3;
   dash_width += kernsrep_width + static_cast<Index_type>(sepchr.size());
 
   double brsize = log10( static_cast<double>(bytesMovedrep_width) );
   string bytesMovedrep_head("BytesMoved/rep");
   bytesMovedrep_width = max( static_cast<Index_type>(bytesMovedrep_head.size()),
-                        static_cast<Index_type>(brsize) ) + 3;
+                             static_cast<Index_type>(brsize) ) + 3;
   dash_width += bytesMovedrep_width + static_cast<Index_type>(sepchr.size());
 
   double frsize = log10( static_cast<double>(flopsrep_width) );
