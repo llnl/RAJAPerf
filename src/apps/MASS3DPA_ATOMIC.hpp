@@ -13,22 +13,22 @@
 ///
 /// for (Index_type e = 0; e < NE; ++e) {
 ///
-/// constexpr Index_type MQ1 = mpa_at::Q1D;
-/// constexpr Index_type MD1 = mpa_at::D1D;
+///   constexpr Index_type MQ1 = mpa_at::Q1D;
+///   constexpr Index_type MD1 = mpa_at::D1D;
 ///
-/// constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
+///   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 ///
-///  Real_type sm_B[MQ1][MD1];
-///  Real_type sm_Bt[MD1][MQ1];
+///   Real_type sm_B[MQ1][MD1];
+///   Real_type sm_Bt[MD1][MQ1];
 ///
-///  Real_type sm0[MDQ * MDQ * MDQ];
-///  Real_type sm1[MDQ * MDQ * MDQ];
-///  Real_type(*sm_X)[MD1][MD1]   = (Real_type(*)[MD1][MD1])sm0;
-///  Real_type(*DDQ)[MD1][MQ1]    = (Real_type(*)[MD1][MQ1])sm1;
-///  Real_type(*DQQ)[MQ1][MQ1]    = (Real_type(*)[MQ1][MQ1])sm0;
-///  Real_type(*QQQ)[MQ1][MQ1]    = (Real_type(*)[MQ1][MQ1])sm1;
-///  Real_type(*QQD)[MQ1][MD1]    = (Real_type(*)[MQ1][MD1])sm0;
-///  Real_type(*QDD)[MD1][MD1]    = (Real_type(*)[MD1][MD1])sm1;
+///   Real_type sm0[MDQ * MDQ * MDQ];
+///   Real_type sm1[MDQ * MDQ * MDQ];
+///   Real_type(*sm_X)[MD1][MD1]   = (Real_type(*)[MD1][MD1])sm0;
+///   Real_type(*DDQ)[MD1][MQ1]    = (Real_type(*)[MD1][MQ1])sm1;
+///   Real_type(*DQQ)[MQ1][MQ1]    = (Real_type(*)[MQ1][MQ1])sm0;
+///   Real_type(*QQQ)[MQ1][MQ1]    = (Real_type(*)[MQ1][MQ1])sm1;
+///   Real_type(*QQD)[MQ1][MD1]    = (Real_type(*)[MQ1][MD1])sm0;
+///   Real_type(*QDD)[MD1][MD1]    = (Real_type(*)[MD1][MD1])sm1;
 ///
 ///   Index_type thread_dofs[MD1 * MD1 * MD1];
 ///
@@ -100,36 +100,36 @@
 ///           u += QQQ[qz][qy][qx] * sm_Bt[dx][qx];
 ///         }
 ///         QQD[qz][qy][dx] = u;
-///         }
 ///       }
 ///     }
+///   }
 ///
-///       for(Index_type qz=0; qz<mpa_at::Q1D; ++qz) {
-///         for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
-///           for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
-///             Real_type u = 0.0;
-///             for (Index_type qy = 0; qy<mpa_at::Q1D; ++qy)
-///             {
-///             u += QQD[qz][qy][dx] * sm_Bt[dy][qy];
-///             }
-///             QDD[qz][dy][dx] = u;
-///           }
+///   for(Index_type qz=0; qz<mpa_at::Q1D; ++qz) {
+///     for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
+///       for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
+///         Real_type u = 0.0;
+///         for (Index_type qy = 0; qy<mpa_at::Q1D; ++qy)
+///         {
+///         u += QQD[qz][qy][dx] * sm_Bt[dy][qy];
 ///         }
+///         QDD[qz][dy][dx] = u;
 ///       }
+///     }
+///   }
 ///
-///       for(Index_type dz=0; dz<mpa_at::D1D; ++dz) {
-///         for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
-///           for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
-///             Real_type u = 0.0;
-///             for (Index_type qz = 0; qz < mpa_at::Q1D; ++qz)
-///             {
-///                u += QDD[qz][dy][dx] * sm_Bt[dz][qz];
-///             }
-///             const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
-///             Y[thread_dofs[j]] += u; //atomic add
-///           }
+///   for(Index_type dz=0; dz<mpa_at::D1D; ++dz) {
+///     for(Index_type dy=0; dy<mpa_at::D1D; ++dy) {
+///       for(Index_type dx=0; dx<mpa_at::D1D; ++dx) {
+///         Real_type u = 0.0;
+///         for (Index_type qz = 0; qz < mpa_at::Q1D; ++qz)
+///         {
+///            u += QDD[qz][dy][dx] * sm_Bt[dz][qz];
 ///         }
+///         const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
+///         Y[thread_dofs[j]] += u; //atomic add
 ///       }
+///     }
+///   }
 ///
 /// } // element loop
 ///
