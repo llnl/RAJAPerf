@@ -718,26 +718,26 @@ private:
   //
   // Persistent properties of kernel, independent of run
   //
-  KernelID    kernel_id;
-  std::string name;
+  KernelID    kernel_id = NumKernels;
+  std::string name = "unnamed";
 
-  Index_type default_prob_size;
-  Index_type default_reps;
+  Index_type default_prob_size = -1;
+  Index_type default_reps = -1;
 
-  Index_type actual_prob_size;
-  Index_type actual_reps;
+  Index_type actual_prob_size = -1;
+  Index_type actual_reps = -1;
 
-  bool uses_feature[NumFeatures];
+  bool uses_feature[NumFeatures] = {};
 
-  ChecksumConsistency checksum_consistency;
-  Checksum_type checksum_tolerance;
+  ChecksumConsistency checksum_consistency = ChecksumConsistency::NumChecksumConsistencies;
+  Checksum_type checksum_tolerance = ChecksumTolerance::normal;
   RAJA::KahanSum<Checksum_type> checksum;
 
   std::vector<Checksum_type> checksum_min[NumVariants];
   std::vector<Checksum_type> checksum_max[NumVariants];
   std::vector<RAJA::KahanSum<Checksum_type>> checksum_sum[NumVariants];
 
-  Complexity complexity;
+  Complexity complexity = Complexity::NumComplexities;
 
   Index_type num_nested_perfect_loops = -1;
   Index_type problem_dimensionality = -1;
@@ -749,23 +749,23 @@ private:
   //
   // Properties of kernel dependent on how kernel is run
   //
-  Index_type its_per_rep;
-  Index_type kernels_per_rep;
-  Index_type bytes_allocated_per_rep;
-  Index_type bytes_read_per_rep;
-  Index_type bytes_written_per_rep;
-  Index_type bytes_modify_written_per_rep;
-  Index_type bytes_atomic_modify_written_per_rep;
-  Index_type FLOPs_per_rep;
+  Index_type its_per_rep = -1;
+  Index_type kernels_per_rep = -1;
+  Index_type bytes_allocated_per_rep = -1;
+  Index_type bytes_read_per_rep = -1;
+  Index_type bytes_written_per_rep = -1;
+  Index_type bytes_modify_written_per_rep = -1;
+  Index_type bytes_atomic_modify_written_per_rep = -1;
+  Index_type FLOPs_per_rep = -1;
   double kernel_block_size = nan(""); // Set default value for non GPU kernels
 
-  VariantID running_variant;
-  size_t running_tuning;
+  VariantID running_variant = NumVariants;
+  size_t running_tuning = getUnknownTuningIdx();
 
-  Checksum_type checksum_reference;
-  VariantID checksum_reference_variant;
-  size_t checksum_reference_tuning;
-  TuningAttribute checksum_reference_tuning_attributes;
+  Checksum_type checksum_reference = nan("");
+  VariantID checksum_reference_variant = NumVariants;
+  size_t checksum_reference_tuning = getUnknownTuningIdx();
+  TuningAttribute checksum_reference_tuning_attributes = TuningAttribute::none;
 
   std::vector<int> num_exec[NumVariants];
 
