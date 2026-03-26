@@ -30,17 +30,18 @@ const size_t max_static_shmem = 49154;
 
 // perform a grid scan on val and returns the result at each thread
 // in exclusive and inclusive, note that val is used as scratch space
-template < typename DataType, size_t block_size, size_t items_per_thread >
+template < typename DataType, size_t block_size, size_t items_per_thread,
+           size_t warp_size = RAJA_CUDA_WARPSIZE >
 struct GridScan
 {
   using BlockScan = cub::BlockScan<DataType, block_size>; //, cub::BLOCK_SCAN_WARP_SCANS>;
   using BlockExchange = cub::BlockExchange<DataType, block_size, items_per_thread>;
-  using WarpReduce32 = cub::WarpReduce<DataType, 32>;
+  using WarpReduce = cub::WarpReduce<DataType, warp_size>;
 
   union SharedStorage {
     typename BlockScan::TempStorage block_scan_storage;
     typename BlockExchange::TempStorage block_exchange_storage;
-    typename WarpReduce32::TempStorage warp_reduce_storage32;
+    typename WarpReduce::TempStorage warp_reduce_storage;
     volatile DataType prev_grid_count;
   };
 
@@ -96,7 +97,7 @@ struct GridScan
 
       DataType prev_grid_count = get_previous_grid_count(
             block_id, last_block, last_thread,
-            s_temp_storage.warp_reduce_storage32, s_temp_storage.prev_grid_count,
+            s_temp_storage.warp_reduce_storage, s_temp_storage.prev_grid_count,
             inclusive, block_counts, grid_counts, block_readys);
 
       for (size_t ti = 0; ti < items_per_thread; ++ti) {
@@ -110,15 +111,13 @@ struct GridScan
   static DataType get_previous_grid_count(const int block_id,
                                           const bool last_block,
                                           const bool last_thread,
-                                          typename WarpReduce32::TempStorage& s_warp_reduce_storage,
+                                          typename WarpReduce::TempStorage& s_warp_reduce_storage,
                                           volatile DataType& s_prev_grid_count,
                                           DataType (&inclusive)[items_per_thread],
                                           DataType* block_counts,
                                           DataType* grid_counts,
                                           unsigned* block_readys)
   {
-    const size_t warp_size = 32;
-
     using ballot_type = unsigned;
     static_assert(warp_size == sizeof(ballot_type)*CHAR_BIT, "");
 
@@ -198,7 +197,7 @@ struct GridScan
       }
 
 
-      prev_grid_count = WarpReduce32(s_warp_reduce_storage).Sum(prev_grid_count);
+      prev_grid_count = WarpReduce(s_warp_reduce_storage).Sum(prev_grid_count);
       prev_grid_count = __shfl_sync(0xffffffffu, prev_grid_count, 0, warp_size); // broadcast output to all threads in warp
 
       if (last_thread) {
