@@ -136,6 +136,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda ()
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
               [&](Index_type dz) {
@@ -150,6 +151,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
               [&](Index_type dz) {
@@ -164,6 +166,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -178,6 +181,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (qz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -192,6 +196,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -206,6 +211,7 @@ void MASS3DPA_ATOMIC::runOpenMPVariant(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
