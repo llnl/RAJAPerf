@@ -19,9 +19,6 @@
 
 #include <iostream>
 
-#define WARPSIZE 64
-#define __shfl_xor_sync(mask,val,n) __shfl_xor(val,n)
-
 namespace rajaperf
 {
 namespace apps

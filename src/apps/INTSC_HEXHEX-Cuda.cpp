@@ -24,7 +24,12 @@ namespace rajaperf
 namespace apps
 {
 
-#define WARPSIZE 32
+#define RAJAPERF_HEXHEX_WARPSIZE RAJA_CUDA_WARPSIZE
+#if RAJAPERF_HEXHEX_WARPSIZE == 32
+#define RAJAPERF_HEXHEX_shfl_xor(val,n) __shfl_xor_sync(0xffffffff,val,n)
+#else
+#error "unexpected RAJA_CUDA_WARPSIZE"
+#endif
 
 template < Size_type block_size >
 __launch_bounds__(block_size)
