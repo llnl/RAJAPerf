@@ -60,6 +60,7 @@ variables:
 stages:
   - prerequisites           # Required: machine availability checks
   - build-and-test          # Required: build and test jobs
+  - performance-measurements
 
 ###############################################################################
 # INCLUDES
@@ -225,3 +226,29 @@ tuolumne-build-and-test:
       - local: '.gitlab/custom-jobs.yml'
       - artifact: 'tuolumne-jobs.yml'
         job: 'generate-job-lists'
+
+# PERFORMANCE
+performance-measurements:
+  stage: performance-measurements
+  trigger:
+    include:
+      - local: '.gitlab/custom-variables.yml'
+      - component: $CI_SERVER_FQDN/radiuss/radiuss-shared-ci/performance-pipeline@v2026.02.2
+        inputs:
+          job_cmd: $JOB_CMD
+          dane_perf_alloc: $DANE_PERF_ALLOC
+          tuolumne_perf_alloc: $TUOLUMNE_PERF_ALLOC
+          perf_processing_cmd: "${CI_PROJECT_DIR}/scripts/gitlab/caliper_to_github_benchmark.py"
+          perf_artifact_dir: $PERF_ARTIFACT_DIR
+          perf_results_file: "*_*-*.cali"
+          perf_processed_file: "processed_results.json"
+          github_token: $GITHUB_WORKFLOW_TOKEN
+          github_project_name: $GITHUB_PROJECT_NAME
+          github_project_org: $GITHUB_PROJECT_ORG
+      - local: '.gitlab/jobs/performances.yml'
+    strategy: depend
+    forward:
+      pipeline_variables: true
+  variables:
+    PERF_TESTS: "true"
+    PERF_ARTIFACT_DIR: "performance-results"
