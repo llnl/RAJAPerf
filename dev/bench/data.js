@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1774915331655,
+  "lastUpdate": 1774915410761,
   "repoUrl": "https://github.com/llnl/RAJAPerf",
   "entries": {
     "clang_14_0_6_mpi_caliper": [
@@ -1218,6 +1218,304 @@ window.BENCHMARK_DATA = {
             "value": 13.24128,
             "unit": "ms/rep",
             "extra": "reps: 250, passes: 1, total_time: 3.310s"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Rich Hornung",
+            "username": "rhornung67",
+            "email": "hornung1@llnl.gov"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "2e4038b7fee213ead90d2108b8458b77c6ac0006",
+          "message": "Merge pull request #678 from llnl/main-mergeback\n\nMain mergeback to develop after v2025.12.1 release",
+          "timestamp": "2026-03-30T22:11:27Z",
+          "url": "https://github.com/llnl/RAJAPerf/commit/2e4038b7fee213ead90d2108b8458b77c6ac0006"
+        },
+        "date": 1774915408205,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "RAJA_OpenMP-default_Basic_ARRAY_OF_PTRS",
+            "value": 4.36636,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 1.092s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_COPY8",
+            "value": 3.63434,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.909s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_DAXPY",
+            "value": 0.1550608,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 0.388s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_DAXPY_ATOMIC",
+            "value": 1.6065000000000003,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 4.016s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_EMPTY",
+            "value": 0.0480602,
+            "unit": "ms/rep",
+            "extra": "reps: 5000, passes: 1, total_time: 0.240s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_IF_QUAD",
+            "value": 1.9486333333333332,
+            "unit": "ms/rep",
+            "extra": "reps: 900, passes: 1, total_time: 1.754s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_INDEXLIST_3LOOP",
+            "value": 1.661642,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 1, total_time: 0.831s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_INIT3",
+            "value": 0.747368,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 1.868s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_INIT_VIEW1D",
+            "value": 0.1042352,
+            "unit": "ms/rep",
+            "extra": "reps: 12500, passes: 1, total_time: 1.303s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_INIT_VIEW1D_OFFSET",
+            "value": 0.1033752,
+            "unit": "ms/rep",
+            "extra": "reps: 12500, passes: 1, total_time: 1.292s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_MAT_MAT_SHARED",
+            "value": 197.0564,
+            "unit": "ms/rep",
+            "extra": "reps: 25, passes: 1, total_time: 4.926s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_MULADDSUB",
+            "value": 0.7499028571428571,
+            "unit": "ms/rep",
+            "extra": "reps: 1750, passes: 1, total_time: 1.312s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_NESTED_INIT",
+            "value": 0.1882018,
+            "unit": "ms/rep",
+            "extra": "reps: 5000, passes: 1, total_time: 0.941s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_PI_ATOMIC",
+            "value": 292.192,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 73.048s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_PI_REDUCE",
+            "value": 0.3559372,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.089s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_REDUCE3_INT",
+            "value": 0.1184372,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.030s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_REDUCE_STRUCT",
+            "value": 0.385546,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.096s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_TRAP_INT",
+            "value": 0.861356,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.215s"
+          },
+          {
+            "name": "RAJA_OpenMP-default_Basic_MULTI_REDUCE",
+            "value": 0.69018,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.173s"
+          },
+          {
+            "name": "RAJA_OpenMP-new_Basic_PI_REDUCE",
+            "value": 0.3495372,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.087s"
+          },
+          {
+            "name": "RAJA_OpenMP-new_Basic_REDUCE3_INT",
+            "value": 0.1019732,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.025s"
+          },
+          {
+            "name": "RAJA_OpenMP-new_Basic_REDUCE_STRUCT",
+            "value": 0.3494316,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.087s"
+          },
+          {
+            "name": "RAJA_OpenMP-new_Basic_TRAP_INT",
+            "value": 0.855676,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.214s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_ARRAY_OF_PTRS",
+            "value": 75.48,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 18.870s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_COPY8",
+            "value": 39.59004,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 9.898s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_DAXPY",
+            "value": 4.133,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 10.332s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_DAXPY_ATOMIC",
+            "value": 4.1302,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 10.325s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_EMPTY",
+            "value": 1.3227980000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 5000, passes: 1, total_time: 6.614s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_IF_QUAD",
+            "value": 32.51422222222222,
+            "unit": "ms/rep",
+            "extra": "reps: 900, passes: 1, total_time: 29.263s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_INDEXLIST_3LOOP",
+            "value": 29.3134,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 1, total_time: 14.657s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_INIT3",
+            "value": 11.13628,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 27.841s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_INIT_VIEW1D",
+            "value": 3.017992,
+            "unit": "ms/rep",
+            "extra": "reps: 12500, passes: 1, total_time: 37.725s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_INIT_VIEW1D_OFFSET",
+            "value": 3.09356,
+            "unit": "ms/rep",
+            "extra": "reps: 12500, passes: 1, total_time: 38.669s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_MAT_MAT_SHARED",
+            "value": 3068.116,
+            "unit": "ms/rep",
+            "extra": "reps: 25, passes: 1, total_time: 76.703s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_MULADDSUB",
+            "value": 11.497085714285715,
+            "unit": "ms/rep",
+            "extra": "reps: 1750, passes: 1, total_time: 20.120s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_NESTED_INIT",
+            "value": 3.6378799999999996,
+            "unit": "ms/rep",
+            "extra": "reps: 5000, passes: 1, total_time: 18.189s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_PI_ATOMIC",
+            "value": 5.292799999999999,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 1.323s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_PI_REDUCE",
+            "value": 10.59128,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 2.648s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_REDUCE3_INT",
+            "value": 2.847688,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.712s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_REDUCE_STRUCT",
+            "value": 7.0196,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 1.755s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_TRAP_INT",
+            "value": 13.50984,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 3.377s"
+          },
+          {
+            "name": "RAJA_Seq-default_Basic_MULTI_REDUCE",
+            "value": 10.90648,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 2.727s"
+          },
+          {
+            "name": "RAJA_Seq-new_Basic_PI_REDUCE",
+            "value": 5.37116,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 1.343s"
+          },
+          {
+            "name": "RAJA_Seq-new_Basic_REDUCE3_INT",
+            "value": 1.455032,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 0.364s"
+          },
+          {
+            "name": "RAJA_Seq-new_Basic_REDUCE_STRUCT",
+            "value": 12.31684,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 3.079s"
+          },
+          {
+            "name": "RAJA_Seq-new_Basic_TRAP_INT",
+            "value": 13.55156,
+            "unit": "ms/rep",
+            "extra": "reps: 250, passes: 1, total_time: 3.388s"
           }
         ]
       }
