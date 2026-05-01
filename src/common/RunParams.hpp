@@ -263,6 +263,25 @@ public:
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
 
+  Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
+  Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
+  Index_type getFemsweepGroups() const { return femsweep_groups; }
+  Index_type getFemsweepX() const { return femsweep_mesh_dims[0]; }
+  Index_type getFemsweepY() const { return femsweep_mesh_dims[1]; }
+  Index_type getFemsweepZ() const { return femsweep_mesh_dims[2]; }
+  bool useFemsweepMeshDims() const { return use_femsweep_mesh_dims; }
+
+  size_t numValidFemsweepMeshDims() const { return femsweep_mesh_dims.size(); }
+  bool validFemsweepMeshDims(Index_type femsweep_mesh_dim) const
+  {
+    for (Index_type valid_femsweep_mesh_dims : femsweep_mesh_dims) {
+      if (valid_femsweep_mesh_dims == femsweep_mesh_dim) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Index_type getArrayOfPtrsArraySize() const { return array_of_ptrs_array_size; }
 
   Index_type getHaloWidth() const { return halo_width; }
@@ -345,8 +364,6 @@ public:
   const std::string& getOutputDirName() const { return outdir; }
   const std::string& getOutputFilePrefix() const { return outfile_prefix; }
 
-  const std::string& getFemsweepMeshFile() const { return femsweep_mesh_file; }
-
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   const std::string& getAddToSpotConfig() const { return add_to_spot_config; }
   const std::string& getAddToCaliperConfig() const { return add_to_cali_config; }
@@ -422,6 +439,12 @@ private:
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
+
+  Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
+  Index_type femsweep_angles_azim; /*!< azimuthal angles used in femsweep kernel (input option) */
+  Index_type femsweep_groups; /*!< groups used in femsweep kernel (input option) */
+  std::vector<Index_type> femsweep_mesh_dims; /*!< mesh dimensions x, y, and z used in femsweep kernel (input option) */
+  bool use_femsweep_mesh_dims; /*!< enable user input of femsweep mesh dimensions x, y, and z in femsweep kernel (true if vector femsweep_mesh_dims is properly passed on command line) */
 
   Index_type array_of_ptrs_array_size; /*!< number of pointers used in ARRAY_OF_PTRS kernel (input option) */
 
@@ -502,8 +525,6 @@ private:
 
   std::string outdir;          /*!< Output directory name. */
   std::string outfile_prefix;  /*!< Prefix for output data file names. */
-
-  std::string femsweep_mesh_file;  /*!< Path to file name of femsweep mesh. */
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)
   std::string add_to_spot_config;

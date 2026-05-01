@@ -8,6 +8,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 #include "FEMSWEEP.hpp"
+#include "FEMSWEEPMeshGen.hpp"
 
 #include "RAJA/RAJA.hpp"
 
@@ -27,67 +28,15 @@ namespace apps
 FEMSWEEP::FEMSWEEP(const RunParams& params)
   : KernelBase(rajaperf::Apps_FEMSWEEP, params)
 {
-  auto readOneLong = [=](std::ifstream & file, Index_type & val, std::string valname) {
-
-    // Read next line for value.
-    std::string line;
-    if ( std::getline(file, line) )
-    {
-      val = std::stol(line);
-    }
-    else
-    {
-      std::cout << "Unable to initialize " << valname << " properly in constructor. Please check the " << m_mesh_file << " file." << std::endl;
-    }
-
-  };
-
-  m_mesh_file = params.getFemsweepMeshFile();
-
-  // Read problem size from file.
-  std::ifstream dataFile(m_mesh_file);
-
-  if ( !dataFile.is_open() )
-  {
-    std::cout << "Could not open " << m_mesh_file << " in constructor." << std::endl;
-  }
-
-  std::string line;
-  while ( std::getline(dataFile, line) )
-  {
-
-    if ( line == std::string("m_nx") )
-    {
-      readOneLong(dataFile, m_nx, "m_nx");
-    }
-
-    else if ( line == std::string("m_ny") )
-    {
-      readOneLong(dataFile, m_ny, "m_ny");
-    }
-
-    else if ( line == std::string("m_nz") )
-    {
-      readOneLong(dataFile, m_nz, "m_nz");
-    }
-
-    else if ( line == std::string("m_na") )
-    {
-      readOneLong(dataFile, m_na, "m_na");
-    }
-
-    else if ( line == std::string("m_ng") )
-    {
-      readOneLong(dataFile, m_ng, "m_ng");
-    }
-
-  }
-
-  dataFile.close();
-
+  // Use user parameters / default values
+  m_na = 8 * params.getFemsweepPolar() * params.getFemsweepAzim();
+  m_ng = params.getFemsweepGroups();
+  m_nx = params.getFemsweepX();
+  m_ny = params.getFemsweepY();
+  m_nz = params.getFemsweepZ();
   m_ne = m_nx * m_ny * m_nz;
 
-  setDefaultProblemSize(ND * m_ne * m_ng * m_na);
+  setDefaultProblemSize( m_ne * m_ng * m_na );
   setDefaultReps(1);
 
   setSize(params.getTargetSize(getDefaultProblemSize()),
@@ -108,8 +57,21 @@ FEMSWEEP::FEMSWEEP(const RunParams& params)
   addVariantTunings();
 }
 
-void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type target_reps)
+void FEMSWEEP::setSize(Index_type target_size, Index_type target_reps)
 {
+  if (!run_params.useFemsweepMeshDims())
+  {
+    // Use target_size
+    Real_type remainder = std::max(1.0, static_cast<Real_type>(target_size) / (m_na * m_ng));
+
+    Index_type rounded_cube = std::cbrt(remainder) + std::cbrt(3)-1.0;
+    m_nx = rounded_cube;
+    m_ny = rounded_cube;
+    m_nz = rounded_cube;
+
+    m_ne = m_nx * m_ny * m_nz;
+  }
+
   m_sharedinteriorfaces = (m_nx - 1) * m_ny * m_nz +
                           m_nx * (m_ny - 1) * m_nz +
                           m_nx * m_ny * (m_nz - 1);
@@ -123,7 +85,7 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
   m_M0len = ND * ND * m_ne;
   m_Xlen = ND * m_ne * m_ng * m_na;
 
-  setActualProblemSize( m_Xlen );
+  setActualProblemSize( m_ne * m_ng * m_na );
   setRunReps( target_reps );
 
   setItsPerRep(1);
@@ -137,13 +99,13 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
                            1*sizeof(Real_type) * m_Xlen + // Xdat
                            1*sizeof(Index_type) * m_na + // nhpaa_r,
                            1*sizeof(Index_type) * m_na + // ohpaa_r,
-                           1*sizeof(Index_type) * m_na * 43 + // phpaa_r,
+                           1*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
                            1*sizeof(Index_type) * m_na * m_ne + // order_r,
                            1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
                            1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
-                           1*sizeof(Index_type) * 10800 + // F_g2l
-                           1*sizeof(Index_type) * 37800 + // idx1
-                           1*sizeof(Index_type) * 37800 );// idx2
+                           1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
+                           1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
+                           1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
   // using total data size instead of writes and reads
   setBytesReadPerRep( 1*sizeof(Real_type) * m_Blen + // Bdat
                       1*sizeof(Real_type) * m_Alen + // Adat
@@ -152,132 +114,66 @@ void FEMSWEEP::setSize(Index_type RAJAPERF_UNUSED_ARG(target_size), Index_type t
                       1*sizeof(Real_type) * m_M0len + // M0dat
                       1*sizeof(Index_type) * m_na + // nhpaa_r,
                       1*sizeof(Index_type) * m_na + // ohpaa_r,
-                      1*sizeof(Index_type) * m_na * 43 + // phpaa_r,
+                      1*sizeof(Index_type) * m_na * m_hplanes + // phpaa_r,
                       1*sizeof(Index_type) * m_na * m_ne + // order_r,
                       1*sizeof(Index_type) * NLF * m_ne * m_na + // AngleElem2FaceType
                       1*sizeof(Index_type) * NLF * m_ne + // elem_to_faces
-                      1*sizeof(Index_type) * 10800 + // F_g2l
-                      1*sizeof(Index_type) * 37800 + // idx1
-                      1*sizeof(Index_type) * 37800 );// idx2
-  setBytesWrittenPerRep( 0 );
-  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * m_Xlen ); // Xdat
+                      1*sizeof(Index_type) * (m_sharedinteriorfaces + m_boundaryfaces) + // F_g2l
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 + // idx1
+                      1*sizeof(Index_type) * m_sharedinteriorfaces * 4 );// idx2
+  Index_type amount_Xdat_modify_written = 1.55 * m_na * m_ng * m_sharedinteriorfaces;
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_Xlen - amount_Xdat_modify_written) ); // remainder of Xdat after part based on sharedinteriorfaces
+  setBytesModifyWrittenPerRep( 1*sizeof(Real_type) * amount_Xdat_modify_written );  // part of Xdat based on sharedinteriorfaces
   setBytesAtomicModifyWrittenPerRep( 0 );
 
   // This is an estimate of the upper bound FLOPs.
-  setFLOPsPerRep( (ND * ND * (ND-1) * 3 * 2 +     // L & U formation
-                  ND * (ND-1) * 3 +               // forward substitution
-                  ND * (ND-1) * 3 +               // backward substitution
-                  NLF * FDS - m_nx * m_ny * 6) *  // coupling between sides of faces
-                  m_ne * m_na * m_ng );           // for all elements, angles, and groups
+  setFLOPsPerRep( m_ne * m_na * m_ng *                        // for all elements, angles, and groups
+                  (ND * ND * ND + 7 * ND * ND / 2 - ND / 2) + // LU (naive)
+                  m_sharedinteriorfaces * m_na * m_ng *       // for all shared faces, angles, and groups
+                  (FDS +                                      // B
+                  FDS * FDS * 3));                            // coupling between sides of faces
 }
 
 FEMSWEEP::~FEMSWEEP()
 {
 }
 
-template < typename T >
-void FEMSWEEP::readIndexArray(VariantID vid, std::ifstream & file, T*& arr, Index_type expectedsize, std::string arrname)
-{
-  std::string line;
-
-  // Read next line for array size.
-  if ( std::getline(file, line) )
-  {
-    long sizetemp = std::stol(line);
-    // Check size for sanity.
-    if ( sizetemp != expectedsize )
-    {
-      std::cout << "Size of " << arrname << " in " << m_mesh_file << " does not match." << std::endl;
-    }
-    auto temp_arr = allocDataForInit(arr, sizetemp, vid); 
-    // Read rest of entries for array.
-    for ( int lcount = 0; lcount < sizetemp; ++lcount )
-    {
-      if ( std::getline(file, line) )
-      {
-        arr[lcount] = std::stol(line);
-      }
-      else
-      {
-        std::cout << "Invalid entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
-      }
-    }
-  }
-  else
-  {
-    std::cout << "Invalid size entry in " << m_mesh_file << " for " << arrname << "." << std::endl;
-  }
-}
-
 void FEMSWEEP::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
+  // Create mesh connectivity arrays
+  m_angularquadrature = new AngularQuadratureLite(this->run_params.getFemsweepPolar(), this->run_params.getFemsweepAzim());
+  m_meshgen = new MeshGenerator(*m_angularquadrature, m_nx, m_ny, m_nz, m_ng);
+  m_meshgen->Setup();
+
   allocAndInitDataRandValue (m_Bdat     , m_Blen      , vid);
   allocAndInitDataRandValue (m_Adat     , m_Alen      , vid);
   allocAndInitDataRandValue (m_Fdat     , m_Flen      , vid);
   allocAndInitDataRandValue (m_Sgdat    , m_Sglen     , vid);
   allocAndInitDataRandValue (m_M0dat    , m_M0len     , vid);
-  allocAndInitDataRandValue (m_Xdat     , m_Xlen      , vid);
+  allocAndInitDataConst     (m_Xdat     , m_Xlen, 0.0 , vid);
 
-  // Read mesh connectivity data from file.
-  std::ifstream dataFile(m_mesh_file);
+  allocAndCopyHostData(m_nhpaa_r, m_meshgen->m_nhyperplanes_all_angles.Data(), m_meshgen->m_nhyperplanes_all_angles.Size(), vid);
 
-  if ( !dataFile.is_open() )
-  {
-    std::cout << "Could not open " << m_mesh_file << " in setUp." << std::endl;
-  }
+  allocAndCopyHostData(m_ohpaa_r, m_meshgen->m_ohyperplanes_all_angles.Data(), m_meshgen->m_ohyperplanes_all_angles.Size(), vid);
 
-  std::string line;
-  while ( std::getline(dataFile, line) )
-  {
+  allocAndCopyHostData(m_phpaa_r, m_meshgen->m_phyperplanes_all_angles.Data(), m_meshgen->m_phyperplanes_all_angles.Size(), vid);
 
-    if ( line == "m_nhpaa_r" )
-    {
-      readIndexArray(vid, dataFile, m_nhpaa_r, m_na, "m_nhpaa_r");
-    }
+  allocAndCopyHostData(m_order_r, m_meshgen->md_ordered_elements_all_angles.Data(), m_meshgen->md_ordered_elements_all_angles.Size(), vid);
 
-    else if ( line == std::string("m_ohpaa_r") )
-    {
-      readIndexArray(vid, dataFile, m_ohpaa_r, m_na, "m_ohpaa_r");
-    }
+  allocAndCopyHostData(m_AngleElem2FaceType, m_meshgen->md_angle_elem_to_face_types.Data(), m_meshgen->md_angle_elem_to_face_types.Size(), vid);
 
-    else if ( line == std::string("m_phpaa_r") )
-    {
-      readIndexArray(vid, dataFile, m_phpaa_r, m_na * m_hplanes, "m_phpaa_r");
-    }
+  allocAndCopyHostData(m_elem_to_faces, m_meshgen->md_elem_to_faces.Data(), m_meshgen->md_elem_to_faces.Size(), vid);
 
-    else if ( line == std::string("m_order_r") )
-    {
-      readIndexArray(vid, dataFile, m_order_r, m_na * m_ne, "m_order_r");
-    }
+  allocAndCopyHostData(m_F_g2l, m_meshgen->global_to_local_face.Data(), m_meshgen->global_to_local_face.Size(), vid);
 
-    else if ( line == std::string("m_AngleElem2FaceType") )
-    {
-      readIndexArray(vid, dataFile, m_AngleElem2FaceType, NLF * m_na * m_ne, "m_AngleElem2FaceType");
-    }
+  allocAndCopyHostData(m_idx1, m_meshgen->d_indices1.Data(), m_meshgen->d_indices1.Size(), vid);
 
-    else if ( line == std::string("m_elem_to_faces") )
-    {
-      readIndexArray(vid, dataFile, m_elem_to_faces, NLF * m_ne, "m_elem_to_faces");
-    }
+  allocAndCopyHostData(m_idx2, m_meshgen->d_indices2.Data(), m_meshgen->d_indices2.Size(), vid);
 
-    else if ( line == std::string("m_F_g2l") )
-    {
-      readIndexArray(vid, dataFile, m_F_g2l, m_sharedinteriorfaces + m_boundaryfaces, "m_F_g2l");
-    }
-
-    else if ( line == std::string("m_idx1") )
-    {
-      readIndexArray(vid, dataFile, m_idx1, m_sharedinteriorfaces * 4, "m_idx1");
-    }
-
-    else if ( line == std::string("m_idx2") )
-    {
-      readIndexArray(vid, dataFile, m_idx2, m_sharedinteriorfaces * 4, "m_idx2");
-    }
-
-  }
-
-  dataFile.close();
+  delete m_angularquadrature;
+  m_angularquadrature = nullptr;
+  delete m_meshgen;
+  m_meshgen = nullptr;
 
 }
 

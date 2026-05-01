@@ -17,7 +17,7 @@ if [[ $# -lt 2 ]]; then
   echo "You must pass 2 or more arguments to the script (in this order): "
   echo "   1) mvapich2 version number"
   echo "   2) icpx compiler version number"
-  echo "   3) optional cmake version
+  echo "   3) optional cmake version"
   echo
   echo "You must pass a compiler version number to script. For example,"
   echo "    toss4_mvapich2_gcc.sh 2.3.7 2022.1.0 [3.27.4]"

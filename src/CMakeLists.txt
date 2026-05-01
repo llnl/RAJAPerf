@@ -17,6 +17,7 @@ add_subdirectory(apps-kokkos)
 add_subdirectory(lcals)
 add_subdirectory(lcals-kokkos)
 add_subdirectory(polybench)
+add_subdirectory(polybench-kokkos)
 add_subdirectory(stream)
 add_subdirectory(stream-kokkos)
 add_subdirectory(algorithm)
@@ -31,6 +32,7 @@ set(RAJA_PERFSUITE_LIBS
     lcals
     lcals-kokkos
     polybench
+    polybench-kokkos
     stream
     stream-kokkos
     algorithm

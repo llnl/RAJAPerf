@@ -19,8 +19,14 @@
 
 #include <iostream>
 
-#define WARPSIZE 64
-#define __shfl_xor_sync(mask,val,n) __shfl_xor(val,n)
+#define RAJAPERF_HEXHEX_WARPSIZE RAJA_HIP_WAVESIZE
+#if RAJAPERF_HEXHEX_WARPSIZE == 32
+#define RAJAPERF_HEXHEX_shfl_xor(val,n) __shfl_xor(val,n)
+#elif RAJAPERF_HEXHEX_WARPSIZE == 64
+#define RAJAPERF_HEXHEX_shfl_xor(val,n) __shfl_xor(val,n)
+#else
+#error "unexpected RAJA_CUDA_WARPSIZE"
+#endif
 
 namespace rajaperf
 {
