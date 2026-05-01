@@ -38,19 +38,18 @@ struct ballot_type_helper<64> { using type = unsigned long long; };
 
 // perform a grid scan on val and returns the result at each thread
 // in exclusive and inclusive, note that val is used as scratch space
-template < typename DataType, size_t block_size, size_t items_per_thread >
+template < typename DataType, size_t block_size, size_t items_per_thread,
+           size_t warp_size = RAJA_HIP_WAVESIZE >
 struct GridScan
 {
   using BlockScan = rocprim::block_scan<DataType, block_size>; //, rocprim::block_scan_algorithm::reduce_then_scan>;
   using BlockExchange = rocprim::block_exchange<DataType, block_size, items_per_thread>;
-  using WarpReduce32 = rocprim::warp_reduce<DataType, 32>;
-  using WarpReduce64 = rocprim::warp_reduce<DataType, 64>;
+  using WarpReduce = rocprim::warp_reduce<DataType, warp_size>;
 
   union SharedStorage {
     typename BlockScan::storage_type block_scan_storage;
     typename BlockExchange::storage_type block_exchange_storage;
-    typename WarpReduce32::storage_type warp_reduce_storage32;
-    typename WarpReduce64::storage_type warp_reduce_storage64;
+    typename WarpReduce::storage_type warp_reduce_storage;
     volatile DataType prev_grid_count;
   };
 
@@ -104,20 +103,10 @@ struct GridScan
         atomicExch(&block_readys[block_id], 1u); // write block_counts is ready
       }
 
-      DataType prev_grid_count{};
-      if (warpSize == 64) {
-        prev_grid_count = get_previous_grid_count<64, WarpReduce64>(
-            block_id, last_block, last_thread,
-            s_temp_storage.warp_reduce_storage64, s_temp_storage.prev_grid_count,
-            inclusive, block_counts, grid_counts, block_readys);
-      } else if (warpSize == 32) {
-        prev_grid_count = get_previous_grid_count<32, WarpReduce32>(
-            block_id, last_block, last_thread,
-            s_temp_storage.warp_reduce_storage32, s_temp_storage.prev_grid_count,
-            inclusive, block_counts, grid_counts, block_readys);
-      } else {
-        assert(warpSize == 32 || warpSize == 64);
-      }
+      DataType prev_grid_count = get_previous_grid_count(
+          block_id, last_block, last_thread,
+          s_temp_storage.warp_reduce_storage, s_temp_storage.prev_grid_count,
+          inclusive, block_counts, grid_counts, block_readys);
 
       for (size_t ti = 0; ti < items_per_thread; ++ti) {
         exclusive[ti] = prev_grid_count + exclusive[ti];
@@ -126,7 +115,6 @@ struct GridScan
     }
   }
 
-  template < size_t warp_size, typename WarpReduce >
   __device__
   static DataType get_previous_grid_count(const int block_id,
                                           const bool last_block,

@@ -433,19 +433,19 @@ RAJA_INLINE void hex_intsc_subz
   INTSC_HEXHEX_BODY_SEQ \
   \
   __syncthreads() ; \
-  for ( Index_type k = 1 ; k < WARPSIZE ; k *= 2 ) { \
-    vv_hi += __shfl_xor_sync ( 0xffffffff, vv_hi, k ) ; \
-    vx_hi += __shfl_xor_sync ( 0xffffffff, vx_hi, k ) ; \
-    vy_hi += __shfl_xor_sync ( 0xffffffff, vy_hi, k ) ; \
-    vz_hi += __shfl_xor_sync ( 0xffffffff, vz_hi, k ) ; \
-    vv_lo += __shfl_xor_sync ( 0xffffffff, vv_lo, k ) ; \
-    vx_lo += __shfl_xor_sync ( 0xffffffff, vx_lo, k ) ; \
-    vy_lo += __shfl_xor_sync ( 0xffffffff, vy_lo, k ) ; \
-    vz_lo += __shfl_xor_sync ( 0xffffffff, vz_lo, k ) ; \
+  for ( Index_type k = 1 ; k < RAJAPERF_HEXHEX_WARPSIZE ; k *= 2 ) { \
+    vv_hi += RAJAPERF_HEXHEX_shfl_xor ( vv_hi, k ) ; \
+    vx_hi += RAJAPERF_HEXHEX_shfl_xor ( vx_hi, k ) ; \
+    vy_hi += RAJAPERF_HEXHEX_shfl_xor ( vy_hi, k ) ; \
+    vz_hi += RAJAPERF_HEXHEX_shfl_xor ( vz_hi, k ) ; \
+    vv_lo += RAJAPERF_HEXHEX_shfl_xor ( vv_lo, k ) ; \
+    vx_lo += RAJAPERF_HEXHEX_shfl_xor ( vx_lo, k ) ; \
+    vy_lo += RAJAPERF_HEXHEX_shfl_xor ( vy_lo, k ) ; \
+    vz_lo += RAJAPERF_HEXHEX_shfl_xor ( vz_lo, k ) ; \
   } \
-  Int_type const nwarps = blksize / WARPSIZE ; \
-  Int_type k = thridx / WARPSIZE ; \
-  if ( thridx == k*WARPSIZE ) { \
+  Int_type const nwarps = blksize / RAJAPERF_HEXHEX_WARPSIZE ; \
+  Int_type k = thridx / RAJAPERF_HEXHEX_WARPSIZE ; \
+  if ( thridx == k*RAJAPERF_HEXHEX_WARPSIZE ) { \
     vv_reduce[ k + 0*max_warps_per_block ] = vv_lo ; \
     vv_reduce[ k + 1*max_warps_per_block ] = vx_lo ; \
     vv_reduce[ k + 2*max_warps_per_block ] = vy_lo ; \

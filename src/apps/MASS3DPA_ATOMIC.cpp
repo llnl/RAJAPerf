@@ -36,12 +36,16 @@ MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
   setSize(params.getTargetSize(getDefaultProblemSize()),
           params.getReps(getDefaultReps()));
 
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
 
+  setMaxPerfectLoopDimensions(3);
+  setProblemDimensionality(3);
+
   setUsesFeature(Launch);
+  setUsesFeature(Atomic);
 
   addVariantTunings();
 }

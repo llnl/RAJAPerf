@@ -325,6 +325,13 @@ Executor::Executor(int argc, char** argv)
   adiak::value("LtimesNumMoments", (uint)run_params.getLtimesNumM());
   adiak::value("LtimesNumDirections", (uint)run_params.getLtimesNumD());
 
+  adiak::value("FemsweepPolar", (uint)run_params.getFemsweepPolar());
+  adiak::value("FemsweepAzim", (uint)run_params.getFemsweepAzim());
+  adiak::value("FemsweepGroups", (uint)run_params.getFemsweepGroups());
+  adiak::value("FemsweepX", (uint)run_params.getFemsweepX());
+  adiak::value("FemsweepY", (uint)run_params.getFemsweepY());
+  adiak::value("FemsweepZ", (uint)run_params.getFemsweepZ());
+
   // Openmp section
 #if defined(_OPENMP)
   std::string strval = "";
@@ -648,6 +655,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type psize_width = 0;
   Index_type reps_width = 0;
   Index_type itsrep_width = 0;
+  Index_type kernsrep_width = 0;
   Index_type bytesMovedrep_width = 0;
   Index_type flopsrep_width = 0;
   Index_type bytesTouchedrep_width = 0;
@@ -658,6 +666,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
   Index_type bytesAllocatedrep_width = 0;
   size_t     checksumConsistency_width = 0;
   size_t     operationalComplexity_width = 0;
+  Index_type maxPerfectLoopDimensions_width = 0;
+  Index_type problemDimensionality_width = 0;
 
   size_t     dash_width = 0;
 
@@ -666,6 +676,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
     psize_width = max(psize_width, kernels[ik]->getActualProblemSize());
     reps_width = max(reps_width, kernels[ik]->getRunReps());
     itsrep_width = max(itsrep_width, kernels[ik]->getItsPerRep());
+    kernsrep_width = max(kernsrep_width, kernels[ik]->getKernelsPerRep());
     bytesMovedrep_width = max(bytesMovedrep_width, kernels[ik]->getBytesMovedPerRep());
     flopsrep_width = max(flopsrep_width, kernels[ik]->getFLOPsPerRep());
     bytesTouchedrep_width = max(bytesTouchedrep_width, kernels[ik]->getBytesTouchedPerRep());
@@ -676,6 +687,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
     bytesAllocatedrep_width = max(bytesAllocatedrep_width, kernels[ik]->getBytesAllocatedPerRep());
     checksumConsistency_width = max(checksumConsistency_width, getChecksumConsistencyName(kernels[ik]->getChecksumConsistency()).size());
     operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
+    maxPerfectLoopDimensions_width = max(maxPerfectLoopDimensions_width, kernels[ik]->getMaxPerfectLoopDimensions());
+    problemDimensionality_width = max(problemDimensionality_width, kernels[ik]->getProblemDimensionality());
   }
 
   const string sepchr(" , ");
@@ -703,16 +716,16 @@ void Executor::writeKernelInfoSummary(ostream& str,
                       static_cast<Index_type>(irsize) ) + 3;
   dash_width += itsrep_width + static_cast<Index_type>(sepchr.size());
 
+  double krsize = log10( static_cast<double>(kernsrep_width) );
   string kernsrep_head("Kernels/rep");
-  Index_type kernsrep_width =
-    max( static_cast<Index_type>(kernsrep_head.size()),
-         static_cast<Index_type>(4) );
+  kernsrep_width = max( static_cast<Index_type>(kernsrep_head.size()),
+                        static_cast<Index_type>(krsize) ) + 3;
   dash_width += kernsrep_width + static_cast<Index_type>(sepchr.size());
 
   double brsize = log10( static_cast<double>(bytesMovedrep_width) );
   string bytesMovedrep_head("BytesMoved/rep");
   bytesMovedrep_width = max( static_cast<Index_type>(bytesMovedrep_head.size()),
-                        static_cast<Index_type>(brsize) ) + 3;
+                             static_cast<Index_type>(brsize) ) + 3;
   dash_width += bytesMovedrep_width + static_cast<Index_type>(sepchr.size());
 
   double frsize = log10( static_cast<double>(flopsrep_width) );
@@ -767,6 +780,18 @@ void Executor::writeKernelInfoSummary(ostream& str,
                                      operationalComplexity_width ) + 2;
   dash_width += operationalComplexity_width + static_cast<Index_type>(sepchr.size());
 
+  double mpldsize = log10( static_cast<double>(maxPerfectLoopDimensions_width) );
+  string maxPerfectLoopDimensions_head("MaxPerfectLoopDimensions");
+  maxPerfectLoopDimensions_width = max( static_cast<Index_type>(maxPerfectLoopDimensions_head.size()),
+                                        static_cast<Index_type>(mpldsize) ) + 3;
+  dash_width += maxPerfectLoopDimensions_width + static_cast<Index_type>(sepchr.size());
+
+  double pdsize = log10( static_cast<double>(problemDimensionality_width) );
+  string problemDimensionality_head("ProblemDimensionality");
+  problemDimensionality_width = max( static_cast<Index_type>(problemDimensionality_head.size()),
+                                     static_cast<Index_type>(pdsize) ) + 3;
+  dash_width += problemDimensionality_width + static_cast<Index_type>(sepchr.size());
+
   str           <<left << setw(kernel_width) << kernel_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
@@ -782,6 +807,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<right<< setw(bytesAllocatedrep_width) << bytesAllocatedrep_head
       << sepchr <<left << setw(checksumConsistency_width) << checksumConsistency_head
       << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
+      << sepchr <<left << setw(maxPerfectLoopDimensions_width) << maxPerfectLoopDimensions_head
+      << sepchr <<left << setw(problemDimensionality_width) << problemDimensionality_head
       << endl;
 
   if ( !to_file ) {
@@ -808,6 +835,8 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<right<< setw(bytesAllocatedrep_width) << kern->getBytesAllocatedPerRep()
         << sepchr <<left << setw(checksumConsistency_width) << getChecksumConsistencyName(kern->getChecksumConsistency())
         << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
+        << sepchr <<right<< setw(maxPerfectLoopDimensions_width) << kern->getMaxPerfectLoopDimensions()
+        << sepchr <<right<< setw(problemDimensionality_width) << kern->getProblemDimensionality()
         << endl;
   }
 

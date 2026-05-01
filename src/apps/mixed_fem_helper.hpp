@@ -269,7 +269,7 @@ constexpr void transform_basis(
 template<rajaperf::Int_type M, rajaperf::Int_type P>
 constexpr rajaperf::Int_type flops_inner_product(const bool is_symmetric)
 {
-  return is_symmetric ? 6*P*(M+1)/2 : 6*P*M;
+  return is_symmetric ? 7*P*(M+1)/2 : 7*P*M;
 }
 
 template<rajaperf::Int_type M, rajaperf::Int_type P>
@@ -312,7 +312,7 @@ constexpr void inner_product(
 
 constexpr rajaperf::Int_type flops_bad_zone_algorithm()
 {
-  return 5;
+  return 3;
 }
 
 RAJA_HOST_DEVICE
@@ -435,7 +435,7 @@ constexpr rajaperf::Real_type Jzz(
 
 constexpr rajaperf::Int_type flops_Jxx()
 {
-  return 8;
+  return 11;
 }
 
 RAJA_HOST_DEVICE

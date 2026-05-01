@@ -112,6 +112,7 @@ private:
 
 public:
   // Methods for verification testing in CI.
+  RunParams::InputOpt getInputState() const { return run_params.getInputState(); }
   std::vector<KernelBase*> getKernels() const { return kernels; }
   std::vector<VariantID> getVariantIDs() const { return variant_ids; }
 

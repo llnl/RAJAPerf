@@ -77,7 +77,12 @@ void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
   constexpr size_t flops_j_loop = flops_k_loop*NQ_1D + 3*flops_Jxx() + 6;
   constexpr size_t flops_i_loop = flops_j_loop*NQ_1D + 1;
 
-  constexpr size_t flops_per_element = flops_i_loop*NQ_1D + 9*flops_Jxx() + flops_compute_detj();
+  constexpr size_t flops_edge_MpSmatrix = 9*flops_Jxx()
+                                          + flops_compute_detj()
+                                          + flops_i_loop*NQ_1D;
+
+  constexpr size_t flops_per_element = flops_edge_MpSmatrix
+                                       + (EB*EB + EB); // sum
 
   setFLOPsPerRep(number_of_elements * flops_per_element);
 }
