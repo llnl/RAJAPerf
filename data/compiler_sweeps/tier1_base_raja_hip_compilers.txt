@@ -1,0 +1,3 @@
+# build_script mpi_version rocm_version gpu_arch
+toss4_cray-mpich_amdclang.sh ?? ?? gfx942
+
