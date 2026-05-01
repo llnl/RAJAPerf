@@ -14,27 +14,47 @@ set -uo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/lc-builds/build_and_run.sh <build_script.sh> <compiler_list.txt> [options] -- [raja-perf args...]
+  scripts/lc-builds/run_compiler_matrix.sh <build_script.sh|from-list> <compiler_list.txt> [options] -- [raja-perf args...]
 
 Description:
   Reads <compiler_list.txt> (one entry per line) and, for each line, invokes
-  <build_script.sh> with the tokens on that line as its arguments, then builds
-  and runs the suite from that build directory.
+  a build script with the tokens on that line as its arguments, then builds and
+  runs the suite from that build directory.
 
   The build script is sourced (not executed) so any 'module load ...' it does
   applies to the subsequent build+run.
 
 List file format:
   - Blank lines and lines starting with '#' are ignored.
-  - Each line is treated as arguments to the build script.
+  - By default, each line is treated as arguments to the build script.
     Examples (for toss4_gcc.sh):
       12.3.0
       12.3.0 3.27.4 -DENABLE_OPENMP=On
+    Examples (for MPI lc-build scripts):
+      # toss4_mvapich2_gcc.sh rows are: mvapich2_version gcc_version [cmake_version] [cmake args...]
+      2.3.7 12.3.0
+      2.3.7 12.3.0 3.27.4 -DENABLE_OPENMP=On
+
+  - If <build_script.sh> is 'from-list', the first token on each line is the
+    build script and the remaining tokens are arguments to that script. Use
+    this to mix non-MPI and MPI compiler builds in one run:
+      toss4_nvcc_gcc.sh 12.3.0 sm_80
+      toss4_mvapich2_gcc.sh 2.3.7 12.3.0
+      toss4_mvapich2_icpx.sh 2.3.7 2022.1.0
 
 Options:
   --kernel <name>        Add a kernel or group to run (repeatable)
   --kernel-file <path>   File with kernels/groups (one per line; '#' comments ok)
   --run-cmd <string>     Required to run; prefix command (e.g. "srun -N1 -n1 -c 64 --" or "direct")
+  --throughput           Run a factor sweep for each requested kernel. Each run
+                         gets --memory-allocated BASEMEM*factor and an outfile
+                         named <kernel>_factor_<factor>.
+  --base-mem <bytes>     Base memory for --throughput (default: 50000)
+  --factor <N>           Add one throughput factor (repeatable)
+  --factors <list>       Add throughput factors from a comma/space separated list
+  --throughput-outdir <path>
+                         Output directory for throughput files, relative to each
+                         build dir unless absolute (default: throughput)
   --no-warmup-same       Do not add --warmup-perfrun-same
   --no-skip-existing     Always reconfigure (do not reuse existing build dirs)
   -j, --jobs <N>        Parallel build jobs (default: nproc)
@@ -46,8 +66,10 @@ Options:
   -h, --help            Show this help
 
 Example:
-  scripts/lc-builds/build_and_run.sh toss4_amdclang.sh compiler_list.txt --run-cmd "srun -N1 -n1 -c 64 --" --kernel INIT3 -- -i 10
-  scripts/lc-builds/build_and_run.sh toss4_amdclang.sh compiler_list.txt --kernel-file kernels.txt -- --dryrun
+  scripts/lc-builds/run_compiler_matrix.sh toss4_amdclang.sh compiler_list.txt --run-cmd "srun -N1 -n1 -c 64 --" --kernel INIT3 -- -i 10
+  scripts/lc-builds/run_compiler_matrix.sh toss4_amdclang.sh compiler_list.txt --kernel-file kernels.txt -- --dryrun
+  scripts/lc-builds/run_compiler_matrix.sh toss4_mvapich2_gcc.sh mpi_gcc.txt --run-cmd "srun -N1 -n2 --" --kernel-file kernels.txt -- --variants OpenMP
+  scripts/lc-builds/run_compiler_matrix.sh from-list compiler_matrix.txt --run-cmd "srun -N1 -n4 --" --throughput --factors "1 4 16 64 256 1024" --kernel-file kernels.txt -- --npasses 1 --variants CUDA
 EOF
 }
 
@@ -63,6 +85,21 @@ build_script="$1"
 list_file="$2"
 shift 2
 
+resolve_build_script_path() {
+  local candidate="$1"
+  if [[ "${candidate}" != /* && "${candidate}" != ./* && "${candidate}" != ../* ]]; then
+    if [[ -f "${script_dir}/${candidate}" ]]; then
+      candidate="${script_dir}/${candidate}"
+    fi
+  fi
+
+  if [[ ! -f "${candidate}" ]]; then
+    return 1
+  fi
+
+  echo "${candidate}"
+}
+
 jobs=""
 configure_only=0
 build_only=0
@@ -73,6 +110,19 @@ skip_existing=1
 warmup_same=1
 run_cmd=""
 run_args=()
+throughput=0
+throughput_base_mem=50000
+throughput_factors=()
+throughput_outdir="throughput"
+
+case "${build_script}" in
+  from-list|from_list|FROM-LIST|FROM_LIST|-)
+    build_script_from_list=1
+    ;;
+  *)
+    build_script_from_list=0
+    ;;
+esac
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -106,6 +156,30 @@ while [[ $# -gt 0 ]]; do
       ;;
     --run-cmd)
       run_cmd="${2:-}"
+      shift 2
+      ;;
+    --throughput)
+      throughput=1
+      shift
+      ;;
+    --base-mem)
+      throughput_base_mem="${2:-}"
+      shift 2
+      ;;
+    --factor)
+      throughput_factors+=("${2:-}")
+      shift 2
+      ;;
+    --factors)
+      factor_list="${2:-}"
+      factor_list="${factor_list//,/ }"
+      for factor in ${factor_list}; do
+        throughput_factors+=("${factor}")
+      done
+      shift 2
+      ;;
+    --throughput-outdir)
+      throughput_outdir="${2:-}"
       shift 2
       ;;
     -j|--jobs)
@@ -179,16 +253,11 @@ if [[ "${warmup_same}" -eq 1 ]]; then
   fi
 fi
 
-# Resolve build script path (allow passing e.g. 'toss4_gcc.sh').
-if [[ "${build_script}" != /* && "${build_script}" != ./* && "${build_script}" != ../* ]]; then
-  if [[ -f "${script_dir}/${build_script}" ]]; then
-    build_script="${script_dir}/${build_script}"
+if [[ "${build_script_from_list}" -eq 0 ]]; then
+  if ! build_script="$(resolve_build_script_path "${build_script}")"; then
+    echo "Build script not found: ${build_script}" >&2
+    exit 2
   fi
-fi
-
-if [[ ! -f "${build_script}" ]]; then
-  echo "Build script not found: ${build_script}" >&2
-  exit 2
 fi
 
 if [[ ! -f "${list_file}" ]]; then
@@ -204,16 +273,28 @@ if [[ -z "${jobs}" ]]; then
   fi
 fi
 
+if [[ "${throughput}" -eq 1 && ${#throughput_factors[@]} -eq 0 ]]; then
+  throughput_factors=(1 4 16 32 64 128 256 512 1024)
+fi
+
 if [[ -z "${log_dir}" ]]; then
   ts="$(date +%Y%m%d-%H%M%S)"
-  base="$(basename -- "${build_script}")"
-  base="${base%.sh}"
+  if [[ "${build_script_from_list}" -eq 1 ]]; then
+    base="compiler-matrix"
+  else
+    base="$(basename -- "${build_script}")"
+    base="${base%.sh}"
+  fi
   log_dir="${repo_root}/logs/${base}-${ts}"
 fi
 mkdir -p "${log_dir}"
 
 echo "Repo root    : ${repo_root}"
-echo "Build script : ${build_script}"
+if [[ "${build_script_from_list}" -eq 1 ]]; then
+  echo "Build script : from list"
+else
+  echo "Build script : ${build_script}"
+fi
 echo "List file    : ${list_file}"
 echo "Jobs         : ${jobs}"
 echo "Log dir      : ${log_dir}"
@@ -222,6 +303,12 @@ echo "Skip existing: ${skip_existing}"
 echo "Warmup same  : ${warmup_same}"
 echo "Run cmd      : ${run_cmd:-"(none)"}"
 echo "Run args     : ${run_args[*]:-(none)}"
+echo "Throughput   : ${throughput}"
+if [[ "${throughput}" -eq 1 ]]; then
+  echo "Base memory  : ${throughput_base_mem}"
+  echo "Factors      : ${throughput_factors[*]}"
+  echo "Output dir   : ${throughput_outdir}"
+fi
 echo
 
 failures=0
@@ -241,12 +328,35 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
   total=$((total + 1))
   entry_id="$(printf "%03d" "${total}")"
 
-  IFS=$' \t' read -r -a script_args <<<"${line}"
+  IFS=$' \t' read -r -a line_tokens <<<"${line}"
+  if [[ "${build_script_from_list}" -eq 1 ]]; then
+    entry_build_script="${line_tokens[0]:-}"
+    script_args=("${line_tokens[@]:1}")
+    if [[ -z "${entry_build_script}" ]]; then
+      echo "FAILED: line ${line_no}: missing build script" >&2
+      failures=$((failures + 1))
+      if [[ "${keep_going}" -eq 0 ]]; then
+        break
+      fi
+      continue
+    fi
+    if ! entry_build_script="$(resolve_build_script_path "${entry_build_script}")"; then
+      echo "FAILED: line ${line_no}: build script not found: ${line_tokens[0]}" >&2
+      failures=$((failures + 1))
+      if [[ "${keep_going}" -eq 0 ]]; then
+        break
+      fi
+      continue
+    fi
+  else
+    entry_build_script="${build_script}"
+    script_args=("${line_tokens[@]}")
+  fi
   log_prefix="${log_dir}/${entry_id}"
 
-  echo "==> [${entry_id}] line ${line_no}: ${line}"
+  echo "==> [${entry_id}] line ${line_no}: $(basename -- "${entry_build_script}") ${script_args[*]}"
 
-  if ! bash -lc '
+  if ! THROUGHPUT_FACTORS="${throughput_factors[*]}" bash -lc '
     set -euo pipefail
     repo_root="$1"; shift
     build_script="$1"; shift
@@ -255,6 +365,9 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
     build_only="$1"; shift
     skip_existing="$1"; shift
     run_cmd="$1"; shift
+    throughput="$1"; shift
+    throughput_base_mem="$1"; shift
+    throughput_outdir="$1"; shift
     delim="$1"; shift
 
     script_args=()
@@ -266,6 +379,20 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
       shift
     fi
     perf_args=("$@")
+
+    run_raja_perf() {
+      if [[ "$run_cmd" == "direct" ]]; then
+        ./bin/raja-perf.exe "$@"
+      else
+        local quoted=()
+        local a q
+        for a in "$@"; do
+          printf -v q "%q" "$a"
+          quoted+=("$q")
+        done
+        eval "${run_cmd} ./bin/raja-perf.exe ${quoted[*]}"
+      fi
+    }
 
     cd "$repo_root"
 
@@ -321,19 +448,63 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
     if [[ "$configure_only" == "0" ]]; then
       cmake --build . --parallel "$jobs"
       if [[ "$build_only" == "0" ]]; then
-        if [[ "$run_cmd" == "direct" ]]; then
-          ./bin/raja-perf.exe "${perf_args[@]}"
-        else
-          quoted=()
-          for a in "${perf_args[@]}"; do
-            printf -v q "%q" "$a"
-            quoted+=("$q")
+        if [[ "$throughput" == "1" ]]; then
+          kernels_to_run=()
+          passthrough_args=()
+          while [[ ${#perf_args[@]} -gt 0 ]]; do
+            case "${perf_args[0]}" in
+              --kernels|-k|--kernel)
+                shift_count=1
+                if [[ "${perf_args[0]}" == "--kernels" ]]; then
+                  shift_count=1
+                fi
+                perf_args=("${perf_args[@]:${shift_count}}")
+                while [[ ${#perf_args[@]} -gt 0 && "${perf_args[0]}" != -* ]]; do
+                  kernels_to_run+=("${perf_args[0]}")
+                  perf_args=("${perf_args[@]:1}")
+                done
+                ;;
+              *)
+                passthrough_args+=("${perf_args[0]}")
+                perf_args=("${perf_args[@]:1}")
+                ;;
+            esac
           done
-          eval "${run_cmd} ./bin/raja-perf.exe ${quoted[*]}"
+          if [[ ${#kernels_to_run[@]} -eq 0 ]]; then
+            kernels_to_run=("all")
+          fi
+
+          factors=()
+          IFS=$' \t,' read -r -a factors <<<"${THROUGHPUT_FACTORS:-}"
+          if [[ ${#factors[@]} -eq 0 ]]; then
+            factors=(1 4 16 32 64 128 256 512 1024)
+          fi
+
+          for kernel_name in "${kernels_to_run[@]}"; do
+            for factor in "${factors[@]}"; do
+              mem=$(( factor * throughput_base_mem ))
+              outfile_kernel="${kernel_name//\//_}"
+              echo "Running throughput: kernel=${kernel_name} factor=${factor} memory=${mem}"
+              generated_args=(
+                --npasses 1
+                --npasses-combiners Average Minimum Maximum
+                --outdir "$throughput_outdir"
+                --outfile "${outfile_kernel}_factor_${factor}"
+                --memory-allocated "$mem"
+              )
+              if [[ "$kernel_name" != "all" ]]; then
+                generated_args=(-k "$kernel_name" "${generated_args[@]}")
+              fi
+              run_raja_perf "${generated_args[@]}" "${passthrough_args[@]}"
+            done
+          done
+        else
+          run_raja_perf "${perf_args[@]}"
         fi
       fi
     fi
-  ' bash "${repo_root}" "${build_script}" "${jobs}" "${configure_only}" "${build_only}" "${skip_existing}" "${run_cmd}" \
+  ' bash "${repo_root}" "${entry_build_script}" "${jobs}" "${configure_only}" "${build_only}" "${skip_existing}" "${run_cmd}" \
+      "${throughput}" "${throughput_base_mem}" "${throughput_outdir}" \
       "__RAJAPERF_MATRIX_DELIM__" "${script_args[@]}" "__RAJAPERF_MATRIX_DELIM__" "${warmup_args[@]}" "${kernel_args[@]}" "${run_args[@]}" \
       </dev/null \
       2>&1 | tee "${log_prefix}.log"; then
