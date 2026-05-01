@@ -6,7 +6,9 @@ import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
-os.environ.setdefault("MPLCONFIGDIR", "/var/tmp/vargas45/matplotlib")
+mpl_config_dir = Path.cwd() / ".matplotlib"
+mpl_config_dir.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", str(mpl_config_dir))
 
 import matplotlib
 
