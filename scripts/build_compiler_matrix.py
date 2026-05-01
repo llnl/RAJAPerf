@@ -21,6 +21,20 @@ TIME_COL = "Mean time per rep (sec.)"
 BANDWIDTH_COL = "Mean Bandwidth (GiB per sec.)"
 FLOPS_COL = "Mean flops (gigaFLOP per sec.)"
 PROBLEM_SIZE_COL = "Problem size"
+COMPILER_HINT_TOKENS = (
+    "amdclang",
+    "hipcc",
+    "gcc",
+    "clang",
+    "nvcc",
+    "icpx",
+    "icc",
+    "cce",
+    "cray",
+    "oneapi",
+    "dpcpp",
+    "rocm",
+)
 
 METRIC_ALIASES = {
     TIME_COL: [
@@ -46,9 +60,21 @@ METRIC_ALIASES = {
 
 
 def find_build_folder(path: Path) -> str:
-    for parent in path.parents:
+    candidates = [path.parent, *path.parents]
+
+    for parent in candidates:
         if parent.name.startswith("build_"):
             return parent.name
+
+    for parent in candidates:
+        if parent.name.startswith("install_"):
+            return parent.name
+
+    for parent in candidates:
+        lower_name = parent.name.lower()
+        if lower_name.startswith("lc_") or any(token in lower_name for token in COMPILER_HINT_TOKENS):
+            return parent.name
+
     return ""
 
 
@@ -56,13 +82,19 @@ def compiler_label(build_folder: str) -> str:
     label = build_folder
     if label.startswith("build_"):
         label = label[len("build_") :]
+    if label.startswith("install_"):
+        label = label[len("install_") :]
     if label.startswith("lc_toss4-"):
         label = label[len("lc_toss4-") :]
+    elif label.startswith("lc_"):
+        label = label[len("lc_") :]
     return label or "unknown-build"
 
 
 def sanitize_filename(text: object) -> str:
-    return "".join(c if c.isalnum() or c in "-_." else "_" for c in str(text))
+    sanitized = "".join(c if c.isalnum() or c in "-_." else "_" for c in str(text))
+    sanitized = re.sub(r"_+", "_", sanitized)
+    return sanitized.strip("_.") or "output"
 
 
 def parse_factor(path: Path) -> float:

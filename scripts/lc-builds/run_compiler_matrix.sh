@@ -358,7 +358,7 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
 
   if ! THROUGHPUT_FACTORS="${throughput_factors[*]}" bash -lc '
     set -euo pipefail
-    repo_root="$1"; shift
+    repo_root="$0"
     build_script="$1"; shift
     jobs="$1"; shift
     configure_only="$1"; shift
@@ -475,7 +475,9 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
           fi
 
           factors=()
-          IFS=$' \t,' read -r -a factors <<<"${THROUGHPUT_FACTORS:-}"
+          throughput_factor_text="${THROUGHPUT_FACTORS:-}"
+          throughput_factor_text="${throughput_factor_text//,/ }"
+          read -r -a factors <<<"${throughput_factor_text}"
           if [[ ${#factors[@]} -eq 0 ]]; then
             factors=(1 4 16 32 64 128 256 512 1024)
           fi
@@ -503,7 +505,7 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
         fi
       fi
     fi
-  ' bash "${repo_root}" "${entry_build_script}" "${jobs}" "${configure_only}" "${build_only}" "${skip_existing}" "${run_cmd}" \
+  ' "${repo_root}" "${entry_build_script}" "${jobs}" "${configure_only}" "${build_only}" "${skip_existing}" "${run_cmd}" \
       "${throughput}" "${throughput_base_mem}" "${throughput_outdir}" \
       "__RAJAPERF_MATRIX_DELIM__" "${script_args[@]}" "__RAJAPERF_MATRIX_DELIM__" "${warmup_args[@]}" "${kernel_args[@]}" "${run_args[@]}" \
       </dev/null \
