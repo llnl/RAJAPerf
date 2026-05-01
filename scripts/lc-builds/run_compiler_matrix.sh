@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# Run a matrix of RAJAPerf builds and runs from a compiler/version list.
+#
+# This script is a thin driver around the existing lc-build scripts. It reads a
+# list of compiler configurations, sources the appropriate build script for each
+# entry, builds the tree, and optionally runs either a normal benchmark command
+# or a throughput factor sweep.
 
 ###############################################################################
 # Copyright (c) Lawrence Livermore National Security, LLC and other
@@ -34,6 +41,15 @@ List file format:
       # toss4_mvapich2_gcc.sh rows are: mvapich2_version gcc_version [cmake_version] [cmake args...]
       2.3.7 12.3.0
       2.3.7 12.3.0 3.27.4 -DENABLE_OPENMP=On
+    Examples (for MPI + device-arch lc-build scripts):
+      # toss4_cray-mpich_amdclang.sh rows are:
+      #   cray_mpich_version hip_compiler_version hip_arch [cmake_version] [cmake args...]
+      9.0.1 7.2.1 gfx942
+      9.0.1 7.2.1 gfx942 3.27.4 -DCMAKE_CXX_FLAGS="-munsafe-fp-atomics"
+      # toss4_mvapich2_nvcc_gcc.sh rows are:
+      #   mvapich2_version nvcc_version cuda_arch gcc_version [cmake_version] [cmake args...]
+      2.3.7 12.2.2 90 10.3.1
+      2.3.7 12.2.2 90 10.3.1 3.27.4 -DENABLE_OPENMP=On
 
   - If <build_script.sh> is 'from-list', the first token on each line is the
     build script and the remaining tokens are arguments to that script. Use
@@ -41,6 +57,8 @@ List file format:
       toss4_nvcc_gcc.sh 12.3.0 sm_80
       toss4_mvapich2_gcc.sh 2.3.7 12.3.0
       toss4_mvapich2_icpx.sh 2.3.7 2022.1.0
+      toss4_cray-mpich_amdclang.sh 9.0.1 7.2.1 gfx942
+      toss4_mvapich2_nvcc_gcc.sh 2.3.7 12.2.2 90 10.3.1
 
 Options:
   --kernel <name>        Add a kernel or group to run (repeatable)
@@ -86,6 +104,8 @@ list_file="$2"
 shift 2
 
 resolve_build_script_path() {
+  # Allow bare script names like "toss4_amdclang.sh" by resolving them relative
+  # to scripts/lc-builds, while still accepting explicit absolute/relative paths.
   local candidate="$1"
   if [[ "${candidate}" != /* && "${candidate}" != ./* && "${candidate}" != ../* ]]; then
     if [[ -f "${script_dir}/${candidate}" ]]; then
@@ -289,6 +309,8 @@ if [[ -z "${log_dir}" ]]; then
 fi
 mkdir -p "${log_dir}"
 
+# Print the resolved run configuration once up front so each log directory is
+# self-describing even if the caller did not capture the command line elsewhere.
 echo "Repo root    : ${repo_root}"
 if [[ "${build_script_from_list}" -eq 1 ]]; then
   echo "Build script : from list"
@@ -328,6 +350,9 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
   total=$((total + 1))
   entry_id="$(printf "%03d" "${total}")"
 
+  # Each non-comment line becomes one matrix entry. In normal mode the line is
+  # passed as arguments to a single build script. In from-list mode the first
+  # token selects the build script and the remaining tokens are its arguments.
   IFS=$' \t' read -r -a line_tokens <<<"${line}"
   if [[ "${build_script_from_list}" -eq 1 ]]; then
     entry_build_script="${line_tokens[0]:-}"
@@ -356,6 +381,10 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
 
   echo "==> [${entry_id}] line ${line_no}: $(basename -- "${entry_build_script}") ${script_args[*]}"
 
+  # Execute each matrix entry in a fresh login shell so module operations and
+  # sourced build scripts do not leak state across compiler configurations.
+  # Positional arguments are marshaled across the bash -lc boundary with a
+  # delimiter because script_args and perf_args are both variable length.
   if ! THROUGHPUT_FACTORS="${throughput_factors[*]}" bash -lc '
     set -euo pipefail
     repo_root="$0"
@@ -381,6 +410,9 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
     perf_args=("$@")
 
     run_raja_perf() {
+      # "direct" bypasses eval entirely. Non-direct run commands are treated as
+      # a launcher prefix such as srun, so the RAJAPerf argv is shell-quoted
+      # first and then appended to that prefix.
       if [[ "$run_cmd" == "direct" ]]; then
         ./bin/raja-perf.exe "$@"
       else
@@ -403,6 +435,10 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
     if [[ "$skip_existing" == "1" ]]; then
       build_preexisted=0
 
+      # Some lc-build scripts always call rm/mkdir/cmake while setting up the
+      # build dir. During the reuse probe, temporarily replace those commands so
+      # we can discover the intended build directory without deleting anything or
+      # re-running configuration.
       cmake() { :; }
       rm() { :; }
       mkdir() {
@@ -430,6 +466,8 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
       cd "$repo_root"
       unset -f cmake rm mkdir
 
+      # If the probed directory already contains a configured build tree, reuse
+      # it. Otherwise source the build script again normally to configure it.
       if [[ "$configured_present" == "1" ]]; then
         cd "$build_dir"
       else
@@ -449,6 +487,10 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
       cmake --build . --parallel "$jobs"
       if [[ "$build_only" == "0" ]]; then
         if [[ "$throughput" == "1" ]]; then
+          # Throughput mode expands one logical entry into many RAJAPerf runs by
+          # pairing each selected kernel with each requested factor. The kernel
+          # selection options are peeled out of perf_args so the generated runs
+          # can inject their own per-kernel outfile and memory size.
           kernels_to_run=()
           passthrough_args=()
           while [[ ${#perf_args[@]} -gt 0 ]]; do
@@ -484,6 +526,8 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
 
           for kernel_name in "${kernels_to_run[@]}"; do
             for factor in "${factors[@]}"; do
+              # Keep output filenames predictable so downstream merge/plot tools
+              # can recover the factor directly from the CSV path.
               mem=$(( factor * throughput_base_mem ))
               outfile_kernel="${kernel_name//\//_}"
               echo "Running throughput: kernel=${kernel_name} factor=${factor} memory=${mem}"

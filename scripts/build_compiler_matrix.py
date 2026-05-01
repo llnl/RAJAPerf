@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""Merge RAJAPerf kernel-run-data CSVs and generate compiler comparison plots.
+
+This script is meant for compiler sweep outputs produced by
+`scripts/lc-builds/run_compiler_matrix.sh`, but it also works on any directory
+tree that contains RAJAPerf `*-kernel-run-data.csv` files.
+
+The main flow is:
+1. Discover matching CSV files from one or more glob patterns.
+2. Find the real CSV header row even when RAJAPerf prepends text metadata.
+3. Normalize column names across slightly different CSV schemas.
+4. Derive compiler/build metadata from the source file path.
+5. Merge everything into one dataframe and emit summary tables and plots.
+"""
 
 import argparse
 import os
@@ -6,6 +19,9 @@ import re
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
+# Matplotlib needs a writable config/cache directory in this environment.
+# Using the current working directory keeps the behavior local to the run
+# rather than depending on a user-specific home directory path.
 mpl_config_dir = Path.cwd() / ".matplotlib"
 mpl_config_dir.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("MPLCONFIGDIR", str(mpl_config_dir))
@@ -62,6 +78,12 @@ METRIC_ALIASES = {
 
 
 def find_build_folder(path: Path) -> str:
+    """Infer the build/compiler identifier from a CSV path.
+
+    Preferred matches are actual `build_*` directories. The fallback cases are
+    there for sweep outputs that were copied or reorganized but still keep a
+    compiler-like directory name in the path.
+    """
     candidates = [path.parent, *path.parents]
 
     for parent in candidates:
@@ -81,6 +103,7 @@ def find_build_folder(path: Path) -> str:
 
 
 def compiler_label(build_folder: str) -> str:
+    """Turn a build folder name into a shorter plot-friendly compiler label."""
     label = build_folder
     if label.startswith("build_"):
         label = label[len("build_") :]
@@ -94,12 +117,21 @@ def compiler_label(build_folder: str) -> str:
 
 
 def sanitize_filename(text: object) -> str:
+    """Make plot/table filenames stable and shell-friendly."""
     sanitized = "".join(c if c.isalnum() or c in "-_." else "_" for c in str(text))
     sanitized = re.sub(r"_+", "_", sanitized)
     return sanitized.strip("_.") or "output"
 
 
 def parse_factor(path: Path) -> float:
+    """Extract the numeric throughput factor from a standard sweep filename.
+
+    Expected examples:
+      DIFFUSION3DPA_factor_1024-kernel-run-data.csv -> 1024.0
+      VOL3D_factor_64-kernel-run-data.csv           -> 64.0
+
+    Returns NaN when the filename is not from a factor sweep.
+    """
     match = re.search(r"(?:^|_)factor_([0-9]+(?:\.[0-9]+)?)", path.name)
     if not match:
         return np.nan
@@ -107,6 +139,7 @@ def parse_factor(path: Path) -> float:
 
 
 def parse_run_name(path: Path) -> str:
+    """Drop the standard CSV suffix to keep the run/file stem for reporting."""
     name = path.name
     if name.endswith("-kernel-run-data.csv"):
         name = name[: -len("-kernel-run-data.csv")]
@@ -114,6 +147,12 @@ def parse_run_name(path: Path) -> str:
 
 
 def find_csv_files(root_dir: Path, patterns: Iterable[str]) -> List[Path]:
+    """Resolve one or more glob patterns into a unique sorted file list.
+
+    Patterns are evaluated relative to root_dir so callers can merge multiple
+    build trees at once, for example:
+      build_*/compiler_sweep_runs/tier1_base_raja_hip/*kernel-run-data.csv
+    """
     files: List[Path] = []
     for pattern in patterns:
         files.extend(root_dir.glob(pattern))
@@ -121,11 +160,13 @@ def find_csv_files(root_dir: Path, patterns: Iterable[str]) -> List[Path]:
 
 
 def header_score(line: str) -> int:
+    """Score a line by how much it looks like a kernel-run-data CSV header."""
     tokens = ["Kernel", "Variant", "Tuning", "Problem size", "Mean time", "Mean flops", "Bandwidth"]
     return sum(1 for token in tokens if token in line)
 
 
 def read_kernel_run_csv(path: Path) -> Optional[pd.DataFrame]:
+    """Read one RAJAPerf CSV, allowing for preamble text before the header row."""
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except UnicodeDecodeError:
@@ -149,6 +190,8 @@ def read_kernel_run_csv(path: Path) -> Optional[pd.DataFrame]:
         return None
 
     try:
+        # RAJAPerf often writes one or more descriptive lines before the actual
+        # CSV header, so the parser starts at the detected header row.
         df = pd.read_csv(path, header=header_idx, skipinitialspace=True)
     except Exception as exc:
         print(f"[SKIP] Could not parse {path}: {exc}")
@@ -158,6 +201,7 @@ def read_kernel_run_csv(path: Path) -> Optional[pd.DataFrame]:
 
 
 def coalesce_prefixed_columns(df: pd.DataFrame, output_name: str, prefix: str) -> pd.DataFrame:
+    """Collapse duplicate/prefixed columns that can appear after CSV parsing."""
     columns = [c for c in df.columns if c == output_name or c.lower().startswith(prefix.lower())]
     if not columns:
         return df
@@ -169,6 +213,7 @@ def coalesce_prefixed_columns(df: pd.DataFrame, output_name: str, prefix: str) -
 
 
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize known schema variations into one canonical column set."""
     df = df.copy()
     df.columns = [str(column).strip() for column in df.columns]
     df = coalesce_prefixed_columns(df, "Kernel", "Kernel")
@@ -194,6 +239,12 @@ def collect_kernel_run_data(
     kernel_filters: Optional[List[str]] = None,
     verbose: bool = False,
 ) -> pd.DataFrame:
+    """Load, normalize, annotate, and merge all matching kernel-run-data CSVs.
+
+    The returned dataframe is the central analysis table used by both the CLI
+    plots and the notebook. Each input file contributes its original benchmark
+    rows plus derived metadata columns describing where that row came from.
+    """
     files = find_csv_files(root_dir, patterns)
     if verbose:
         print(f"Found {len(files)} CSV files under {root_dir}")
@@ -210,6 +261,8 @@ def collect_kernel_run_data(
             print(f"[SKIP] {path} missing columns: {missing}")
             continue
 
+        # These derived columns are what let downstream plots compare compilers
+        # without requiring the original directory structure at plotting time.
         build_folder = find_build_folder(path)
         df["BuildFolder"] = build_folder
         df["Compiler"] = compiler_label(build_folder)
@@ -244,6 +297,7 @@ def collect_kernel_run_data(
 
 
 def choose_available_metrics(df: pd.DataFrame, requested: Optional[List[str]]) -> List[str]:
+    """Keep only metrics that are present and have at least one real value."""
     metrics = requested or [TIME_COL, FLOPS_COL, BANDWIDTH_COL]
     available = [metric for metric in metrics if metric in df.columns and df[metric].notna().any()]
     missing = [metric for metric in metrics if metric not in available]
@@ -253,6 +307,12 @@ def choose_available_metrics(df: pd.DataFrame, requested: Optional[List[str]]) -
 
 
 def plot_fixed_size_bars(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
+    """Plot per-kernel bars comparing compilers at the merged problem sizes present.
+
+    This view is most useful when different compilers were run on the same
+    problem sizes and you want a compact side-by-side comparison for each
+    variant/tuning combination.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     for metric in metrics:
         metric_df = df.dropna(subset=[metric]).copy()
@@ -299,6 +359,12 @@ def plot_fixed_size_bars(df: pd.DataFrame, output_dir: Path, metrics: List[str])
 
 
 def plot_throughput_curves(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
+    """Plot metric-vs-problem-size curves for factor sweeps or multi-size runs.
+
+    A row is considered sweep-like if either:
+    - a numeric factor was parsed from the filename, or
+    - the same kernel/compiler/variant/tuning appears at multiple sizes
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     sweep_df = df.copy()
     sweep_df = sweep_df[sweep_df["Factor"].notna() | sweep_df.duplicated(["Kernel", "CompilerVariantTuning"], keep=False)]
@@ -345,6 +411,11 @@ def plot_throughput_curves(df: pd.DataFrame, output_dir: Path, metrics: List[str
 
 
 def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
+    """Write merged and peak-performance summary tables alongside the plots.
+
+    The peak tables keep the single best row per kernel and
+    compiler/variant/tuning label for the requested metric.
+    """
     output_dir.mkdir(parents=True, exist_ok=True)
     summary_columns = ["Kernel", "Compiler", "Variant", "Tuning", PROBLEM_SIZE_COL, "Factor", *metrics]
     present_columns = [column for column in summary_columns if column in df.columns]
@@ -365,6 +436,7 @@ def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str])
 
 
 def parse_args() -> argparse.Namespace:
+    """Define the small CLI used by ad hoc plotting and notebook preparation."""
     parser = argparse.ArgumentParser(
         description="Read RAJAPerf kernel-run-data CSVs and plot compiler comparisons."
     )
@@ -396,11 +468,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """CLI entrypoint: load data, write merged tables, and render requested plots."""
     args = parse_args()
     root_dir = Path(args.root_dir).resolve()
     output_dir = Path(args.output_dir).resolve()
     patterns = args.glob_pattern or ["**/*kernel-run-data.csv"]
 
+    # Input discovery is intentionally flexible: callers can point at a single
+    # build tree, the repository root, or a multi-build glob under the repo.
     df = collect_kernel_run_data(
         root_dir=root_dir,
         patterns=patterns,
