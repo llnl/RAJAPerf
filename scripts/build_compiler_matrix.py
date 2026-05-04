@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge RAJAPerf kernel-run-data CSVs and generate compiler comparison plots.
+"""Merge RAJAPerf kernel-run-data CSVs and generate compiler matrix plots.
 
 This script is meant for compiler sweep outputs produced by
 `scripts/lc-builds/run_compiler_matrix.sh`, but it also works on any directory
@@ -438,10 +438,10 @@ def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str])
 def parse_args() -> argparse.Namespace:
     """Define the small CLI used by ad hoc plotting and notebook preparation."""
     parser = argparse.ArgumentParser(
-        description="Read RAJAPerf kernel-run-data CSVs and plot compiler comparisons."
+        description="Read RAJAPerf kernel-run-data CSVs and plot compiler matrices."
     )
     parser.add_argument("--root-dir", default=".", help="Directory to search recursively (default: current directory)")
-    parser.add_argument("--output-dir", default="compiler-comparison-output", help="Output directory")
+    parser.add_argument("--output-dir", default="compiler-matrix-output", help="Output directory")
     parser.add_argument(
         "--glob-pattern",
         action="append",
@@ -502,7 +502,7 @@ def main() -> int:
     if not args.no_throughput_plots:
         plot_throughput_curves(df, output_dir / "throughput-plots", metrics)
 
-    print(f"Wrote compiler comparison outputs under: {output_dir}")
+    print(f"Wrote compiler matrix outputs under: {output_dir}")
     return 0
 
 
