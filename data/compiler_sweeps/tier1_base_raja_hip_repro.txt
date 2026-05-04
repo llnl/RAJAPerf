@@ -8,10 +8,10 @@ Kernel lists:
 Run from the repository root.
 
 Main Tier 1 kernels:
-  scripts/lc-builds/run_compiler_matrix.sh from-list data/compiler_sweeps/tier1_base_raja_hip_compilers.txt --run-cmd direct --throughput --base-mem 100000 --factors "1 4 16 32 64 128 256 512 1024 1500 2048 3000 4000" --kernel-file data/compiler_sweeps/tier1_main_kernels.txt -- --variants Base_HIP RAJA_HIP --npasses 1 --npasses-combiners Average Minimum Maximum --outdir compiler_sweep_runs/tier1_base_raja_hip
+  scripts/lc-builds/run_compiler_matrix.sh from-list data/compiler_sweeps/tier1_base_raja_hip_compilers.txt --run-cmd direct --throughput --base-mem 100000 --factors "1 4 16 32 64 128 256 512 1024 1500 2048 3000 4000" --kernel-file data/compiler_sweeps/tier1_main_kernels.txt -- --variants Base_HIP RAJA_HIP --npasses 3 --npasses-combiners Average Minimum Maximum --outdir compiler_sweep_runs/tier1_base_raja_hip
 
 Tier 1 special-range kernels:
-  scripts/lc-builds/run_compiler_matrix.sh from-list data/compiler_sweeps/tier1_base_raja_hip_compilers.txt --run-cmd direct --throughput --base-mem 100000 --factors "32 64 128 256 512 1024 1500 2048 3000 4000 5000 6000" --kernel-file data/compiler_sweeps/tier1_diff_range_kernels.txt -- --variants Base_HIP RAJA_HIP --npasses 1 --npasses-combiners Average Minimum Maximum --outdir compiler_sweep_runs/tier1_base_raja_hip
+  scripts/lc-builds/run_compiler_matrix.sh from-list data/compiler_sweeps/tier1_base_raja_hip_compilers.txt --run-cmd direct --throughput --base-mem 100000 --factors "32 64 128 256 512 1024 1500 2048 3000 4000 5000 6000" --kernel-file data/compiler_sweeps/tier1_diff_range_kernels.txt -- --variants Base_HIP RAJA_HIP --npasses 3 --npasses-combiners Average Minimum Maximum --outdir compiler_sweep_runs/tier1_base_raja_hip
 
 Generate plots from the produced kernel-run-data CSV files:
   python3 scripts/build_compiler_matrix.py --root-dir . --output-dir compiler-comparison-output/tier1_base_raja_hip --no-fixed-plots
