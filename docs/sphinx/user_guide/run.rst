@@ -97,7 +97,7 @@ generated in the run directory after Suite execution completes.
 .. note:: You can pass the ``--dryrun`` command-line option to the executable
           to see a summary of how the Suite will execute by showing run
           parameters without actually running it. You can pass any other
-          command-line options when doing a "dryrun" and you will see
+          command-line options when doing a "dry run" and you will see
           that the given options are represented in the screen output.
 
 Lastly, the program will report specific errors if given incorrect input, such
