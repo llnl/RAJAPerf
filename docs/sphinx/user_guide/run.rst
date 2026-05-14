@@ -159,6 +159,11 @@ The generated ``*-kernel-run-data.csv`` files can then be merged and plotted
 with the processing scripts in ``scripts/`` such as
 ``scripts/build_compiler_matrix.py`` where it will generate corresponding plots.
 
+By default the script writes its outputs under ``./compiler-matrix-output``.
+Throughput plots are placed under ``./compiler-matrix-output/throughput-plots``.
+For example, the ``VOL3D`` throughput plot is written as
+``./compiler-matrix-output/throughput-plots/Apps_VOL3D_Mean_flops_gigaFLOP_per_sec_throughput.pdf``.
+
 .. _run_mpi-label:
 
 ==================

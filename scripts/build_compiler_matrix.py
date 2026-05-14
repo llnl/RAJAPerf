@@ -124,6 +124,16 @@ def sanitize_filename(text: object) -> str:
     return sanitized.strip("_.") or "output"
 
 
+def line_dash_for_compiler(label: object) -> str:
+    """Use dashed lines for Base_* traces and solid lines for RAJA_* traces."""
+    name = str(label).strip()
+    if re.search(r"\|\s*Base_", name):
+        return "dash"
+    if re.search(r"\|\s*RAJA_", name):
+        return "solid"
+    return "solid"
+
+
 def parse_factor(path: Path) -> float:
     """Extract the numeric throughput factor from a standard sweep filename.
 
@@ -307,58 +317,6 @@ def choose_available_metrics(df: pd.DataFrame, requested: Optional[List[str]]) -
     return available
 
 
-def plot_fixed_size_bars(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
-    """Plot per-kernel bars comparing compilers at the merged problem sizes present.
-
-    This view is most useful when different compilers were run on the same
-    problem sizes and you want a compact side-by-side comparison for each
-    variant/tuning combination.
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    for metric in metrics:
-        metric_df = df.dropna(subset=[metric]).copy()
-        if metric_df.empty:
-            continue
-
-        grouped = (
-            metric_df.groupby(["Kernel", "VariantTuning", "Compiler"], dropna=False)[metric]
-            .mean()
-            .reset_index()
-        )
-
-        for kernel, kernel_df in grouped.groupby("Kernel", sort=True):
-            variant_tunings = sorted(kernel_df["VariantTuning"].dropna().unique())
-            compilers = sorted(kernel_df["Compiler"].dropna().unique())
-            if not variant_tunings or not compilers:
-                continue
-
-            x_idx = np.arange(len(variant_tunings))
-            width = 0.82 / max(len(compilers), 1)
-            fig, ax = plt.subplots(figsize=(14, 7))
-
-            for idx, compiler in enumerate(compilers):
-                sub = kernel_df[kernel_df["Compiler"] == compiler]
-                values = []
-                for vt in variant_tunings:
-                    row = sub[sub["VariantTuning"] == vt]
-                    values.append(row[metric].iloc[0] if not row.empty else np.nan)
-                offset = (idx - len(compilers) / 2) * width + width / 2
-                ax.bar(x_idx + offset, values, width=width, label=compiler)
-
-            ax.set_title(f"{kernel} - {metric}", fontsize=15)
-            ax.set_ylabel(metric)
-            ax.set_xlabel("Variant | Tuning")
-            ax.set_xticks(x_idx)
-            ax.set_xticklabels(variant_tunings, rotation=35, ha="right")
-            ax.grid(axis="y", linestyle="--", alpha=0.35)
-            ax.set_axisbelow(True)
-            ax.legend(title="Compiler", bbox_to_anchor=(1.02, 1), loc="upper left")
-            fig.tight_layout()
-            out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_bars.png"
-            fig.savefig(out_path, dpi=200)
-            plt.close(fig)
-
-
 def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
     """Matplotlib line plots (vector PDF) for metric vs problem size."""
     for metric in metrics:
@@ -379,6 +337,7 @@ def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metric
                     line_df[metric],
                     marker="o",
                     linewidth=2,
+                    linestyle=line_dash_for_compiler(label),
                     markersize=5,
                     label=label,
                 )
@@ -446,7 +405,7 @@ def _plot_throughput_curves_plotly(
                         y=line_df[metric],
                         mode="lines+markers",
                         name=str(label),
-                        line=dict(width=2),
+                        line=dict(width=2, dash=line_dash_for_compiler(label)),
                         marker=dict(size=10),
                     )
                 )
@@ -551,7 +510,7 @@ def parse_args() -> argparse.Namespace:
         description="Read RAJAPerf kernel-run-data CSVs and plot compiler comparisons."
     )
     parser.add_argument("--root-dir", default=".", help="Directory to search recursively (default: current directory)")
-    parser.add_argument("--output-dir", default="compiler-comparison-output", help="Output directory")
+    parser.add_argument("--output-dir", default="compiler-matrix-output", help="Output directory")
     parser.add_argument(
         "--glob-pattern",
         action="append",
@@ -571,7 +530,6 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Metric to plot, repeatable (default: time, flops, bandwidth when present)",
     )
-    parser.add_argument("--no-fixed-plots", action="store_true", help="Skip fixed-size bar plots")
     parser.add_argument(
         "--html",
         action="store_true",
@@ -621,8 +579,6 @@ def main() -> int:
         return 1
 
     write_summary_tables(df, output_dir, metrics)
-    if not args.no_fixed_plots:
-        plot_fixed_size_bars(df, output_dir / "fixed-size-plots", metrics)
     if not args.no_throughput_plots:
         try:
             plot_throughput_curves(
