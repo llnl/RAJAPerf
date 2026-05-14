@@ -63,7 +63,9 @@ List file format:
 Options:
   --kernel <name>        Add a kernel or group to run (repeatable)
   --kernel-file <path>   File with kernels/groups (one per line; '#' comments ok)
-  --run-cmd <string>     Required to run; prefix command (e.g. "srun -N1 -n1 -c 64 --" or "direct")
+  --run-cmd <string>     Required to run; launcher prefix. End launcher options
+                         with `--` so RAJAPerf args can be appended (e.g.
+                         "srun -N1 -n1 -c 64 --")
   --throughput           Run a factor sweep for each requested kernel. Each run
                          gets --memory-allocated BASEMEM*factor and an outfile
                          named <kernel>_factor_<factor>.
@@ -246,7 +248,12 @@ done
 
 # If we're going to run, require an explicit run command prefix.
 if [[ "${configure_only}" -eq 0 && "${build_only}" -eq 0 && -z "${run_cmd}" ]]; then
-  echo "Missing required --run-cmd (use e.g. --run-cmd \"srun -N1 -n1 -c 64 --\" or --run-cmd direct)." >&2
+  echo "Missing required --run-cmd (use e.g. --run-cmd \"srun -N1 -n1 -c 64 --\")." >&2
+  exit 2
+fi
+
+if [[ "${run_cmd}" == "direct" ]]; then
+  echo "The --run-cmd direct shortcut is no longer supported; pass an explicit launcher prefix." >&2
   exit 2
 fi
 
@@ -410,20 +417,15 @@ while IFS= read -r raw_line || [[ -n "${raw_line}" ]]; do
     perf_args=("$@")
 
     run_raja_perf() {
-      # "direct" bypasses eval entirely. Non-direct run commands are treated as
-      # a launcher prefix such as srun, so the RAJAPerf argv is shell-quoted
-      # first and then appended to that prefix.
-      if [[ "$run_cmd" == "direct" ]]; then
-        ./bin/raja-perf.exe "$@"
-      else
-        local quoted=()
-        local a q
-        for a in "$@"; do
-          printf -v q "%q" "$a"
-          quoted+=("$q")
-        done
-        eval "${run_cmd} ./bin/raja-perf.exe ${quoted[*]}"
-      fi
+      # Treat the user-supplied run command as a launcher prefix such as srun,
+      # then append the RAJAPerf executable and shell-quoted arguments.
+      local quoted=()
+      local a q
+      for a in "$@"; do
+        printf -v q "%q" "$a"
+        quoted+=("$q")
+      done
+      eval "${run_cmd} ./bin/raja-perf.exe ${quoted[*]}"
     }
 
     cd "$repo_root"
