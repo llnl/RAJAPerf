@@ -161,8 +161,12 @@ with the processing scripts in ``scripts/`` such as
 
 By default the script writes its outputs under ``./compiler-matrix-output``.
 Throughput plots are placed under ``./compiler-matrix-output/throughput-plots``.
-For example, the ``VOL3D`` throughput plot is written as
-``./compiler-matrix-output/throughput-plots/Apps_VOL3D_Mean_flops_gigaFLOP_per_sec_throughput.pdf``.
+For example, the ``VOL3D`` throughput plot can be embedded with:
+
+.. figure:: ../_static/compiler-comparison-output/throughput-plots/Apps_VOL3D_Mean_flops_gigaFLOP_per_sec_throughput.pdf
+   :alt: VOL3D throughput plot
+
+   VOL3D throughput plot.
 
 .. _run_mpi-label:
 
