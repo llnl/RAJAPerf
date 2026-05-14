@@ -157,7 +157,7 @@ line names the build script and the remaining tokens are passed to that script.
 
 The generated ``*-kernel-run-data.csv`` files can then be merged and plotted
 with the processing scripts in ``scripts/`` such as
-``scripts/build_compiler_matrix.py`` and ``scripts/kh_compiler_matrix.py``.
+``scripts/build_compiler_matrix.py`` where it will generate corresponding plots.
 
 .. _run_mpi-label:
 
