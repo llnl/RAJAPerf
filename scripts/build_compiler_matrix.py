@@ -16,6 +16,7 @@ The main flow is:
 import argparse
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -358,20 +359,8 @@ def plot_fixed_size_bars(df: pd.DataFrame, output_dir: Path, metrics: List[str])
             plt.close(fig)
 
 
-def plot_throughput_curves(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
-    """Plot metric-vs-problem-size curves for factor sweeps or multi-size runs.
-
-    A row is considered sweep-like if either:
-    - a numeric factor was parsed from the filename, or
-    - the same kernel/compiler/variant/tuning appears at multiple sizes
-    """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    sweep_df = df.copy()
-    sweep_df = sweep_df[sweep_df["Factor"].notna() | sweep_df.duplicated(["Kernel", "CompilerVariantTuning"], keep=False)]
-    if sweep_df.empty:
-        print("[INFO] No factor-sweep or multi-size data found for throughput plots.")
-        return
-
+def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
+    """Matplotlib line plots (vector PDF) for metric vs problem size."""
     for metric in metrics:
         metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
         if metric_df.empty:
@@ -403,11 +392,132 @@ def plot_throughput_curves(df: pd.DataFrame, output_dir: Path, metrics: List[str
             ax.set_xlabel("Problem size")
             ax.set_ylabel(metric)
             ax.grid(True, linestyle="--", alpha=0.35)
+            ax.set_axisbelow(True)
             ax.legend(title="Compiler | Variant | Tuning", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
             fig.tight_layout()
-            out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.png"
-            fig.savefig(out_path, dpi=200)
+            out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.pdf"
+            fig.savefig(out_path, format="pdf", bbox_inches="tight")
             plt.close(fig)
+
+
+def _plot_throughput_curves_plotly(
+    sweep_df: pd.DataFrame, output_dir: Path, metrics: List[str], *, write_png: bool
+) -> None:
+    """Plotly throughput: standalone HTML, or PNG via ``write_image`` (same basename as PDF/HTML)."""
+    try:
+        import plotly.graph_objects as go
+    except ImportError as exc:
+        raise ImportError(
+            "Throughput Plotly output requires the 'plotly' package (e.g. pip install plotly)."
+        ) from exc
+
+    if write_png:
+        try:
+            import kaleido  # noqa: F401
+        except ImportError as exc:
+            raise ImportError(
+                "Throughput PNG (--confluence) requires the 'kaleido' package (e.g. pip install kaleido)."
+            ) from exc
+
+    grid_style = dict(
+        showgrid=True,
+        gridcolor="rgba(220, 220, 240, 0.22)",
+        gridwidth=1,
+        griddash="dash",
+        tickfont=dict(size=15),
+        title_font=dict(size=17),
+    )
+
+    for metric in metrics:
+        metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
+        if metric_df.empty:
+            continue
+
+        for kernel, kernel_df in metric_df.groupby("Kernel", sort=True):
+            traces = []
+
+            for label, line_df in kernel_df.groupby("CompilerVariantTuning", sort=True):
+                line_df = line_df.sort_values([PROBLEM_SIZE_COL, "Factor"])
+                if line_df.empty:
+                    continue
+                traces.append(
+                    go.Scatter(
+                        x=line_df[PROBLEM_SIZE_COL],
+                        y=line_df[metric],
+                        mode="lines+markers",
+                        name=str(label),
+                        line=dict(width=2),
+                        marker=dict(size=10),
+                    )
+                )
+
+            if not traces:
+                continue
+
+            fig = go.Figure(data=traces)
+            fig.update_layout(
+                title=dict(text=f"{kernel} throughput - {metric}", font=dict(size=24)),
+                xaxis_title="Problem size",
+                yaxis_title=metric,
+                legend_title_text="Compiler | Variant | Tuning",
+                legend=dict(
+                    font=dict(size=14),
+                    title_font=dict(size=15),
+                    yanchor="top",
+                    y=1,
+                    xanchor="left",
+                    x=1.02,
+                ),
+                hovermode="closest",
+                hoverlabel=dict(namelength=-1, font=dict(size=15)),
+                template="plotly_dark",
+                font=dict(size=16),
+                width=1100,
+                height=560,
+                margin=dict(l=76, r=220, t=76, b=58),
+            )
+            fig.update_xaxes(**grid_style)
+            fig.update_yaxes(**grid_style)
+
+            stem = f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput"
+            if write_png:
+                out_path = output_dir / f"{stem}.png"
+                fig.write_image(str(out_path))
+            else:
+                out_path = output_dir / f"{stem}.html"
+                fig.write_html(out_path, include_plotlyjs="cdn", full_html=True)
+
+
+def plot_throughput_curves(
+    df: pd.DataFrame,
+    output_dir: Path,
+    metrics: List[str],
+    html: bool = False,
+    *,
+    confluence: bool = False,
+) -> None:
+    """Plot metric vs problem size for factor sweeps or multi-size runs.
+
+    A row is considered sweep-like if either:
+    - a numeric factor was parsed from the filename, or
+    - the same kernel/compiler/variant/tuning appears at multiple sizes
+
+    By default writes one vector PDF per kernel/metric. With ``html=True`` and
+    ``confluence=False``, writes standalone Plotly HTML. With ``confluence=True``,
+    writes the same Plotly figure as PNG (``*_throughput.png``, same stem as PDF/HTML)
+    via ``fig.write_image``. If both ``html`` and ``confluence`` are true, PNG is used.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    sweep_df = df.copy()
+    sweep_df = sweep_df[sweep_df["Factor"].notna() | sweep_df.duplicated(["Kernel", "CompilerVariantTuning"], keep=False)]
+    if sweep_df.empty:
+        print("[INFO] No factor-sweep or multi-size data found for throughput plots.")
+        return
+
+    if html or confluence:
+        _plot_throughput_curves_plotly(sweep_df, output_dir, metrics, write_png=confluence)
+    else:
+        _plot_throughput_curves_pdf(sweep_df, output_dir, metrics)
 
 
 def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
@@ -438,10 +548,10 @@ def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str])
 def parse_args() -> argparse.Namespace:
     """Define the small CLI used by ad hoc plotting and notebook preparation."""
     parser = argparse.ArgumentParser(
-        description="Read RAJAPerf kernel-run-data CSVs and plot compiler matrices."
+        description="Read RAJAPerf kernel-run-data CSVs and plot compiler comparisons."
     )
     parser.add_argument("--root-dir", default=".", help="Directory to search recursively (default: current directory)")
-    parser.add_argument("--output-dir", default="compiler-matrix-output", help="Output directory")
+    parser.add_argument("--output-dir", default="compiler-comparison-output", help="Output directory")
     parser.add_argument(
         "--glob-pattern",
         action="append",
@@ -462,7 +572,21 @@ def parse_args() -> argparse.Namespace:
         help="Metric to plot, repeatable (default: time, flops, bandwidth when present)",
     )
     parser.add_argument("--no-fixed-plots", action="store_true", help="Skip fixed-size bar plots")
-    parser.add_argument("--no-throughput-plots", action="store_true", help="Skip throughput line plots")
+    parser.add_argument(
+        "--html",
+        action="store_true",
+        help="Write throughput plots as standalone Plotly HTML pages (default: vector PDF via matplotlib)",
+    )
+    parser.add_argument(
+        "--confluence",
+        action="store_true",
+        help="Write throughput as Plotly PNG (fig.write_image) for Confluence; same basename as PDF/HTML; requires kaleido",
+    )
+    parser.add_argument(
+        "--no-throughput-plots",
+        action="store_true",
+        help="Skip throughput plots (PDF by default; use --html or --confluence for Plotly)",
+    )
     parser.add_argument("--verbose", action="store_true", help="Print input discovery details")
     return parser.parse_args()
 
@@ -500,9 +624,19 @@ def main() -> int:
     if not args.no_fixed_plots:
         plot_fixed_size_bars(df, output_dir / "fixed-size-plots", metrics)
     if not args.no_throughput_plots:
-        plot_throughput_curves(df, output_dir / "throughput-plots", metrics)
+        try:
+            plot_throughput_curves(
+                df,
+                output_dir / "throughput-plots",
+                metrics,
+                html=args.html,
+                confluence=args.confluence,
+            )
+        except ImportError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
 
-    print(f"Wrote compiler matrix outputs under: {output_dir}")
+    print(f"Wrote compiler comparison outputs under: {output_dir}")
     return 0
 
 
