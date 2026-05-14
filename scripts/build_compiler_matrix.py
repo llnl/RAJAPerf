@@ -128,6 +128,16 @@ def line_dash_for_compiler(label: object) -> str:
     """Use dashed lines for Base_* traces and solid lines for RAJA_* traces."""
     name = str(label).strip()
     if re.search(r"\|\s*Base_", name):
+        return "dashed"
+    if re.search(r"\|\s*RAJA_", name):
+        return "solid"
+    return "solid"
+
+
+def plotly_dash_for_compiler(label: object) -> str:
+    """Use Plotly-compatible dash styles for Base_* traces and solid for RAJA_* traces."""
+    name = str(label).strip()
+    if re.search(r"\|\s*Base_", name):
         return "dash"
     if re.search(r"\|\s*RAJA_", name):
         return "solid"
@@ -405,7 +415,7 @@ def _plot_throughput_curves_plotly(
                         y=line_df[metric],
                         mode="lines+markers",
                         name=str(label),
-                        line=dict(width=2, dash=line_dash_for_compiler(label)),
+                        line=dict(width=2, dash=plotly_dash_for_compiler(label)),
                         marker=dict(size=10),
                     )
                 )
