@@ -31,6 +31,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -76,6 +77,24 @@ METRIC_ALIASES = {
         "GFlop/s",
     ],
 }
+
+MATPLOTLIB_MARKERS = ["o", "s", "^", "D", "v", "P", "X", "*", "h", "<", ">", "p", "8", "d"]
+PLOTLY_MARKERS = [
+    "circle",
+    "square",
+    "triangle-up",
+    "diamond",
+    "triangle-down",
+    "cross",
+    "x",
+    "star",
+    "hexagon",
+    "triangle-left",
+    "triangle-right",
+    "pentagon",
+    "octagon",
+    "diamond-tall",
+]
 
 
 def find_build_folder(path: Path) -> str:
@@ -124,23 +143,47 @@ def sanitize_filename(text: object) -> str:
     return sanitized.strip("_.") or "output"
 
 
-def line_dash_for_compiler(label: object) -> str:
-    """Use dashed lines for Base_* traces and solid lines for RAJA_* traces."""
-    name = str(label).strip()
-    if re.search(r"\|\s*Base_", name):
+def matplotlib_color_sequence() -> List[str]:
+    """Use Matplotlib's categorical tab20 palette for compiler colors."""
+    return [mcolors.to_hex(color) for color in plt.get_cmap("tab20").colors]
+
+
+def make_style_map(values: Iterable[object], styles: List[str], style_name: str) -> Dict[str, str]:
+    """Assign styles deterministically from the sorted names present in this run."""
+    names = sorted({str(value).strip() for value in values if str(value).strip()})
+    if len(names) > len(styles):
+        print(
+            f"[INFO] {len(names)} unique {style_name} values exceed {len(styles)} available styles; "
+            "styles will repeat."
+        )
+    return {name: styles[index % len(styles)] for index, name in enumerate(names)}
+
+
+def line_dash_for_variant(variant: object) -> str:
+    """Use line style for the implementation family."""
+    name = str(variant).strip()
+    if name.startswith("Base_"):
         return "dashed"
-    if re.search(r"\|\s*RAJA_", name):
+    if name.startswith("RAJA_"):
         return "solid"
+    if name.startswith("Lambda_"):
+        return "dotted"
+    if name.startswith("Kokkos_"):
+        return "dashdot"
     return "solid"
 
 
-def plotly_dash_for_compiler(label: object) -> str:
-    """Use Plotly-compatible dash styles for Base_* traces and solid for RAJA_* traces."""
-    name = str(label).strip()
-    if re.search(r"\|\s*Base_", name):
+def plotly_dash_for_variant(variant: object) -> str:
+    """Use Plotly-compatible line style for the implementation family."""
+    name = str(variant).strip()
+    if name.startswith("Base_"):
         return "dash"
-    if re.search(r"\|\s*RAJA_", name):
+    if name.startswith("RAJA_"):
         return "solid"
+    if name.startswith("Lambda_"):
+        return "dot"
+    if name.startswith("Kokkos_"):
+        return "dashdot"
     return "solid"
 
 
@@ -327,7 +370,13 @@ def choose_available_metrics(df: pd.DataFrame, requested: Optional[List[str]]) -
     return available
 
 
-def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
+def _plot_throughput_curves_pdf(
+    sweep_df: pd.DataFrame,
+    output_dir: Path,
+    metrics: List[str],
+    compiler_color_map: Dict[str, str],
+    tuning_marker_map: Dict[str, str],
+) -> None:
     """Matplotlib line plots (vector PDF) for metric vs problem size."""
     for metric in metrics:
         metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
@@ -338,16 +387,18 @@ def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metric
             fig, ax = plt.subplots(figsize=(15, 7))
             plotted = False
 
-            for label, line_df in kernel_df.groupby("CompilerVariantTuning", sort=True):
+            group_columns = ["Compiler", "Variant", "Tuning", "CompilerVariantTuning"]
+            for (compiler, variant, tuning, label), line_df in kernel_df.groupby(group_columns, sort=True):
                 line_df = line_df.sort_values([PROBLEM_SIZE_COL, "Factor"])
                 if line_df.empty:
                     continue
                 ax.plot(
                     line_df[PROBLEM_SIZE_COL],
                     line_df[metric],
-                    marker="o",
+                    color=compiler_color_map.get(str(compiler), "#1f77b4"),
+                    marker=tuning_marker_map.get(str(tuning), "o"),
                     linewidth=2,
-                    linestyle=line_dash_for_compiler(label),
+                    linestyle=line_dash_for_variant(variant),
                     markersize=5,
                     label=label,
                 )
@@ -362,7 +413,12 @@ def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metric
             ax.set_ylabel(metric)
             ax.grid(True, linestyle="--", alpha=0.35)
             ax.set_axisbelow(True)
-            ax.legend(title="Compiler | Variant | Tuning", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
+            ax.legend(
+                title="Compiler | Variant | Tuning\n(color | line | marker)",
+                bbox_to_anchor=(1.02, 1),
+                loc="upper left",
+                fontsize=8,
+            )
             fig.tight_layout()
             out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.pdf"
             fig.savefig(out_path, format="pdf", bbox_inches="tight")
@@ -370,11 +426,17 @@ def _plot_throughput_curves_pdf(sweep_df: pd.DataFrame, output_dir: Path, metric
 
 
 def _plot_throughput_curves_plotly(
-    sweep_df: pd.DataFrame, output_dir: Path, metrics: List[str], *, write_png: bool
+    sweep_df: pd.DataFrame,
+    output_dir: Path,
+    metrics: List[str],
+    tuning_marker_map: Dict[str, str],
+    *,
+    write_png: bool,
 ) -> None:
     """Plotly throughput: standalone HTML, or PNG via ``write_image`` (same basename as PDF/HTML)."""
     try:
         import plotly.graph_objects as go
+        from plotly.colors import qualitative
     except ImportError as exc:
         raise ImportError(
             "Throughput Plotly output requires the 'plotly' package (e.g. pip install plotly)."
@@ -387,6 +449,8 @@ def _plot_throughput_curves_plotly(
             raise ImportError(
                 "Throughput PNG (--confluence) requires the 'kaleido' package (e.g. pip install kaleido)."
             ) from exc
+
+    compiler_color_map = make_style_map(sweep_df["Compiler"], qualitative.Dark24, "Plotly compiler color")
 
     grid_style = dict(
         showgrid=True,
@@ -405,18 +469,20 @@ def _plot_throughput_curves_plotly(
         for kernel, kernel_df in metric_df.groupby("Kernel", sort=True):
             traces = []
 
-            for label, line_df in kernel_df.groupby("CompilerVariantTuning", sort=True):
+            group_columns = ["Compiler", "Variant", "Tuning", "CompilerVariantTuning"]
+            for (compiler, variant, tuning, label), line_df in kernel_df.groupby(group_columns, sort=True):
                 line_df = line_df.sort_values([PROBLEM_SIZE_COL, "Factor"])
                 if line_df.empty:
                     continue
+                color = compiler_color_map.get(str(compiler), "#1f77b4")
                 traces.append(
                     go.Scatter(
                         x=line_df[PROBLEM_SIZE_COL],
                         y=line_df[metric],
                         mode="lines+markers",
                         name=str(label),
-                        line=dict(width=2, dash=plotly_dash_for_compiler(label)),
-                        marker=dict(size=10),
+                        line=dict(width=2, dash=plotly_dash_for_variant(variant), color=color),
+                        marker=dict(size=10, symbol=tuning_marker_map.get(str(tuning), "circle"), color=color),
                     )
                 )
 
@@ -428,7 +494,7 @@ def _plot_throughput_curves_plotly(
                 title=dict(text=f"{kernel} throughput - {metric}", font=dict(size=24)),
                 xaxis_title="Problem size",
                 yaxis_title=metric,
-                legend_title_text="Compiler | Variant | Tuning",
+                legend_title_text="Compiler | Variant | Tuning<br>(color | line | marker)",
                 legend=dict(
                     font=dict(size=14),
                     title_font=dict(size=15),
@@ -484,9 +550,28 @@ def plot_throughput_curves(
         return
 
     if html or confluence:
-        _plot_throughput_curves_plotly(sweep_df, output_dir, metrics, write_png=confluence)
+        plotly_tuning_marker_map = make_style_map(sweep_df["Tuning"], PLOTLY_MARKERS, "Plotly tuning marker")
+        _plot_throughput_curves_plotly(
+            sweep_df,
+            output_dir,
+            metrics,
+            plotly_tuning_marker_map,
+            write_png=confluence,
+        )
     else:
-        _plot_throughput_curves_pdf(sweep_df, output_dir, metrics)
+        matplotlib_compiler_color_map = make_style_map(
+            sweep_df["Compiler"],
+            matplotlib_color_sequence(),
+            "Matplotlib compiler color",
+        )
+        matplotlib_tuning_marker_map = make_style_map(sweep_df["Tuning"], MATPLOTLIB_MARKERS, "matplotlib tuning marker")
+        _plot_throughput_curves_pdf(
+            sweep_df,
+            output_dir,
+            metrics,
+            matplotlib_compiler_color_map,
+            matplotlib_tuning_marker_map,
+        )
 
 
 def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
