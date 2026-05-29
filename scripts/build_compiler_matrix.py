@@ -201,7 +201,12 @@ def write_plot_index_pages(output_dir: Path, plot_entries: List[Dict[str, str]])
         kernel: f"{sanitize_filename(kernel)}.html"
         for kernel in sorted(by_kernel)
     }
-    plot_kind = "PNG" if plot_entries[0]["kind"] == "png" else "Plotly HTML"
+    plot_kind_names = {
+        "html": "Plotly HTML",
+        "pdf": "PDF",
+        "png": "PNG",
+    }
+    plot_kind = plot_kind_names.get(plot_entries[0]["kind"], plot_entries[0]["kind"].upper())
 
     css = """
     body { background: #111827; color: #e5e7eb; font-family: system-ui, sans-serif; margin: 2rem; }
@@ -559,10 +564,9 @@ def _plot_throughput_curves_matplotlib(
             out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.{output_format}"
             fig.savefig(out_path, format=output_format, bbox_inches="tight")
             plt.close(fig)
-            if output_format == "png":
-                plot_entries.append(
-                    {"kernel": str(kernel), "metric": str(metric), "filename": out_path.name, "kind": "png"}
-                )
+            plot_entries.append(
+                {"kernel": str(kernel), "metric": str(metric), "filename": out_path.name, "kind": output_format}
+            )
 
     return plot_entries
 
@@ -704,7 +708,7 @@ def plot_throughput_curves(
     - a numeric factor was parsed from the filename, or
     - the same kernel/compiler/variant/tuning appears at multiple sizes
 
-    By default writes one vector PDF per kernel/metric. With ``matplotlib_png=True``,
+    By default writes Matplotlib PDFs plus browser index pages. With ``matplotlib_png=True``,
     writes Matplotlib PNGs plus browser index pages. With ``html=True`` and
     ``confluence=False``, writes standalone Plotly HTML. With ``confluence=True``,
     writes the same Plotly figure as PNG (``*_throughput.png``, same stem as PDF/HTML)
@@ -743,8 +747,7 @@ def plot_throughput_curves(
             matplotlib_tuning_marker_map,
             output_format=output_format,
         )
-        if matplotlib_png:
-            write_plot_index_pages(output_dir, plot_entries)
+        write_plot_index_pages(output_dir, plot_entries)
 
 
 def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
