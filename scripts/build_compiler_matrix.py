@@ -14,6 +14,7 @@ The main flow is:
 """
 
 import argparse
+import html as html_lib
 import os
 import re
 import sys
@@ -185,6 +186,135 @@ def plotly_dash_for_variant(variant: object) -> str:
     if name.startswith("Kokkos_"):
         return "dashdot"
     return "solid"
+
+
+def write_plot_index_pages(output_dir: Path, plot_entries: List[Dict[str, str]]) -> None:
+    """Write a landing page plus one embedded plot page per kernel."""
+    if not plot_entries:
+        return
+
+    by_kernel: Dict[str, List[Dict[str, str]]] = {}
+    for entry in plot_entries:
+        by_kernel.setdefault(entry["kernel"], []).append(entry)
+
+    kernel_page_names = {
+        kernel: f"{sanitize_filename(kernel)}.html"
+        for kernel in sorted(by_kernel)
+    }
+    plot_kind = "PNG" if plot_entries[0]["kind"] == "png" else "Plotly HTML"
+
+    css = """
+    body { background: #111827; color: #e5e7eb; font-family: system-ui, sans-serif; margin: 2rem; }
+    a { color: #93c5fd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+    th, td { border-bottom: 1px solid #374151; padding: 0.65rem 0.75rem; text-align: left; }
+    th { color: #cbd5e1; font-weight: 600; }
+    .metric-links a { margin-right: 1rem; white-space: nowrap; }
+    .summary { color: #9ca3af; margin-bottom: 1.5rem; }
+    .plot-frame { border: 1px solid #374151; border-radius: 8px; height: clamp(760px, 92vh, 1200px); width: 100%; }
+    .plot-image { border: 1px solid #374151; border-radius: 8px; max-width: 100%; }
+    .plot-section { margin: 2rem 0 3rem; }
+    """
+
+    index_rows = []
+    for kernel in sorted(by_kernel):
+        entries = by_kernel[kernel]
+        page_name = kernel_page_names[kernel]
+        metric_links = " ".join(
+            '<a href="{page}#{anchor}">{metric}</a>'.format(
+                page=html_lib.escape(page_name),
+                anchor=html_lib.escape(f"metric-{sanitize_filename(entry['metric'])}"),
+                metric=html_lib.escape(entry["metric"]),
+            )
+            for entry in entries
+        )
+        index_rows.append(
+            "<tr><td><a href=\"{page}\">{kernel}</a></td><td class=\"metric-links\">{metrics}</td></tr>".format(
+                page=html_lib.escape(page_name),
+                kernel=html_lib.escape(kernel),
+                metrics=metric_links,
+            )
+        )
+
+    index_html = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>RAJAPerf Compiler Matrix Plots</title>
+  <style>{css}</style>
+</head>
+<body>
+  <h1>RAJAPerf Compiler Matrix Plots</h1>
+  <p class="summary">{kernel_count} kernels · {plot_count} {plot_kind} plots</p>
+  <table>
+    <thead><tr><th>Kernel</th><th>Plots</th></tr></thead>
+    <tbody>
+      {rows}
+    </tbody>
+  </table>
+</body>
+</html>
+""".format(
+        css=css,
+        kernel_count=len(by_kernel),
+        plot_count=len(plot_entries),
+        plot_kind=html_lib.escape(plot_kind),
+        rows="\n      ".join(index_rows),
+    )
+    (output_dir / "index.html").write_text(index_html, encoding="utf-8")
+
+    for kernel in sorted(by_kernel):
+        sections = []
+        for entry in by_kernel[kernel]:
+            metric = entry["metric"]
+            filename = entry["filename"]
+            anchor = f"metric-{sanitize_filename(metric)}"
+            if entry["kind"] == "png":
+                embedded_plot = '<img class="plot-image" src="{src}" alt="{alt}">'.format(
+                    src=html_lib.escape(filename),
+                    alt=html_lib.escape(f"{kernel} {metric}"),
+                )
+            else:
+                embedded_plot = '<iframe class="plot-frame" src="{src}" title="{title}"></iframe>'.format(
+                    src=html_lib.escape(filename),
+                    title=html_lib.escape(f"{kernel} {metric}"),
+                )
+            sections.append(
+                '<section class="plot-section" id="{anchor}">\n'
+                "  <h2>{metric}</h2>\n"
+                '  <p><a href="{filename}">Open standalone plot</a></p>\n'
+                "  {embedded_plot}\n"
+                "</section>".format(
+                    anchor=html_lib.escape(anchor),
+                    metric=html_lib.escape(metric),
+                    filename=html_lib.escape(filename),
+                    embedded_plot=embedded_plot,
+                )
+            )
+
+        kernel_html = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{kernel} - RAJAPerf Compiler Matrix Plots</title>
+  <style>{css}</style>
+</head>
+<body>
+  <p><a href="index.html">← Back to all kernels</a></p>
+  <h1>{kernel}</h1>
+  <p class="summary">{plot_count} {plot_kind} plots</p>
+  {sections}
+</body>
+</html>
+""".format(
+            css=css,
+            kernel=html_lib.escape(kernel),
+            plot_count=len(by_kernel[kernel]),
+            plot_kind=html_lib.escape(plot_kind),
+            sections="\n  ".join(sections),
+        )
+        (output_dir / kernel_page_names[kernel]).write_text(kernel_html, encoding="utf-8")
 
 
 def parse_factor(path: Path) -> float:
@@ -380,6 +510,7 @@ def _plot_throughput_curves_pdf(
     """Matplotlib line plots (vector PDF) for metric vs problem size."""
     for metric in metrics:
         metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
+        metric_df = metric_df[(metric_df[PROBLEM_SIZE_COL] > 0) & (metric_df[metric] > 0)]
         if metric_df.empty:
             continue
 
@@ -411,6 +542,8 @@ def _plot_throughput_curves_pdf(
             ax.set_title(f"{kernel} throughput - {metric}", fontsize=15)
             ax.set_xlabel("Problem size")
             ax.set_ylabel(metric)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
             ax.grid(True, linestyle="--", alpha=0.35)
             ax.set_axisbelow(True)
             ax.legend(
@@ -432,7 +565,7 @@ def _plot_throughput_curves_plotly(
     tuning_marker_map: Dict[str, str],
     *,
     write_png: bool,
-) -> None:
+) -> List[Dict[str, str]]:
     """Plotly throughput: standalone HTML, or PNG via ``write_image`` (same basename as PDF/HTML)."""
     try:
         import plotly.graph_objects as go
@@ -451,6 +584,7 @@ def _plot_throughput_curves_plotly(
             ) from exc
 
     compiler_color_map = make_style_map(sweep_df["Compiler"], qualitative.Dark24, "Plotly compiler color")
+    plot_entries: List[Dict[str, str]] = []
 
     grid_style = dict(
         showgrid=True,
@@ -463,6 +597,7 @@ def _plot_throughput_curves_plotly(
 
     for metric in metrics:
         metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
+        metric_df = metric_df[(metric_df[PROBLEM_SIZE_COL] > 0) & (metric_df[metric] > 0)]
         if metric_df.empty:
             continue
 
@@ -490,6 +625,13 @@ def _plot_throughput_curves_plotly(
                 continue
 
             fig = go.Figure(data=traces)
+            legend_rows = max(1, int(np.ceil(len(traces) / 2)))
+            legend_bottom_margin = min(420, max(130, 44 * legend_rows + 70))
+            plot_size = (
+                dict(width=1500, height=760)
+                if write_png
+                else dict(autosize=True)
+            )
             fig.update_layout(
                 title=dict(text=f"{kernel} throughput - {metric}", font=dict(size=24)),
                 xaxis_title="Problem size",
@@ -498,29 +640,44 @@ def _plot_throughput_curves_plotly(
                 legend=dict(
                     font=dict(size=14),
                     title_font=dict(size=15),
+                    orientation="h",
                     yanchor="top",
-                    y=1,
+                    y=-0.14,
                     xanchor="left",
-                    x=1.02,
+                    x=0,
                 ),
                 hovermode="closest",
                 hoverlabel=dict(namelength=-1, font=dict(size=15)),
                 template="plotly_dark",
                 font=dict(size=16),
-                width=1100,
-                height=560,
-                margin=dict(l=76, r=220, t=76, b=58),
+                margin=dict(l=76, r=40, t=76, b=legend_bottom_margin),
+                **plot_size,
             )
-            fig.update_xaxes(**grid_style)
-            fig.update_yaxes(**grid_style)
+            fig.update_xaxes(type="log", **grid_style)
+            fig.update_yaxes(type="log", **grid_style)
 
             stem = f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput"
             if write_png:
                 out_path = output_dir / f"{stem}.png"
                 fig.write_image(str(out_path))
+                plot_entries.append(
+                    {"kernel": str(kernel), "metric": str(metric), "filename": out_path.name, "kind": "png"}
+                )
             else:
                 out_path = output_dir / f"{stem}.html"
-                fig.write_html(out_path, include_plotlyjs="cdn", full_html=True)
+                fig.write_html(
+                    out_path,
+                    include_plotlyjs="cdn",
+                    full_html=True,
+                    config={"responsive": True},
+                    default_width="100%",
+                    default_height="96vh",
+                )
+                plot_entries.append(
+                    {"kernel": str(kernel), "metric": str(metric), "filename": out_path.name, "kind": "html"}
+                )
+
+    return plot_entries
 
 
 def plot_throughput_curves(
@@ -551,13 +708,14 @@ def plot_throughput_curves(
 
     if html or confluence:
         plotly_tuning_marker_map = make_style_map(sweep_df["Tuning"], PLOTLY_MARKERS, "Plotly tuning marker")
-        _plot_throughput_curves_plotly(
+        plot_entries = _plot_throughput_curves_plotly(
             sweep_df,
             output_dir,
             metrics,
             plotly_tuning_marker_map,
             write_png=confluence,
         )
+        write_plot_index_pages(output_dir, plot_entries)
     else:
         matplotlib_compiler_color_map = make_style_map(
             sweep_df["Compiler"],
