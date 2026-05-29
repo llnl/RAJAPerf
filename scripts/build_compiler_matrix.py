@@ -500,14 +500,17 @@ def choose_available_metrics(df: pd.DataFrame, requested: Optional[List[str]]) -
     return available
 
 
-def _plot_throughput_curves_pdf(
+def _plot_throughput_curves_matplotlib(
     sweep_df: pd.DataFrame,
     output_dir: Path,
     metrics: List[str],
     compiler_color_map: Dict[str, str],
     tuning_marker_map: Dict[str, str],
-) -> None:
-    """Matplotlib line plots (vector PDF) for metric vs problem size."""
+    *,
+    output_format: str,
+) -> List[Dict[str, str]]:
+    """Matplotlib line plots for metric vs problem size."""
+    plot_entries: List[Dict[str, str]] = []
     for metric in metrics:
         metric_df = sweep_df.dropna(subset=[PROBLEM_SIZE_COL, metric]).copy()
         metric_df = metric_df[(metric_df[PROBLEM_SIZE_COL] > 0) & (metric_df[metric] > 0)]
@@ -553,9 +556,15 @@ def _plot_throughput_curves_pdf(
                 fontsize=8,
             )
             fig.tight_layout()
-            out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.pdf"
-            fig.savefig(out_path, format="pdf", bbox_inches="tight")
+            out_path = output_dir / f"{sanitize_filename(kernel)}_{sanitize_filename(metric)}_throughput.{output_format}"
+            fig.savefig(out_path, format=output_format, bbox_inches="tight")
             plt.close(fig)
+            if output_format == "png":
+                plot_entries.append(
+                    {"kernel": str(kernel), "metric": str(metric), "filename": out_path.name, "kind": "png"}
+                )
+
+    return plot_entries
 
 
 def _plot_throughput_curves_plotly(
@@ -687,6 +696,7 @@ def plot_throughput_curves(
     html: bool = False,
     *,
     confluence: bool = False,
+    matplotlib_png: bool = False,
 ) -> None:
     """Plot metric vs problem size for factor sweeps or multi-size runs.
 
@@ -694,7 +704,8 @@ def plot_throughput_curves(
     - a numeric factor was parsed from the filename, or
     - the same kernel/compiler/variant/tuning appears at multiple sizes
 
-    By default writes one vector PDF per kernel/metric. With ``html=True`` and
+    By default writes one vector PDF per kernel/metric. With ``matplotlib_png=True``,
+    writes Matplotlib PNGs plus browser index pages. With ``html=True`` and
     ``confluence=False``, writes standalone Plotly HTML. With ``confluence=True``,
     writes the same Plotly figure as PNG (``*_throughput.png``, same stem as PDF/HTML)
     via ``fig.write_image``. If both ``html`` and ``confluence`` are true, PNG is used.
@@ -723,13 +734,17 @@ def plot_throughput_curves(
             "Matplotlib compiler color",
         )
         matplotlib_tuning_marker_map = make_style_map(sweep_df["Tuning"], MATPLOTLIB_MARKERS, "matplotlib tuning marker")
-        _plot_throughput_curves_pdf(
+        output_format = "png" if matplotlib_png else "pdf"
+        plot_entries = _plot_throughput_curves_matplotlib(
             sweep_df,
             output_dir,
             metrics,
             matplotlib_compiler_color_map,
             matplotlib_tuning_marker_map,
+            output_format=output_format,
         )
+        if matplotlib_png:
+            write_plot_index_pages(output_dir, plot_entries)
 
 
 def write_summary_tables(df: pd.DataFrame, output_dir: Path, metrics: List[str]) -> None:
@@ -794,6 +809,11 @@ def parse_args() -> argparse.Namespace:
         help="Write throughput as Plotly PNG (fig.write_image) for Confluence; same basename as PDF/HTML; requires kaleido",
     )
     parser.add_argument(
+        "--matplotlib-png",
+        action="store_true",
+        help="Write throughput plots as Matplotlib PNG files with index pages instead of Matplotlib PDF",
+    )
+    parser.add_argument(
         "--no-throughput-plots",
         action="store_true",
         help="Skip throughput plots (PDF by default; use --html or --confluence for Plotly)",
@@ -840,6 +860,7 @@ def main() -> int:
                 metrics,
                 html=args.html,
                 confluence=args.confluence,
+                matplotlib_png=args.matplotlib_png,
             )
         except ImportError as exc:
             print(str(exc), file=sys.stderr)
