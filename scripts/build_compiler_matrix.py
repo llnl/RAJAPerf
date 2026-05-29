@@ -700,7 +700,7 @@ def plot_throughput_curves(
     html: bool = False,
     *,
     confluence: bool = False,
-    matplotlib_png: bool = False,
+    png: bool = False,
 ) -> None:
     """Plot metric vs problem size for factor sweeps or multi-size runs.
 
@@ -708,7 +708,7 @@ def plot_throughput_curves(
     - a numeric factor was parsed from the filename, or
     - the same kernel/compiler/variant/tuning appears at multiple sizes
 
-    By default writes Matplotlib PDFs plus browser index pages. With ``matplotlib_png=True``,
+    By default writes Matplotlib PDFs plus browser index pages. With ``png=True``,
     writes Matplotlib PNGs plus browser index pages. With ``html=True`` and
     ``confluence=False``, writes standalone Plotly HTML. With ``confluence=True``,
     writes the same Plotly figure as PNG (``*_throughput.png``, same stem as PDF/HTML)
@@ -738,7 +738,7 @@ def plot_throughput_curves(
             "Matplotlib compiler color",
         )
         matplotlib_tuning_marker_map = make_style_map(sweep_df["Tuning"], MATPLOTLIB_MARKERS, "matplotlib tuning marker")
-        output_format = "png" if matplotlib_png else "pdf"
+        output_format = "png" if png else "pdf"
         plot_entries = _plot_throughput_curves_matplotlib(
             sweep_df,
             output_dir,
@@ -812,7 +812,7 @@ def parse_args() -> argparse.Namespace:
         help="Write throughput as Plotly PNG (fig.write_image) for Confluence; same basename as PDF/HTML; requires kaleido",
     )
     parser.add_argument(
-        "--matplotlib-png",
+        "--png",
         action="store_true",
         help="Write throughput plots as Matplotlib PNG files with index pages instead of Matplotlib PDF",
     )
@@ -863,7 +863,7 @@ def main() -> int:
                 metrics,
                 html=args.html,
                 confluence=args.confluence,
-                matplotlib_png=args.matplotlib_png,
+                png=args.png,
             )
         except ImportError as exc:
             print(str(exc), file=sys.stderr)
