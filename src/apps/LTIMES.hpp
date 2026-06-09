@@ -76,7 +76,7 @@ namespace ltimes_idx {
                                    RAJA::Layout<3, Index_type, 2>,
                                    IZ, IG, ID>;
   using ELL_VIEW = RAJA::TypedView<Real_type,
-                                   RAJA::Layout<2, Index_type, 1>,
+                                   RAJA::Layout<2, Index_type, 0>,
                                    IM, ID>;
   using PHI_VIEW = RAJA::TypedView<Real_type,
                                    RAJA::Layout<3, Index_type, 2>,
@@ -114,17 +114,17 @@ public:
   void runOpenMPVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
 
-  template < size_t block_size, size_t tune_idx >
+  template < size_t m_block_sz, size_t tune_idx >
   void runCudaVariantImpl(VariantID vid);
-  template < size_t block_size, size_t tune_idx >
+  template < size_t m_block_sz, size_t tune_idx >
   void runHipVariantImpl(VariantID vid);
   template < size_t work_group_size, size_t tune_idx >
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = 256;
-  using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
-                                                         integer::MultipleOf<32>>;
+  static const size_t default_gpu_block_size = 25;
+  using gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<default_gpu_block_size>;
 
   Real_ptr m_phidat;
   Real_ptr m_elldat;

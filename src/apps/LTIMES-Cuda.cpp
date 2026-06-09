@@ -27,9 +27,9 @@ using namespace ltimes_idx;
 //
 // Define thread block shape for CUDA execution
 //
-#define m_block_sz (32)
-#define g_block_sz (integer::greater_of_squarest_factor_pair(block_size/m_block_sz))
-#define z_block_sz (integer::lesser_of_squarest_factor_pair(block_size/m_block_sz))
+#define m_block_sz (block_size)
+#define g_block_sz (1)
+#define z_block_sz (1)
 
 #define LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA \
   m_block_sz, g_block_sz, z_block_sz
@@ -39,19 +39,19 @@ using namespace ltimes_idx;
   static_assert(m_block_sz*g_block_sz*z_block_sz == block_size, "Invalid block_size");
 
 #define LTIMES_NBLOCKS_CUDA \
-  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_g, g_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_z, z_block_sz)));
+  dim3 nblocks(static_cast<size_t>(*num_z), \
+               static_cast<size_t>(*num_g), \
+               1);
 
 
-template < size_t m_block_size, size_t g_block_size, size_t z_block_size >
-__launch_bounds__(m_block_size*g_block_size*z_block_size)
+template < size_t block_size >
+__launch_bounds__(block_size)
 __global__ void ltimes(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
                        ID num_d, IM num_m, IG num_g, IZ num_z)
 {
-   IM m(blockIdx.x * m_block_size + threadIdx.x);
-   IG g(blockIdx.y * g_block_size + threadIdx.y);
-   IZ z(blockIdx.z * z_block_size + threadIdx.z);
+   IM m(threadIdx.x);
+   IG g(blockIdx.y);
+   IZ z(blockIdx.x);
 
    if (m < num_m && g < num_g && z < num_z) {
      for (ID d(0); d < num_d; ++d ) {
@@ -60,14 +60,14 @@ __global__ void ltimes(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
    }
 }
 
-template < size_t m_block_size, size_t g_block_size, size_t z_block_size, typename Lambda >
-__launch_bounds__(m_block_size*g_block_size*z_block_size)
+template < size_t block_size, typename Lambda >
+__launch_bounds__(block_size)
 __global__ void ltimes_lam(IM num_m, IG num_g, IZ num_z,
                            Lambda body)
 {
-   IM m(blockIdx.x * m_block_size + threadIdx.x);
-   IG g(blockIdx.y * g_block_size + threadIdx.y);
-   IZ z(blockIdx.z * z_block_size + threadIdx.z);
+   IM m(threadIdx.x);
+   IG g(blockIdx.y);
+   IZ z(blockIdx.x);
 
    if (m < num_m && g < num_g && z < num_z) {
      body(z, g, m);
@@ -123,8 +123,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel(
-        (ltimes_lam<LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA,
-                    decltype(ltimes_lambda)>),
+        (ltimes_lam<LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA, decltype(ltimes_lambda)>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         num_m, num_g, num_z,
@@ -139,10 +138,10 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
       using EXEC_POL =
         RAJA::KernelPolicy<
-          RAJA::statement::CudaKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
-            RAJA::statement::For<1, RAJA::cuda_global_size_z_direct<z_block_sz>,     //z
-              RAJA::statement::For<2, RAJA::cuda_global_size_y_direct<g_block_sz>,   //g
-                RAJA::statement::For<3, RAJA::cuda_global_size_x_direct<m_block_sz>, //m
+          RAJA::statement::CudaKernelAsync<
+            RAJA::statement::For<1, RAJA::cuda_block_x_loop, // z
+              RAJA::statement::For<2, RAJA::cuda_block_y_loop, // g
+                RAJA::statement::For<3, RAJA::cuda_thread_x_loop, // m
                   RAJA::statement::For<0, RAJA::seq_exec,           //d
                     RAJA::statement::Lambda<0>
                   >
@@ -174,29 +173,24 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
       constexpr bool async = true;
 
-      using launch_policy = RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, m_block_sz*g_block_sz*z_block_sz>>;
+      using launch_policy =
+          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, block_size>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_z_loop<z_block_sz>>;
+      using z_policy = RAJA::LoopPolicy<RAJA::cuda_block_x_loop>;
 
-      using g_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_y_loop<g_block_sz>>;
+      using g_policy = RAJA::LoopPolicy<RAJA::cuda_block_y_loop>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::cuda_global_size_x_loop<m_block_sz>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
-
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, z_block_sz);
-
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, g_block_sz);
-
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_block_sz);
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>( res,
-            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
-                               RAJA::Threads(m_block_sz, g_block_sz, z_block_sz)),
+            RAJA::LaunchParams(RAJA::Teams(*num_z, *num_g, 1),
+                               RAJA::Threads(block_size, 1, 1)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
