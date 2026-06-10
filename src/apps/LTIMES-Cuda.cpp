@@ -97,7 +97,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel(
-        (ltimes<LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
+        (ltimes<block_size>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         phi, ell, psi,
@@ -123,7 +123,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       RPlaunchCudaKernel(
-        (ltimes_lam<LTIMES_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA, decltype(ltimes_lambda)>),
+        (ltimes_lam<block_size, decltype(ltimes_lambda)>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         num_m, num_g, num_z,
