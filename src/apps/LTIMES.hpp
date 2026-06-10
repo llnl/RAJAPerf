@@ -9,6 +9,8 @@
 
 ///
 /// LTIMES kernel reference implementation:
+/// Dependent on running in Kripke --layout ZGD
+/// https://github.com/llnl/Kripke/blob/develop/src/Kripke/Kernel/LTimes.cpp#L27
 ///
 /// for (Index_type z = 0; z < num_z; ++z ) {
 ///   for (Index_type g = 0; g < num_g; ++g ) {
