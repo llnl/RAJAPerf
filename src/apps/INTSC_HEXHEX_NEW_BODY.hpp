@@ -472,6 +472,63 @@ RAJA_INLINE void target_map_to_ref_new(HexHexTargetTetMapNew const &m,
   zr = dx * m.r2x + dy * m.r2y + dz * m.r2z;
 }
 
+RAJA_HOST_DEVICE
+RAJA_INLINE Real_type subz_soa_get(Real_const_ptr soa,
+                                   Size_type const nPairs,
+                                   Int_type const component,
+                                   Index_type const ipair) {
+  return soa[component * nPairs + ipair];
+}
+
+template <Int_type TTET>
+RAJA_HOST_DEVICE
+RAJA_INLINE void make_target_tet_map_new_fixed_soa(
+    Real_const_ptr ts_soa,
+    Size_type const nPairs,
+    Index_type const ipair,
+    HexHexTargetTetMapNew &m) {
+  constexpr Int_type v1 = HexHexTetNodesFixedNew<TTET>::n1;
+  constexpr Int_type v2 = HexHexTetNodesFixedNew<TTET>::n2;
+
+  Real_type const x0 = subz_soa_get(ts_soa, nPairs, 0, ipair);
+  Real_type const y0 = subz_soa_get(ts_soa, nPairs, 8, ipair);
+  Real_type const z0 = subz_soa_get(ts_soa, nPairs, 16, ipair);
+
+  m.x0 = x0;
+  m.y0 = y0;
+  m.z0 = z0;
+
+  m.e1x = subz_soa_get(ts_soa, nPairs, v1, ipair) - x0;
+  m.e1y = subz_soa_get(ts_soa, nPairs, 8 + v1, ipair) - y0;
+  m.e1z = subz_soa_get(ts_soa, nPairs, 16 + v1, ipair) - z0;
+
+  m.e2x = subz_soa_get(ts_soa, nPairs, v2, ipair) - x0;
+  m.e2y = subz_soa_get(ts_soa, nPairs, 8 + v2, ipair) - y0;
+  m.e2z = subz_soa_get(ts_soa, nPairs, 16 + v2, ipair) - z0;
+
+  m.e3x = subz_soa_get(ts_soa, nPairs, 7, ipair) - x0;
+  m.e3y = subz_soa_get(ts_soa, nPairs, 15, ipair) - y0;
+  m.e3z = subz_soa_get(ts_soa, nPairs, 23, ipair) - z0;
+
+  m.det = m.e1x * m.e2y * m.e3z - m.e1x * m.e3y * m.e2z +
+          m.e2x * m.e3y * m.e1z - m.e2x * m.e1y * m.e3z +
+          m.e3x * m.e1y * m.e2z - m.e3x * m.e2y * m.e1z;
+
+  Real_type const deti = m.det / (m.det * m.det + Real_type(1.0e-100));
+
+  m.r0x = (m.e2y * m.e3z - m.e2z * m.e3y) * deti;
+  m.r0y = (m.e2z * m.e3x - m.e2x * m.e3z) * deti;
+  m.r0z = (m.e2x * m.e3y - m.e2y * m.e3x) * deti;
+
+  m.r1x = (m.e3y * m.e1z - m.e3z * m.e1y) * deti;
+  m.r1y = (m.e3z * m.e1x - m.e3x * m.e1z) * deti;
+  m.r1z = (m.e3x * m.e1y - m.e3y * m.e1x) * deti;
+
+  m.r2x = (m.e1y * m.e2z - m.e1z * m.e2y) * deti;
+  m.r2y = (m.e1z * m.e2x - m.e1x * m.e2z) * deti;
+  m.r2z = (m.e1x * m.e2y - m.e1y * m.e2x) * deti;
+}
+
 template <Int_type TTET, Int_type DTET>
 RAJA_HOST_DEVICE
 RAJA_INLINE void transform_donor_tet_fixed(
@@ -495,6 +552,48 @@ RAJA_INLINE void transform_donor_tet_fixed(
       m, xds[n2], xds[8 + n2], xds[16 + n2], x[2], y[2], z[2]);
   target_map_to_ref_new(
       m, xds[n3], xds[8 + n3], xds[16 + n3], x[3], y[3], z[3]);
+}
+
+template <Int_type TTET>
+RAJA_HOST_DEVICE
+RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_soa(
+    Real_const_ptr ds_soa,
+    Size_type const nPairs,
+    Index_type const ipair,
+    Int_type const dtet,
+    HexHexTargetTetMapNew const &m,
+    Real_type x[4],
+    Real_type y[4],
+    Real_type z[4]) {
+  static_assert(TTET >= 0 && TTET < 6, "target tet id must be in [0, 5]");
+
+  Int_type n0, n1, n2, n3;
+  donor_tet_nodes_fast(dtet, n0, n1, n2, n3);
+
+  target_map_to_ref_new(
+      m,
+      subz_soa_get(ds_soa, nPairs, n0, ipair),
+      subz_soa_get(ds_soa, nPairs, 8 + n0, ipair),
+      subz_soa_get(ds_soa, nPairs, 16 + n0, ipair),
+      x[0], y[0], z[0]);
+  target_map_to_ref_new(
+      m,
+      subz_soa_get(ds_soa, nPairs, n1, ipair),
+      subz_soa_get(ds_soa, nPairs, 8 + n1, ipair),
+      subz_soa_get(ds_soa, nPairs, 16 + n1, ipair),
+      x[1], y[1], z[1]);
+  target_map_to_ref_new(
+      m,
+      subz_soa_get(ds_soa, nPairs, n2, ipair),
+      subz_soa_get(ds_soa, nPairs, 8 + n2, ipair),
+      subz_soa_get(ds_soa, nPairs, 16 + n2, ipair),
+      x[2], y[2], z[2]);
+  target_map_to_ref_new(
+      m,
+      subz_soa_get(ds_soa, nPairs, n3, ipair),
+      subz_soa_get(ds_soa, nPairs, 8 + n3, ipair),
+      subz_soa_get(ds_soa, nPairs, 16 + n3, ipair),
+      x[3], y[3], z[3]);
 }
 
 #ifndef HEXHEX_TETTET_COMPAT_EPS

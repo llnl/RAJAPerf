@@ -215,6 +215,99 @@ __global__ void stage2_tettet_reduce_kernel(
 
 template < Size_type block_size >
 __launch_bounds__(block_size)
+__global__ void stage2_subz_aos_to_soa_kernel(
+    Real_ptr const aos,
+    Size_type const nPairs,
+    Real_ptr const soa)
+{
+  Index_type const i = blockIdx.x * blockDim.x + threadIdx.x;
+  Index_type const len = 24 * nPairs;
+
+  if (i >= len) {
+    return;
+  }
+
+  Int_type const component = i / nPairs;
+  Index_type const ipair = i - component * nPairs;
+
+  soa[i] = aos[24 * ipair + component];
+}
+
+template <Int_type TTET, Size_type block_size>
+__launch_bounds__(block_size)
+__global__ void stage2_target_tet_kernel(
+    Real_ptr const dsubz_soa,
+    Real_ptr const tsubz_soa,
+    Size_type const nPairs,
+    Real_ptr const vv_out)
+{
+  Index_type const ipair = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (ipair >= nPairs) {
+    return;
+  }
+
+  HexHexTargetTetMapNew map;
+  make_target_tet_map_new_fixed_soa<TTET>(
+      tsubz_soa, nPairs, ipair, map);
+
+  Real_type vv_sum = Real_type(0.0);
+  Real_type vx_sum = Real_type(0.0);
+  Real_type vy_sum = Real_type(0.0);
+  Real_type vz_sum = Real_type(0.0);
+
+#pragma unroll 1
+  for (Int_type dtet = 0; dtet < 6; ++dtet) {
+    Real_type x[4], y[4], z[4];
+
+    transform_donor_tet_fixed_runtime_dtet_soa<TTET>(
+        dsubz_soa, nPairs, ipair, dtet, map, x, y, z);
+
+    Real_type vref = Real_type(0.0);
+    Real_type mxref = Real_type(0.0);
+    Real_type myref = Real_type(0.0);
+    Real_type mzref = Real_type(0.0);
+
+    intersect_tettet_edgeface_new(x, y, z, vref, mxref, myref, mzref);
+
+    vv_sum += map.det * vref;
+    vx_sum += map.det * (map.x0  * vref +
+                         map.e1x * mxref +
+                         map.e2x * myref +
+                         map.e3x * mzref);
+    vy_sum += map.det * (map.y0  * vref +
+                         map.e1y * mxref +
+                         map.e2y * myref +
+                         map.e3y * mzref);
+    vz_sum += map.det * (map.z0  * vref +
+                         map.e1z * mxref +
+                         map.e2z * myref +
+                         map.e3z * mzref);
+  }
+
+  Index_type const std_i = ipair / hexhex_new_fixup_groupsize;
+  Index_type const sub_i = ipair % hexhex_new_fixup_groupsize;
+
+  Real_ptr out =
+      vv_out +
+      hexhex_new_nvals_per_std_intsc * std_i +
+      hexhex_new_nvals_per_pair * sub_i;
+
+  if constexpr (TTET == 0) {
+    out[0] = vv_sum;
+    out[1] = vx_sum;
+    out[2] = vy_sum;
+    out[3] = vz_sum;
+  } else {
+    out[0] += vv_sum;
+    out[1] += vx_sum;
+    out[2] += vy_sum;
+    out[3] += vz_sum;
+  }
+}
+
+template < Size_type block_size >
+__launch_bounds__(block_size)
 __global__ void intsc_hexhex_new
   ( Real_ptr const dsubz,
     Real_ptr const tsubz,
@@ -275,15 +368,19 @@ void INTSC_HEXHEX_NEW::runCudaVariantImpl(VariantID vid)
   if ( vid == Base_CUDA ) {
 
     constexpr Size_type stage2_block_size = 128;
-    constexpr Size_type stage2_tasks = 36;
-    setKernelsPerRep(stage2_tasks + 1);
+    constexpr Size_type stage2_target_tet_kernels = 6;
+    constexpr Size_type stage2_transpose_kernels = 2;
+    setKernelsPerRep(stage2_transpose_kernels + stage2_target_tet_kernels);
     const Size_type stage2_grid_size =
         RAJA_DIVIDE_CEILING_INT(n_subz_intsc, stage2_block_size);
-    const Size_type stage2_partial_len =
-        stage2_tasks * hexhex_new_nvals_per_pair * n_subz_intsc;
+    const Size_type stage2_soa_len = 24 * n_subz_intsc;
+    const Size_type stage2_transpose_grid_size =
+        RAJA_DIVIDE_CEILING_INT(stage2_soa_len, stage2_block_size);
 
-    Real_ptr stage2_partial;
-    allocData(DataSpace::CudaDevice, stage2_partial, stage2_partial_len);
+    Real_ptr dsubz_soa;
+    Real_ptr tsubz_soa;
+    allocData(DataSpace::CudaDevice, dsubz_soa, stage2_soa_len);
+    allocData(DataSpace::CudaDevice, tsubz_soa, stage2_soa_len);
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -291,66 +388,37 @@ void INTSC_HEXHEX_NEW::runCudaVariantImpl(VariantID vid)
 
       constexpr Size_type shmem = 0;
 
-#define LAUNCH_TETTET_TASK(TTET, DTET)                                      \
+      RPlaunchCudaKernel( (stage2_subz_aos_to_soa_kernel<stage2_block_size>),
+                          stage2_transpose_grid_size, stage2_block_size,
+                          shmem, res.get_stream(),
+                          m_dsubz, n_subz_intsc, dsubz_soa ) ;
+
+      RPlaunchCudaKernel( (stage2_subz_aos_to_soa_kernel<stage2_block_size>),
+                          stage2_transpose_grid_size, stage2_block_size,
+                          shmem, res.get_stream(),
+                          m_tsubz, n_subz_intsc, tsubz_soa ) ;
+
+#define LAUNCH_TARGET_TET(TTET)                                             \
       RPlaunchCudaKernel(                                                   \
-          (stage2_tettet_task_kernel<TTET, DTET, stage2_block_size>),        \
+          (stage2_target_tet_kernel<TTET, stage2_block_size>),               \
           stage2_grid_size, stage2_block_size,                               \
           shmem, res.get_stream(),                                           \
-          m_dsubz, m_tsubz, n_subz_intsc, stage2_partial )
+          dsubz_soa, tsubz_soa, n_subz_intsc, m_vv_out )
 
-      LAUNCH_TETTET_TASK(0, 0);
-      LAUNCH_TETTET_TASK(0, 1);
-      LAUNCH_TETTET_TASK(0, 2);
-      LAUNCH_TETTET_TASK(0, 3);
-      LAUNCH_TETTET_TASK(0, 4);
-      LAUNCH_TETTET_TASK(0, 5);
+      LAUNCH_TARGET_TET(0);
+      LAUNCH_TARGET_TET(1);
+      LAUNCH_TARGET_TET(2);
+      LAUNCH_TARGET_TET(3);
+      LAUNCH_TARGET_TET(4);
+      LAUNCH_TARGET_TET(5);
 
-      LAUNCH_TETTET_TASK(1, 0);
-      LAUNCH_TETTET_TASK(1, 1);
-      LAUNCH_TETTET_TASK(1, 2);
-      LAUNCH_TETTET_TASK(1, 3);
-      LAUNCH_TETTET_TASK(1, 4);
-      LAUNCH_TETTET_TASK(1, 5);
-
-      LAUNCH_TETTET_TASK(2, 0);
-      LAUNCH_TETTET_TASK(2, 1);
-      LAUNCH_TETTET_TASK(2, 2);
-      LAUNCH_TETTET_TASK(2, 3);
-      LAUNCH_TETTET_TASK(2, 4);
-      LAUNCH_TETTET_TASK(2, 5);
-
-      LAUNCH_TETTET_TASK(3, 0);
-      LAUNCH_TETTET_TASK(3, 1);
-      LAUNCH_TETTET_TASK(3, 2);
-      LAUNCH_TETTET_TASK(3, 3);
-      LAUNCH_TETTET_TASK(3, 4);
-      LAUNCH_TETTET_TASK(3, 5);
-
-      LAUNCH_TETTET_TASK(4, 0);
-      LAUNCH_TETTET_TASK(4, 1);
-      LAUNCH_TETTET_TASK(4, 2);
-      LAUNCH_TETTET_TASK(4, 3);
-      LAUNCH_TETTET_TASK(4, 4);
-      LAUNCH_TETTET_TASK(4, 5);
-
-      LAUNCH_TETTET_TASK(5, 0);
-      LAUNCH_TETTET_TASK(5, 1);
-      LAUNCH_TETTET_TASK(5, 2);
-      LAUNCH_TETTET_TASK(5, 3);
-      LAUNCH_TETTET_TASK(5, 4);
-      LAUNCH_TETTET_TASK(5, 5);
-
-#undef LAUNCH_TETTET_TASK
-
-      RPlaunchCudaKernel( (stage2_tettet_reduce_kernel<stage2_block_size>),
-                          stage2_grid_size, stage2_block_size,
-                          shmem, res.get_stream(),
-                          stage2_partial, n_subz_intsc, m_vv_out ) ;
+#undef LAUNCH_TARGET_TET
 
     }
     stopTimer();
 
-    deallocData(DataSpace::CudaDevice, stage2_partial);
+    deallocData(DataSpace::CudaDevice, dsubz_soa);
+    deallocData(DataSpace::CudaDevice, tsubz_soa);
 
   } else if ( vid == Lambda_CUDA ) {
 
