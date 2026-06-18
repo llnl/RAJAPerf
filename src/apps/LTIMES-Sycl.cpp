@@ -27,9 +27,9 @@ using namespace ltimes_idx;
 //
 // Define work-group shape for SYCL execution
 //
-#define m_wg_sz (32)
-#define g_wg_sz (integer::greater_of_squarest_factor_pair(work_group_size/m_wg_sz))
-#define z_wg_sz (integer::lesser_of_squarest_factor_pair(work_group_size/m_wg_sz))
+#define m_wg_sz (work_group_size)
+#define g_wg_sz (1)
+#define z_wg_sz (1)
 
 template <size_t work_group_size, size_t tune_idx >
 void LTIMES::runSyclVariantImpl(VariantID vid)
@@ -45,8 +45,8 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 
   if ( vid == Base_SYCL ) {
 
-    sycl::range<3> global_dim(z_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_z, z_wg_sz),
-                              g_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_g, g_wg_sz),
+    sycl::range<3> global_dim(*num_z,
+                              *num_g,
                               m_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz));
     sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
 
@@ -124,9 +124,9 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, z_wg_sz);
+      const size_t z_grid_sz = *num_z;
 
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, g_wg_sz);
+      const size_t g_grid_sz = *num_g;
 
       const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz);
 
