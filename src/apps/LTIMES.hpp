@@ -18,7 +18,7 @@
 ///       for (Index_type d = 0; d < num_d; ++d ) {
 ///
 ///         phi[m+ (g * num_m) + (z * num_m * num_g)] +=
-///           ell[d+ (m * num_d)] * psi[d+ (g * num_d) + (z * num_d * num_g];
+///           ell[m+ (d * num_m)] * psi[d+ (g * num_d) + (z * num_d * num_g];
 ///
 ///       }
 ///     }
@@ -44,7 +44,7 @@
                      RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) ); \
   ELL_VIEW ell(m_elldat, \
                RAJA::make_permuted_layout( {{*num_m, *num_d}}, \
-                     RAJA::as_array<RAJA::Perm<0, 1> >::get() ) ); \
+                     RAJA::as_array<RAJA::Perm<1, 0> >::get() ) ); \
   PHI_VIEW phi(m_phidat, \
                RAJA::make_permuted_layout( {{*num_z, *num_g, *num_m}}, \
                      RAJA::as_array<RAJA::Perm<0, 1, 2> >::get() ) );
