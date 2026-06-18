@@ -25,31 +25,32 @@ namespace apps
 //
 // Define thread block shape for Hip execution
 //
-#define m_block_sz (32)
-#define g_block_sz (integer::greater_of_squarest_factor_pair(block_size/m_block_sz))
-#define z_block_sz (integer::lesser_of_squarest_factor_pair(block_size/m_block_sz))
+#define m_block_sz (block_size)
+#define g_block_sz (1)
+#define z_block_sz (1)
 
 #define LTIMES_NOVIEW_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
   m_block_sz, g_block_sz, z_block_sz
 
 #define LTIMES_NOVIEW_THREADS_PER_BLOCK_HIP \
-  dim3 nthreads_per_block(LTIMES_NOVIEW_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
+  dim3 nthreads_per_block(LTIMES_NOVIEW_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP); \
+  static_assert(m_block_sz*g_block_sz*z_block_sz == block_size, "Invalid block_size");
 
 #define LTIMES_NOVIEW_NBLOCKS_HIP \
-  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_g, g_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_z, z_block_sz)));
+  dim3 nblocks(static_cast<size_t>(num_z), \
+               static_cast<size_t>(num_g), \
+               1);
 
 
-template < size_t m_block_size, size_t g_block_size, size_t z_block_size >
-__launch_bounds__(m_block_size*g_block_size*z_block_size)
+template < size_t block_size >
+__launch_bounds__(block_size)
 __global__ void ltimes_noview(Real_ptr phidat, Real_ptr elldat, Real_ptr psidat,
                               Index_type num_d,
                               Index_type num_m, Index_type num_g, Index_type num_z)
 {
-   Index_type m = blockIdx.x * m_block_size + threadIdx.x;
-   Index_type g = blockIdx.y * g_block_size + threadIdx.y;
-   Index_type z = blockIdx.z * z_block_size + threadIdx.z;
+   Index_type m = threadIdx.x;
+   Index_type g = blockIdx.y;
+   Index_type z = blockIdx.x;
 
    if (m < num_m && g < num_g && z < num_z) {
      for (Index_type d = 0; d < num_d; ++d ) {
@@ -58,14 +59,14 @@ __global__ void ltimes_noview(Real_ptr phidat, Real_ptr elldat, Real_ptr psidat,
    }
 }
 
-template < size_t m_block_size, size_t g_block_size, size_t z_block_size, typename Lambda >
-__launch_bounds__(m_block_size*g_block_size*z_block_size)
+template < size_t block_size, typename Lambda >
+__launch_bounds__(block_size)
 __global__ void ltimes_noview_lam(Index_type num_m, Index_type num_g, Index_type num_z,
                                   Lambda body)
 {
-   Index_type m = blockIdx.x * m_block_size + threadIdx.x;
-   Index_type g = blockIdx.y * g_block_size + threadIdx.y;
-   Index_type z = blockIdx.z * z_block_size + threadIdx.z;
+   Index_type m = threadIdx.x;
+   Index_type g = blockIdx.y;
+   Index_type z = blockIdx.x;
 
    if (m < num_m && g < num_g && z < num_z) {
      body(z, g, m);
@@ -95,7 +96,7 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       RPlaunchHipKernel(
-        (ltimes_noview<LTIMES_NOVIEW_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
+        (ltimes_noview<block_size>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         phidat, elldat, psidat,
@@ -122,8 +123,7 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       RPlaunchHipKernel(
-        (ltimes_noview_lam<LTIMES_NOVIEW_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP,
-                           decltype(ltimes_noview_lambda)>),
+        (ltimes_noview_lam<block_size, decltype(ltimes_noview_lambda)>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         num_m, num_g, num_z,
@@ -138,10 +138,10 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 
       using EXEC_POL =
         RAJA::KernelPolicy<
-          RAJA::statement::HipKernelFixedAsync<m_block_sz*g_block_sz*z_block_sz,
-            RAJA::statement::For<1, RAJA::hip_global_size_z_direct<z_block_sz>,     //z
-              RAJA::statement::For<2, RAJA::hip_global_size_y_direct<g_block_sz>,   //g
-                RAJA::statement::For<3, RAJA::hip_global_size_x_direct<m_block_sz>, //m
+          RAJA::statement::HipKernelAsync<
+            RAJA::statement::For<1, RAJA::hip_block_x_loop, // z
+              RAJA::statement::For<2, RAJA::hip_block_y_loop, // g
+                RAJA::statement::For<3, RAJA::hip_thread_x_loop, // m
                   RAJA::statement::For<0, RAJA::seq_exec,          //d
                     RAJA::statement::Lambda<0>
                   >
@@ -174,29 +174,24 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 
       constexpr bool async = true;
 
-      using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, m_block_sz*g_block_sz*z_block_sz>>;
+      using launch_policy =
+          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::hip_global_size_z_loop<z_block_sz>>;
+      using z_policy = RAJA::LoopPolicy<RAJA::hip_block_x_loop>;
 
-      using g_policy = RAJA::LoopPolicy<RAJA::hip_global_size_y_loop<g_block_sz>>;
+      using g_policy = RAJA::LoopPolicy<RAJA::hip_block_y_loop>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::hip_global_size_x_loop<m_block_sz>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
-
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(num_z, z_block_sz);
-
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(num_g, g_block_sz);
-
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(num_m, m_block_sz);
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>( res,
-            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
-                               RAJA::Threads(m_block_sz, g_block_sz, z_block_sz)),
+            RAJA::LaunchParams(RAJA::Teams(num_z, num_g, 1),
+                               RAJA::Threads(block_size, 1, 1)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, RAJA::RangeSegment(0, num_z),
