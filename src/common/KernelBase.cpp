@@ -40,36 +40,6 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
   kernel_id = kid;
   name = getFullKernelName(kernel_id);
 
-  default_prob_size = -1;
-  default_reps = -1;
-
-  actual_prob_size = -1;
-
-  for (size_t fid = 0; fid < NumFeatures; ++fid) {
-    uses_feature[fid] = false;
-  }
-
-  checksum_consistency = ChecksumConsistency::NumChecksumConsistencies;
-
-  complexity = Complexity::NumComplexities;
-
-  its_per_rep = -1;
-  kernels_per_rep = -1;
-  bytes_allocated_per_rep = -1;
-  bytes_read_per_rep = -1;
-  bytes_written_per_rep = -1;
-  bytes_modify_written_per_rep = -1;
-  bytes_atomic_modify_written_per_rep = -1;
-  FLOPs_per_rep = -1;
-
-  running_variant = NumVariants;
-  running_tuning = getUnknownTuningIdx();
-
-  checksum_reference = 0.0;
-  checksum_reference_variant = NumVariants;
-  checksum_reference_tuning = getUnknownTuningIdx();
-  checksum_reference_tuning_attributes = TuningAttribute::none;
-
   checksum_tolerance = ChecksumTolerance::normal;
 
 #if defined(RAJA_PERFSUITE_USE_CALIPER)

@@ -111,7 +111,6 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
 
     case RAJA_HIP : {
 
-      const size_t grid_size = RAJA_DIVIDE_CEILING_INT(na*ng, block_size);
       constexpr bool async = true;
 
       using launch_policy =

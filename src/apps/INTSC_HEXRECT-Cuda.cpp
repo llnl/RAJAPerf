@@ -24,8 +24,6 @@ namespace rajaperf
 namespace apps
 {
 
-#define WARPSIZE 32
-
 template < Size_type block_size >
 __launch_bounds__(block_size)
 __global__ void intsc_hexrect

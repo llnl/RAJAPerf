@@ -27,12 +27,6 @@ void NESTED_INIT::runKokkosVariant(VariantID vid) {
   // See the basic NESTED_INIT.hpp file for defnition of NESTED_INIT
 
   auto array_kokkos_view = getViewFromPointer(array, nk, nj, ni);
-  //
-  // Used in Kokkos variant (below).  Do not remove.
-  //
-  auto nestedinit_lam = [=](Index_type i, Index_type j, Index_type k) {
-    NESTED_INIT_BODY;
-  };
 
   switch (vid) {
 

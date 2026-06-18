@@ -98,6 +98,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(dz, 0, mpa_at::D1D) {
                SYCL_FOREACH_THREAD_DIRECT(dy, 1, mpa_at::D1D) {
@@ -106,6 +107,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(dz, 0, mpa_at::D1D) {
                SYCL_FOREACH_THREAD_DIRECT(qy, 1, mpa_at::Q1D) {
@@ -114,6 +116,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(qz, 0, mpa_at::Q1D) {
                SYCL_FOREACH_THREAD_DIRECT(qy, 1, mpa_at::Q1D) {
@@ -122,6 +125,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(qz, 0, mpa_at::Q1D) {
                SYCL_FOREACH_THREAD_DIRECT(qy, 1, mpa_at::Q1D) {
@@ -130,6 +134,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(qz, 0, mpa_at::Q1D) {
                SYCL_FOREACH_THREAD_DIRECT(dy, 1, mpa_at::D1D) {
@@ -138,6 +143,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  }
                }
              }
+             itm.barrier(::sycl::access::fence_space::local_space);
 
              SYCL_FOREACH_THREAD_DIRECT(dz, 0, mpa_at::D1D) {
                SYCL_FOREACH_THREAD_DIRECT(dy, 2, mpa_at::D1D) {
@@ -247,6 +253,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                  ); // RAJA::loop<inner_y>
                } // lambda ()
              ); // RAJA::loop<inner_z>
+             ctx.teamSync();
 
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
@@ -262,6 +269,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
               [&](Index_type dz) {
@@ -276,6 +284,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -290,6 +299,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (qz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -304,6 +314,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
               [&](Index_type qz) {
@@ -318,6 +329,7 @@ void MASS3DPA_ATOMIC::runSyclVariantImpl(VariantID vid) {
                 ); // RAJA::loop<inner_y>
               } // lambda (dz)
             ); // RAJA::loop<inner_z>
+            ctx.teamSync();
 
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),

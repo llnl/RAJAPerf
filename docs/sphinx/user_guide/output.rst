@@ -169,18 +169,16 @@ Information reported in the file for each kernel is:
     a problem dimensionality of 3, because phi (g, m, and z) and psi
     (g, d, and z) are indexed over 3 dimensions.
 
-  ..note:: The Bytes*/rep attributes count how many bytes are accessed in memory
-           like DRAM or HBM under idealized conditions. They assume caching is
-           perfect so even if the same byte is read multiple times then it
-           assumes that the byte is only read from memory once.
+.. note:: The ``Bytes*/rep`` attributes count how many bytes are accessed in memory
+          like DRAM or HBM under idealized conditions. They assume caching is
+          perfect so even if the same byte is read multiple times then it
+          assumes that the byte is only read from memory once.
 
-  ..note:: The Bytes*/rep and FLOPs/rep counts are estimates for kernels
-           involving randomness or difficult to count algorithms.
-
-  ..note:: The Bytes*/rep and FLOPs/rep counts are intended to help give a
-           reasonable approximation of the achieved bandwidth and flop rate.
-           The kernels that perform significantly outside of expectations are
-           good candidates for more detailed performance studies.
+.. note:: The ``Bytes*/rep`` and ``FLOPs/rep`` counts are estimates for kernels
+          involving randomness or difficult to count algorithms. The counts are
+          meant to give a reasonable approximation of achieved bandwidth and flop
+          rate. Kernels that perform significantly outside of expectations are
+          good candidates for more detailed performance studies.
 
 .. _output_probsize-label:
 
@@ -316,9 +314,7 @@ or the variant represented in this file::
 
 .. note:: The script above was written using caliper-reader 0.3.0, 
           but is fairly generic. Other version usage notes may be 
-          found at the link below
-
-`caliper-reader <https://pypi.org/project/caliper-reader/>`_ 
+          found at `caliper-reader <https://pypi.org/project/caliper-reader/>`_ 
 
 
 3: Using the *Hatchet* Python module for single files::
@@ -329,7 +325,7 @@ or the variant represented in this file::
   gf1 = ht.GraphFrame.from_caliperreader("RAJA_Seq.cali")
   print(gf1.tree())
 
-`Find out more on hatchet <https://github.com/LLNL/hatchet>`_
+To learn more about Hatchet, please see `Hatchet <https://github.com/LLNL/hatchet>`_
 
 4: Using the *Thicket* Python module for multiple files::
 
@@ -339,4 +335,4 @@ or the variant represented in this file::
   th1 = th.Thicket.from_caliperreader(["RAJA_Seq-default.cali", "Base_Seq-default.cali", "Base_CUDA-block_128", "Base_CUDA-block_256"])
   print(th1.tree())
 
-`Find out more on thicket <https://github.com/LLNL/thicket>`_
+To learn more about Thicket, please see `Thicket <https://github.com/LLNL/thicket>`_
