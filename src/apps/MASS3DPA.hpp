@@ -172,8 +172,22 @@
 
 // Number of Dofs/Qpts in 1D
 namespace mpa {
-constexpr RAJA::Index_type D1D = 4;
-constexpr RAJA::Index_type Q1D = 5;
+// linear
+//   constexpr RAJA::Index_type D1D = 2;
+//   constexpr RAJA::Index_type Q1D = 2;
+// }
+// quadratic
+//   constexpr RAJA::Index_type D1D = 4;
+//   constexpr RAJA::Index_type Q1D = 4;
+// cubic
+// constexpr RAJA::Index_type D1D = 6;
+//   constexpr RAJA::Index_type Q1D = 6;
+  constexpr RAJA::Index_type D1D = 2;
+  constexpr RAJA::Index_type Q1D = 2;
+
+  constexpr RAJA::Index_type TBATCH = 16; // linear
+  // constexpr RAJA::Index_type TBATCH = 2; // quadratic
+  // constexpr RAJA::Index_type TBATCH = 1; // cubic
 } // namespace mpa
 #define MPA_B(x, y) B[x + mpa::Q1D * y]
 #define MPA_Bt(x, y) Bt[x + mpa::D1D * y]
@@ -203,21 +217,28 @@ constexpr RAJA::Index_type Q1D = 5;
   Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 
-#define MASS3DPA_0_GPU                                                         \
+#define MASS3DPA_GPU_SMEM_DECL(TBATCH)                                         \
   constexpr Index_type MQ1 = mpa::Q1D;                                         \
   constexpr Index_type MD1 = mpa::D1D;                                         \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   RAJA_TEAM_SHARED Real_type sDQ[MQ1 * MD1];                                   \
   Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;                             \
   Real_type(*Btsmem)[MQ1] = (Real_type(*)[MQ1])sDQ;                            \
-  RAJA_TEAM_SHARED Real_type sm0[MDQ * MDQ * MDQ];                             \
-  RAJA_TEAM_SHARED Real_type sm1[MDQ * MDQ * MDQ];                             \
-  Real_type(*Xsmem)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm0;                   \
-  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1;                     \
-  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0;                     \
-  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1;                     \
-  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;                     \
-  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
+  RAJA_TEAM_SHARED Real_type sm0[TBATCH][MDQ * MDQ * MDQ];                     \
+  RAJA_TEAM_SHARED Real_type sm1[TBATCH][MDQ * MDQ * MDQ];
+
+#define MASS3DPA_GPU_SMEM_SLICE(TBATCH)                                        \
+  Real_type(*Xsmem)[MD1][MD1] =                                                \
+      (Real_type(*)[MD1][MD1])sm0[TBATCH];                                     \
+  Real_type(*DDQ)[MD1][MQ1] = (Real_type(*)[MD1][MQ1])sm1[TBATCH];             \
+  Real_type(*DQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm0[TBATCH];             \
+  Real_type(*QQQ)[MQ1][MQ1] = (Real_type(*)[MQ1][MQ1])sm1[TBATCH];             \
+  Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0[TBATCH];             \
+  Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1[TBATCH];
+
+#define MASS3DPA_0_GPU                                                         \
+  MASS3DPA_GPU_SMEM_DECL(mpa::TBATCH)                                                    \
+  MASS3DPA_GPU_SMEM_SLICE(0)
 
 #define MASS3DPA_1                                                             \
   RAJAPERF_UNROLL(MD1)                                                         \
@@ -375,7 +396,7 @@ public:
   template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = mpa::Q1D * mpa::Q1D;
+  static const size_t default_gpu_block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
   Real_ptr m_B;
