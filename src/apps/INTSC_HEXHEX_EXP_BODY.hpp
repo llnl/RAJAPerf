@@ -366,43 +366,42 @@ RAJA_INLINE void target_map_to_ref_exp(HexHexTargetTetMapExp const &m,
   zr = dx * m.r2x + dy * m.r2y + dz * m.r2z;
 }
 
+template <Size_type tile_size>
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type subz_soa_get(Real_const_ptr soa,
-                                   Size_type const nPairs,
-                                   Int_type const component,
-                                   Index_type const ipair) {
-  return soa[component * nPairs + ipair];
+RAJA_INLINE Real_type subz_aosoa_tile_get(Real_const_ptr tile,
+                                          Int_type const component,
+                                          Index_type const lane) {
+  return tile[component * tile_size + lane];
 }
 
-template <Int_type TTET>
+template <Int_type TTET, Size_type tile_size>
 RAJA_HOST_DEVICE
-RAJA_INLINE void make_target_tet_map_new_fixed_soa(
-    Real_const_ptr ts_soa,
-    Size_type const nPairs,
-    Index_type const ipair,
+RAJA_INLINE void make_target_tet_map_new_fixed_aosoa(
+    Real_const_ptr ts_tile,
+    Index_type const lane,
     HexHexTargetTetMapExp &m) {
   constexpr Int_type v1 = HexHexTetNodesFixedExp<TTET>::n1;
   constexpr Int_type v2 = HexHexTetNodesFixedExp<TTET>::n2;
 
-  Real_type const x0 = subz_soa_get(ts_soa, nPairs, 0, ipair);
-  Real_type const y0 = subz_soa_get(ts_soa, nPairs, 8, ipair);
-  Real_type const z0 = subz_soa_get(ts_soa, nPairs, 16, ipair);
+  Real_type const x0 = subz_aosoa_tile_get<tile_size>(ts_tile, 0, lane);
+  Real_type const y0 = subz_aosoa_tile_get<tile_size>(ts_tile, 8, lane);
+  Real_type const z0 = subz_aosoa_tile_get<tile_size>(ts_tile, 16, lane);
 
   m.x0 = x0;
   m.y0 = y0;
   m.z0 = z0;
 
-  m.e1x = subz_soa_get(ts_soa, nPairs, v1, ipair) - x0;
-  m.e1y = subz_soa_get(ts_soa, nPairs, 8 + v1, ipair) - y0;
-  m.e1z = subz_soa_get(ts_soa, nPairs, 16 + v1, ipair) - z0;
+  m.e1x = subz_aosoa_tile_get<tile_size>(ts_tile, v1, lane) - x0;
+  m.e1y = subz_aosoa_tile_get<tile_size>(ts_tile, 8 + v1, lane) - y0;
+  m.e1z = subz_aosoa_tile_get<tile_size>(ts_tile, 16 + v1, lane) - z0;
 
-  m.e2x = subz_soa_get(ts_soa, nPairs, v2, ipair) - x0;
-  m.e2y = subz_soa_get(ts_soa, nPairs, 8 + v2, ipair) - y0;
-  m.e2z = subz_soa_get(ts_soa, nPairs, 16 + v2, ipair) - z0;
+  m.e2x = subz_aosoa_tile_get<tile_size>(ts_tile, v2, lane) - x0;
+  m.e2y = subz_aosoa_tile_get<tile_size>(ts_tile, 8 + v2, lane) - y0;
+  m.e2z = subz_aosoa_tile_get<tile_size>(ts_tile, 16 + v2, lane) - z0;
 
-  m.e3x = subz_soa_get(ts_soa, nPairs, 7, ipair) - x0;
-  m.e3y = subz_soa_get(ts_soa, nPairs, 15, ipair) - y0;
-  m.e3z = subz_soa_get(ts_soa, nPairs, 23, ipair) - z0;
+  m.e3x = subz_aosoa_tile_get<tile_size>(ts_tile, 7, lane) - x0;
+  m.e3y = subz_aosoa_tile_get<tile_size>(ts_tile, 15, lane) - y0;
+  m.e3z = subz_aosoa_tile_get<tile_size>(ts_tile, 23, lane) - z0;
 
   m.det = m.e1x * m.e2y * m.e3z - m.e1x * m.e3y * m.e2z +
           m.e2x * m.e3y * m.e1z - m.e2x * m.e1y * m.e3z +
@@ -423,12 +422,11 @@ RAJA_INLINE void make_target_tet_map_new_fixed_soa(
   m.r2z = (m.e1x * m.e2y - m.e1y * m.e2x) * deti;
 }
 
-template <Int_type TTET>
+template <Int_type TTET, Size_type tile_size>
 RAJA_HOST_DEVICE
-RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_soa(
-    Real_const_ptr ds_soa,
-    Size_type const nPairs,
-    Index_type const ipair,
+RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_aosoa(
+    Real_const_ptr ds_tile,
+    Index_type const lane,
     Int_type const dtet,
     HexHexTargetTetMapExp const &m,
     Real_type x[4],
@@ -441,27 +439,27 @@ RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_soa(
 
   target_map_to_ref_exp(
       m,
-      subz_soa_get(ds_soa, nPairs, n0, ipair),
-      subz_soa_get(ds_soa, nPairs, 8 + n0, ipair),
-      subz_soa_get(ds_soa, nPairs, 16 + n0, ipair),
+      subz_aosoa_tile_get<tile_size>(ds_tile, n0, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n0, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n0, lane),
       x[0], y[0], z[0]);
   target_map_to_ref_exp(
       m,
-      subz_soa_get(ds_soa, nPairs, n1, ipair),
-      subz_soa_get(ds_soa, nPairs, 8 + n1, ipair),
-      subz_soa_get(ds_soa, nPairs, 16 + n1, ipair),
+      subz_aosoa_tile_get<tile_size>(ds_tile, n1, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n1, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n1, lane),
       x[1], y[1], z[1]);
   target_map_to_ref_exp(
       m,
-      subz_soa_get(ds_soa, nPairs, n2, ipair),
-      subz_soa_get(ds_soa, nPairs, 8 + n2, ipair),
-      subz_soa_get(ds_soa, nPairs, 16 + n2, ipair),
+      subz_aosoa_tile_get<tile_size>(ds_tile, n2, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n2, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n2, lane),
       x[2], y[2], z[2]);
   target_map_to_ref_exp(
       m,
-      subz_soa_get(ds_soa, nPairs, n3, ipair),
-      subz_soa_get(ds_soa, nPairs, 8 + n3, ipair),
-      subz_soa_get(ds_soa, nPairs, 16 + n3, ipair),
+      subz_aosoa_tile_get<tile_size>(ds_tile, n3, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n3, lane),
+      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n3, lane),
       x[3], y[3], z[3]);
 }
 

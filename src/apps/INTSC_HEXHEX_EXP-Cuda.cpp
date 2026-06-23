@@ -31,43 +31,71 @@ namespace apps
 #error "unexpected RAJA_CUDA_WARPSIZE"
 #endif
 
-template < Size_type block_size >
+template < Size_type tile_size, Size_type block_size >
 __launch_bounds__(block_size)
-__global__ void stage2_subz_aos_to_soa_kernel(
-    Real_ptr const aos,
+__global__ void stage2_subz_aos_to_aosoa_pair_kernel(
+    Real_ptr const dAos,
+    Real_ptr const tAos,
     Size_type const nPairs,
-    Real_ptr const soa)
+    Real_ptr const dBlk,
+    Real_ptr const tBlk)
 {
-  Index_type const i = blockIdx.x * blockDim.x + threadIdx.x;
-  Index_type const len = 24 * nPairs;
+  __shared__ Real_type tile[24][tile_size + 1];
 
-  if (i >= len) {
-    return;
+  Index_type const tileId = blockIdx.x;
+  Index_type const pairBase = tileId * tile_size;
+  Index_type const tid = threadIdx.x;
+
+  for (Int_type pass = 0; pass < 2; ++pass) {
+    Real_ptr const src = pass == 0 ? dAos : tAos;
+
+    for (Index_type e = tid; e < 24 * tile_size; e += block_size) {
+      Int_type const p = e / 24;
+      Int_type const component = e - 24 * p;
+      Index_type const ipair = pairBase + p;
+
+      tile[component][p] = (ipair < nPairs)
+                         ? src[24 * ipair + component]
+                         : Real_type(0.0);
+    }
+
+    __syncthreads();
+
+    Real_ptr const dst = (pass == 0 ? dBlk : tBlk) + tileId * 24 * tile_size;
+
+    for (Index_type e = tid; e < 24 * tile_size; e += block_size) {
+      Int_type const component = e / tile_size;
+      Int_type const p = e - component * tile_size;
+
+      dst[component * tile_size + p] = tile[component][p];
+    }
+
+    __syncthreads();
   }
-
-  Int_type const component = i / nPairs;
-  Index_type const ipair = i - component * nPairs;
-
-  soa[i] = aos[24 * ipair + component];
 }
 
 template <Int_type TTET, Size_type block_size>
 __launch_bounds__(block_size)
-__global__ void stage2_target_tet_kernel(
-    Real_ptr const dsubz_soa,
-    Real_ptr const tsubz_soa,
+__global__ void stage2_target_tet_kernel_aosoa(
+    Real_ptr const dsubz_blk,
+    Real_ptr const tsubz_blk,
     Size_type const nPairs,
     Real_ptr const vv_out)
 {
-  Index_type const ipair = blockIdx.x * blockDim.x + threadIdx.x;
+  Index_type const lane = threadIdx.x;
+  Index_type const tile = blockIdx.x;
+  Index_type const ipair = tile * block_size + lane;
 
   if (ipair >= nPairs) {
     return;
   }
 
+  Real_const_ptr const dTile = dsubz_blk + tile * 24 * block_size;
+  Real_const_ptr const tTile = tsubz_blk + tile * 24 * block_size;
+
   HexHexTargetTetMapExp map;
-  make_target_tet_map_new_fixed_soa<TTET>(
-      tsubz_soa, nPairs, ipair, map);
+  make_target_tet_map_new_fixed_aosoa<TTET, block_size>(
+      tTile, lane, map);
 
   Real_type vv_sum = Real_type(0.0);
   Real_type vx_sum = Real_type(0.0);
@@ -78,8 +106,8 @@ __global__ void stage2_target_tet_kernel(
   for (Int_type dtet = 0; dtet < 6; ++dtet) {
     Real_type x[4], y[4], z[4];
 
-    transform_donor_tet_fixed_runtime_dtet_soa<TTET>(
-        dsubz_soa, nPairs, ipair, dtet, map, x, y, z);
+    transform_donor_tet_fixed_runtime_dtet_aosoa<TTET, block_size>(
+        dTile, lane, dtet, map, x, y, z);
 
     Real_type vref = Real_type(0.0);
     Real_type mxref = Real_type(0.0);
@@ -185,20 +213,20 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
 
   if ( vid == Base_CUDA ) {
 
-    constexpr Size_type stage2_block_size = 128;
+    constexpr Size_type stage2_tile_size = 128;
+    constexpr Size_type stage2_transpose_block_size = 256;
     constexpr Size_type stage2_target_tet_kernels = 6;
-    constexpr Size_type stage2_transpose_kernels = 2;
+    constexpr Size_type stage2_transpose_kernels = 1;
     setKernelsPerRep(stage2_transpose_kernels + stage2_target_tet_kernels);
     const Size_type stage2_grid_size =
-        RAJA_DIVIDE_CEILING_INT(n_subz_intsc, stage2_block_size);
-    const Size_type stage2_soa_len = 24 * n_subz_intsc;
-    const Size_type stage2_transpose_grid_size =
-        RAJA_DIVIDE_CEILING_INT(stage2_soa_len, stage2_block_size);
+        RAJA_DIVIDE_CEILING_INT(n_subz_intsc, stage2_tile_size);
+    const Size_type stage2_aosoa_len =
+        24 * stage2_grid_size * stage2_tile_size;
 
-    Real_ptr dsubz_soa;
-    Real_ptr tsubz_soa;
-    allocData(DataSpace::CudaDevice, dsubz_soa, stage2_soa_len);
-    allocData(DataSpace::CudaDevice, tsubz_soa, stage2_soa_len);
+    Real_ptr dsubz_blk;
+    Real_ptr tsubz_blk;
+    allocData(DataSpace::CudaDevice, dsubz_blk, stage2_aosoa_len);
+    allocData(DataSpace::CudaDevice, tsubz_blk, stage2_aosoa_len);
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -206,22 +234,19 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
 
       constexpr Size_type shmem = 0;
 
-      RPlaunchCudaKernel( (stage2_subz_aos_to_soa_kernel<stage2_block_size>),
-                          stage2_transpose_grid_size, stage2_block_size,
+      RPlaunchCudaKernel( (stage2_subz_aos_to_aosoa_pair_kernel<
+                              stage2_tile_size, stage2_transpose_block_size>),
+                          stage2_grid_size, stage2_transpose_block_size,
                           shmem, res.get_stream(),
-                          m_dsubz, n_subz_intsc, dsubz_soa ) ;
-
-      RPlaunchCudaKernel( (stage2_subz_aos_to_soa_kernel<stage2_block_size>),
-                          stage2_transpose_grid_size, stage2_block_size,
-                          shmem, res.get_stream(),
-                          m_tsubz, n_subz_intsc, tsubz_soa ) ;
+                          m_dsubz, m_tsubz, n_subz_intsc,
+                          dsubz_blk, tsubz_blk ) ;
 
 #define LAUNCH_TARGET_TET(TTET)                                             \
       RPlaunchCudaKernel(                                                   \
-          (stage2_target_tet_kernel<TTET, stage2_block_size>),               \
-          stage2_grid_size, stage2_block_size,                               \
+          (stage2_target_tet_kernel_aosoa<TTET, stage2_tile_size>),          \
+          stage2_grid_size, stage2_tile_size,                                \
           shmem, res.get_stream(),                                           \
-          dsubz_soa, tsubz_soa, n_subz_intsc, m_vv_out )
+          dsubz_blk, tsubz_blk, n_subz_intsc, m_vv_out )
 
       LAUNCH_TARGET_TET(0);
       LAUNCH_TARGET_TET(1);
@@ -235,8 +260,8 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
     }
     stopTimer();
 
-    deallocData(DataSpace::CudaDevice, dsubz_soa);
-    deallocData(DataSpace::CudaDevice, tsubz_soa);
+    deallocData(DataSpace::CudaDevice, dsubz_blk);
+    deallocData(DataSpace::CudaDevice, tsubz_blk);
 
   } else if ( vid == Lambda_CUDA ) {
 
