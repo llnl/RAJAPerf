@@ -32,15 +32,14 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
   const Index_type zbatch = threadIdx.z;
   const Index_type e = blockIdx.x * blockDim.z + zbatch;
   const bool valid_e = e < NE;
+  if (!valid_e) { return; }
 
   MASS3DPA_GPU_SMEM_DECL(mpa::TBATCH)
   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
   GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D){
-      if (valid_e) {
-        MASS3DPA_1
-      }
+      MASS3DPA_1
     }
     GPU_FOREACH_THREAD_INC(dx, x, mpa::Q1D, mpa::Q1D) {
       MASS3DPA_2
@@ -56,25 +55,19 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
   __syncthreads();
   GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_3
-      }
+      MASS3DPA_3
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_4
-      }
+      MASS3DPA_4
     }
   }
   __syncthreads();
   GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(qx, x, mpa::Q1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_5
-      }
+      MASS3DPA_5
     }
   }
 
@@ -90,27 +83,21 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
   __syncthreads();
   GPU_FOREACH_THREAD_INC(qy, y, mpa::Q1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_7
-      }
+      MASS3DPA_7
     }
   }
   __syncthreads();
 
   GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_8
-      }
+      MASS3DPA_8
     }
   }
 
   __syncthreads();
   GPU_FOREACH_THREAD_INC(dy, y, mpa::D1D, mpa::Q1D) {
     GPU_FOREACH_THREAD_INC(dx, x, mpa::D1D, mpa::Q1D) {
-      if (valid_e) {
-        MASS3DPA_9
-      }
+      MASS3DPA_9
     }
   }
 }
@@ -181,15 +168,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                     [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                         [&](Index_type dx) {
-                          if (valid_e) {
-                            MASS3DPA_1
-                          }
+                          MASS3DPA_1
                         }
                       );  // RAJA::loop<inner_x>
 
@@ -223,15 +209,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                     [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                         [&](Index_type qx) {
-                          if (valid_e) {
-                            MASS3DPA_3
-                          }
+                          MASS3DPA_3
                         }
                       );  // RAJA::loop<inner_x>
                     }
@@ -245,15 +230,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                     [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                         [&](Index_type qx) {
-                          if (valid_e) {
-                            MASS3DPA_4
-                          }
+                          MASS3DPA_4
                         }
                       );  // RAJA::loop<inner_x>
                     }
@@ -267,15 +251,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                     [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                         [&](Index_type qx) {
-                          if (valid_e) {
-                            MASS3DPA_5
-                          }
+                          MASS3DPA_5
                         }
                       );  // RAJA::loop<inner_x>
                     }
@@ -307,15 +290,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::Q1D),
                     [&](Index_type qy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                         [&](Index_type dx) {
-                          if (valid_e) {
-                            MASS3DPA_7
-                          }
+                          MASS3DPA_7
                         }
                       );  // RAJA::loop<inner_x>
                     }
@@ -329,15 +311,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                     [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                         [&](Index_type dx) {
-                          if (valid_e) {
-                            MASS3DPA_8
-                          }
+                          MASS3DPA_8
                         }
                       );  // RAJA::loop<inner_x>
                     }
@@ -351,15 +332,14 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
                 [&](Index_type zbatch) {
                   const Index_type e = elem_block * mpa::TBATCH + zbatch;
                   const bool valid_e = e < NE;
+                  if (!valid_e) { return; }
                   MASS3DPA_GPU_SMEM_SLICE(zbatch)
 
                   RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                     [&](Index_type dy) {
                       RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa::D1D),
                         [&](Index_type dx) {
-                          if (valid_e) {
-                            MASS3DPA_9
-                          }
+                          MASS3DPA_9
                         }
                       );  // RAJA::loop<inner_x>
                     }
