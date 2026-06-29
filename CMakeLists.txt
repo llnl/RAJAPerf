@@ -160,6 +160,20 @@ else()
   message(STATUS "Using default gpu items per thread(s)")
 endif()
 
+###########################
+if (ENABLE_CUDA)
+  if (CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA")
+    if (NOT CMAKE_CUDA_FLAGS MATCHES "(^| )-lineinfo( |$)")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo")
+    endif()
+  elseif (CMAKE_CUDA_COMPILER_ID STREQUAL "Clang")
+    if (NOT CMAKE_CUDA_FLAGS MATCHES "(^| )-gline-tables-only( |$)")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gline-tables-only")
+    endif()
+  endif()
+endif()
+##########################
+
 # exclude RAJA make targets from top-level build...
 add_subdirectory(tpl/RAJA)
 

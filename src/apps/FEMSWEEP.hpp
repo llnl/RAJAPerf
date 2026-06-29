@@ -302,7 +302,7 @@ private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
 #else
-  static const size_t default_gpu_block_size = 128;
+  static const size_t default_gpu_block_size = 64;
 #endif
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
