@@ -82,6 +82,8 @@ __global__ void stage2_target_tet_kernel_aosoa(
     Size_type const nPairs,
     Real_ptr const vv_out)
 {
+  extern __shared__ Real_type shmem[];
+
   Index_type const lane = threadIdx.x;
   Index_type const tile = blockIdx.x;
   Index_type const ipair = tile * block_size + lane;
@@ -92,43 +94,72 @@ __global__ void stage2_target_tet_kernel_aosoa(
 
   Real_const_ptr const dTile = dsubz_blk + tile * 24 * block_size;
   Real_const_ptr const tTile = tsubz_blk + tile * 24 * block_size;
+  Real_type *cand_vx = shmem;
+  Real_type *cand_vy = cand_vx + 12 * block_size;
+  Real_type *cand_vz = cand_vy + 12 * block_size;
 
-  HexHexTargetTetMapExp map;
-  make_target_tet_map_new_fixed_aosoa<TTET, block_size>(
-      tTile, lane, map);
+  HexHexTargetRefMapExp ref_map;
+  make_target_tet_ref_map_new_fixed_aosoa<TTET, block_size>(
+      tTile, lane, ref_map);
 
-  Real_type vv_sum = Real_type(0.0);
-  Real_type vx_sum = Real_type(0.0);
-  Real_type vy_sum = Real_type(0.0);
-  Real_type vz_sum = Real_type(0.0);
+  Moment4 ref_sum;
+  ref_sum.v = Real_type(0.0);
+  ref_sum.mx = Real_type(0.0);
+  ref_sum.my = Real_type(0.0);
+  ref_sum.mz = Real_type(0.0);
 
 #pragma unroll 1
   for (Int_type dtet = 0; dtet < 6; ++dtet) {
-    Real_type x[4], y[4], z[4];
+    Tet4 t;
 
     transform_donor_tet_fixed_runtime_dtet_aosoa<TTET, block_size>(
-        dTile, lane, dtet, map, x, y, z);
+        dTile, lane, dtet, ref_map, t);
 
-    Real_type vref = Real_type(0.0);
-    Real_type mxref = Real_type(0.0);
-    Real_type myref = Real_type(0.0);
-    Real_type mzref = Real_type(0.0);
+    Moment4 const ref_mom =
+        intersect_tettet_edgeface_shared_exp<block_size>(
+            t, cand_vx, cand_vy, cand_vz, lane);
 
-    intersect_tettet_edgeface_exp(x, y, z, vref, mxref, myref, mzref);
+    ref_sum.v += ref_mom.v;
+    ref_sum.mx += ref_mom.mx;
+    ref_sum.my += ref_mom.my;
+    ref_sum.mz += ref_mom.mz;
+  }
 
-    vv_sum += map.det * vref;
-    vx_sum += map.det * (map.x0  * vref +
-                         map.e1x * mxref +
-                         map.e2x * myref +
-                         map.e3x * mzref);
-    vy_sum += map.det * (map.y0  * vref +
-                         map.e1y * mxref +
-                         map.e2y * myref +
-                         map.e3y * mzref);
-    vz_sum += map.det * (map.z0  * vref +
-                         map.e1z * mxref +
-                         map.e2z * myref +
-                         map.e3z * mzref);
+  Real_type const det = compute_target_det_exp<TTET, block_size>(tTile, lane);
+
+  Real_type const vv_sum = det * ref_sum.v;
+
+  Real_type vx_sum;
+  {
+    Real_type x0, e1x, e2x, e3x;
+    load_target_x_row_exp<TTET, block_size>(
+        tTile, lane, x0, e1x, e2x, e3x);
+    vx_sum = det * (x0 * ref_sum.v +
+                    e1x * ref_sum.mx +
+                    e2x * ref_sum.my +
+                    e3x * ref_sum.mz);
+  }
+
+  Real_type vy_sum;
+  {
+    Real_type y0, e1y, e2y, e3y;
+    load_target_y_row_exp<TTET, block_size>(
+        tTile, lane, y0, e1y, e2y, e3y);
+    vy_sum = det * (y0 * ref_sum.v +
+                    e1y * ref_sum.mx +
+                    e2y * ref_sum.my +
+                    e3y * ref_sum.mz);
+  }
+
+  Real_type vz_sum;
+  {
+    Real_type z0, e1z, e2z, e3z;
+    load_target_z_row_exp<TTET, block_size>(
+        tTile, lane, z0, e1z, e2z, e3z);
+    vz_sum = det * (z0 * ref_sum.v +
+                    e1z * ref_sum.mx +
+                    e2z * ref_sum.my +
+                    e3z * ref_sum.mz);
   }
 
   Index_type const std_i = ipair / hexhex_exp_fixup_groupsize;
@@ -233,6 +264,8 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       constexpr Size_type shmem = 0;
+      constexpr Size_type target_tet_shmem =
+          3 * 12 * stage2_tile_size * sizeof(Real_type);
 
       RPlaunchCudaKernel( (stage2_subz_aos_to_aosoa_pair_kernel<
                               stage2_tile_size, stage2_transpose_block_size>),
@@ -245,7 +278,7 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
       RPlaunchCudaKernel(                                                   \
           (stage2_target_tet_kernel_aosoa<TTET, stage2_tile_size>),          \
           stage2_grid_size, stage2_tile_size,                                \
-          shmem, res.get_stream(),                                           \
+          target_tet_shmem, res.get_stream(),                                \
           dsubz_blk, tsubz_blk, n_subz_intsc, m_vv_out )
 
       LAUNCH_TARGET_TET(0);
