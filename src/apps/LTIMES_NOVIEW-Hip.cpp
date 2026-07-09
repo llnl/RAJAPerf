@@ -403,10 +403,10 @@ void LTIMES_NOVIEW::defineHipVariantTunings()
         if (vid == RAJA_HIP) {
 
           addVariantTuning<&LTIMES_NOVIEW::runHipVariantImpl<block_size, 0>>(
-              vid, "kernel_block_m");
+              vid, "kernel_m");
 
           addVariantTuning<&LTIMES_NOVIEW::runHipVariantImpl<block_size, 2>>(
-              vid, "launch_block_m");
+              vid, "launch_m");
 
         } else {
 
@@ -431,10 +431,10 @@ void LTIMES_NOVIEW::defineHipVariantTunings()
         if (vid == RAJA_HIP) {
 
           addVariantTuning<&LTIMES_NOVIEW::runHipVariantImpl<block_size, 1>>(
-              vid, "kernel_block_m32_gBigFact_zLowFact_"+std::to_string(block_size));
+              vid, "kernel_m32_gBigFact_zLowFact_"+std::to_string(block_size));
 
           addVariantTuning<&LTIMES_NOVIEW::runHipVariantImpl<block_size, 3>>(
-              vid, "launch_block_m32_gBigFact_zLowFact_"+std::to_string(block_size));
+              vid, "launch_m32_gBigFact_zLowFact_"+std::to_string(block_size));
 
         } else {
 
