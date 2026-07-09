@@ -127,6 +127,10 @@ private:
   static const size_t default_gpu_block_size = 25;
   using gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<default_gpu_block_size>;
+  static const size_t factorized_default_gpu_block_size = 256;
+  using factorized_gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<factorized_default_gpu_block_size,
+                                             integer::MultipleOf<32>>;
 
   Real_ptr m_phidat;
   Real_ptr m_elldat;
