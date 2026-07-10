@@ -17,6 +17,16 @@
 
 #include "AppsData.hpp"
 
+#if defined(__has_include)
+#if __has_include(<nvtx3/nvToolsExt.h>)
+#include <nvtx3/nvToolsExt.h>
+#else
+#include <nvToolsExt.h>
+#endif
+#else
+#include <nvToolsExt.h>
+#endif
+
 #include <iostream>
 
 namespace rajaperf
@@ -267,6 +277,8 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
       constexpr Size_type target_tet_shmem =
           3 * 12 * stage2_tile_size * sizeof(Real_type);
 
+      nvtxRangePushA("INTSC_HEXHEX_EXP stage2_aosoa");
+
       RPlaunchCudaKernel( (stage2_subz_aos_to_aosoa_pair_kernel<
                               stage2_tile_size, stage2_transpose_block_size>),
                           stage2_grid_size, stage2_transpose_block_size,
@@ -289,6 +301,8 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
       LAUNCH_TARGET_TET(5);
 
 #undef LAUNCH_TARGET_TET
+
+      nvtxRangePop();
 
     }
     stopTimer();

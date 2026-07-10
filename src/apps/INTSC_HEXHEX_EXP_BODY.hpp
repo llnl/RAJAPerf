@@ -112,8 +112,6 @@ clip_polygon_ge_0_packed_exp(Real_type x[hexhex_exp_max_poly_vertices],
   Real_type c00 = c0;
   Real_type clast = c0;
 
-// gives better performance that aggressive loop unrolling
-#pragma unroll 1
   while (j >= 0) {
     Int_type jj = hexhex_exp_next_get(next_pack, j);
     Int_type jp = jj;
@@ -164,8 +162,6 @@ clip_polygon_ge_0_packed_exp(Real_type x[hexhex_exp_max_poly_vertices],
 
   j = first0;
 
-// gives better performance that aggressive loop unrolling
-#pragma unroll 1
   while (j >= 0) {
     Int_type jp = hexhex_exp_next_get(next_pack, j);
     if (hexhex_plane_value_packed_exp<P>(x, y, z, j) < Real_type(0.0)) {
@@ -265,96 +261,59 @@ struct HexHexTargetRefMapExp {
   Real_type r2x, r2y, r2z;
 };
 
+template <Int_type TET> struct HexHexTetCycleExp {
+  static_assert(TET >= 0 && TET < 6, "tet id must be in [0, 5]");
+  static constexpr Int_type node = TET == 0   ? 1
+                                  : TET == 1 ? 3
+                                  : TET == 2 ? 2
+                                  : TET == 3 ? 6
+                                  : TET == 4 ? 4
+                                             : 5;
+};
+
 RAJA_HOST_DEVICE
-RAJA_INLINE Int_type hexhex_exp_vert_cyc(Int_type k) {
+RAJA_INLINE Int_type hexhex_exp_tet_cycle_node(Int_type const k) {
   switch (k) {
   case 0:
-    return 1;
+    return HexHexTetCycleExp<0>::node;
   case 1:
-    return 3;
+    return HexHexTetCycleExp<1>::node;
   case 2:
-    return 2;
+    return HexHexTetCycleExp<2>::node;
   case 3:
-    return 6;
+    return HexHexTetCycleExp<3>::node;
   case 4:
-    return 4;
+    return HexHexTetCycleExp<4>::node;
   default:
-    return 5;
+    return HexHexTetCycleExp<5>::node;
   }
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Int_type hexhex_exp_vert_cyc_next(Int_type k) {
-  switch (k) {
-  case 0:
-    return 3;
-  case 1:
-    return 2;
-  case 2:
-    return 6;
-  case 3:
-    return 4;
-  case 4:
-    return 5;
-  default:
-    return 1;
-  }
+RAJA_INLINE Int_type hexhex_exp_vert_cyc(Int_type const k) {
+  return hexhex_exp_tet_cycle_node(k);
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void donor_tet_nodes_fast(Int_type const dtet,
-                                      Int_type &n0,
-                                      Int_type &n1,
-                                      Int_type &n2,
+RAJA_INLINE Int_type hexhex_exp_vert_cyc_next(Int_type const k) {
+  return hexhex_exp_tet_cycle_node(k == 5 ? 0 : k + 1);
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void donor_tet_nodes_fast(Int_type const dtet, Int_type &n0,
+                                      Int_type &n1, Int_type &n2,
                                       Int_type &n3) {
   n0 = 0;
+  n1 = hexhex_exp_vert_cyc(dtet);
+  n2 = hexhex_exp_vert_cyc_next(dtet);
   n3 = 7;
-
-  switch (dtet) {
-  case 0:
-    n1 = 1;
-    n2 = 3;
-    break;
-  case 1:
-    n1 = 3;
-    n2 = 2;
-    break;
-  case 2:
-    n1 = 2;
-    n2 = 6;
-    break;
-  case 3:
-    n1 = 6;
-    n2 = 4;
-    break;
-  case 4:
-    n1 = 4;
-    n2 = 5;
-    break;
-  default:
-    n1 = 5;
-    n2 = 1;
-    break;
-  }
 }
 
-template <Int_type TET>
-struct HexHexTetNodesFixedExp {
+template <Int_type TET> struct HexHexTetNodesFixedExp {
   static_assert(TET >= 0 && TET < 6, "tet id must be in [0, 5]");
-
   static constexpr Int_type n0 = 0;
-  static constexpr Int_type n1 =
-      TET == 0 ? 1 :
-      TET == 1 ? 3 :
-      TET == 2 ? 2 :
-      TET == 3 ? 6 :
-      TET == 4 ? 4 : 5;
-  static constexpr Int_type n2 =
-      TET == 0 ? 3 :
-      TET == 1 ? 2 :
-      TET == 2 ? 6 :
-      TET == 3 ? 4 :
-      TET == 4 ? 5 : 1;
+  static constexpr Int_type n1 = HexHexTetCycleExp<TET>::node;
+  static constexpr Int_type n2 = HexHexTetCycleExp<(TET + 1) % 6>::node;
   static constexpr Int_type n3 = 7;
 };
 
@@ -373,22 +332,16 @@ RAJA_INLINE void target_map_to_ref_exp(HexHexTargetRefMapExp const &m,
 }
 
 template <Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE Real_type subz_aosoa_tile_get(Real_const_ptr tile,
-                                          Int_type const component,
-                                          Index_type const lane) {
+RAJA_HOST_DEVICE RAJA_INLINE Real_type subz_aosoa_tile_get(
+    Real_const_ptr tile, Int_type const component, Index_type const lane) {
   return tile[component * tile_size + lane];
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE void load_target_x_row_exp(
-    Real_const_ptr ts_tile,
-    Index_type const lane,
-    Real_type &x0,
-    Real_type &e1x,
-    Real_type &e2x,
-    Real_type &e3x) {
+RAJA_HOST_DEVICE RAJA_INLINE void
+load_target_x_row_exp(Real_const_ptr ts_tile, Index_type const lane,
+                      Real_type &x0, Real_type &e1x, Real_type &e2x,
+                      Real_type &e3x) {
   constexpr Int_type v1 = HexHexTetNodesFixedExp<TTET>::n1;
   constexpr Int_type v2 = HexHexTetNodesFixedExp<TTET>::n2;
 
@@ -399,14 +352,10 @@ RAJA_INLINE void load_target_x_row_exp(
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE void load_target_y_row_exp(
-    Real_const_ptr ts_tile,
-    Index_type const lane,
-    Real_type &y0,
-    Real_type &e1y,
-    Real_type &e2y,
-    Real_type &e3y) {
+RAJA_HOST_DEVICE RAJA_INLINE void
+load_target_y_row_exp(Real_const_ptr ts_tile, Index_type const lane,
+                      Real_type &y0, Real_type &e1y, Real_type &e2y,
+                      Real_type &e3y) {
   constexpr Int_type v1 = HexHexTetNodesFixedExp<TTET>::n1;
   constexpr Int_type v2 = HexHexTetNodesFixedExp<TTET>::n2;
 
@@ -417,14 +366,10 @@ RAJA_INLINE void load_target_y_row_exp(
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE void load_target_z_row_exp(
-    Real_const_ptr ts_tile,
-    Index_type const lane,
-    Real_type &z0,
-    Real_type &e1z,
-    Real_type &e2z,
-    Real_type &e3z) {
+RAJA_HOST_DEVICE RAJA_INLINE void
+load_target_z_row_exp(Real_const_ptr ts_tile, Index_type const lane,
+                      Real_type &z0, Real_type &e1z, Real_type &e2z,
+                      Real_type &e3z) {
   constexpr Int_type v1 = HexHexTetNodesFixedExp<TTET>::n1;
   constexpr Int_type v2 = HexHexTetNodesFixedExp<TTET>::n2;
 
@@ -435,10 +380,8 @@ RAJA_INLINE void load_target_z_row_exp(
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE Real_type compute_target_det_exp(
-    Real_const_ptr ts_tile,
-    Index_type const lane) {
+RAJA_HOST_DEVICE RAJA_INLINE Real_type
+compute_target_det_exp(Real_const_ptr ts_tile, Index_type const lane) {
   Real_type x0, e1x, e2x, e3x;
   Real_type y0, e1y, e2y, e3y;
   Real_type z0, e1z, e2z, e3z;
@@ -450,17 +393,13 @@ RAJA_INLINE Real_type compute_target_det_exp(
   static_cast<void>(y0);
   static_cast<void>(z0);
 
-  return e1x * e2y * e3z - e1x * e3y * e2z +
-         e2x * e3y * e1z - e2x * e1y * e3z +
+  return e1x * e2y * e3z - e1x * e3y * e2z + e2x * e3y * e1z - e2x * e1y * e3z +
          e3x * e1y * e2z - e3x * e2y * e1z;
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE void make_target_tet_ref_map_new_fixed_aosoa(
-    Real_const_ptr ts_tile,
-    Index_type const lane,
-    HexHexTargetRefMapExp &m) {
+RAJA_HOST_DEVICE RAJA_INLINE void make_target_tet_ref_map_new_fixed_aosoa(
+    Real_const_ptr ts_tile, Index_type const lane, HexHexTargetRefMapExp &m) {
   Real_type x0, e1x, e2x, e3x;
   Real_type y0, e1y, e2y, e3y;
   Real_type z0, e1z, e2z, e3z;
@@ -473,9 +412,8 @@ RAJA_INLINE void make_target_tet_ref_map_new_fixed_aosoa(
   m.y0 = y0;
   m.z0 = z0;
 
-  Real_type const det = e1x * e2y * e3z - e1x * e3y * e2z +
-                        e2x * e3y * e1z - e2x * e1y * e3z +
-                        e3x * e1y * e2z - e3x * e2y * e1z;
+  Real_type const det = e1x * e2y * e3z - e1x * e3y * e2z + e2x * e3y * e1z -
+                        e2x * e1y * e3z + e3x * e1y * e2z - e3x * e2y * e1z;
   Real_type const deti = det / (det * det + Real_type(1.0e-100));
 
   m.r0x = (e2y * e3z - e2z * e3y) * deti;
@@ -492,42 +430,30 @@ RAJA_INLINE void make_target_tet_ref_map_new_fixed_aosoa(
 }
 
 template <Int_type TTET, Size_type tile_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_aosoa(
-    Real_const_ptr ds_tile,
-    Index_type const lane,
-    Int_type const dtet,
-    HexHexTargetRefMapExp const &m,
-    Tet4 &t) {
+RAJA_HOST_DEVICE RAJA_INLINE void transform_donor_tet_fixed_runtime_dtet_aosoa(
+    Real_const_ptr ds_tile, Index_type const lane, Int_type const dtet,
+    HexHexTargetRefMapExp const &m, Tet4 &t) {
   static_assert(TTET >= 0 && TTET < 6, "target tet id must be in [0, 5]");
 
   Int_type n0, n1, n2, n3;
   donor_tet_nodes_fast(dtet, n0, n1, n2, n3);
 
-  target_map_to_ref_exp(
-      m,
-      subz_aosoa_tile_get<tile_size>(ds_tile, n0, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n0, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n0, lane),
-      t.p0.x, t.p0.y, t.p0.z);
-  target_map_to_ref_exp(
-      m,
-      subz_aosoa_tile_get<tile_size>(ds_tile, n1, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n1, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n1, lane),
-      t.p1.x, t.p1.y, t.p1.z);
-  target_map_to_ref_exp(
-      m,
-      subz_aosoa_tile_get<tile_size>(ds_tile, n2, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n2, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n2, lane),
-      t.p2.x, t.p2.y, t.p2.z);
-  target_map_to_ref_exp(
-      m,
-      subz_aosoa_tile_get<tile_size>(ds_tile, n3, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n3, lane),
-      subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n3, lane),
-      t.p3.x, t.p3.y, t.p3.z);
+  target_map_to_ref_exp(m, subz_aosoa_tile_get<tile_size>(ds_tile, n0, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n0, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n0, lane),
+                        t.p0.x, t.p0.y, t.p0.z);
+  target_map_to_ref_exp(m, subz_aosoa_tile_get<tile_size>(ds_tile, n1, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n1, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n1, lane),
+                        t.p1.x, t.p1.y, t.p1.z);
+  target_map_to_ref_exp(m, subz_aosoa_tile_get<tile_size>(ds_tile, n2, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n2, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n2, lane),
+                        t.p2.x, t.p2.y, t.p2.z);
+  target_map_to_ref_exp(m, subz_aosoa_tile_get<tile_size>(ds_tile, n3, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 8 + n3, lane),
+                        subz_aosoa_tile_get<tile_size>(ds_tile, 16 + n3, lane),
+                        t.p3.x, t.p3.y, t.p3.z);
 }
 
 #ifndef HEXHEX_TETTET_COMPAT_EPS
@@ -557,27 +483,20 @@ RAJA_INLINE Real_type hexhex_max_abs_update_exp(Real_type const s,
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type hexhex_max4_exp(Real_type const a,
-                                      Real_type const b,
-                                      Real_type const c,
-                                      Real_type const d) {
+RAJA_INLINE Real_type hexhex_max4_exp(Real_type const a, Real_type const b,
+                                      Real_type const c, Real_type const d) {
   Real_type ab = a > b ? a : b;
   Real_type cd = c > d ? c : d;
   return ab > cd ? ab : cd;
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type hexhex_det3_exp(Real_type const ax,
-                                      Real_type const ay,
-                                      Real_type const az,
-                                      Real_type const bx,
-                                      Real_type const by,
-                                      Real_type const bz,
-                                      Real_type const cx,
-                                      Real_type const cy,
+RAJA_INLINE Real_type hexhex_det3_exp(Real_type const ax, Real_type const ay,
+                                      Real_type const az, Real_type const bx,
+                                      Real_type const by, Real_type const bz,
+                                      Real_type const cx, Real_type const cy,
                                       Real_type const cz) {
-  return ax * (by * cz - bz * cy) -
-         ay * (bx * cz - bz * cx) +
+  return ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) +
          az * (bx * cy - by * cx);
 }
 
@@ -618,10 +537,10 @@ RAJA_INLINE Real_type hexhex_tettet_scale_eps_exp(Tet4 const &t) {
 
 RAJA_HOST_DEVICE
 RAJA_INLINE Moment4 signed_tet_moments_exp(Tet4 const &t) {
-  Real_type const det = hexhex_det3_exp(
-      t.p1.x - t.p0.x, t.p1.y - t.p0.y, t.p1.z - t.p0.z,
-      t.p2.x - t.p0.x, t.p2.y - t.p0.y, t.p2.z - t.p0.z,
-      t.p3.x - t.p0.x, t.p3.y - t.p0.y, t.p3.z - t.p0.z);
+  Real_type const det =
+      hexhex_det3_exp(t.p1.x - t.p0.x, t.p1.y - t.p0.y, t.p1.z - t.p0.z,
+                      t.p2.x - t.p0.x, t.p2.y - t.p0.y, t.p2.z - t.p0.z,
+                      t.p3.x - t.p0.x, t.p3.y - t.p0.y, t.p3.z - t.p0.z);
   Moment4 m;
   m.v = det / Real_type(6.0);
   m.mx = m.v * (t.p0.x + t.p1.x + t.p2.x + t.p3.x) / Real_type(4.0);
@@ -645,9 +564,7 @@ RAJA_INLINE unsigned short face_bits(FaceBitsPacked const &fb, int face) {
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void mark_one_facebit(FaceBitsPacked &fb,
-                                  int id,
-                                  int face) {
+RAJA_INLINE void mark_one_facebit(FaceBitsPacked &fb, int id, int face) {
   unsigned long long const bit = 1ull << id;
 
   if (face < 4) {
@@ -664,31 +581,27 @@ RAJA_INLINE void facebits_clear_exp(FaceBitsPacked &fb) {
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Index_type cand_idx_exp(Int_type const i,
-                                    Index_type const lane,
+RAJA_INLINE Index_type cand_idx_exp(Int_type const i, Index_type const lane,
                                     Index_type const block_size) {
   return i * block_size + lane;
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type cand_x_exp(Real_type const *vx,
-                                 Int_type const i,
+RAJA_INLINE Real_type cand_x_exp(Real_type const *vx, Int_type const i,
                                  Index_type const lane,
                                  Index_type const block_size) {
   return vx[cand_idx_exp(i, lane, block_size)];
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type cand_y_exp(Real_type const *vy,
-                                 Int_type const i,
+RAJA_INLINE Real_type cand_y_exp(Real_type const *vy, Int_type const i,
                                  Index_type const lane,
                                  Index_type const block_size) {
   return vy[cand_idx_exp(i, lane, block_size)];
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE Real_type cand_z_exp(Real_type const *vz,
-                                 Int_type const i,
+RAJA_INLINE Real_type cand_z_exp(Real_type const *vz, Int_type const i,
                                  Index_type const lane,
                                  Index_type const block_size) {
   return vz[cand_idx_exp(i, lane, block_size)];
@@ -702,10 +615,8 @@ struct HexHexCandidateVertsExp {
   Index_type block_size;
 
   RAJA_HOST_DEVICE
-  RAJA_INLINE HexHexCandidateVertsExp(Real_type *vx_,
-                                      Real_type *vy_,
-                                      Real_type *vz_,
-                                      Index_type const lane_,
+  RAJA_INLINE HexHexCandidateVertsExp(Real_type *vx_, Real_type *vy_,
+                                      Real_type *vz_, Index_type const lane_,
                                       Index_type const block_size_)
       : vx(vx_), vy(vy_), vz(vz_), lane(lane_), block_size(block_size_) {}
 
@@ -725,9 +636,7 @@ struct HexHexCandidateVertsExp {
   }
 
   RAJA_HOST_DEVICE
-  RAJA_INLINE void set(Int_type const i,
-                       Real_type const x_,
-                       Real_type const y_,
+  RAJA_INLINE void set(Int_type const i, Real_type const x_, Real_type const y_,
                        Real_type const z_) {
     Index_type const idx = cand_idx_exp(i, lane, block_size);
     vx[idx] = x_;
@@ -737,29 +646,31 @@ struct HexHexCandidateVertsExp {
 };
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void mark_facebits_exp(FaceBitsPacked &fb,
-                                   Int_type const id,
+RAJA_INLINE void mark_facebits_exp(FaceBitsPacked &fb, Int_type const id,
                                    unsigned char const mask) {
-  if (mask & (1u << 0)) mark_one_facebit(fb, id, 0);
-  if (mask & (1u << 1)) mark_one_facebit(fb, id, 1);
-  if (mask & (1u << 2)) mark_one_facebit(fb, id, 2);
-  if (mask & (1u << 3)) mark_one_facebit(fb, id, 3);
-  if (mask & (1u << 4)) mark_one_facebit(fb, id, 4);
-  if (mask & (1u << 5)) mark_one_facebit(fb, id, 5);
-  if (mask & (1u << 6)) mark_one_facebit(fb, id, 6);
-  if (mask & (1u << 7)) mark_one_facebit(fb, id, 7);
+  if (mask & (1u << 0))
+    mark_one_facebit(fb, id, 0);
+  if (mask & (1u << 1))
+    mark_one_facebit(fb, id, 1);
+  if (mask & (1u << 2))
+    mark_one_facebit(fb, id, 2);
+  if (mask & (1u << 3))
+    mark_one_facebit(fb, id, 3);
+  if (mask & (1u << 4))
+    mark_one_facebit(fb, id, 4);
+  if (mask & (1u << 5))
+    mark_one_facebit(fb, id, 5);
+  if (mask & (1u << 6))
+    mark_one_facebit(fb, id, 6);
+  if (mask & (1u << 7))
+    mark_one_facebit(fb, id, 7);
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void add_unique_tettet_vertex_bits_exp(
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const x,
-    Real_type const y,
-    Real_type const z,
-    unsigned char const mask,
-    Real_type const eps) {
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const x, Real_type const y, Real_type const z,
+    unsigned char const mask, Real_type const eps) {
   Real_type const eps2 = eps * eps;
 
   for (Int_type i = 0; i < nv; ++i) {
@@ -790,10 +701,8 @@ RAJA_INLINE Int_type facebits_popcount_exp(unsigned short bits) {
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void facebits_extract_three_exp(unsigned short bits,
-                                           Int_type &i0,
-                                           Int_type &i1,
-                                           Int_type &i2) {
+RAJA_INLINE void facebits_extract_three_exp(unsigned short bits, Int_type &i0,
+                                            Int_type &i1, Int_type &i2) {
   unsigned int b = static_cast<unsigned int>(bits);
 
 #if defined(RAJA_ENABLE_CUDA) && defined(__CUDA_ARCH__)
@@ -816,8 +725,7 @@ RAJA_INLINE void facebits_extract_three_exp(unsigned short bits,
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void mark_three_facebits_exp(FaceBitsPacked &fb,
-                                         Int_type const id,
+RAJA_INLINE void mark_three_facebits_exp(FaceBitsPacked &fb, Int_type const id,
                                          unsigned char const mask) {
   Int_type f0, f1, f2;
   facebits_extract_three_exp(static_cast<unsigned short>(mask), f0, f1, f2);
@@ -828,12 +736,8 @@ RAJA_INLINE void mark_three_facebits_exp(FaceBitsPacked &fb,
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void add_tettet_vertex_direct_three_bits_exp(
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const x,
-    Real_type const y,
-    Real_type const z,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const x, Real_type const y, Real_type const z,
     unsigned char const mask) {
   if (nv < 12) {
     cand.set(nv, x, y, z);
@@ -847,10 +751,10 @@ RAJA_INLINE bool hexhex_tettet_angle_less_exp(Real_type const ax,
                                               Real_type const ay,
                                               Real_type const bx,
                                               Real_type const by) {
-  bool const ah = (ay > Real_type(0.0)) ||
-                  (ay == Real_type(0.0) && ax >= Real_type(0.0));
-  bool const bh = (by > Real_type(0.0)) ||
-                  (by == Real_type(0.0) && bx >= Real_type(0.0));
+  bool const ah =
+      (ay > Real_type(0.0)) || (ay == Real_type(0.0) && ax >= Real_type(0.0));
+  bool const bh =
+      (by > Real_type(0.0)) || (by == Real_type(0.0) && bx >= Real_type(0.0));
 
   if (ah != bh) {
     return ah;
@@ -866,12 +770,9 @@ RAJA_INLINE bool hexhex_tettet_angle_less_exp(Real_type const ax,
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void hexhex_tettet_face_basis_exp(HexHexPlaneExp const &p,
-                                              Real_type &ux,
-                                              Real_type &uy,
-                                              Real_type &uz,
-                                              Real_type &vx,
-                                              Real_type &vy,
-                                              Real_type &vz) {
+                                              Real_type &ux, Real_type &uy,
+                                              Real_type &uz, Real_type &vx,
+                                              Real_type &vy, Real_type &vz) {
   if (hexhex_abs_exp(p.nx) > hexhex_abs_exp(p.nz)) {
     ux = -p.ny;
     uy = p.nx;
@@ -944,10 +845,8 @@ RAJA_INLINE unsigned char donor_vertex_mask_exp(Int_type const v) {
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void make_donor_tet_plane_one_exp(Vec3 const &a,
-                                              Vec3 const &b,
-                                              Vec3 const &c,
-                                              Vec3 const &o,
+RAJA_INLINE void make_donor_tet_plane_one_exp(Vec3 const &a, Vec3 const &b,
+                                              Vec3 const &c, Vec3 const &o,
                                               HexHexPlaneExp &p) {
   Real_type const bax = b.x - a.x;
   Real_type const bay = b.y - a.y;
@@ -989,24 +888,16 @@ RAJA_HOST_DEVICE
 RAJA_INLINE Real_type scaled_plane_eps_exp(HexHexPlaneExp const &p,
                                            Real_type const eps) {
   return eps * (hexhex_abs_exp(p.nx) + hexhex_abs_exp(p.ny) +
-                hexhex_abs_exp(p.nz) + hexhex_abs_exp(p.d) +
-                Real_type(1.0));
+                hexhex_abs_exp(p.nz) + hexhex_abs_exp(p.d) + Real_type(1.0));
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void add_candidate_bits_if_inside_all_planes_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const px,
-    Real_type const py,
-    Real_type const pz,
-    unsigned char mask,
-    Real_type const eps) {
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const px, Real_type const py, Real_type const pz,
+    unsigned char mask, Real_type const eps) {
   Real_type c = px;
   Real_type peps = target_plane_eps_exp(0, eps);
   if (c < -peps) {
@@ -1080,23 +971,19 @@ RAJA_INLINE void add_candidate_bits_if_inside_all_planes_exp(
   }
 
   if (facebits_popcount_exp(static_cast<unsigned short>(mask)) == 3) {
-    add_tettet_vertex_direct_three_bits_exp(cand, facebits, nv,
-                                            px, py, pz, mask);
+    add_tettet_vertex_direct_three_bits_exp(cand, facebits, nv, px, py, pz,
+                                            mask);
   } else {
-    add_unique_tettet_vertex_bits_exp(cand, facebits, nv,
-                                      px, py, pz, mask, eps);
+    add_unique_tettet_vertex_bits_exp(cand, facebits, nv, px, py, pz, mask,
+                                      eps);
   }
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void orient_triangle_to_normal_exp(
-    HexHexCandidateVertsExp const &cand,
-    Int_type ia,
-    Int_type &ib,
-    Int_type &ic,
-    Real_type const nx,
-    Real_type const ny,
-    Real_type const nz) {
+RAJA_INLINE void
+orient_triangle_to_normal_exp(HexHexCandidateVertsExp const &cand, Int_type ia,
+                              Int_type &ib, Int_type &ic, Real_type const nx,
+                              Real_type const ny, Real_type const nz) {
   Real_type const e1x = cand.x(ib) - cand.x(ia);
   Real_type const e1y = cand.y(ib) - cand.y(ia);
   Real_type const e1z = cand.z(ib) - cand.z(ia);
@@ -1115,15 +1002,11 @@ RAJA_INLINE void orient_triangle_to_normal_exp(
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void integrate_oriented_triangle_exp(
-    HexHexCandidateVertsExp const &cand,
-    Int_type const ia,
-    Int_type const ib,
-    Int_type const ic,
-    Real_type &V,
-    Real_type &Mx,
-    Real_type &My,
-    Real_type &Mz) {
+RAJA_INLINE void
+integrate_oriented_triangle_exp(HexHexCandidateVertsExp const &cand,
+                                Int_type const ia, Int_type const ib,
+                                Int_type const ic, Real_type &V, Real_type &Mx,
+                                Real_type &My, Real_type &Mz) {
   Real_type const ax = cand.x(ia);
   Real_type const ay = cand.y(ia);
   Real_type const az = cand.z(ia);
@@ -1144,313 +1027,100 @@ RAJA_INLINE void integrate_oriented_triangle_exp(
 }
 
 template <Int_type P>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz);
+RAJA_HOST_DEVICE RAJA_INLINE void tettet_face_outward_normal_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3, Real_type &nx,
+    Real_type &ny, Real_type &nz) {
+  static_assert(P >= 0 && P < 8, "face id must be in [0, 7]");
 
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<0>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = Real_type(-1.0);
-  ny = Real_type(0.0);
-  nz = Real_type(0.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<1>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = Real_type(0.0);
-  ny = Real_type(-1.0);
-  nz = Real_type(0.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<2>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = Real_type(0.0);
-  ny = Real_type(0.0);
-  nz = Real_type(-1.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<3>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = Real_type(1.0);
-  ny = Real_type(1.0);
-  nz = Real_type(1.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<4>(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = -dp0.nx;
-  ny = -dp0.ny;
-  nz = -dp0.nz;
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<5>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = -dp1.nx;
-  ny = -dp1.ny;
-  nz = -dp1.nz;
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<6>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = -dp2.nx;
-  ny = -dp2.ny;
-  nz = -dp2.nz;
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_outward_normal_exp<7>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp3,
-    Real_type &nx,
-    Real_type &ny,
-    Real_type &nz) {
-  nx = -dp3.nx;
-  ny = -dp3.ny;
-  nz = -dp3.nz;
+  if constexpr (P == 0) {
+    nx = Real_type(-1.0);
+    ny = Real_type(0.0);
+    nz = Real_type(0.0);
+  } else if constexpr (P == 1) {
+    nx = Real_type(0.0);
+    ny = Real_type(-1.0);
+    nz = Real_type(0.0);
+  } else if constexpr (P == 2) {
+    nx = Real_type(0.0);
+    ny = Real_type(0.0);
+    nz = Real_type(-1.0);
+  } else if constexpr (P == 3) {
+    nx = Real_type(1.0);
+    ny = Real_type(1.0);
+    nz = Real_type(1.0);
+  } else if constexpr (P == 4) {
+    nx = -dp0.nx;
+    ny = -dp0.ny;
+    nz = -dp0.nz;
+  } else if constexpr (P == 5) {
+    nx = -dp1.nx;
+    ny = -dp1.ny;
+    nz = -dp1.nz;
+  } else if constexpr (P == 6) {
+    nx = -dp2.nx;
+    ny = -dp2.ny;
+    nz = -dp2.nz;
+  } else {
+    nx = -dp3.nx;
+    ny = -dp3.ny;
+    nz = -dp3.nz;
+  }
 }
 
 template <Int_type P>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz);
+RAJA_HOST_DEVICE RAJA_INLINE void
+tettet_face_basis_exp(HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+                      HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+                      Real_type &ux, Real_type &uy, Real_type &uz,
+                      Real_type &vx, Real_type &vy, Real_type &vz) {
+  static_assert(P >= 0 && P < 8, "face id must be in [0, 7]");
 
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<0>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  ux = Real_type(0.0);
-  uy = Real_type(0.0);
-  uz = Real_type(1.0);
-  vx = Real_type(0.0);
-  vy = Real_type(1.0);
-  vz = Real_type(0.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<1>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  ux = Real_type(1.0);
-  uy = Real_type(0.0);
-  uz = Real_type(0.0);
-  vx = Real_type(0.0);
-  vy = Real_type(0.0);
-  vz = Real_type(1.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<2>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  ux = Real_type(0.0);
-  uy = Real_type(1.0);
-  uz = Real_type(0.0);
-  vx = Real_type(1.0);
-  vy = Real_type(0.0);
-  vz = Real_type(0.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<3>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  ux = Real_type(1.0);
-  uy = Real_type(-1.0);
-  uz = Real_type(0.0);
-  vx = Real_type(1.0);
-  vy = Real_type(1.0);
-  vz = Real_type(-2.0);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<4>(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  hexhex_tettet_face_basis_exp(dp0, ux, uy, uz, vx, vy, vz);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<5>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  hexhex_tettet_face_basis_exp(dp1, ux, uy, uz, vx, vy, vz);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<6>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  hexhex_tettet_face_basis_exp(dp2, ux, uy, uz, vx, vy, vz);
-}
-
-template <>
-RAJA_HOST_DEVICE
-RAJA_INLINE void tettet_face_basis_exp<7>(
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &,
-    HexHexPlaneExp const &dp3,
-    Real_type &ux,
-    Real_type &uy,
-    Real_type &uz,
-    Real_type &vx,
-    Real_type &vy,
-    Real_type &vz) {
-  hexhex_tettet_face_basis_exp(dp3, ux, uy, uz, vx, vy, vz);
+  if constexpr (P == 0) {
+    ux = Real_type(0.0);
+    uy = Real_type(0.0);
+    uz = Real_type(1.0);
+    vx = Real_type(0.0);
+    vy = Real_type(1.0);
+    vz = Real_type(0.0);
+  } else if constexpr (P == 1) {
+    ux = Real_type(1.0);
+    uy = Real_type(0.0);
+    uz = Real_type(0.0);
+    vx = Real_type(0.0);
+    vy = Real_type(0.0);
+    vz = Real_type(1.0);
+  } else if constexpr (P == 2) {
+    ux = Real_type(0.0);
+    uy = Real_type(1.0);
+    uz = Real_type(0.0);
+    vx = Real_type(1.0);
+    vy = Real_type(0.0);
+    vz = Real_type(0.0);
+  } else if constexpr (P == 3) {
+    ux = Real_type(1.0);
+    uy = Real_type(-1.0);
+    uz = Real_type(0.0);
+    vx = Real_type(1.0);
+    vy = Real_type(1.0);
+    vz = Real_type(-2.0);
+  } else if constexpr (P == 4) {
+    hexhex_tettet_face_basis_exp(dp0, ux, uy, uz, vx, vy, vz);
+  } else if constexpr (P == 5) {
+    hexhex_tettet_face_basis_exp(dp1, ux, uy, uz, vx, vy, vz);
+  } else if constexpr (P == 6) {
+    hexhex_tettet_face_basis_exp(dp2, ux, uy, uz, vx, vy, vz);
+  } else {
+    hexhex_tettet_face_basis_exp(dp3, ux, uy, uz, vx, vy, vz);
+  }
 }
 
 template <Int_type P>
-RAJA_HOST_DEVICE
-RAJA_INLINE void integrate_one_triangle_face_exp(
-    HexHexCandidateVertsExp const &cand,
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    Int_type ia,
-    Int_type ib,
-    Int_type ic,
-    Real_type &V,
-    Real_type &Mx,
-    Real_type &My,
-    Real_type &Mz) {
+RAJA_HOST_DEVICE RAJA_INLINE void integrate_one_triangle_face_exp(
+    HexHexCandidateVertsExp const &cand, HexHexPlaneExp const &dp0,
+    HexHexPlaneExp const &dp1, HexHexPlaneExp const &dp2,
+    HexHexPlaneExp const &dp3, Int_type ia, Int_type ib, Int_type ic,
+    Real_type &V, Real_type &Mx, Real_type &My, Real_type &Mz) {
   Real_type nx, ny, nz;
   tettet_face_outward_normal_exp<P>(dp0, dp1, dp2, dp3, nx, ny, nz);
   orient_triangle_to_normal_exp(cand, ia, ib, ic, nx, ny, nz);
@@ -1458,18 +1128,11 @@ RAJA_INLINE void integrate_one_triangle_face_exp(
 }
 
 template <Int_type P>
-RAJA_HOST_DEVICE
-RAJA_INLINE void integrate_general_face_from_bits_exp(
-    unsigned short const bits,
-    HexHexCandidateVertsExp const &cand,
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    Real_type &V,
-    Real_type &Mx,
-    Real_type &My,
-    Real_type &Mz) {
+RAJA_HOST_DEVICE RAJA_INLINE void integrate_general_face_from_bits_exp(
+    unsigned short const bits, HexHexCandidateVertsExp const &cand,
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3, Real_type &V,
+    Real_type &Mx, Real_type &My, Real_type &Mz) {
   unsigned long long ids = 0;
   int n = 0;
 
@@ -1498,18 +1161,18 @@ RAJA_INLINE void integrate_general_face_from_bits_exp(
 
   for (int i = 1; i < n; ++i) {
     int const id = get_id(ids, i);
-    Real_type const iax =
-        (cand.x(id) - cx) * ux + (cand.y(id) - cy) * uy + (cand.z(id) - cz) * uz;
-    Real_type const iay =
-        (cand.x(id) - cx) * bx + (cand.y(id) - cy) * by + (cand.z(id) - cz) * bz;
+    Real_type const iax = (cand.x(id) - cx) * ux + (cand.y(id) - cy) * uy +
+                          (cand.z(id) - cz) * uz;
+    Real_type const iay = (cand.x(id) - cx) * bx + (cand.y(id) - cy) * by +
+                          (cand.z(id) - cz) * bz;
 
     int j = i - 1;
     for (; j >= 0; --j) {
       int const jd = get_id(ids, j);
-      Real_type const jax =
-          (cand.x(jd) - cx) * ux + (cand.y(jd) - cy) * uy + (cand.z(jd) - cz) * uz;
-      Real_type const jay =
-          (cand.x(jd) - cx) * bx + (cand.y(jd) - cy) * by + (cand.z(jd) - cz) * bz;
+      Real_type const jax = (cand.x(jd) - cx) * ux + (cand.y(jd) - cy) * uy +
+                            (cand.z(jd) - cz) * uz;
+      Real_type const jay = (cand.x(jd) - cx) * bx + (cand.y(jd) - cy) * by +
+                            (cand.z(jd) - cz) * bz;
       if (!hexhex_tettet_angle_less_exp(iax, iay, jax, jay)) {
         break;
       }
@@ -1538,25 +1201,17 @@ RAJA_INLINE void integrate_general_face_from_bits_exp(
   }
 
   for (int k = 1; k + 1 < n; ++k) {
-    integrate_oriented_triangle_exp(
-        cand, get_id(ids, 0), get_id(ids, k), get_id(ids, k + 1),
-        V, Mx, My, Mz);
+    integrate_oriented_triangle_exp(cand, get_id(ids, 0), get_id(ids, k),
+                                    get_id(ids, k + 1), V, Mx, My, Mz);
   }
 }
 
 template <Int_type P>
-RAJA_HOST_DEVICE
-RAJA_INLINE void integrate_face_from_bits_exp(
-    unsigned short const bits,
-    HexHexCandidateVertsExp const &cand,
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    Real_type &V,
-    Real_type &Mx,
-    Real_type &My,
-    Real_type &Mz) {
+RAJA_HOST_DEVICE RAJA_INLINE void integrate_face_from_bits_exp(
+    unsigned short const bits, HexHexCandidateVertsExp const &cand,
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3, Real_type &V,
+    Real_type &Mx, Real_type &My, Real_type &Mz) {
   Int_type const nids = facebits_popcount_exp(bits);
 
   if (nids < 3) {
@@ -1567,75 +1222,57 @@ RAJA_INLINE void integrate_face_from_bits_exp(
     Int_type ia, ib, ic;
     facebits_extract_three_exp(bits, ia, ib, ic);
 
-    integrate_one_triangle_face_exp<P>(
-        cand, dp0, dp1, dp2, dp3, ia, ib, ic, V, Mx, My, Mz);
+    integrate_one_triangle_face_exp<P>(cand, dp0, dp1, dp2, dp3, ia, ib, ic, V,
+                                       Mx, My, Mz);
 
     return;
   }
 
-  integrate_general_face_from_bits_exp<P>(
-      bits, cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
+  integrate_general_face_from_bits_exp<P>(bits, cand, dp0, dp1, dp2, dp3, V, Mx,
+                                          My, Mz);
+}
+
+template <Int_type P>
+RAJA_HOST_DEVICE RAJA_INLINE void integrate_faces_from_bits_exp(
+    HexHexCandidateVertsExp const &cand, FaceBitsPacked const &fb,
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3, Real_type &V,
+    Real_type &Mx, Real_type &My, Real_type &Mz) {
+  integrate_face_from_bits_exp<P>(face_bits(fb, P), cand, dp0, dp1, dp2, dp3, V,
+                                  Mx, My, Mz);
+  if constexpr (P + 1 < 8) {
+    integrate_faces_from_bits_exp<P + 1>(cand, fb, dp0, dp1, dp2, dp3, V, Mx,
+                                         My, Mz);
+  }
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void integrate_vertices_by_facebits_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp const &cand,
-    FaceBitsPacked const &fb,
-    Real_type &V,
-    Real_type &Mx,
-    Real_type &My,
-    Real_type &Mz) {
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp const &cand, FaceBitsPacked const &fb, Real_type &V,
+    Real_type &Mx, Real_type &My, Real_type &Mz) {
   V = Real_type(0.0);
   Mx = Real_type(0.0);
   My = Real_type(0.0);
   Mz = Real_type(0.0);
 
-  integrate_face_from_bits_exp<0>(
-      face_bits(fb, 0), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<1>(
-      face_bits(fb, 1), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<2>(
-      face_bits(fb, 2), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<3>(
-      face_bits(fb, 3), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<4>(
-      face_bits(fb, 4), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<5>(
-      face_bits(fb, 5), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<6>(
-      face_bits(fb, 6), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
-  integrate_face_from_bits_exp<7>(
-      face_bits(fb, 7), cand, dp0, dp1, dp2, dp3, V, Mx, My, Mz);
+  integrate_faces_from_bits_exp<0>(cand, fb, dp0, dp1, dp2, dp3, V, Mx, My,
+                                   Mz);
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void process_donor_edge_target_plane_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const ax,
-    Real_type const ay,
-    Real_type const az,
-    Real_type const bx,
-    Real_type const by,
-    Real_type const bz,
-    Real_type const ca,
-    Real_type const cb,
-    Int_type const plane,
-    unsigned char const edge_mask,
-    Real_type const eps) {
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const ax, Real_type const ay, Real_type const az,
+    Real_type const bx, Real_type const by, Real_type const bz,
+    Real_type const ca, Real_type const cb, Int_type const plane,
+    unsigned char const edge_mask, Real_type const eps) {
   Real_type const peps = target_plane_eps_exp(plane, eps);
 
-  if ((ca < -peps && cb < -peps) ||
-      (ca >  peps && cb >  peps)) {
+  if ((ca < -peps && cb < -peps) || (ca > peps && cb > peps)) {
     return;
   }
 
@@ -1656,68 +1293,45 @@ RAJA_INLINE void process_donor_edge_target_plane_exp(
       static_cast<unsigned char>(edge_mask | (1u << plane));
 
   add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      px, py, pz, mask, eps);
+      dp0, dp1, dp2, dp3, cand, facebits, nv, px, py, pz, mask, eps);
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void process_donor_edge_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const ax,
-    Real_type const ay,
-    Real_type const az,
-    Real_type const ah,
-    Real_type const bx,
-    Real_type const by,
-    Real_type const bz,
-    Real_type const bh,
-    unsigned char const edge_mask,
-    Real_type const eps) {
-  process_donor_edge_target_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, ax, bx, 0, edge_mask, eps);
-  process_donor_edge_target_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, ay, by, 1, edge_mask, eps);
-  process_donor_edge_target_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, az, bz, 2, edge_mask, eps);
-  process_donor_edge_target_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, ah, bh, 3, edge_mask, eps);
+RAJA_INLINE void
+process_donor_edge_exp(HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+                       HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+                       HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits,
+                       Int_type &nv, Real_type const ax, Real_type const ay,
+                       Real_type const az, Real_type const ah,
+                       Real_type const bx, Real_type const by,
+                       Real_type const bz, Real_type const bh,
+                       unsigned char const edge_mask, Real_type const eps) {
+  process_donor_edge_target_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, ax, bx, 0,
+                                      edge_mask, eps);
+  process_donor_edge_target_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, ay, by, 1,
+                                      edge_mask, eps);
+  process_donor_edge_target_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, az, bz, 2,
+                                      edge_mask, eps);
+  process_donor_edge_target_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, ah, bh, 3,
+                                      edge_mask, eps);
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void process_target_edge_donor_plane_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const ax,
-    Real_type const ay,
-    Real_type const az,
-    Real_type const bx,
-    Real_type const by,
-    Real_type const bz,
-    Real_type const ca,
-    Real_type const cb,
-    HexHexPlaneExp const &plane,
-    Int_type const p,
-    unsigned char const edge_mask,
-    Real_type const eps) {
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const ax, Real_type const ay, Real_type const az,
+    Real_type const bx, Real_type const by, Real_type const bz,
+    Real_type const ca, Real_type const cb, HexHexPlaneExp const &plane,
+    Int_type const p, unsigned char const edge_mask, Real_type const eps) {
   Real_type const peps = scaled_plane_eps_exp(plane, eps);
 
-  if ((ca < -peps && cb < -peps) ||
-      (ca >  peps && cb >  peps)) {
+  if ((ca < -peps && cb < -peps) || (ca > peps && cb > peps)) {
     return;
   }
 
@@ -1738,53 +1352,170 @@ RAJA_INLINE void process_target_edge_donor_plane_exp(
       static_cast<unsigned char>(edge_mask | (1u << (4 + p)));
 
   add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      px, py, pz, mask, eps);
+      dp0, dp1, dp2, dp3, cand, facebits, nv, px, py, pz, mask, eps);
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE void process_target_edge_exp(
-    HexHexPlaneExp const &dp0,
-    HexHexPlaneExp const &dp1,
-    HexHexPlaneExp const &dp2,
-    HexHexPlaneExp const &dp3,
-    HexHexCandidateVertsExp &cand,
-    FaceBitsPacked &facebits,
-    Int_type &nv,
-    Real_type const ax,
-    Real_type const ay,
-    Real_type const az,
-    Real_type const bx,
-    Real_type const by,
-    Real_type const bz,
-    Real_type const a0,
-    Real_type const a1,
-    Real_type const a2,
-    Real_type const a3,
-    Real_type const b0,
-    Real_type const b1,
-    Real_type const b2,
-    Real_type const b3,
-    unsigned char const edge_mask,
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const ax, Real_type const ay, Real_type const az,
+    Real_type const bx, Real_type const by, Real_type const bz,
+    Real_type const a0, Real_type const a1, Real_type const a2,
+    Real_type const a3, Real_type const b0, Real_type const b1,
+    Real_type const b2, Real_type const b3, unsigned char const edge_mask,
     Real_type const eps) {
-  process_target_edge_donor_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, a0, b0, dp0, 0, edge_mask, eps);
-  process_target_edge_donor_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, a1, b1, dp1, 1, edge_mask, eps);
-  process_target_edge_donor_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, a2, b2, dp2, 2, edge_mask, eps);
-  process_target_edge_donor_plane_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      ax, ay, az, bx, by, bz, a3, b3, dp3, 3, edge_mask, eps);
+  process_target_edge_donor_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, a0, b0, dp0, 0,
+                                      edge_mask, eps);
+  process_target_edge_donor_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, a1, b1, dp1, 1,
+                                      edge_mask, eps);
+  process_target_edge_donor_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, a2, b2, dp2, 2,
+                                      edge_mask, eps);
+  process_target_edge_donor_plane_exp(dp0, dp1, dp2, dp3, cand, facebits, nv,
+                                      ax, ay, az, bx, by, bz, a3, b3, dp3, 3,
+                                      edge_mask, eps);
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE Vec3 donor_tet_vertex_exp(Tet4 const &t, Int_type const v) {
+  return v == 0 ? t.p0 : v == 1 ? t.p1 : v == 2 ? t.p2 : t.p3;
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE Real_type donor_tet_h_exp(Int_type const v, Real_type const h0,
+                                      Real_type const h1, Real_type const h2,
+                                      Real_type const h3) {
+  return v == 0 ? h0 : v == 1 ? h1 : v == 2 ? h2 : h3;
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE Vec3 target_ref_vertex_exp(Int_type const v) {
+  Vec3 p;
+  p.x = v == 1 ? Real_type(1.0) : Real_type(0.0);
+  p.y = v == 2 ? Real_type(1.0) : Real_type(0.0);
+  p.z = v == 3 ? Real_type(1.0) : Real_type(0.0);
+  return p;
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE Real_type target_plane_value_at_vertex_exp(
+    HexHexPlaneExp const &p, Int_type const v) {
+  return v == 0 ? p.d : v == 1 ? p.nx + p.d : v == 2 ? p.ny + p.d : p.nz + p.d;
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void tettet_edge_nodes_exp(Int_type const edge, Int_type &a,
+                                       Int_type &b) {
+  a = edge < 3 ? 0 : edge < 5 ? 1 : 2;
+  b = edge < 3 ? edge + 1 : edge == 3 ? 2 : 3;
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void add_donor_tet_vertices_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Tet4 const &t, Real_type const eps) {
+#pragma unroll
+  for (Int_type v = 0; v < 4; ++v) {
+    Vec3 const p = donor_tet_vertex_exp(t, v);
+    add_candidate_bits_if_inside_all_planes_exp(
+        dp0, dp1, dp2, dp3, cand, facebits, nv, p.x, p.y, p.z,
+        donor_vertex_mask_exp(v), eps);
+  }
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void add_target_ref_vertices_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Real_type const eps) {
+#pragma unroll
+  for (Int_type v = 0; v < 4; ++v) {
+    Vec3 const p = target_ref_vertex_exp(v);
+    add_candidate_bits_if_inside_all_planes_exp(
+        dp0, dp1, dp2, dp3, cand, facebits, nv, p.x, p.y, p.z,
+        target_vertex_mask_exp(v), eps);
+  }
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void process_donor_tet_edge_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Tet4 const &t, Real_type const h0, Real_type const h1, Real_type const h2,
+    Real_type const h3, Int_type const edge, Real_type const eps) {
+  Int_type a, b;
+  tettet_edge_nodes_exp(edge, a, b);
+
+  Vec3 const va = donor_tet_vertex_exp(t, a);
+  Vec3 const vb = donor_tet_vertex_exp(t, b);
+
+  process_donor_edge_exp(
+      dp0, dp1, dp2, dp3, cand, facebits, nv, va.x, va.y, va.z,
+      donor_tet_h_exp(a, h0, h1, h2, h3), vb.x, vb.y, vb.z,
+      donor_tet_h_exp(b, h0, h1, h2, h3),
+      static_cast<unsigned char>(donor_vertex_mask_exp(a) &
+                                 donor_vertex_mask_exp(b)),
+      eps);
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void process_target_ref_edge_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Int_type const edge, Real_type const eps) {
+  Int_type a, b;
+  tettet_edge_nodes_exp(edge, a, b);
+
+  Vec3 const va = target_ref_vertex_exp(a);
+  Vec3 const vb = target_ref_vertex_exp(b);
+
+  process_target_edge_exp(
+      dp0, dp1, dp2, dp3, cand, facebits, nv, va.x, va.y, va.z, vb.x, vb.y,
+      vb.z, target_plane_value_at_vertex_exp(dp0, a),
+      target_plane_value_at_vertex_exp(dp1, a),
+      target_plane_value_at_vertex_exp(dp2, a),
+      target_plane_value_at_vertex_exp(dp3, a),
+      target_plane_value_at_vertex_exp(dp0, b),
+      target_plane_value_at_vertex_exp(dp1, b),
+      target_plane_value_at_vertex_exp(dp2, b),
+      target_plane_value_at_vertex_exp(dp3, b),
+      static_cast<unsigned char>(target_vertex_mask_exp(a) &
+                                 target_vertex_mask_exp(b)),
+      eps);
+}
+
+RAJA_HOST_DEVICE
+RAJA_INLINE void process_tettet_edges_exp(
+    HexHexPlaneExp const &dp0, HexHexPlaneExp const &dp1,
+    HexHexPlaneExp const &dp2, HexHexPlaneExp const &dp3,
+    HexHexCandidateVertsExp &cand, FaceBitsPacked &facebits, Int_type &nv,
+    Tet4 const &t, Real_type const h0, Real_type const h1, Real_type const h2,
+    Real_type const h3, Real_type const eps) {
+#pragma unroll
+  for (Int_type edge = 0; edge < 6; ++edge) {
+    process_donor_tet_edge_exp(dp0, dp1, dp2, dp3, cand, facebits, nv, t, h0,
+                               h1, h2, h3, edge, eps);
+  }
+
+#pragma unroll
+  for (Int_type edge = 0; edge < 6; ++edge) {
+    process_target_ref_edge_exp(dp0, dp1, dp2, dp3, cand, facebits, nv, edge,
+                                eps);
+  }
 }
 
 RAJA_HOST_DEVICE
 RAJA_INLINE Moment4 intersect_tettet_edgeface_with_candidates_exp(
-    Tet4 const &t,
-    HexHexCandidateVertsExp &cand) {
+    Tet4 const &t, HexHexCandidateVertsExp &cand) {
   Moment4 m;
   m.v = Real_type(0.0);
   m.mx = Real_type(0.0);
@@ -1793,10 +1524,10 @@ RAJA_INLINE Moment4 intersect_tettet_edgeface_with_candidates_exp(
 
   Real_type const eps = hexhex_tettet_scale_eps_exp(t);
 
-  Real_type const det_donor = hexhex_det3_exp(
-      t.p1.x - t.p0.x, t.p1.y - t.p0.y, t.p1.z - t.p0.z,
-      t.p2.x - t.p0.x, t.p2.y - t.p0.y, t.p2.z - t.p0.z,
-      t.p3.x - t.p0.x, t.p3.y - t.p0.y, t.p3.z - t.p0.z);
+  Real_type const det_donor =
+      hexhex_det3_exp(t.p1.x - t.p0.x, t.p1.y - t.p0.y, t.p1.z - t.p0.z,
+                      t.p2.x - t.p0.x, t.p2.y - t.p0.y, t.p2.z - t.p0.z,
+                      t.p3.x - t.p0.x, t.p3.y - t.p0.y, t.p3.z - t.p0.z);
   Real_type const donor_sign =
       det_donor >= Real_type(0.0) ? Real_type(1.0) : Real_type(-1.0);
 
@@ -1870,10 +1601,10 @@ RAJA_INLINE Moment4 intersect_tettet_edgeface_with_candidates_exp(
     return m;
   }
 
-  if (d00 >= -de0 && d01 >= -de0 && d02 >= -de0 && d03 >= -de0 &&
-      d10 >= -de1 && d11 >= -de1 && d12 >= -de1 && d13 >= -de1 &&
-      d20 >= -de2 && d21 >= -de2 && d22 >= -de2 && d23 >= -de2 &&
-      d30 >= -de3 && d31 >= -de3 && d32 >= -de3 && d33 >= -de3) {
+  if (d00 >= -de0 && d01 >= -de0 && d02 >= -de0 && d03 >= -de0 && d10 >= -de1 &&
+      d11 >= -de1 && d12 >= -de1 && d13 >= -de1 && d20 >= -de2 && d21 >= -de2 &&
+      d22 >= -de2 && d23 >= -de2 && d30 >= -de3 && d31 >= -de3 && d32 >= -de3 &&
+      d33 >= -de3) {
     m.v = donor_sign * Real_type(1.0 / 6.0);
     m.mx = donor_sign * Real_type(1.0 / 24.0);
     m.my = donor_sign * Real_type(1.0 / 24.0);
@@ -1885,104 +1616,17 @@ RAJA_INLINE Moment4 intersect_tettet_edgeface_with_candidates_exp(
   facebits_clear_exp(facebits);
   Int_type nv = 0;
 
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p0.x, t.p0.y, t.p0.z, donor_vertex_mask_exp(0), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p1.x, t.p1.y, t.p1.z, donor_vertex_mask_exp(1), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p2.x, t.p2.y, t.p2.z, donor_vertex_mask_exp(2), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p3.x, t.p3.y, t.p3.z, donor_vertex_mask_exp(3), eps);
-
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(0.0), Real_type(0.0),
-      target_vertex_mask_exp(0), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(1.0), Real_type(0.0), Real_type(0.0),
-      target_vertex_mask_exp(1), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(1.0), Real_type(0.0),
-      target_vertex_mask_exp(2), eps);
-  add_candidate_bits_if_inside_all_planes_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(0.0), Real_type(1.0),
-      target_vertex_mask_exp(3), eps);
-
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p0.x, t.p0.y, t.p0.z, h0, t.p1.x, t.p1.y, t.p1.z, h1,
-      static_cast<unsigned char>(donor_vertex_mask_exp(0) & donor_vertex_mask_exp(1)), eps);
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p0.x, t.p0.y, t.p0.z, h0, t.p2.x, t.p2.y, t.p2.z, h2,
-      static_cast<unsigned char>(donor_vertex_mask_exp(0) & donor_vertex_mask_exp(2)), eps);
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p0.x, t.p0.y, t.p0.z, h0, t.p3.x, t.p3.y, t.p3.z, h3,
-      static_cast<unsigned char>(donor_vertex_mask_exp(0) & donor_vertex_mask_exp(3)), eps);
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p1.x, t.p1.y, t.p1.z, h1, t.p2.x, t.p2.y, t.p2.z, h2,
-      static_cast<unsigned char>(donor_vertex_mask_exp(1) & donor_vertex_mask_exp(2)), eps);
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p1.x, t.p1.y, t.p1.z, h1, t.p3.x, t.p3.y, t.p3.z, h3,
-      static_cast<unsigned char>(donor_vertex_mask_exp(1) & donor_vertex_mask_exp(3)), eps);
-  process_donor_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      t.p2.x, t.p2.y, t.p2.z, h2, t.p3.x, t.p3.y, t.p3.z, h3,
-      static_cast<unsigned char>(donor_vertex_mask_exp(2) & donor_vertex_mask_exp(3)), eps);
-
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(0.0), Real_type(0.0),
-      Real_type(1.0), Real_type(0.0), Real_type(0.0),
-      d00, d10, d20, d30, d01, d11, d21, d31,
-      static_cast<unsigned char>(target_vertex_mask_exp(0) & target_vertex_mask_exp(1)), eps);
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(0.0), Real_type(0.0),
-      Real_type(0.0), Real_type(1.0), Real_type(0.0),
-      d00, d10, d20, d30, d02, d12, d22, d32,
-      static_cast<unsigned char>(target_vertex_mask_exp(0) & target_vertex_mask_exp(2)), eps);
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(0.0), Real_type(0.0),
-      Real_type(0.0), Real_type(0.0), Real_type(1.0),
-      d00, d10, d20, d30, d03, d13, d23, d33,
-      static_cast<unsigned char>(target_vertex_mask_exp(0) & target_vertex_mask_exp(3)), eps);
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(1.0), Real_type(0.0), Real_type(0.0),
-      Real_type(0.0), Real_type(1.0), Real_type(0.0),
-      d01, d11, d21, d31, d02, d12, d22, d32,
-      static_cast<unsigned char>(target_vertex_mask_exp(1) & target_vertex_mask_exp(2)), eps);
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(1.0), Real_type(0.0), Real_type(0.0),
-      Real_type(0.0), Real_type(0.0), Real_type(1.0),
-      d01, d11, d21, d31, d03, d13, d23, d33,
-      static_cast<unsigned char>(target_vertex_mask_exp(1) & target_vertex_mask_exp(3)), eps);
-  process_target_edge_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, nv,
-      Real_type(0.0), Real_type(1.0), Real_type(0.0),
-      Real_type(0.0), Real_type(0.0), Real_type(1.0),
-      d02, d12, d22, d32, d03, d13, d23, d33,
-      static_cast<unsigned char>(target_vertex_mask_exp(2) & target_vertex_mask_exp(3)), eps);
+  add_donor_tet_vertices_exp(dp0, dp1, dp2, dp3, cand, facebits, nv, t, eps);
+  add_target_ref_vertices_exp(dp0, dp1, dp2, dp3, cand, facebits, nv, eps);
+  process_tettet_edges_exp(dp0, dp1, dp2, dp3, cand, facebits, nv, t, h0, h1,
+                           h2, h3, eps);
 
   if (nv < 4) {
     return m;
   }
 
-  integrate_vertices_by_facebits_exp(
-      dp0, dp1, dp2, dp3, cand, facebits, m.v, m.mx, m.my, m.mz);
+  integrate_vertices_by_facebits_exp(dp0, dp1, dp2, dp3, cand, facebits, m.v,
+                                     m.mx, m.my, m.mz);
 
   m.v *= donor_sign;
   m.mx *= donor_sign;
@@ -1999,12 +1643,8 @@ RAJA_INLINE Moment4 intersect_tettet_edgeface_exp(Tet4 const &t) {
 }
 
 template <Size_type block_size>
-RAJA_HOST_DEVICE
-RAJA_INLINE Moment4 intersect_tettet_edgeface_shared_exp(
-    Tet4 const &t,
-    Real_type *vx,
-    Real_type *vy,
-    Real_type *vz,
+RAJA_HOST_DEVICE RAJA_INLINE Moment4 intersect_tettet_edgeface_shared_exp(
+    Tet4 const &t, Real_type *vx, Real_type *vy, Real_type *vz,
     Index_type const lane) {
   HexHexCandidateVertsExp cand(vx, vy, vz, lane, block_size);
   return intersect_tettet_edgeface_with_candidates_exp(t, cand);
@@ -2188,10 +1828,8 @@ RAJA_INLINE void cuda_intsc_tri_tet_exp(
 }
 
 RAJA_HOST_DEVICE
-RAJA_INLINE void make_donor_facet_exp(Real_const_ptr xds,
-                                      Int_type const dfacet,
-                                      Real_type (&xdt)[3],
-                                      Real_type (&ydt)[3],
+RAJA_INLINE void make_donor_facet_exp(Real_const_ptr xds, Int_type const dfacet,
+                                      Real_type (&xdt)[3], Real_type (&ydt)[3],
                                       Real_type (&zdt)[3]) {
   Real_const_ptr yds = xds + 8;
   Real_const_ptr zds = yds + 8;
