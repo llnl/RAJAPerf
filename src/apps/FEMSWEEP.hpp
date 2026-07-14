@@ -96,6 +96,13 @@ constexpr long ND = 8;   // number of corners per element
 constexpr long NLF = 6;  // number of faces per element
 constexpr long FDS = 4;  // number of DOFs per face
 
+#define FEMSWEEP_UNROLL _Pragma("unroll")
+#define FEMSWEEP_UNROLL_ND _Pragma("unroll 8")
+#define FEMSWEEP_UNROLL_NLF _Pragma("unroll 6")
+#define FEMSWEEP_UNROLL_FDS _Pragma("unroll 4")
+
+
+
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \
   Real_ptr Adat = m_Adat; \
@@ -130,14 +137,17 @@ constexpr long FDS = 4;  // number of DOFs per face
   Real_type A[ND*ND]; \
   Real_type b[ND]; \
   const Index_type e = order_r[k + nehp_pos + a * ne]; \
+  FEMSWEEP_UNROLL_ND \
   for (Index_type j = 0; j < ND; ++j) \
   { \
     b[j] = Bdat[j + e * ND + a * ne * ND]; \
+    FEMSWEEP_UNROLL_ND \
     for (Index_type i = 0; i < ND; ++i) \
     { \
       A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
     } \
   } \
+  FEMSWEEP_UNROLL_NLF \
   for (Index_type face = 0; face < NLF; ++face) \
   { \
     const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
@@ -147,11 +157,13 @@ constexpr long FDS = 4;  // number of DOFs per face
     { \
       continue; \
     } \
+    FEMSWEEP_UNROLL_FDS \
     for (Index_type j = 0; j < FDS; ++j) \
     { \
       const Index_type ffj = f * FDS + j; \
       const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
       Real_type F = 0.0; \
+      FEMSWEEP_UNROLL_FDS \
       for (Index_type i = 0; i < FDS; i++) \
       { \
         const Index_type ffi = f * FDS + i; \
@@ -184,8 +196,10 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // tempA = A + s * M0
   // set L to 0, U to identity
+  FEMSWEEP_UNROLL
   for ( Index_type ii = 0; ii < N; ++ii )
   {
+    FEMSWEEP_UNROLL
     for ( Index_type jj = 0; jj < N; ++jj )
     {
       tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
@@ -202,11 +216,13 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   }
 
   // set first column of L, and first row of U
+  FEMSWEEP_UNROLL
   for ( Index_type ii = 0; ii < N; ++ii )
   {
     L[ii][0] = tempA[ii][0];
   }
 
+  FEMSWEEP_UNROLL
   for ( Index_type ii = 1; ii < N; ++ii )
   {
     U[0][ii] = tempA[0][ii]/tempA[0][0];
@@ -215,12 +231,15 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   // form L & U
   // L formed one column at a time
   // U formed one row at a time
+  FEMSWEEP_UNROLL
   for ( Index_type ii = 1; ii < N; ++ii )
   {
     // L column formation
+    FEMSWEEP_UNROLL
     for ( Index_type jj = ii; jj < N; ++jj )
     {
       Real_type sum = 0.0;
+      FEMSWEEP_UNROLL
       for ( Index_type kk = 0; kk < jj; ++kk )
       {
         sum += L[jj][kk] * U[kk][ii];
@@ -229,9 +248,11 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
     }
 
     // U row formation
+    FEMSWEEP_UNROLL
     for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       Real_type sum = 0.0;
+      FEMSWEEP_UNROLL
       for ( Index_type kk = 0; kk < ii; ++kk )
       {
         sum += L[ii][kk] * U[kk][jj];
@@ -242,9 +263,11 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // forward substitution
   D[0] = b[0]/L[0][0];
+  FEMSWEEP_UNROLL
   for ( Index_type ii = 1; ii < N; ++ii )
   {
     Real_type sum = 0.0;
+    FEMSWEEP_UNROLL
     for ( Index_type jj = 0; jj < ii; ++jj )
     {
       sum += L[ii][jj] * D[jj];
@@ -254,9 +277,11 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
 
   // backward substitution
   x[N-1] = tempx[N-1] = D[N-1];
+  FEMSWEEP_UNROLL
   for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
   {
     Real_type sum = 0.0;
+    FEMSWEEP_UNROLL
     for ( Index_type jj = ii+1; jj < N; ++jj )
     {
       sum += U[ii][jj] * tempx[jj];
@@ -302,7 +327,7 @@ private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
 #else
-  static const size_t default_gpu_block_size = 128;
+  static const size_t default_gpu_block_size = 64;
 #endif
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
