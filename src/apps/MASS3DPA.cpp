@@ -78,8 +78,10 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 
 void MASS3DPA::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_NE = std::max((target_size + (m_D1D*m_D1D*m_D1D)/2) /
-                  (m_D1D*m_D1D*m_D1D), Index_type(1));
+  constexpr Index_type baseline_dofs_per_elem =
+      mpa::D1D * mpa::D1D * mpa::D1D;
+  m_NE = std::max((target_size + baseline_dofs_per_elem/2) /
+                  baseline_dofs_per_elem, Index_type(1));
 
   setActualProblemSize( m_NE*m_D1D*m_D1D*m_D1D );
   setRunReps( target_reps );
