@@ -66,6 +66,11 @@ blt_add_library(
           INTSC_HEXHEX_NEW-Hip.cpp
           INTSC_HEXHEX_NEW-Seq.cpp
           INTSC_HEXHEX_NEW-OMP.cpp
+          INTSC_HEXHEX_EXP.cpp
+          INTSC_HEXHEX_EXP-Cuda.cpp
+          INTSC_HEXHEX_EXP-Hip.cpp
+          INTSC_HEXHEX_EXP-Seq.cpp
+          INTSC_HEXHEX_EXP-OMP.cpp
           INTSC_HEXRECT.cpp
           INTSC_HEXRECT-Cuda.cpp
           INTSC_HEXRECT-Hip.cpp

@@ -69,6 +69,8 @@ blt_add_executable(
   apps/INTSC_HEXHEX-Seq.cpp
   apps/INTSC_HEXHEX_NEW.cpp
   apps/INTSC_HEXHEX_NEW-Seq.cpp
+  apps/INTSC_HEXHEX_EXP.cpp
+  apps/INTSC_HEXHEX_EXP-Seq.cpp
   apps/INTSC_HEXRECT.cpp
   apps/INTSC_HEXRECT-Seq.cpp
   apps/LTIMES.cpp
