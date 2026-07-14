@@ -63,7 +63,7 @@ MASS3DPA::MASS3DPA(const RunParams& params)
 
   setSize(m_target_size, m_target_reps);
 
-  setChecksumConsistency(ChecksumConsistency::ConsistentPerVariantTuning);
+  setChecksumConsistency(ChecksumConsistency::Consistent);
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
@@ -122,7 +122,16 @@ void MASS3DPA::setUp(VariantID vid, size_t tune_idx)
 
 void MASS3DPA::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_Y, m_D1D*m_D1D*m_D1D*m_NE, vid);
+  const Size_type y_len = m_D1D*m_D1D*m_D1D*m_NE;
+  const Checksum_type y_checksum =
+      calcChecksum(getDataSpace(vid), m_Y, y_len, getDataAlignment());
+  const Checksum_type x_checksum =
+      calcChecksum(getDataSpace(vid), m_X, y_len, getDataAlignment());
+  const Checksum_type expected_value =
+      Checksum_type(m_D1D) * Checksum_type(m_D1D) * Checksum_type(m_D1D) *
+      Checksum_type(m_Q1D) * Checksum_type(m_Q1D) * Checksum_type(m_Q1D);
+
+  addToChecksum(y_checksum / (x_checksum * expected_value));
 }
 
 void MASS3DPA::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
