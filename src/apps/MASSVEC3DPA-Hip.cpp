@@ -424,24 +424,27 @@ void MASSVEC3DPA::defineHipVariantTunings()
 #define MASSVEC3DPA_HIP_TUNING(name, tuning_name, d1d, q1d)                   \
     {                                                                         \
       constexpr size_t block_size = q1d * q1d * q1d;                          \
-      if (vid == Base_HIP) {                                                  \
-        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
-            d1d, q1d, block_size, 0>>(                                        \
-            vid, tuning_name + std::string("_runtime_block_stride_loop"));     \
-        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
-            d1d, q1d, block_size, 1>>(vid,                                    \
-            tuning_name + std::string("_direct"));                            \
-      }                                                                       \
-      if (vid == RAJA_HIP) {                                                  \
-        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
-            d1d, q1d, block_size, 0>>(                                        \
-            vid, tuning_name + std::string("_runtime_block_stride_loop"));     \
-        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
-            d1d, q1d, block_size, 1>>(vid,                                    \
-            tuning_name + std::string("_direct"));                            \
-        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
-            d1d, q1d, block_size, 2>>(                                        \
-            vid, tuning_name + std::string("_cached_block_stride_loop"));      \
+      if (run_params.numValidGPUBlockSize() == 0u ||                          \
+          run_params.validGPUBlockSize(block_size)) {                         \
+        if (vid == Base_HIP) {                                                \
+          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                   \
+              d1d, q1d, block_size, 0>>(                                      \
+              vid, tuning_name + std::string("_runtime_block_stride_loop"));   \
+          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                   \
+              d1d, q1d, block_size, 1>>(vid,                                  \
+              tuning_name + std::string("_direct"));                          \
+        }                                                                     \
+        if (vid == RAJA_HIP) {                                                \
+          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                   \
+              d1d, q1d, block_size, 0>>(                                      \
+              vid, tuning_name + std::string("_runtime_block_stride_loop"));   \
+          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                   \
+              d1d, q1d, block_size, 1>>(vid,                                  \
+              tuning_name + std::string("_direct"));                          \
+          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                   \
+              d1d, q1d, block_size, 2>>(                                      \
+              vid, tuning_name + std::string("_cached_block_stride_loop"));    \
+        }                                                                     \
       }                                                                       \
     }
     MASSVEC3DPA_GEOMETRIES(MASSVEC3DPA_HIP_TUNING)

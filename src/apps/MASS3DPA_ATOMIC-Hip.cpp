@@ -322,8 +322,11 @@ void MASS3DPA_ATOMIC::defineHipVariantTunings()
 #define MASS3DPA_ATOMIC_HIP_TUNING(name, tuning_name, d1d, q1d)               \
     {                                                                         \
       constexpr size_t block_size = q1d * q1d * q1d;                          \
-      addVariantTuning<&MASS3DPA_ATOMIC::runHipVariantImpl<                   \
-          d1d, q1d, block_size>>(vid, tuning_name);                           \
+      if (run_params.numValidGPUBlockSize() == 0u ||                          \
+          run_params.validGPUBlockSize(block_size)) {                         \
+        addVariantTuning<&MASS3DPA_ATOMIC::runHipVariantImpl<                 \
+            d1d, q1d, block_size>>(vid, tuning_name);                         \
+      }                                                                       \
     }
     MASS3DPA_ATOMIC_GEOMETRIES(MASS3DPA_ATOMIC_HIP_TUNING)
 #undef MASS3DPA_ATOMIC_HIP_TUNING

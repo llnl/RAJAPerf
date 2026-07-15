@@ -293,8 +293,12 @@ void MASSVEC3DPA::defineSyclVariantTunings()
 #define MASSVEC3DPA_SYCL_TUNING(name, tuning_name, d1d, q1d)                  \
     {                                                                         \
       constexpr Index_type TBATCH = 1;                                        \
-      addVariantTuning<&MASSVEC3DPA::runSyclVariantImpl<                     \
-          d1d, q1d, TBATCH>>(vid, tuning_name);                               \
+      constexpr size_t block_size = q1d * q1d * q1d;                          \
+      if (run_params.numValidGPUBlockSize() == 0u ||                          \
+          run_params.validGPUBlockSize(block_size)) {                         \
+        addVariantTuning<&MASSVEC3DPA::runSyclVariantImpl<                   \
+            d1d, q1d, TBATCH>>(vid, tuning_name);                             \
+      }                                                                       \
     }
     MASSVEC3DPA_GEOMETRIES(MASSVEC3DPA_SYCL_TUNING)
 #undef MASSVEC3DPA_SYCL_TUNING

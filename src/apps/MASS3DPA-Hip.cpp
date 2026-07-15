@@ -405,8 +405,12 @@ void MASS3DPA::defineHipVariantTunings()
               (std::max(d1d, q1d) * std::max(d1d, q1d) *                       \
                std::max(d1d, q1d)),                                            \
           64);                                                                 \
-      addVariantTuning<&MASS3DPA::runHipVariantImpl<d1d, q1d, TBATCH>>(        \
-          vid, tuning_name);                                                   \
+      constexpr size_t block_size = q1d * q1d * TBATCH;                        \
+      if (run_params.numValidGPUBlockSize() == 0u ||                           \
+          run_params.validGPUBlockSize(block_size)) {                          \
+        addVariantTuning<&MASS3DPA::runHipVariantImpl<d1d, q1d, TBATCH>>(      \
+            vid, tuning_name);                                                 \
+      }                                                                        \
     }
     MASS3DPA_GEOMETRIES(MASS3DPA_HIP_TUNING)
 #undef MASS3DPA_HIP_TUNING
