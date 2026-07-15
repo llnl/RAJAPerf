@@ -96,10 +96,17 @@ constexpr long ND = 8;   // number of corners per element
 constexpr long NLF = 6;  // number of faces per element
 constexpr long FDS = 4;  // number of DOFs per face
 
+#if defined(FEMSWEEP_ENABLE_UNROLL)
 #define FEMSWEEP_UNROLL _Pragma("unroll")
 #define FEMSWEEP_UNROLL_ND _Pragma("unroll 8")
 #define FEMSWEEP_UNROLL_NLF _Pragma("unroll 6")
 #define FEMSWEEP_UNROLL_FDS _Pragma("unroll 4")
+#else
+#define FEMSWEEP_UNROLL
+#define FEMSWEEP_UNROLL_ND
+#define FEMSWEEP_UNROLL_NLF
+#define FEMSWEEP_UNROLL_FDS
+#endif
 
 
 
