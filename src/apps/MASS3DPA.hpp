@@ -199,8 +199,6 @@ namespace mpa {
   D[qx + MQ1 * qy + MQ1 * MQ1 * qz + MQ1 * MQ1 * MQ1 * e]
 
 #define MASS3DPA_0_CPU                                                         \
-  constexpr Index_type MQ1 = mpa::Q1D;                                         \
-  constexpr Index_type MD1 = mpa::D1D;                                         \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   Real_type sDQ[MQ1 * MD1];                                                    \
   Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;                             \
@@ -386,11 +384,15 @@ public:
   void runSeqVariant(VariantID vid);
   void runOpenMPVariant(VariantID vid);
 
+  template <Index_type D1D, Index_type Q1D>
+  void runSeqVariantImpl(VariantID vid);
+  template <Index_type D1D, Index_type Q1D>
+  void runOpenMPVariantImpl(VariantID vid);
   template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
   void runCudaVariantImpl(VariantID vid);
   template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
   void runHipVariantImpl(VariantID vid);
-  template <size_t work_group_size>
+  template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
   void runSyclVariantImpl(VariantID vid);
 
 private:
