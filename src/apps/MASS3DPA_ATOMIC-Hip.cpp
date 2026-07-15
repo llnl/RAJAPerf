@@ -23,27 +23,29 @@
 namespace rajaperf {
 namespace apps {
 
-template < size_t block_size >
+template <Index_type D1D, Index_type Q1D, size_t block_size>
   __launch_bounds__(block_size)
 __global__ void Mass3DPA_Atomic(const Real_ptr B,
                                 const Real_ptr D, const Real_ptr X, const Index_ptr ElemToDoF, Real_ptr Y) {
+  constexpr Index_type MD1 = D1D;
+  constexpr Index_type MQ1 = Q1D;
 
   const Index_type e = blockIdx.x;
 
   MASS3DPA_ATOMIC_0_GPU;
 
 
-  GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
-    GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
-      GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, MD1) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, MD1) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, MD1) {
         MASS3DPA_ATOMIC_1;
       }
     }
   }
 
   GPU_FOREACH_THREAD_DIRECT(dz, z, 1) {
-    GPU_FOREACH_THREAD_DIRECT(d, y, mpa_at::D1D) {
-      GPU_FOREACH_THREAD_DIRECT(q, x, mpa_at::Q1D) {
+    GPU_FOREACH_THREAD_DIRECT(d, y, MD1) {
+      GPU_FOREACH_THREAD_DIRECT(q, x, MQ1) {
         MASS3DPA_ATOMIC_2;
       }
     }
@@ -51,9 +53,9 @@ __global__ void Mass3DPA_Atomic(const Real_ptr B,
   __syncthreads();
 
 
-  GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
-    GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
-      GPU_FOREACH_THREAD_DIRECT(qx, x, mpa_at::Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, MD1) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, MD1) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, MQ1) {
         MASS3DPA_ATOMIC_3;
       }
     }
@@ -61,45 +63,45 @@ __global__ void Mass3DPA_Atomic(const Real_ptr B,
   __syncthreads();
 
 
-  GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
-    GPU_FOREACH_THREAD_DIRECT(qy, y, mpa_at::Q1D) {
-      GPU_FOREACH_THREAD_DIRECT(qx, x, mpa_at::Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, MD1) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, MQ1) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, MQ1) {
       MASS3DPA_ATOMIC_4;
       }
     }
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD_DIRECT(qz, z, mpa_at::Q1D) {
-    GPU_FOREACH_THREAD_DIRECT(qy, y, mpa_at::Q1D) {
-      GPU_FOREACH_THREAD_DIRECT(qx, x, mpa_at::Q1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, MQ1) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, MQ1) {
+      GPU_FOREACH_THREAD_DIRECT(qx, x, MQ1) {
         MASS3DPA_ATOMIC_5;
       }
     }
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD_DIRECT(qz, z, mpa_at::Q1D) {
-    GPU_FOREACH_THREAD_DIRECT(qy, y, mpa_at::Q1D) {
-      GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, MQ1) {
+    GPU_FOREACH_THREAD_DIRECT(qy, y, MQ1) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, MD1) {
       MASS3DPA_ATOMIC_6;
       }
     }
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD_DIRECT(qz, z, mpa_at::Q1D) {
-    GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
-      GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
+  GPU_FOREACH_THREAD_DIRECT(qz, z, MQ1) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, MD1) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, MD1) {
         MASS3DPA_ATOMIC_7;
       }
     }
   }
   __syncthreads();
 
-  GPU_FOREACH_THREAD_DIRECT(dz, z, mpa_at::D1D) {
-    GPU_FOREACH_THREAD_DIRECT(dy, y, mpa_at::D1D) {
-      GPU_FOREACH_THREAD_DIRECT(dx, x, mpa_at::D1D) {
+  GPU_FOREACH_THREAD_DIRECT(dz, z, MD1) {
+    GPU_FOREACH_THREAD_DIRECT(dy, y, MD1) {
+      GPU_FOREACH_THREAD_DIRECT(dx, x, MD1) {
       MASS3DPA_ATOMIC_8;
       MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_HIP);
       }
@@ -108,8 +110,10 @@ __global__ void Mass3DPA_Atomic(const Real_ptr B,
 
 }
 
-template < size_t block_size >
+template <Index_type D1D, Index_type Q1D, size_t block_size>
 void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
+  constexpr Index_type MD1 = D1D;
+  constexpr Index_type MQ1 = Q1D;
   setBlockSize(block_size);
 
   const Index_type run_reps = getRunReps();
@@ -126,10 +130,10 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      dim3 nthreads_per_block(mpa_at::Q1D, mpa_at::Q1D, mpa_at::Q1D);
+      dim3 nthreads_per_block(MQ1, MQ1, MQ1);
       constexpr size_t shmem = 0;
 
-      RPlaunchHipKernel( (Mass3DPA_Atomic<block_size>),
+      RPlaunchHipKernel( (Mass3DPA_Atomic<D1D, Q1D, block_size>),
                          NE, nthreads_per_block,
                          shmem, res.get_stream(),
                          B, D, X, ElemToDoF, Y );
@@ -144,15 +148,15 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
 
     constexpr bool async = true;
 
-    using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D>>;
+    using launch_policy = RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
 
     using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
-    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<mpa_at::Q1D>>;
+    using inner_x = RAJA::LoopPolicy<RAJA::hip_thread_size_x_direct<MQ1>>;
 
-    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<mpa_at::Q1D>>;
+    using inner_y = RAJA::LoopPolicy<RAJA::hip_thread_size_y_direct<MQ1>>;
 
-    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<mpa_at::Q1D>>;
+    using inner_z = RAJA::LoopPolicy<RAJA::hip_thread_size_z_direct<MQ1>>;
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -161,7 +165,7 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
       //clang-format off
       RAJA::launch<launch_policy>( res,
         RAJA::LaunchParams(RAJA::Teams(NE),
-                         RAJA::Threads(mpa_at::Q1D, mpa_at::Q1D, mpa_at::Q1D)),
+                         RAJA::Threads(MQ1, MQ1, MQ1)),
         [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
           RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),
             [&](Index_type e) {
@@ -169,11 +173,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
 
             MASS3DPA_ATOMIC_0_GPU;
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_1;
                       } // lambda (dx)
@@ -186,9 +190,9 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
 
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),
               [&](Index_type ) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),
                   [&](Index_type d) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1),
                       [&](Index_type q) {
                       MASS3DPA_ATOMIC_2;
                       } // lambda (q)
@@ -200,11 +204,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ctx.teamSync();
 
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1),
                       [&](Index_type qx) {
                       MASS3DPA_ATOMIC_3;
                       } // lambda (qx)
@@ -215,11 +219,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ); // RAJA::loop<inner_z>
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1),
                       [&](Index_type qx) {
                       MASS3DPA_ATOMIC_4;
                       } // lambda (qx)
@@ -230,11 +234,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ); // RAJA::loop<inner_z>
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1),
                       [&](Index_type qx) {
                       MASS3DPA_ATOMIC_5;
                       } // lambda (qx)
@@ -245,11 +249,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ); // RAJA::loop<inner_z>
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),
                   [&](Index_type qy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_6;
                       } // lambda (qx)
@@ -260,11 +264,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ); // RAJA::loop<inner_z>
             ctx.teamSync();
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::Q1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),
               [&](Index_type qz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_7;
                       } // lambda (qx)
@@ -276,11 +280,11 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
             ctx.teamSync();
 
 
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),
               [&](Index_type dz) {
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),
                   [&](Index_type dy) {
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mpa_at::D1D),
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1),
                       [&](Index_type dx) {
                       MASS3DPA_ATOMIC_8;
                       MASS3DPA_ATOMIC_9(RAJAPERF_ATOMIC_ADD_RAJA_HIP);
@@ -312,7 +316,19 @@ void MASS3DPA_ATOMIC::runHipVariantImpl(VariantID vid) {
   }
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASS3DPA_ATOMIC, Hip, Base_HIP, RAJA_HIP)
+void MASS3DPA_ATOMIC::defineHipVariantTunings()
+{
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
+#define MASS3DPA_ATOMIC_HIP_TUNING(name, tuning_name, d1d, q1d)               \
+    {                                                                         \
+      constexpr size_t block_size = q1d * q1d * q1d;                          \
+      addVariantTuning<&MASS3DPA_ATOMIC::runHipVariantImpl<                   \
+          d1d, q1d, block_size>>(vid, tuning_name);                           \
+    }
+    MASS3DPA_ATOMIC_GEOMETRIES(MASS3DPA_ATOMIC_HIP_TUNING)
+#undef MASS3DPA_ATOMIC_HIP_TUNING
+  }
+}
 
 } // end namespace apps
 } // end namespace rajaperf

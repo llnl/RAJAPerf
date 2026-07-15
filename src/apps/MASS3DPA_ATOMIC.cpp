@@ -14,9 +14,37 @@
 #include "common/DataUtils.hpp"
 
 #include <algorithm>
+#include <string>
+#include <vector>
 
 namespace rajaperf {
 namespace apps {
+
+MASS3DPA_ATOMIC::Geometry
+MASS3DPA_ATOMIC::getGeometryForTuning(VariantID vid, size_t tune_idx) const
+{
+  if (hasVariantTuningDefined(vid, tune_idx)) {
+    const std::string& tuning_name = getVariantTuningName(vid, tune_idx);
+
+#define MASS3DPA_ATOMIC_GEOMETRY_LOOKUP(name, geometry_tuning_name, d1d, q1d) \
+    if (tuning_name.find(geometry_tuning_name) != std::string::npos) {         \
+      return {d1d, q1d};                                                       \
+    }
+    MASS3DPA_ATOMIC_GEOMETRIES(MASS3DPA_ATOMIC_GEOMETRY_LOOKUP)
+#undef MASS3DPA_ATOMIC_GEOMETRY_LOOKUP
+  }
+
+  return {mpa_at::D1D, mpa_at::Q1D};
+}
+
+void MASS3DPA_ATOMIC::configureGeometryForTuning(VariantID vid, size_t tune_idx)
+{
+  Geometry geometry = getGeometryForTuning(vid, tune_idx);
+  m_D1D = geometry.d1d;
+  m_Q1D = geometry.q1d;
+  m_P = m_D1D - 1;
+  setSize(m_target_size, m_target_reps);
+}
 
 void buildElemToDofTable(Index_type Nx, Index_type Ny, Index_type Nz,
                          Index_type p,
@@ -26,15 +54,20 @@ void buildElemToDofTable(Index_type Nx, Index_type Ny, Index_type Nz,
 MASS3DPA_ATOMIC::MASS3DPA_ATOMIC(const RunParams &params)
     : KernelBase(rajaperf::Apps_MASS3DPA_ATOMIC, params)
 {
+  m_D1D = mpa_at::D1D;
+  m_Q1D = mpa_at::Q1D;
+
   Index_type DOF_default = 1000000;
   setDefaultProblemSize(DOF_default);
   setDefaultReps(50);
 
   // polynomial order
-  m_P = mpa_at::D1D - 1;
+  m_P = m_D1D - 1;
 
-  setSize(params.getTargetSize(getDefaultProblemSize()),
-          params.getReps(getDefaultReps()));
+  m_target_size = params.getTargetSize(getDefaultProblemSize());
+  m_target_reps = params.getReps(getDefaultReps());
+
+  setSize(m_target_size, m_target_reps);
 
   setChecksumConsistency(ChecksumConsistency::Inconsistent);
   setChecksumTolerance(ChecksumTolerance::normal);
@@ -70,40 +103,41 @@ void MASS3DPA_ATOMIC::setSize(Index_type target_size, Index_type target_reps)
   setActualProblemSize(m_Tot_Dofs);
   setRunReps( target_reps );
 
-  setItsPerRep(m_NE * mpa_at::D1D*mpa_at::D1D);
+  setItsPerRep(m_NE * m_D1D*m_D1D);
   setKernelsPerRep(1);
 
-  setBytesAllocatedPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
-                           1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE + // D
+  setBytesAllocatedPerRep( 1*sizeof(Real_type) * m_Q1D*m_D1D + // B
+                           1*sizeof(Real_type) * m_Q1D*m_Q1D*m_Q1D*m_NE + // D
                            2*sizeof(Real_type) * m_Tot_Dofs + // X, Y
                            1*sizeof(Index_type) * ndof_per_elem*m_NE ); // ElemToDoF
-  setBytesReadPerRep( 1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::D1D + // B
-                      1*sizeof(Index_type) * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*m_NE + // ElemToDoF
+  setBytesReadPerRep( 1*sizeof(Real_type) * m_Q1D*m_D1D + // B
+                      1*sizeof(Index_type) * m_D1D*m_D1D*m_D1D*m_NE + // ElemToDoF
                       1*sizeof(Real_type) * m_Tot_Dofs + // X
-                      1*sizeof(Real_type) * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE ); // D
+                      1*sizeof(Real_type) * m_Q1D*m_Q1D*m_Q1D*m_NE ); // D
   setBytesWrittenPerRep( 0 );
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep(1*sizeof(Real_type) * m_Tot_Dofs ); // Y
 
   setFLOPsPerRep(
       m_NE *
-      (2 * mpa_at::D1D*mpa_at::D1D*mpa_at::D1D*mpa_at::Q1D +
-       2 * mpa_at::D1D*mpa_at::D1D*mpa_at::Q1D*mpa_at::Q1D +
-       2 * mpa_at::D1D*mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D +
-       mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D +
-       2 * mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*mpa_at::D1D +
-       2 * mpa_at::Q1D*mpa_at::Q1D*mpa_at::D1D*mpa_at::D1D +
-       2 * mpa_at::Q1D*mpa_at::D1D*mpa_at::D1D*mpa_at::D1D +
-       mpa_at::D1D*mpa_at::D1D*mpa_at::D1D));
+      (2 * m_D1D*m_D1D*m_D1D*m_Q1D +
+       2 * m_D1D*m_D1D*m_Q1D*m_Q1D +
+       2 * m_D1D*m_Q1D*m_Q1D*m_Q1D +
+       m_Q1D*m_Q1D*m_Q1D +
+       2 * m_Q1D*m_Q1D*m_Q1D*m_D1D +
+       2 * m_Q1D*m_Q1D*m_D1D*m_D1D +
+       2 * m_Q1D*m_D1D*m_D1D*m_D1D +
+       m_D1D*m_D1D*m_D1D));
 }
 
 MASS3DPA_ATOMIC::~MASS3DPA_ATOMIC() {}
 
-void MASS3DPA_ATOMIC::setUp(VariantID vid,
-                            size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
+void MASS3DPA_ATOMIC::setUp(VariantID vid, size_t tune_idx) {
 
-  allocAndInitDataConst(m_B, mpa_at::Q1D*mpa_at::D1D, Real_type(1.0), vid);
-  allocAndInitDataConst(m_D, mpa_at::Q1D*mpa_at::Q1D*mpa_at::Q1D*m_NE, Real_type(1.0), vid);
+  configureGeometryForTuning(vid, tune_idx);
+
+  allocAndInitDataConst(m_B, m_Q1D*m_D1D, Real_type(1.0), vid);
+  allocAndInitDataConst(m_D, m_Q1D*m_Q1D*m_Q1D*m_NE, Real_type(1.0), vid);
   allocAndInitDataConst(m_X, m_Tot_Dofs, Real_type(1.0), vid);
   allocAndInitDataConst(m_Y, m_Tot_Dofs, Real_type(0.0), vid);
 
@@ -116,7 +150,35 @@ void MASS3DPA_ATOMIC::setUp(VariantID vid,
 
 void MASS3DPA_ATOMIC::updateChecksum(VariantID vid,
                                      size_t RAJAPERF_UNUSED_ARG(tune_idx)) {
-   addToChecksum(m_Y, m_Tot_Dofs, vid);
+  const Checksum_type y_checksum =
+      calcChecksum(getDataSpace(vid), m_Y, m_Tot_Dofs, getDataAlignment());
+
+  std::vector<Real_type> expected_y(m_Tot_Dofs, Real_type(0.0));
+  const Real_type expected_value =
+      Real_type(m_D1D) * Real_type(m_D1D) * Real_type(m_D1D) *
+      Real_type(m_Q1D) * Real_type(m_Q1D) * Real_type(m_Q1D);
+
+  const Index_type num_nodes_x = m_Nx * m_P + 1;
+  const Index_type num_nodes_y = m_Ny * m_P + 1;
+
+  for (Index_type iz = 0; iz < m_Nz * m_P + 1; ++iz) {
+    const Index_type mz = (iz > 0 && iz < m_Nz * m_P && iz % m_P == 0) ? 2 : 1;
+    for (Index_type iy = 0; iy < m_Ny * m_P + 1; ++iy) {
+      const Index_type my =
+          (iy > 0 && iy < m_Ny * m_P && iy % m_P == 0) ? 2 : 1;
+      for (Index_type ix = 0; ix < num_nodes_x; ++ix) {
+        const Index_type mx =
+            (ix > 0 && ix < m_Nx * m_P && ix % m_P == 0) ? 2 : 1;
+        const Index_type dof = ix + num_nodes_x * (iy + num_nodes_y * iz);
+        expected_y[dof] = expected_value * mx * my * mz;
+      }
+    }
+  }
+
+  const Checksum_type expected_checksum =
+      detail::calcChecksum(expected_y.data(), m_Tot_Dofs);
+
+  addToChecksum(y_checksum / expected_checksum);
 }
 
 void MASS3DPA_ATOMIC::tearDown(VariantID vid,

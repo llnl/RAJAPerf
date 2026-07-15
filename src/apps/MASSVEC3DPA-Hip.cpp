@@ -22,55 +22,55 @@ namespace apps {
 
 #define MASSVEC3DPA_GPU_KERNEL_BODY(SHARED_2D, SHARED_3D)              \
   {                                                                    \
-    GPU_SHARED_2D_APPLY(SHARED_2D, q, d, mvpa::Q1D, mvpa::D1D) {       \
+    GPU_SHARED_2D_APPLY(SHARED_2D, q, d, MQ1, MD1) {       \
       MASSVEC3DPA_1;                                                   \
     }                                                                  \
                                                                        \
     for (Index_type c = 0; c < 3; ++c) {                               \
-      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, mvpa::D1D, mvpa::D1D, \
-                          mvpa::D1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, MD1, MD1, \
+                          MD1)                                   \
       {                                                                \
         MASSVEC3DPA_2;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, qx, dy, dz, mvpa::Q1D, mvpa::D1D, \
-                          mvpa::D1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, dy, dz, MQ1, MD1, \
+                          MD1)                                   \
       {                                                                \
         MASSVEC3DPA_3;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, dz, mvpa::Q1D, mvpa::Q1D, \
-                          mvpa::D1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, dz, MQ1, MQ1, \
+                          MD1)                                   \
       {                                                                \
         MASSVEC3DPA_4;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, qz, mvpa::Q1D, mvpa::Q1D, \
-                          mvpa::Q1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, qx, qy, qz, MQ1, MQ1, \
+                          MQ1)                                   \
       {                                                                \
         MASSVEC3DPA_5;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, dx, qy, qz, mvpa::D1D, mvpa::Q1D, \
-                          mvpa::Q1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, qy, qz, MD1, MQ1, \
+                          MQ1)                                   \
       {                                                                \
         MASSVEC3DPA_6;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, qz, mvpa::D1D, mvpa::D1D, \
-                          mvpa::Q1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, qz, MD1, MD1, \
+                          MQ1)                                   \
       {                                                                \
         MASSVEC3DPA_7;                                                 \
       }                                                                \
       __syncthreads();                                                 \
                                                                        \
-      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, mvpa::D1D, mvpa::D1D, \
-                          mvpa::D1D)                                   \
+      GPU_SHARED_3D_APPLY(SHARED_3D, dx, dy, dz, MD1, MD1, \
+                          MD1)                                   \
       {                                                                \
         MASSVEC3DPA_8;                                                 \
       }                                                                \
@@ -79,12 +79,14 @@ namespace apps {
     } /* (c) dimension loop */                                         \
 	  }
 
-template <size_t block_size>
+template <Index_type D1D, Index_type Q1D, size_t block_size>
 __launch_bounds__(block_size) __global__ void MassVec3DPADirect(const Real_ptr B,
                                                                 const Real_ptr D,
                                                                 const Real_ptr X,
                                                                 Real_ptr Y)
 {
+  constexpr Index_type MD1 = D1D;
+  constexpr Index_type MQ1 = Q1D;
 
   const Index_type e = blockIdx.x;
 
@@ -94,12 +96,14 @@ __launch_bounds__(block_size) __global__ void MassVec3DPADirect(const Real_ptr B
 
 }
 
-template <size_t block_size>
+template <Index_type D1D, Index_type Q1D, size_t block_size>
 __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                               const Real_ptr D,
                                                               const Real_ptr X,
                                                               Real_ptr Y)
 {
+  constexpr Index_type MD1 = D1D;
+  constexpr Index_type MQ1 = Q1D;
 
   const Index_type e = blockIdx.x;
 
@@ -115,7 +119,7 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
     RAJA::launch<launch_policy>(                                               \
       res,                                                                     \
       RAJA::LaunchParams(RAJA::Teams(NE),                                      \
-      RAJA::Threads(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D)),                         \
+      RAJA::Threads(MQ1, MQ1, MQ1)),                                          \
       [=] RAJA_HOST_DEVICE(launch_context ctx) {                               \
                                                                                \
         RAJA::loop<outer_x>(ctx, RAJA::RangeSegment(0, NE),                    \
@@ -125,10 +129,10 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, 1),                 \
               [&](Index_type) {                                                \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),     \
                   [&](Index_type d) {                                          \
                                                                                \
-                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),   \
+                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1),   \
                     [&](Index_type q) {                                        \
                       MASSVEC3DPA_1;                                           \
                     } /* lambda (q) */                                         \
@@ -140,11 +144,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             for (Index_type c = 0; c < 3; ++c) {                               \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1), \
                       [&](Index_type dx) {                                     \
                         MASSVEC3DPA_2;                                         \
                       } /* lambda (dx) */                                      \
@@ -156,11 +160,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1), \
                       [&](Index_type qx) {                                     \
                         MASSVEC3DPA_3;                                         \
                       } /* lambda (qx) */                                      \
@@ -172,11 +176,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1), \
                       [&](Index_type qx) {                                     \
                         MASSVEC3DPA_4;                                         \
                       } /* lambda (qx) */                                      \
@@ -188,11 +192,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::Q1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MQ1), \
                     [&](Index_type qx) {                                       \
                     MASSVEC3DPA_5;                                             \
                     } /* lambda (qx) */                                        \
@@ -204,11 +208,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MQ1),     \
                   [&](Index_type qy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1), \
                       [&](Index_type dx) {                                     \
                         MASSVEC3DPA_6;                                         \
                       } /* lambda (dx) */                                      \
@@ -220,11 +224,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::Q1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MQ1),         \
               [&](Index_type qz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1), \
                       [&](Index_type dx) {                                     \
                       MASSVEC3DPA_7;                                           \
                       } /* lambda (dx) */                                      \
@@ -236,11 +240,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
             ctx.teamSync();                                                    \
                                                                                \
-            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, mvpa::D1D),         \
+            RAJA::loop<inner_z>(ctx, RAJA::RangeSegment(0, MD1),         \
               [&](Index_type dz) {                                             \
-                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, mvpa::D1D),     \
+                RAJA::loop<inner_y>(ctx, RAJA::RangeSegment(0, MD1),     \
                   [&](Index_type dy) {                                         \
-                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, mvpa::D1D), \
+                    RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, MD1), \
                     [&](Index_type dx) {                                       \
                     MASSVEC3DPA_8;                                             \
                     } /* lambda (dx) */                                        \
@@ -261,9 +265,11 @@ __launch_bounds__(block_size) __global__ void MassVec3DPALoop(const Real_ptr B,
                                                                                \
   }
 
-template <size_t block_size, size_t tune_idx>
+template <Index_type D1D, Index_type Q1D, size_t block_size, size_t tune_idx>
 void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 {
+  constexpr Index_type MD1 = D1D;
+  constexpr Index_type MQ1 = Q1D;
 
   setBlockSize(block_size);
 
@@ -283,11 +289,11 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
+        dim3 nthreads_per_block(MQ1, MQ1, MQ1);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPALoop<block_size>), NE, nthreads_per_block,
-                          shmem, res.get_stream(), B, D, X, Y);
+        RPlaunchHipKernel((MassVec3DPALoop<D1D, Q1D, block_size>), NE, nthreads_per_block,
+                           shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
 
@@ -297,11 +303,11 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-        dim3 nthreads_per_block(mvpa::Q1D, mvpa::Q1D, mvpa::Q1D);
+        dim3 nthreads_per_block(MQ1, MQ1, MQ1);
         constexpr size_t shmem = 0;
 
-        RPlaunchHipKernel((MassVec3DPADirect<block_size>), NE, nthreads_per_block,
-                          shmem, res.get_stream(), B, D, X, Y);
+        RPlaunchHipKernel((MassVec3DPADirect<D1D, Q1D, block_size>), NE, nthreads_per_block,
+                           shmem, res.get_stream(), B, D, X, Y);
       }
       stopTimer();
     }
@@ -316,7 +322,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy = RAJA::LaunchPolicy<
-      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+      RAJA::hip_launch_t<async, block_size>>;
 
       using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
@@ -343,7 +349,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy = RAJA::LaunchPolicy<
-      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+      RAJA::hip_launch_t<async, block_size>>;
 
       using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
@@ -370,7 +376,7 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy = RAJA::LaunchPolicy<
-      RAJA::hip_launch_t<async, mvpa::Q1D * mvpa::Q1D * mvpa::Q1D>>;
+      RAJA::hip_launch_t<async, block_size>>;
 
       using outer_x = RAJA::LoopPolicy<RAJA::hip_block_x_direct>;
 
@@ -414,41 +420,32 @@ void MASSVEC3DPA::runHipVariantImpl(VariantID vid)
 
 void MASSVEC3DPA::defineHipVariantTunings()
 {
-
   for (VariantID vid : {Base_HIP, RAJA_HIP}) {
-
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
-
-        if (vid == Base_HIP) {
-
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 0>>(
-              vid, "runtime_block_stride_loop_" + std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 1>>(
-              vid, "direct_" + std::to_string(block_size));
-
-        }
-
-        if (vid == RAJA_HIP) {
-
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 0>>(
-              vid, "runtime_block_stride_loop_" + std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 1>>(
-              vid, "direct_" + std::to_string(block_size));
-
-          addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<block_size, 2>>(
-              vid, "cached_block_stride_loop_" + std::to_string(block_size));
-
-        }
-
-      }
-
-    });
-
+#define MASSVEC3DPA_HIP_TUNING(name, tuning_name, d1d, q1d)                   \
+    {                                                                         \
+      constexpr size_t block_size = q1d * q1d * q1d;                          \
+      if (vid == Base_HIP) {                                                  \
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
+            d1d, q1d, block_size, 0>>(                                        \
+            vid, tuning_name + std::string("_runtime_block_stride_loop"));     \
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
+            d1d, q1d, block_size, 1>>(vid,                                    \
+            tuning_name + std::string("_direct"));                            \
+      }                                                                       \
+      if (vid == RAJA_HIP) {                                                  \
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
+            d1d, q1d, block_size, 0>>(                                        \
+            vid, tuning_name + std::string("_runtime_block_stride_loop"));     \
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
+            d1d, q1d, block_size, 1>>(vid,                                    \
+            tuning_name + std::string("_direct"));                            \
+        addVariantTuning<&MASSVEC3DPA::runHipVariantImpl<                     \
+            d1d, q1d, block_size, 2>>(                                        \
+            vid, tuning_name + std::string("_cached_block_stride_loop"));      \
+      }                                                                       \
+    }
+    MASSVEC3DPA_GEOMETRIES(MASSVEC3DPA_HIP_TUNING)
+#undef MASSVEC3DPA_HIP_TUNING
   }
 
 }
