@@ -24,7 +24,7 @@ namespace apps
 {
 
 template < size_t block_size >
-__launch_bounds__(block_size,1)
+__launch_bounds__(block_size)
 __global__ void FEMSweep3D( const Real_ptr Bdat,
                             const Real_ptr Adat,
                             const Real_ptr Fdat,
