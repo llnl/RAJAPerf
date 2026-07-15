@@ -403,15 +403,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
         if (vid == RAJA_CUDA) {
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
-              vid, "kernel_m");
+              vid, "kernel_m_"+std::to_string(block_size));
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 2>>(
-              vid, "launch_m");
+              vid, "launch_m_"+std::to_string(block_size));
 
         } else {
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
-              vid, "block_m");
+              vid, "block_m_"+std::to_string(block_size));
 
         }
 
@@ -431,15 +431,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
         if (vid == RAJA_CUDA) {
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 1>>(
-              vid, "kernel_m32_gBigFact_zLowFact_"+std::to_string(block_size));
+              vid, "kernel_zgm_"+std::to_string(block_size));
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 3>>(
-              vid, "launch_m32_gBigFact_zLowFact_"+std::to_string(block_size));
+              vid, "launch_zgm_"+std::to_string(block_size));
 
         } else {
 
           addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 1>>(
-              vid, "block_m32_gBigFact_zLowFact_"+std::to_string(block_size));
+              vid, "block_zgm_"+std::to_string(block_size));
 
         }
 
