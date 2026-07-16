@@ -216,7 +216,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
           RAJA::statement::CudaKernelAsync<
             RAJA::statement::For<1, RAJA::cuda_block_x_loop, // z
               RAJA::statement::For<2, RAJA::cuda_block_y_loop, // g
-                RAJA::statement::For<3, RAJA::cuda_thread_size_x_loop<block_size>, // m
+                RAJA::statement::For<3, RAJA::cuda_thread_x_loop, // m
                   RAJA::statement::For<0, RAJA::seq_exec,           //d
                     RAJA::statement::Lambda<0>
                   >
@@ -290,7 +290,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
       using g_policy = RAJA::LoopPolicy<RAJA::cuda_block_y_loop>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::cuda_thread_size_x_loop<block_size>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::cuda_thread_x_loop>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
