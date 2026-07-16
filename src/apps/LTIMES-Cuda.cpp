@@ -112,7 +112,7 @@ __global__ void ltimes_lam_factorized(IM num_m, IG num_g, IZ num_z,
 }
 
 
-template < size_t block_size, size_t tune_idx >
+template < size_t tune_idx, size_t block_size >
 void LTIMES::runCudaVariantImpl(VariantID vid)
 {
   if constexpr (tune_idx == 0 || tune_idx == 2) {
@@ -385,19 +385,18 @@ void LTIMES::defineCudaVariantTunings()
 
   for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
 
-    constexpr size_t block_size = runtime_m_gpu_block_size;
     const size_t m_block_size = static_cast<size_t>(m_num_m);
 
     if (run_params.numValidGPUBlockSize() == 0u ||
         run_params.validGPUBlockSize(m_block_size)) {
 
       if (vid == RAJA_CUDA) {
-        addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 0>>(
+        addVariantTuning<&LTIMES::runCudaVariantImpl<0>>(
             vid, "kernel_m_"+std::to_string(m_block_size));
-        addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 2>>(
+        addVariantTuning<&LTIMES::runCudaVariantImpl<2>>(
             vid, "launch_m_"+std::to_string(m_block_size));
       } else {
-        addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 0>>(
+        addVariantTuning<&LTIMES::runCudaVariantImpl<0>>(
             vid, "block_m_"+std::to_string(m_block_size));
       }
 
@@ -407,18 +406,18 @@ void LTIMES::defineCudaVariantTunings()
 
   for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
 
-    seq_for(factorized_gpu_block_sizes_type{}, [&](auto block_size) {
+    seq_for(zgm_gpu_block_sizes_type{}, [&](auto block_size) {
 
       if (run_params.numValidGPUBlockSize() == 0u ||
           run_params.validGPUBlockSize(block_size)) {
 
         if (vid == RAJA_CUDA) {
-          addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 1>>(
+          addVariantTuning<&LTIMES::runCudaVariantImpl<1, block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
-          addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 3>>(
+          addVariantTuning<&LTIMES::runCudaVariantImpl<3, block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
         } else {
-          addVariantTuning<&LTIMES::runCudaVariantImpl<block_size, 1>>(
+          addVariantTuning<&LTIMES::runCudaVariantImpl<1, block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
         }
 

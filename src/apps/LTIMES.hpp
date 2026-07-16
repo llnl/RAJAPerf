@@ -116,18 +116,17 @@ public:
   void runOpenMPVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
 
-  template < size_t m_block_sz, size_t tune_idx >
+  template < size_t tune_idx, size_t block_size = 0 >
   void runCudaVariantImpl(VariantID vid);
-  template < size_t m_block_sz, size_t tune_idx >
+  template < size_t tune_idx, size_t block_size = 0 >
   void runHipVariantImpl(VariantID vid);
-  template < size_t work_group_size, size_t tune_idx >
+  template < size_t tune_idx >
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t runtime_m_gpu_block_size = 25;
-  static const size_t factorized_default_gpu_block_size = 256;
-  using factorized_gpu_block_sizes_type =
-      integer::make_gpu_block_size_list_type<factorized_default_gpu_block_size,
+  static const size_t zgm_default_gpu_block_size = 256;
+  using zgm_gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<zgm_default_gpu_block_size,
                                              integer::MultipleOf<32>>;
 
   Real_ptr m_phidat;

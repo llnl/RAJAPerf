@@ -28,7 +28,7 @@ namespace apps
 #define g_wg_sz (1)
 #define z_wg_sz (1)
 
-template <size_t work_group_size, size_t tune_idx >
+template <size_t tune_idx >
 void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
 {
   setBlockSize(m_num_m);
@@ -170,7 +170,6 @@ void LTIMES_NOVIEW::defineSyclVariantTunings()
 
   for (VariantID vid : {Base_SYCL, RAJA_SYCL}) {
 
-    constexpr size_t work_group_size = runtime_m_gpu_block_size;
     const size_t m_work_group_size = static_cast<size_t>(m_num_m);
 
     if (run_params.numValidGPUBlockSize() == 0u ||
@@ -178,15 +177,15 @@ void LTIMES_NOVIEW::defineSyclVariantTunings()
 
       if (vid == RAJA_SYCL) {
 
-        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 0>>(
+        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<0>>(
             vid, "kernel_m_"+std::to_string(m_work_group_size));
 
-        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 1>>(
+        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<1>>(
             vid, "launch_m_"+std::to_string(m_work_group_size));
 
       } else {
 
-        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<work_group_size, 0>>(
+        addVariantTuning<&LTIMES_NOVIEW::runSyclVariantImpl<0>>(
             vid, "block_m_"+std::to_string(m_work_group_size));
 
       }
