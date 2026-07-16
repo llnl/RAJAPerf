@@ -140,22 +140,22 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 
       constexpr size_t shmem = 0;
 
-      if constexpr (tune_idx == 1) {
-        LTIMES_ZGM_THREADS_PER_BLOCK_HIP;
-        LTIMES_ZGM_NBLOCKS_HIP;
-
-        RPlaunchHipKernel(
-          (ltimes_factorized<LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          phi, ell, psi,
-          num_d, num_m, num_g, num_z );
-      } else {
+      if constexpr (tune_idx == 0) {
         LTIMES_M_THREADS_PER_BLOCK_HIP;
         LTIMES_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_block_moments<block_size>),
+          nblocks, nthreads_per_block,
+          shmem, res.get_stream(),
+          phi, ell, psi,
+          num_d, num_m, num_g, num_z );
+      } else if constexpr (tune_idx == 1) {
+        LTIMES_ZGM_THREADS_PER_BLOCK_HIP;
+        LTIMES_ZGM_NBLOCKS_HIP;
+
+        RPlaunchHipKernel(
+          (ltimes_factorized<LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           phi, ell, psi,
@@ -179,23 +179,23 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 
       constexpr size_t shmem = 0;
 
-      if constexpr (tune_idx == 1) {
+      if constexpr (tune_idx == 0) {
+        LTIMES_M_THREADS_PER_BLOCK_HIP;
+        LTIMES_M_NBLOCKS_HIP;
+
+        RPlaunchHipKernel(
+          (ltimes_lam_block_moments<block_size, decltype(ltimes_lambda)>),
+          nblocks, nthreads_per_block,
+          shmem, res.get_stream(),
+          num_m, num_g, num_z,
+          ltimes_lambda );
+      } else if constexpr (tune_idx == 1) {
         LTIMES_ZGM_THREADS_PER_BLOCK_HIP;
         LTIMES_ZGM_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_lam_factorized<LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP,
                           decltype(ltimes_lambda)>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          num_m, num_g, num_z,
-          ltimes_lambda );
-      } else {
-        LTIMES_M_THREADS_PER_BLOCK_HIP;
-        LTIMES_M_NBLOCKS_HIP;
-
-        RPlaunchHipKernel(
-          (ltimes_lam_block_moments<block_size, decltype(ltimes_lambda)>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           num_m, num_g, num_z,

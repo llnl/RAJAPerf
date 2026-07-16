@@ -142,22 +142,22 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 
       constexpr size_t shmem = 0;
 
-      if constexpr (tune_idx == 1) {
-        LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_HIP;
-        LTIMES_NOVIEW_ZGM_NBLOCKS_HIP;
-
-        RPlaunchHipKernel(
-          (ltimes_noview_factorized<LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          phidat, elldat, psidat,
-          num_d, num_m, num_g, num_z );
-      } else {
+      if constexpr (tune_idx == 0) {
         LTIMES_NOVIEW_M_THREADS_PER_BLOCK_HIP;
         LTIMES_NOVIEW_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_noview_block_moments<block_size>),
+          nblocks, nthreads_per_block,
+          shmem, res.get_stream(),
+          phidat, elldat, psidat,
+          num_d, num_m, num_g, num_z );
+      } else if constexpr (tune_idx == 1) {
+        LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_HIP;
+        LTIMES_NOVIEW_ZGM_NBLOCKS_HIP;
+
+        RPlaunchHipKernel(
+          (ltimes_noview_factorized<LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           phidat, elldat, psidat,
@@ -182,23 +182,23 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 
       constexpr size_t shmem = 0;
 
-      if constexpr (tune_idx == 1) {
+      if constexpr (tune_idx == 0) {
+        LTIMES_NOVIEW_M_THREADS_PER_BLOCK_HIP;
+        LTIMES_NOVIEW_M_NBLOCKS_HIP;
+
+        RPlaunchHipKernel(
+          (ltimes_noview_lam_block_moments<block_size, decltype(ltimes_noview_lambda)>),
+          nblocks, nthreads_per_block,
+          shmem, res.get_stream(),
+          num_m, num_g, num_z,
+          ltimes_noview_lambda );
+      } else if constexpr (tune_idx == 1) {
         LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_HIP;
         LTIMES_NOVIEW_ZGM_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_noview_lam_factorized<LTIMES_NOVIEW_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP,
                                  decltype(ltimes_noview_lambda)>),
-          nblocks, nthreads_per_block,
-          shmem, res.get_stream(),
-          num_m, num_g, num_z,
-          ltimes_noview_lambda );
-      } else {
-        LTIMES_NOVIEW_M_THREADS_PER_BLOCK_HIP;
-        LTIMES_NOVIEW_M_NBLOCKS_HIP;
-
-        RPlaunchHipKernel(
-          (ltimes_noview_lam_block_moments<block_size, decltype(ltimes_noview_lambda)>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           num_m, num_g, num_z,
