@@ -217,7 +217,7 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
           RAJA::statement::HipKernelAsync<
             RAJA::statement::For<1, RAJA::hip_block_x_loop, // z
               RAJA::statement::For<2, RAJA::hip_block_y_loop, // g
-                RAJA::statement::For<3, RAJA::hip_thread_x_loop, // m
+                RAJA::statement::For<3, RAJA::hip_thread_size_x_loop<block_size>, // m
                   RAJA::statement::For<0, RAJA::seq_exec,          //d
                     RAJA::statement::Lambda<0>
                   >
@@ -293,7 +293,7 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 
       using g_policy = RAJA::LoopPolicy<RAJA::hip_block_y_loop>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::hip_thread_x_loop>;
+      using m_policy = RAJA::LoopPolicy<RAJA::hip_thread_size_x_loop<block_size>>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
