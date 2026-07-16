@@ -27,15 +27,8 @@ using namespace ltimes_idx;
 //
 // Define thread block shape for Hip execution
 //
-#define m_block_sz (block_size)
-#define m_g_block_sz (1)
-#define m_z_block_sz (1)
-
-#define LTIMES_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
-  m_block_sz, m_g_block_sz, m_z_block_sz
-
 #define LTIMES_M_THREADS_PER_BLOCK_HIP \
-  dim3 nthreads_per_block(LTIMES_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
+  dim3 nthreads_per_block(static_cast<size_t>(*num_m), 1, 1);
 
 #define LTIMES_M_NBLOCKS_HIP \
   dim3 nblocks(static_cast<size_t>(*num_z), \
@@ -58,8 +51,6 @@ using namespace ltimes_idx;
                static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_z, zgm_z_block_sz)));
 
 
-template < size_t block_size >
-__launch_bounds__(block_size)
 __global__ void ltimes_block_moments(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
                        ID num_d, IM num_m, IG num_g, IZ num_z)
 {
@@ -67,7 +58,7 @@ __global__ void ltimes_block_moments(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
    IZ z(blockIdx.x);
 
    if (g < num_g && z < num_z) {
-     for (IM m(threadIdx.x); m < num_m; m += block_size) {
+     for (IM m(threadIdx.x); m < num_m; m += blockDim.x) {
        for (ID d(0); d < num_d; ++d ) {
          LTIMES_BODY;
        }
@@ -91,8 +82,7 @@ __global__ void ltimes_factorized(PHI_VIEW phi, ELL_VIEW ell, PSI_VIEW psi,
    }
 }
 
-template < size_t block_size, typename Lambda >
-__launch_bounds__(block_size)
+template < typename Lambda >
 __global__ void ltimes_lam_block_moments(IM num_m, IG num_g, IZ num_z,
                            Lambda body)
 {
@@ -100,7 +90,7 @@ __global__ void ltimes_lam_block_moments(IM num_m, IG num_g, IZ num_z,
    IZ z(blockIdx.x);
 
    if (g < num_g && z < num_z) {
-     for (IM m(threadIdx.x); m < num_m; m += block_size) {
+     for (IM m(threadIdx.x); m < num_m; m += blockDim.x) {
        body(z, g, m);
      }
    }
@@ -124,7 +114,11 @@ __global__ void ltimes_lam_factorized(IM num_m, IG num_g, IZ num_z,
 template < size_t block_size, size_t tune_idx >
 void LTIMES::runHipVariantImpl(VariantID vid)
 {
-  setBlockSize(block_size);
+  if constexpr (tune_idx == 0 || tune_idx == 2) {
+    setBlockSize(m_num_m);
+  } else {
+    setBlockSize(block_size);
+  }
 
   const Index_type run_reps = getRunReps();
 
@@ -145,7 +139,7 @@ void LTIMES::runHipVariantImpl(VariantID vid)
         LTIMES_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
-          (ltimes_block_moments<block_size>),
+          (ltimes_block_moments),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           phi, ell, psi,
@@ -184,7 +178,7 @@ void LTIMES::runHipVariantImpl(VariantID vid)
         LTIMES_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
-          (ltimes_lam_block_moments<block_size, decltype(ltimes_lambda)>),
+          (ltimes_lam_block_moments<decltype(ltimes_lambda)>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           num_m, num_g, num_z,
@@ -282,7 +276,7 @@ void LTIMES::runHipVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, block_size>>;
+          RAJA::LaunchPolicy<RAJA::hip_launch_t<async>>;
 
       using z_policy = RAJA::LoopPolicy<RAJA::hip_block_x_loop>;
 
@@ -298,7 +292,7 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(*num_z, *num_g, 1),
-                               RAJA::Threads(block_size, 1, 1)),
+                               RAJA::Threads(*num_m, 1, 1)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
@@ -390,24 +384,23 @@ void LTIMES::defineHipVariantTunings()
 
   for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    constexpr size_t block_size = default_gpu_block_size;
+    const size_t m_block_size = static_cast<size_t>(m_num_m);
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(m_block_size)) {
 
-        if (vid == RAJA_HIP) {
-          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
-              vid, "kernel_m_"+std::to_string(block_size));
-          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 2>>(
-              vid, "launch_m_"+std::to_string(block_size));
-        } else {
-          addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
-              vid, "block_m_"+std::to_string(block_size));
-        }
-
+      if (vid == RAJA_HIP) {
+        addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+            vid, "kernel_m_"+std::to_string(m_block_size));
+        addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 2>>(
+            vid, "launch_m_"+std::to_string(m_block_size));
+      } else {
+        addVariantTuning<&LTIMES::runHipVariantImpl<block_size, 0>>(
+            vid, "block_m_"+std::to_string(m_block_size));
       }
 
-    });
+    }
 
   }
 

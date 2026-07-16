@@ -25,16 +25,8 @@ namespace apps
 //
 // Define thread block shape for CUDA execution
 //
-#define m_block_sz (block_size)
-#define m_g_block_sz (1)
-#define m_z_block_sz (1)
-
-#define LTIMES_NOVIEW_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA \
-  m_block_sz, m_g_block_sz, m_z_block_sz
-
 #define LTIMES_NOVIEW_M_THREADS_PER_BLOCK_CUDA \
-  dim3 nthreads_per_block(LTIMES_NOVIEW_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA); \
-  static_assert(m_block_sz*m_g_block_sz*m_z_block_sz == block_size, "Invalid block_size");
+  dim3 nthreads_per_block(static_cast<size_t>(num_m), 1, 1);
 
 #define LTIMES_NOVIEW_M_NBLOCKS_CUDA \
   dim3 nblocks(static_cast<size_t>(num_z), \
@@ -58,8 +50,6 @@ namespace apps
                static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(num_z, zgm_z_block_sz)));
 
 
-template < size_t block_size >
-__launch_bounds__(block_size)
 __global__ void ltimes_noview_block_moments(Real_ptr phidat, Real_ptr elldat, Real_ptr psidat,
                               Index_type num_d,
                               Index_type num_m, Index_type num_g, Index_type num_z)
@@ -68,7 +58,7 @@ __global__ void ltimes_noview_block_moments(Real_ptr phidat, Real_ptr elldat, Re
    Index_type z = blockIdx.x;
 
    if (g < num_g && z < num_z) {
-     for (Index_type m = threadIdx.x; m < num_m; m += block_size) {
+     for (Index_type m = threadIdx.x; m < num_m; m += blockDim.x) {
        for (Index_type d = 0; d < num_d; ++d ) {
          LTIMES_NOVIEW_BODY;
        }
@@ -93,8 +83,7 @@ __global__ void ltimes_noview_factorized(Real_ptr phidat, Real_ptr elldat, Real_
    }
 }
 
-template < size_t block_size, typename Lambda >
-__launch_bounds__(block_size)
+template < typename Lambda >
 __global__ void ltimes_noview_lam_block_moments(Index_type num_m, Index_type num_g, Index_type num_z,
                                   Lambda body)
 {
@@ -102,7 +91,7 @@ __global__ void ltimes_noview_lam_block_moments(Index_type num_m, Index_type num
    Index_type z = blockIdx.x;
 
    if (g < num_g && z < num_z) {
-     for (Index_type m = threadIdx.x; m < num_m; m += block_size) {
+     for (Index_type m = threadIdx.x; m < num_m; m += blockDim.x) {
        body(z, g, m);
      }
    }
@@ -126,7 +115,11 @@ __global__ void ltimes_noview_lam_factorized(Index_type num_m, Index_type num_g,
 template < size_t block_size, size_t tune_idx >
 void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
 {
-  setBlockSize(block_size);
+  if constexpr (tune_idx == 0 || tune_idx == 2) {
+    setBlockSize(m_num_m);
+  } else {
+    setBlockSize(block_size);
+  }
 
   const Index_type run_reps = getRunReps();
 
@@ -147,7 +140,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
         LTIMES_NOVIEW_M_NBLOCKS_CUDA;
 
         RPlaunchCudaKernel(
-          (ltimes_noview_block_moments<block_size>),
+          (ltimes_noview_block_moments),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           phidat, elldat, psidat,
@@ -187,7 +180,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
         LTIMES_NOVIEW_M_NBLOCKS_CUDA;
 
         RPlaunchCudaKernel(
-          (ltimes_noview_lam_block_moments<block_size, decltype(ltimes_noview_lambda)>),
+          (ltimes_noview_lam_block_moments<decltype(ltimes_noview_lambda)>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           num_m, num_g, num_z,
@@ -287,7 +280,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, block_size>>;
+          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async>>;
 
       using z_policy = RAJA::LoopPolicy<RAJA::cuda_block_x_loop>;
 
@@ -303,7 +296,7 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(num_z, num_g, 1),
-                               RAJA::Threads(block_size, 1, 1)),
+                               RAJA::Threads(num_m, 1, 1)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, RAJA::RangeSegment(0, num_z),
@@ -395,29 +388,28 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
 
   for (VariantID vid : {Base_CUDA, Lambda_CUDA, RAJA_CUDA}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+    constexpr size_t block_size = default_gpu_block_size;
+    const size_t m_block_size = static_cast<size_t>(m_num_m);
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size)) {
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(m_block_size)) {
 
-        if (vid == RAJA_CUDA) {
+      if (vid == RAJA_CUDA) {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
-              vid, "kernel_m_"+std::to_string(block_size));
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
+            vid, "kernel_m_"+std::to_string(m_block_size));
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 2>>(
-              vid, "launch_m_"+std::to_string(block_size));
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 2>>(
+            vid, "launch_m_"+std::to_string(m_block_size));
 
-        } else {
+      } else {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
-              vid, "block_m_"+std::to_string(block_size));
-
-        }
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<block_size, 0>>(
+            vid, "block_m_"+std::to_string(m_block_size));
 
       }
 
-    });
+    }
 
   }
 
