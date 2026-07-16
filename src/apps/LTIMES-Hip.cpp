@@ -27,35 +27,35 @@ using namespace ltimes_idx;
 //
 // Define thread block shape for Hip execution
 //
-#define block_moments_m_block_sz (block_size)
-#define block_moments_g_block_sz (1)
-#define block_moments_z_block_sz (1)
+#define m_block_sz (block_size)
+#define m_g_block_sz (1)
+#define m_z_block_sz (1)
 
-#define LTIMES_BLOCK_MOMENTS_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
-  block_moments_m_block_sz, block_moments_g_block_sz, block_moments_z_block_sz
+#define LTIMES_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
+  m_block_sz, m_g_block_sz, m_z_block_sz
 
-#define LTIMES_BLOCK_MOMENTS_THREADS_PER_BLOCK_HIP \
-  dim3 nthreads_per_block(LTIMES_BLOCK_MOMENTS_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
+#define LTIMES_M_THREADS_PER_BLOCK_HIP \
+  dim3 nthreads_per_block(LTIMES_M_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
 
-#define LTIMES_BLOCK_MOMENTS_NBLOCKS_HIP \
+#define LTIMES_M_NBLOCKS_HIP \
   dim3 nblocks(static_cast<size_t>(*num_z), \
                static_cast<size_t>(*num_g), \
                1);
 
-#define factorized_m_block_sz (32)
-#define factorized_g_block_sz (integer::greater_of_squarest_factor_pair(block_size/factorized_m_block_sz))
-#define factorized_z_block_sz (integer::lesser_of_squarest_factor_pair(block_size/factorized_m_block_sz))
+#define zgm_m_block_sz (32)
+#define zgm_g_block_sz (integer::greater_of_squarest_factor_pair(block_size/zgm_m_block_sz))
+#define zgm_z_block_sz (integer::lesser_of_squarest_factor_pair(block_size/zgm_m_block_sz))
 
-#define LTIMES_FACTORIZED_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
-  factorized_m_block_sz, factorized_g_block_sz, factorized_z_block_sz
+#define LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP \
+  zgm_m_block_sz, zgm_g_block_sz, zgm_z_block_sz
 
-#define LTIMES_FACTORIZED_THREADS_PER_BLOCK_HIP \
-  dim3 nthreads_per_block(LTIMES_FACTORIZED_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
+#define LTIMES_ZGM_THREADS_PER_BLOCK_HIP \
+  dim3 nthreads_per_block(LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP);
 
-#define LTIMES_FACTORIZED_NBLOCKS_HIP \
-  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_m, factorized_m_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_g, factorized_g_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_z, factorized_z_block_sz)));
+#define LTIMES_ZGM_NBLOCKS_HIP \
+  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_m, zgm_m_block_sz)), \
+               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_g, zgm_g_block_sz)), \
+               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(*num_z, zgm_z_block_sz)));
 
 
 template < size_t block_size >
@@ -141,18 +141,18 @@ void LTIMES::runHipVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       if constexpr (tune_idx == 1) {
-        LTIMES_FACTORIZED_THREADS_PER_BLOCK_HIP;
-        LTIMES_FACTORIZED_NBLOCKS_HIP;
+        LTIMES_ZGM_THREADS_PER_BLOCK_HIP;
+        LTIMES_ZGM_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
-          (ltimes_factorized<LTIMES_FACTORIZED_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
+          (ltimes_factorized<LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           phi, ell, psi,
           num_d, num_m, num_g, num_z );
       } else {
-        LTIMES_BLOCK_MOMENTS_THREADS_PER_BLOCK_HIP;
-        LTIMES_BLOCK_MOMENTS_NBLOCKS_HIP;
+        LTIMES_M_THREADS_PER_BLOCK_HIP;
+        LTIMES_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_block_moments<block_size>),
@@ -180,19 +180,19 @@ void LTIMES::runHipVariantImpl(VariantID vid)
       constexpr size_t shmem = 0;
 
       if constexpr (tune_idx == 1) {
-        LTIMES_FACTORIZED_THREADS_PER_BLOCK_HIP;
-        LTIMES_FACTORIZED_NBLOCKS_HIP;
+        LTIMES_ZGM_THREADS_PER_BLOCK_HIP;
+        LTIMES_ZGM_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
-          (ltimes_lam_factorized<LTIMES_FACTORIZED_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP,
+          (ltimes_lam_factorized<LTIMES_ZGM_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP,
                           decltype(ltimes_lambda)>),
           nblocks, nthreads_per_block,
           shmem, res.get_stream(),
           num_m, num_g, num_z,
           ltimes_lambda );
       } else {
-        LTIMES_BLOCK_MOMENTS_THREADS_PER_BLOCK_HIP;
-        LTIMES_BLOCK_MOMENTS_NBLOCKS_HIP;
+        LTIMES_M_THREADS_PER_BLOCK_HIP;
+        LTIMES_M_NBLOCKS_HIP;
 
         RPlaunchHipKernel(
           (ltimes_lam_block_moments<block_size, decltype(ltimes_lambda)>),
@@ -246,10 +246,10 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 
       using EXEC_POL =
         RAJA::KernelPolicy<
-          RAJA::statement::HipKernelFixedAsync<factorized_m_block_sz*factorized_g_block_sz*factorized_z_block_sz,
-            RAJA::statement::For<1, RAJA::hip_global_size_z_direct<factorized_z_block_sz>,     // z
-              RAJA::statement::For<2, RAJA::hip_global_size_y_direct<factorized_g_block_sz>,   // g
-                RAJA::statement::For<3, RAJA::hip_global_size_x_direct<factorized_m_block_sz>, // m
+          RAJA::statement::HipKernelFixedAsync<zgm_m_block_sz*zgm_g_block_sz*zgm_z_block_sz,
+            RAJA::statement::For<1, RAJA::hip_global_size_z_direct<zgm_z_block_sz>,     // z
+              RAJA::statement::For<2, RAJA::hip_global_size_y_direct<zgm_g_block_sz>,   // g
+                RAJA::statement::For<3, RAJA::hip_global_size_x_direct<zgm_m_block_sz>, // m
                   RAJA::statement::For<0, RAJA::seq_exec,                               // d
                     RAJA::statement::Lambda<0>
                   >
@@ -329,21 +329,21 @@ void LTIMES::runHipVariantImpl(VariantID vid)
       constexpr bool async = true;
 
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, factorized_m_block_sz*factorized_g_block_sz*factorized_z_block_sz>>;
+          RAJA::LaunchPolicy<RAJA::hip_launch_t<async, zgm_m_block_sz*zgm_g_block_sz*zgm_z_block_sz>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::hip_global_size_z_loop<factorized_z_block_sz>>;
+      using z_policy = RAJA::LoopPolicy<RAJA::hip_global_size_z_loop<zgm_z_block_sz>>;
 
-      using g_policy = RAJA::LoopPolicy<RAJA::hip_global_size_y_loop<factorized_g_block_sz>>;
+      using g_policy = RAJA::LoopPolicy<RAJA::hip_global_size_y_loop<zgm_g_block_sz>>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::hip_global_size_x_loop<factorized_m_block_sz>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::hip_global_size_x_loop<zgm_m_block_sz>>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
-      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, factorized_z_block_sz);
+      const size_t z_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_z, zgm_z_block_sz);
 
-      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, factorized_g_block_sz);
+      const size_t g_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_g, zgm_g_block_sz);
 
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, factorized_m_block_sz);
+      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, zgm_m_block_sz);
 
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -351,7 +351,7 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
-                               RAJA::Threads(factorized_m_block_sz, factorized_g_block_sz, factorized_z_block_sz)),
+                               RAJA::Threads(zgm_m_block_sz, zgm_g_block_sz, zgm_z_block_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
