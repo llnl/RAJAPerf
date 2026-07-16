@@ -388,7 +388,7 @@ void LTIMES_NOVIEW::defineHipVariantTunings()
 
   for (VariantID vid : {Base_HIP, Lambda_HIP, RAJA_HIP}) {
 
-    constexpr size_t block_size = default_gpu_block_size;
+    constexpr size_t block_size = runtime_m_gpu_block_size;
     const size_t m_block_size = static_cast<size_t>(m_num_m);
 
     if (run_params.numValidGPUBlockSize() == 0u ||

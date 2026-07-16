@@ -27,14 +27,13 @@ using namespace ltimes_idx;
 //
 // Define work-group shape for SYCL execution
 //
-#define m_wg_sz (work_group_size)
 #define g_wg_sz (1)
 #define z_wg_sz (1)
 
 template <size_t work_group_size, size_t tune_idx >
 void LTIMES::runSyclVariantImpl(VariantID vid)
 {
-  setBlockSize(work_group_size);
+  setBlockSize(m_num_m);
 
   const Index_type run_reps = getRunReps();
 
@@ -47,8 +46,8 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 
     sycl::range<3> global_dim(*num_z,
                               *num_g,
-                              m_wg_sz * RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz));
-    sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, m_wg_sz);
+                              *num_m);
+    sycl::range<3> wkgroup_dim(z_wg_sz, g_wg_sz, static_cast<size_t>(*num_m));
 
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -81,9 +80,9 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
       using EXEC_POL =
         RAJA::KernelPolicy<
           RAJA::statement::SyclKernelAsync<
-            RAJA::statement::For<1, RAJA::sycl_global_0<z_wg_sz>,      //z
-              RAJA::statement::For<2, RAJA::sycl_global_1<g_wg_sz>,    //g
-                RAJA::statement::For<3, RAJA::sycl_global_2<m_wg_sz>,  //m
+            RAJA::statement::For<1, RAJA::sycl_group_0_direct,         //z
+              RAJA::statement::For<2, RAJA::sycl_group_1_direct,       //g
+                RAJA::statement::For<3, RAJA::sycl_local_2_loop,       //m
                   RAJA::statement::For<0, RAJA::seq_exec,              //d
                     RAJA::statement::Lambda<0>
                   >
@@ -128,15 +127,13 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 
       const size_t g_grid_sz = *num_g;
 
-      const size_t m_grid_sz = RAJA_DIVIDE_CEILING_INT(*num_m, m_wg_sz);
-
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RAJA::launch<launch_policy>( res,
-            RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
-                               RAJA::Threads(m_wg_sz, g_wg_sz, z_wg_sz)),
+            RAJA::LaunchParams(RAJA::Teams(1, g_grid_sz, z_grid_sz),
+                               RAJA::Threads(*num_m, g_wg_sz, z_wg_sz)),
             [=] RAJA_HOST_DEVICE(RAJA::LaunchContext ctx) {
 
               RAJA::loop<z_policy>(ctx, IZRange(0, *num_z),
@@ -175,29 +172,28 @@ void LTIMES::defineSyclVariantTunings()
 
   for (VariantID vid : {Base_SYCL, RAJA_SYCL}) {
 
-    seq_for(gpu_block_sizes_type{}, [&](auto work_group_size) {
+    constexpr size_t work_group_size = runtime_m_gpu_block_size;
+    const size_t m_work_group_size = static_cast<size_t>(m_num_m);
 
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(work_group_size)) {
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(m_work_group_size)) {
 
-        if (vid == RAJA_SYCL) {
+      if (vid == RAJA_SYCL) {
 
-          addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 0>>(
-              vid, "kernel_m_"+std::to_string(work_group_size));
+        addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 0>>(
+            vid, "kernel_m_"+std::to_string(m_work_group_size));
 
-          addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 1>>(
-              vid, "launch_m_"+std::to_string(work_group_size));
+        addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 1>>(
+            vid, "launch_m_"+std::to_string(m_work_group_size));
 
-        } else {
+      } else {
 
-          addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 0>>(
-              vid, "block_m_"+std::to_string(work_group_size));
-
-        }
+        addVariantTuning<&LTIMES::runSyclVariantImpl<work_group_size, 0>>(
+            vid, "block_m_"+std::to_string(m_work_group_size));
 
       }
 
-    });
+    }
 
   }
 

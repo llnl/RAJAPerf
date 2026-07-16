@@ -124,9 +124,7 @@ public:
   void runSyclVariantImpl(VariantID vid);
 
 private:
-  static const size_t default_gpu_block_size = 25;
-  using gpu_block_sizes_type =
-      integer::make_gpu_block_size_list_type<default_gpu_block_size>;
+  static const size_t runtime_m_gpu_block_size = 25;
   static const size_t factorized_default_gpu_block_size = 256;
   using factorized_gpu_block_sizes_type =
       integer::make_gpu_block_size_list_type<factorized_default_gpu_block_size,
