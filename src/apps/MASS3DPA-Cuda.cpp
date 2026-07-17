@@ -396,11 +396,28 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
 void MASS3DPA::defineCudaVariantTunings()
 {
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
-    constexpr size_t block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
+    constexpr Index_type TBATCH_16 = 16;
+    constexpr size_t block_size_16 = mpa::Q1D * mpa::Q1D * TBATCH_16;
     if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size)) {
+        run_params.validGPUBlockSize(block_size_16)) {
       addVariantTuning<&MASS3DPA::runCudaVariantImpl<
-          mpa::D1D, mpa::Q1D, mpa::TBATCH>>(vid, "block_64");
+          mpa::D1D, mpa::Q1D, TBATCH_16>>(vid, "block_64_batch_16");
+    }
+
+    constexpr Index_type TBATCH_8 = 8;
+    constexpr size_t block_size_8 = mpa::Q1D * mpa::Q1D * TBATCH_8;
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size_8)) {
+      addVariantTuning<&MASS3DPA::runCudaVariantImpl<
+          mpa::D1D, mpa::Q1D, TBATCH_8>>(vid, "block_32_batch_8");
+    }
+
+    constexpr Index_type TBATCH_4 = 4;
+    constexpr size_t block_size_4 = mpa::Q1D * mpa::Q1D * TBATCH_4;
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size_4)) {
+      addVariantTuning<&MASS3DPA::runCudaVariantImpl<
+          mpa::D1D, mpa::Q1D, TBATCH_4>>(vid, "block_16_batch_4");
     }
   }
 }
