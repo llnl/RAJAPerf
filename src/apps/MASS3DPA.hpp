@@ -17,8 +17,8 @@
 ///
 /// for (Index_type e = 0; e < NE; ++e) {
 ///
-///   constexpr Index_type MQ1 = MQ1;
-///   constexpr Index_type MD1 = MD1;
+///   constexpr Index_type MQ1 = mpa::Q1D;
+///   constexpr Index_type MD1 = mpa::D1D;
 ///   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;
 ///   Real_type sDQ[MQ1 * MD1];
 ///   Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;
@@ -32,120 +32,120 @@
 ///   Real_type(*QQD)[MQ1][MD1] = (Real_type(*)[MQ1][MD1])sm0;
 ///   Real_type(*QDD)[MD1][MD1] = (Real_type(*)[MD1][MD1])sm1;
 ///
-///   for(Index_type dy=0; dy<MD1; ++dy) {
-///     for(Index_type dx=0; dx<MD1; ++dx) {
-///       for (Index_type dz = 0; dz< MD1; ++dz) {
+///   for(Index_type dy=0; dy<mpa::D1D; ++dy) {
+///     for(Index_type dx=0; dx<mpa::D1D; ++dx) {
+///       for (Index_type dz = 0; dz< mpa::D1D; ++dz) {
 ///         Xsmem[dz][dy][dx] = MPA_X(dx, dy, dz, e);
 ///       }
 ///     }
-///     for(Index_type dx=0; dx<MQ1; ++dx) {
+///     for(Index_type dx=0; dx<mpa::Q1D; ++dx) {
 ///      Bsmem[dx][dy] = MPA_B(dx, dy);
 ///     }
 ///   }
 ///
-///   for(Index_type dy=0; dy<MD1; ++dy) {
-///     for(Index_type dx=0; dx<MQ1; ++dx) {
-///       Real_type u[MD1];
-///       for (Index_type dz = 0; dz < MD1; dz++) {
+///   for(Index_type dy=0; dy<mpa::D1D; ++dy) {
+///     for(Index_type dx=0; dx<mpa::Q1D; ++dx) {
+///       Real_type u[mpa::D1D];
+///       for (Index_type dz = 0; dz < mpa::D1D; dz++) {
 ///           u[dz] = 0;
 ///       }
-///       for (Index_type dx = 0; dx < MD1; ++dx) {
-///         for (Index_type dz = 0; dz < MD1; ++dz) {
+///       for (Index_type dx = 0; dx < mpa::D1D; ++dx) {
+///         for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
 ///           u[dz] += Xsmem[dz][dy][dx] * Bsmem[qx][dx];
 ///          }
 ///       }
-///       for (Index_type dz = 0; dz < MD1; ++dz) {
+///       for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
 ///         DDQ[dz][dy][qx] = u[dz];
 ///       }
 ///     }
 ///   }
 ///
-///   for(Index_type qy=0; qy<MQ1; ++qy) {
-///     for(Index_type qx=0; qx<MQ1; ++qx) {
-///       Real_type u[MD1];
-///       for (Index_type dz = 0; dz < MD1; dz++) {
+///   for(Index_type qy=0; qy<mpa::Q1D; ++qy) {
+///     for(Index_type qx=0; qx<mpa::Q1D; ++qx) {
+///       Real_type u[mpa::D1D];
+///       for (Index_type dz = 0; dz < mpa::D1D; dz++) {
 ///         u[dz] = 0;
 ///       }
-///       for (Index_type dy = 0; dy < MD1; ++dy) {
-///         for (Index_type dz = 0; dz < MD1; dz++) {
+///       for (Index_type dy = 0; dy < mpa::D1D; ++dy) {
+///         for (Index_type dz = 0; dz < mpa::D1D; dz++) {
 ///           u[dz] += DDQ[dz][dy][qx] * Bsmem[qy][dy];
 ///         }
 ///       }
-///       for (Index_type dz = 0; dz < MD1; dz++) {
+///       for (Index_type dz = 0; dz < mpa::D1D; dz++) {
 ///         DQQ[dz][qy][qx] = u[dz];
 ///       }
 ///     }
 ///   }
 ///
-///   for(Index_type qy=0; qy<MQ1; ++qy) {
-///     for(Index_type qx=0; qx<MQ1; ++qx) {
-///       Real_type u[MQ1];
-///       for (Index_type qz = 0; qz < MQ1; qz++) {
+///   for(Index_type qy=0; qy<mpa::Q1D; ++qy) {
+///     for(Index_type qx=0; qx<mpa::Q1D; ++qx) {
+///       Real_type u[mpa::Q1D];
+///       for (Index_type qz = 0; qz < mpa::Q1D; qz++) {
 ///         u[qz] = 0;
 ///       }
-///       for (Index_type dz = 0; dz < MD1; ++dz) {
-///         for (Index_type qz = 0; qz < MQ1; qz++) {
+///       for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
+///         for (Index_type qz = 0; qz < mpa::Q1D; qz++) {
 ///            u[qz] += DQQ[dz][qy][qx] * Bsmem[qz][dz];
 ///          }
 ///       }
-///       for (Index_type qz = 0; qz < MQ1; qz++) {
+///       for (Index_type qz = 0; qz < mpa::Q1D; qz++) {
 ///         QQQ[qz][qy][qx] = u[qz] * MPA_D(qx, qy, qz, e);
 ///       }
 ///     }
 ///   }
 ///
-///   for(Index_type d=0; d<MD1; ++d) {
-///     for(Index_type q=0; q<MQ1; ++q) {
+///   for(Index_type d=0; d<mpa::D1D; ++d) {
+///     for(Index_type q=0; q<mpa::Q1D; ++q) {
 ///       Btsmem[d][q] = MPA_Bt(q, d);
 ///     }
 ///   }
 ///
-///   for(Index_type qy=0; qy<MQ1; ++qy) {
-///     for(Index_type dx=0; dx<MD1; ++dx) {
-///       Real_type u[MQ1];
-///       for (Index_type qz = 0; qz < MQ1; ++qz) {
+///   for(Index_type qy=0; qy<mpa::Q1D; ++qy) {
+///     for(Index_type dx=0; dx<mpa::D1D; ++dx) {
+///       Real_type u[mpa::Q1D];
+///       for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///         u[qz] = 0;
 ///       }
-///       for (Index_type qx = 0; qx < MQ1; ++qx) {
-///         for (Index_type qz = 0; qz < MQ1; ++qz) {
+///       for (Index_type qx = 0; qx < mpa::Q1D; ++qx) {
+///         for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///           u[qz] += QQQ[qz][qy][qx] * Btsmem[dx][qx];
 ///         }
 ///       }
-///       for (Index_type qz = 0; qz < MQ1; ++qz) {
+///       for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///          QQD[qz][qy][dx] = u[qz];
 ///       }
 ///     }
 ///   }
 ///
-///   for(Index_type dy=0; dy<MD1; ++dy) {
-///     for(Index_type dx=0; dx<MD1; ++dx) {
-///       Real_type u[MQ1];
-///       for (Index_type qz = 0; qz < MQ1; ++qz) {
+///   for(Index_type dy=0; dy<mpa::D1D; ++dy) {
+///     for(Index_type dx=0; dx<mpa::D1D; ++dx) {
+///       Real_type u[mpa::Q1D];
+///       for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///          u[qz] = 0;
 ///       }
-///       for (Index_type qy = 0; qy < MQ1; ++qy) {
-///         for (Index_type qz = 0; qz < MQ1; ++qz) {
+///       for (Index_type qy = 0; qy < mpa::Q1D; ++qy) {
+///         for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///           u[qz] += QQD[qz][qy][dx] * Btsmem[dy][qy];
 ///          }
 ///       }
-///       for (Index_type qz = 0; qz < MQ1; ++qz) {
+///       for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
 ///         QDD[qz][dy][dx] = u[qz];
 ///       }
 ///     }
 ///   }
 ///
-///   for(Index_type dy=0; dy<MD1; ++dy) {
-///     for(Index_type dx=0; dx<MD1; ++dx) {
-///       Real_type u[MD1];
-///       for (Index_type dz = 0; dz < MD1; ++dz) {
+///   for(Index_type dy=0; dy<mpa::D1D; ++dy) {
+///     for(Index_type dx=0; dx<mpa::D1D; ++dx) {
+///       Real_type u[mpa::D1D];
+///       for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
 ///        u[dz] = 0;
 ///       }
-///       for (Index_type qz = 0; qz < MQ1; ++qz) {
-///         for (Index_type dz = 0; dz < MD1; ++dz) {
+///       for (Index_type qz = 0; qz < mpa::Q1D; ++qz) {
+///         for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
 ///            u[dz] += QDD[qz][dy][dx] * Btsmem[dz][qz];
 ///          }
 ///       }
-///       for (Index_type dz = 0; dz < MD1; ++dz) {
+///       for (Index_type dz = 0; dz < mpa::D1D; ++dz) {
 ///         MPA_Y(dx, dy, dz, e) += u[dz];
 ///       }
 ///     }
