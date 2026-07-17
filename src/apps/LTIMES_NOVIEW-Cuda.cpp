@@ -383,6 +383,29 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
 }
 
 
+void LTIMES_NOVIEW::runCudaVariantM(VariantID vid)
+{
+  runCudaVariantImpl<0>(vid);
+}
+
+template < size_t block_size >
+void LTIMES_NOVIEW::runCudaVariantZGM(VariantID vid)
+{
+  runCudaVariantImpl<1, block_size>(vid);
+}
+
+void LTIMES_NOVIEW::runCudaVariantLaunchM(VariantID vid)
+{
+  runCudaVariantImpl<2>(vid);
+}
+
+template < size_t block_size >
+void LTIMES_NOVIEW::runCudaVariantLaunchZGM(VariantID vid)
+{
+  runCudaVariantImpl<3, block_size>(vid);
+}
+
+
 void LTIMES_NOVIEW::defineCudaVariantTunings()
 {
 
@@ -395,15 +418,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
 
       if (vid == RAJA_CUDA) {
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<0>>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM>(
             vid, "kernel_m_"+std::to_string(m_block_size));
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<2>>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantLaunchM>(
             vid, "launch_m_"+std::to_string(m_block_size));
 
       } else {
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<0>>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM>(
             vid, "block_m_"+std::to_string(m_block_size));
 
       }
@@ -421,15 +444,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
 
         if (vid == RAJA_CUDA) {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<1, block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<3, block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantLaunchZGM<block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
 
         } else {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantImpl<1, block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
 
         }

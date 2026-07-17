@@ -167,6 +167,17 @@ void LTIMES::runSyclVariantImpl(VariantID vid)
 }
 
 
+void LTIMES::runSyclVariantM(VariantID vid)
+{
+  runSyclVariantImpl<0>(vid);
+}
+
+void LTIMES::runSyclVariantLaunchM(VariantID vid)
+{
+  runSyclVariantImpl<1>(vid);
+}
+
+
 void LTIMES::defineSyclVariantTunings()
 {
 
@@ -179,15 +190,15 @@ void LTIMES::defineSyclVariantTunings()
 
       if (vid == RAJA_SYCL) {
 
-        addVariantTuning<&LTIMES::runSyclVariantImpl<0>>(
+        addVariantTuning<&LTIMES::runSyclVariantM>(
             vid, "kernel_m_"+std::to_string(m_work_group_size));
 
-        addVariantTuning<&LTIMES::runSyclVariantImpl<1>>(
+        addVariantTuning<&LTIMES::runSyclVariantLaunchM>(
             vid, "launch_m_"+std::to_string(m_work_group_size));
 
       } else {
 
-        addVariantTuning<&LTIMES::runSyclVariantImpl<0>>(
+        addVariantTuning<&LTIMES::runSyclVariantM>(
             vid, "block_m_"+std::to_string(m_work_group_size));
 
       }

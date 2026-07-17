@@ -380,6 +380,29 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 }
 
 
+void LTIMES::runCudaVariantM(VariantID vid)
+{
+  runCudaVariantImpl<0>(vid);
+}
+
+template < size_t block_size >
+void LTIMES::runCudaVariantZGM(VariantID vid)
+{
+  runCudaVariantImpl<1, block_size>(vid);
+}
+
+void LTIMES::runCudaVariantLaunchM(VariantID vid)
+{
+  runCudaVariantImpl<2>(vid);
+}
+
+template < size_t block_size >
+void LTIMES::runCudaVariantLaunchZGM(VariantID vid)
+{
+  runCudaVariantImpl<3, block_size>(vid);
+}
+
+
 void LTIMES::defineCudaVariantTunings()
 {
 
@@ -391,12 +414,12 @@ void LTIMES::defineCudaVariantTunings()
         run_params.validGPUBlockSize(m_block_size)) {
 
       if (vid == RAJA_CUDA) {
-        addVariantTuning<&LTIMES::runCudaVariantImpl<0>>(
+        addVariantTuning<&LTIMES::runCudaVariantM>(
             vid, "kernel_m_"+std::to_string(m_block_size));
-        addVariantTuning<&LTIMES::runCudaVariantImpl<2>>(
+        addVariantTuning<&LTIMES::runCudaVariantLaunchM>(
             vid, "launch_m_"+std::to_string(m_block_size));
       } else {
-        addVariantTuning<&LTIMES::runCudaVariantImpl<0>>(
+        addVariantTuning<&LTIMES::runCudaVariantM>(
             vid, "block_m_"+std::to_string(m_block_size));
       }
 
@@ -412,12 +435,12 @@ void LTIMES::defineCudaVariantTunings()
           run_params.validGPUBlockSize(block_size)) {
 
         if (vid == RAJA_CUDA) {
-          addVariantTuning<&LTIMES::runCudaVariantImpl<1, block_size>>(
+          addVariantTuning<&LTIMES::runCudaVariantZGM<block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
-          addVariantTuning<&LTIMES::runCudaVariantImpl<3, block_size>>(
+          addVariantTuning<&LTIMES::runCudaVariantLaunchZGM<block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
         } else {
-          addVariantTuning<&LTIMES::runCudaVariantImpl<1, block_size>>(
+          addVariantTuning<&LTIMES::runCudaVariantZGM<block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
         }
 
