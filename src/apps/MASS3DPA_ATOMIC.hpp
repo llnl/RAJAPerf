@@ -150,24 +150,20 @@
 
 #include "RAJA/RAJA.hpp"
 
-#include <string>
-
 // Number of Dofs/Qpts in 1D
 namespace mpa_at {
 constexpr RAJA::Index_type D1D = 3;
 constexpr RAJA::Index_type Q1D = 4;
 } // namespace mpa_at
 
-#define MASS3DPA_ATOMIC_GEOMETRIES(APPLY)                                     \
-  APPLY(Block8D2Q2, "block_8_d2q2", 2, 2)                                     \
-  APPLY(Block64D4Q4, "block_64_d4q4", 4, 4)                                   \
-  APPLY(Block216D6Q6, "block_216_d6q6", 6, 6)
-
-#define MPAT_B(x, y) B[x + MQ1 * y]
+#define MPAT_B(x, y) B[x + mpa_at::Q1D * y]
 #define MPAT_D(qx, qy, qz, e)                                                  \
-  D[qx + MQ1 * qy + MQ1 * MQ1 * qz + MQ1 * MQ1 * MQ1 * e]
+  D[qx + mpa_at::Q1D * qy + mpa_at::Q1D * mpa_at::Q1D * qz +                   \
+    mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D * e]
 
 #define MASS3DPA_ATOMIC_0_CPU                                                  \
+  constexpr Index_type MQ1 = mpa_at::Q1D;                                      \
+  constexpr Index_type MD1 = mpa_at::D1D;                                      \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   Real_type sm_B[MQ1][MD1];                                                    \
   Real_type sm_Bt[MD1][MQ1];                                                   \
@@ -182,6 +178,8 @@ constexpr RAJA::Index_type Q1D = 4;
   Index_type thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_0_GPU                                                  \
+  constexpr Index_type MQ1 = mpa_at::Q1D;                                      \
+  constexpr Index_type MD1 = mpa_at::D1D;                                      \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   RAJA_TEAM_SHARED Real_type sm_B[MQ1][MD1];                                   \
   RAJA_TEAM_SHARED Real_type sm_Bt[MD1][MQ1];                                  \
@@ -196,8 +194,8 @@ constexpr RAJA::Index_type Q1D = 4;
   RAJA_TEAM_SHARED Index_type thread_dofs[MD1 * MD1 * MD1];
 
 #define MASS3DPA_ATOMIC_1                                                      \
-  Index_type j = dx + MD1 * (dy + dz * MD1);                                   \
-  thread_dofs[j] = ElemToDoF[j + MD1 * MD1 * MD1 * e];                         \
+  Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);                   \
+  thread_dofs[j] = ElemToDoF[j + mpa_at::D1D * mpa_at::D1D * mpa_at::D1D * e]; \
   sm_X[dz][dy][dx] =                                                           \
       X[thread_dofs[j]]; // missing dof_map for lexicographical ordering
 
@@ -209,7 +207,7 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * D1D
 #define MASS3DPA_ATOMIC_3                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type dx = 0; dx < MD1; ++dx) {                                    \
+  for (Index_type dx = 0; dx < mpa_at::D1D; ++dx) {                            \
     u += sm_X[dz][dy][dx] * sm_B[qx][dx];                                      \
   }                                                                            \
   DDQ[dz][dy][qx] = u;
@@ -217,7 +215,7 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * D1D
 #define MASS3DPA_ATOMIC_4                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type dy = 0; dy < MD1; ++dy) {                                    \
+  for (Index_type dy = 0; dy < mpa_at::D1D; ++dy) {                            \
     u += DDQ[dz][dy][qx] * sm_B[qy][dy];                                       \
   }                                                                            \
   DQQ[dz][qy][qx] = u;
@@ -225,7 +223,7 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * D1D + 1
 #define MASS3DPA_ATOMIC_5                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type dz = 0; dz < MD1; ++dz) {                                    \
+  for (Index_type dz = 0; dz < mpa_at::D1D; ++dz) {                            \
     u += DQQ[dz][qy][qx] * sm_B[qz][dz];                                       \
   }                                                                            \
   QQQ[qz][qy][qx] = u * MPAT_D(qx, qy, qz, e);
@@ -233,7 +231,7 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * Q1D
 #define MASS3DPA_ATOMIC_6                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type qx = 0; qx < MQ1; ++qx) {                                    \
+  for (Index_type qx = 0; qx < mpa_at::Q1D; ++qx) {                            \
     u += QQQ[qz][qy][qx] * sm_Bt[dx][qx];                                      \
   }                                                                            \
   QQD[qz][qy][dx] = u;
@@ -241,7 +239,7 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * Q1D
 #define MASS3DPA_ATOMIC_7                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type qy = 0; qy < MQ1; ++qy) {                                    \
+  for (Index_type qy = 0; qy < mpa_at::Q1D; ++qy) {                            \
     u += QQD[qz][qy][dx] * sm_Bt[dy][qy];                                      \
   }                                                                            \
   QDD[qz][dy][dx] = u;
@@ -249,10 +247,10 @@ constexpr RAJA::Index_type Q1D = 4;
 // 2 * Q1D + 1
 #define MASS3DPA_ATOMIC_8                                                      \
   Real_type u = 0.0;                                                           \
-  for (Index_type qz = 0; qz < MQ1; ++qz) {                                    \
+  for (Index_type qz = 0; qz < mpa_at::Q1D; ++qz) {                            \
     u += QDD[qz][dy][dx] * sm_Bt[dz][qz];                                      \
   }                                                                            \
-  const Index_type j = dx + MD1 * (dy + dz * MD1);
+  const Index_type j = dx + mpa_at::D1D * (dy + dz * mpa_at::D1D);
 
 #define MASS3DPA_ATOMIC_9(atomicAdd)                                           \
   atomicAdd(Y[thread_dofs[j]], u); // atomic add
@@ -282,29 +280,14 @@ public:
   void runSeqVariant(VariantID vid);
   void runOpenMPVariant(VariantID vid);
 
-  template <Index_type D1D, Index_type Q1D>
-  void runSeqVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D>
-  void runOpenMPVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D, size_t block_size>
-  void runCudaVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D, size_t block_size>
-  void runHipVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
-  void runSyclVariantImpl(VariantID vid);
+  template <size_t block_size> void runCudaVariantImpl(VariantID vid);
+  template <size_t block_size> void runHipVariantImpl(VariantID vid);
+  template <size_t work_group_size> void runSyclVariantImpl(VariantID vid);
 
 private:
   static const size_t default_gpu_block_size =
       mpa_at::Q1D * mpa_at::Q1D * mpa_at::Q1D;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
-
-  struct Geometry {
-    Index_type d1d;
-    Index_type q1d;
-  };
-
-  Geometry getGeometryForTuning(VariantID vid, size_t tune_idx) const;
-  void configureGeometryForTuning(VariantID vid, size_t tune_idx);
 
   Real_ptr m_B;
   Real_ptr m_D;
@@ -320,10 +303,6 @@ private:
   Index_ptr m_ElemToDoF;
 
   Index_type m_NE;
-  Index_type m_D1D;
-  Index_type m_Q1D;
-  Index_type m_target_size;
-  Index_type m_target_reps;
 };
 
 } // end namespace apps

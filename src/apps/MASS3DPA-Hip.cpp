@@ -397,23 +397,12 @@ void MASS3DPA::runHipVariantImpl(VariantID vid) {
 void MASS3DPA::defineHipVariantTunings()
 {
   for (VariantID vid : {Base_HIP, RAJA_HIP}) {
-#define MASS3DPA_HIP_TUNING(name, tuning_name, d1d, q1d)                       \
-    {                                                                          \
-      constexpr Index_type TBATCH = std::min(                                  \
-          (128 + std::max(d1d, q1d) * std::max(d1d, q1d) *                     \
-                     std::max(d1d, q1d) - 1) /                                 \
-              (std::max(d1d, q1d) * std::max(d1d, q1d) *                       \
-               std::max(d1d, q1d)),                                            \
-          64);                                                                 \
-      constexpr size_t block_size = q1d * q1d * TBATCH;                        \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        addVariantTuning<&MASS3DPA::runHipVariantImpl<d1d, q1d, TBATCH>>(      \
-            vid, tuning_name);                                                 \
-      }                                                                        \
+    constexpr size_t block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+      addVariantTuning<&MASS3DPA::runHipVariantImpl<
+          mpa::D1D, mpa::Q1D, mpa::TBATCH>>(vid, "block_64");
     }
-    MASS3DPA_GEOMETRIES(MASS3DPA_HIP_TUNING)
-#undef MASS3DPA_HIP_TUNING
   }
 }
 

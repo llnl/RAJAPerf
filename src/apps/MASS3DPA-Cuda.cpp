@@ -396,23 +396,12 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
 void MASS3DPA::defineCudaVariantTunings()
 {
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
-#define MASS3DPA_CUDA_TUNING(name, tuning_name, d1d, q1d)                      \
-    {                                                                          \
-      constexpr Index_type TBATCH = std::min(                                  \
-          (128 + std::max(d1d, q1d) * std::max(d1d, q1d) *                     \
-                     std::max(d1d, q1d) - 1) /                                 \
-              (std::max(d1d, q1d) * std::max(d1d, q1d) *                       \
-               std::max(d1d, q1d)),                                            \
-          64);                                                                 \
-      constexpr size_t block_size = q1d * q1d * TBATCH;                        \
-      if (run_params.numValidGPUBlockSize() == 0u ||                           \
-          run_params.validGPUBlockSize(block_size)) {                          \
-        addVariantTuning<&MASS3DPA::runCudaVariantImpl<d1d, q1d, TBATCH>>(     \
-            vid, tuning_name);                                                 \
-      }                                                                        \
+    constexpr size_t block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+      addVariantTuning<&MASS3DPA::runCudaVariantImpl<
+          mpa::D1D, mpa::Q1D, mpa::TBATCH>>(vid, "block_64");
     }
-    MASS3DPA_GEOMETRIES(MASS3DPA_CUDA_TUNING)
-#undef MASS3DPA_CUDA_TUNING
   }
 }
 

@@ -170,24 +170,12 @@
 
 #include "RAJA/RAJA.hpp"
 
-#include <algorithm>
-#include <string>
-
-// Number of Dofs/Qpts in 1D for non-geometry-specialized variants.
+// Number of Dofs/Qpts in 1D
 namespace mpa {
-  constexpr RAJA::Index_type D1D = 2;
-  constexpr RAJA::Index_type Q1D = 2;
-  constexpr RAJA::Index_type TBATCH = std::min(
-      (128 + std::max(D1D, Q1D) * std::max(D1D, Q1D) *
-                 std::max(D1D, Q1D) - 1) /
-          (std::max(D1D, Q1D) * std::max(D1D, Q1D) * std::max(D1D, Q1D)),
-      RAJA::Index_type(64));
+constexpr RAJA::Index_type D1D = 2;
+constexpr RAJA::Index_type Q1D = 2;
+constexpr RAJA::Index_type TBATCH = 16;
 } // namespace mpa
-
-#define MASS3DPA_GEOMETRIES(APPLY)                                            \
-  APPLY(Block64D2Q2T16, "block_64_d2q2t16", 2, 2)                             \
-  APPLY(Block32D4Q4T2, "block_32_d4q4t2", 4, 4)                               \
-  APPLY(Block36D6Q6T1, "block_36_d6q6t1", 6, 6)
 
 #define MPA_B(x, y) B[x + MQ1 * y]
 #define MPA_Bt(x, y) Bt[x + MD1 * y]
@@ -399,14 +387,6 @@ private:
   static const size_t default_gpu_block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
   using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
 
-  struct Geometry {
-    Index_type d1d;
-    Index_type q1d;
-  };
-
-  Geometry getGeometryForTuning(VariantID vid, size_t tune_idx) const;
-  void configureGeometryForTuning(VariantID vid, size_t tune_idx);
-
   Real_ptr m_B;
   Real_ptr m_Bt;
   Real_ptr m_D;
@@ -414,10 +394,6 @@ private:
   Real_ptr m_Y;
 
   Index_type m_NE;
-  Index_type m_D1D;
-  Index_type m_Q1D;
-  Index_type m_target_size;
-  Index_type m_target_reps;
 };
 
 } // end namespace apps

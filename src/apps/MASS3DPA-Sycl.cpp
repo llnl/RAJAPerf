@@ -311,18 +311,13 @@ void MASS3DPA::runSyclVariantImpl(VariantID vid) {
 void MASS3DPA::defineSyclVariantTunings()
 {
   for (VariantID vid : {Base_SYCL, RAJA_SYCL}) {
-#define MASS3DPA_SYCL_TUNING(name, tuning_name, d1d, q1d)                     \
-    {                                                                         \
-      constexpr Index_type TBATCH = 1;                                        \
-      constexpr size_t block_size = q1d * q1d * TBATCH;                       \
-      if (run_params.numValidGPUBlockSize() == 0u ||                          \
-          run_params.validGPUBlockSize(block_size)) {                         \
-        addVariantTuning<&MASS3DPA::runSyclVariantImpl<d1d, q1d, TBATCH>>(    \
-            vid, tuning_name);                                                \
-      }                                                                       \
+    constexpr Index_type TBATCH = 1;
+    constexpr size_t block_size = mpa::Q1D * mpa::Q1D * TBATCH;
+    if (run_params.numValidGPUBlockSize() == 0u ||
+        run_params.validGPUBlockSize(block_size)) {
+      addVariantTuning<&MASS3DPA::runSyclVariantImpl<
+          mpa::D1D, mpa::Q1D, TBATCH>>(vid, "block_4");
     }
-    MASS3DPA_GEOMETRIES(MASS3DPA_SYCL_TUNING)
-#undef MASS3DPA_SYCL_TUNING
   }
 }
 

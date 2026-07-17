@@ -254,10 +254,7 @@ void MASS3DPA::runSeqVariant(VariantID vid)
 void MASS3DPA::defineSeqVariantTunings()
 {
   for (VariantID vid : {Base_Seq, RAJA_Seq}) {
-#define MASS3DPA_SEQ_TUNING(name, tuning_name, d1d, q1d)                      \
-    addVariantTuning<&MASS3DPA::runSeqVariantImpl<d1d, q1d>>(vid, tuning_name);
-    MASS3DPA_GEOMETRIES(MASS3DPA_SEQ_TUNING)
-#undef MASS3DPA_SEQ_TUNING
+    addVariantTuning<&MASS3DPA::runSeqVariant>(vid, getDefaultTuningName());
   }
 }
 

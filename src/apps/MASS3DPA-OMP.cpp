@@ -259,11 +259,7 @@ void MASS3DPA::runOpenMPVariant(VariantID vid)
 void MASS3DPA::defineOpenMPVariantTunings()
 {
   for (VariantID vid : {Base_OpenMP, RAJA_OpenMP}) {
-#define MASS3DPA_OPENMP_TUNING(name, tuning_name, d1d, q1d)                   \
-    addVariantTuning<&MASS3DPA::runOpenMPVariantImpl<d1d, q1d>>(              \
-        vid, tuning_name);
-    MASS3DPA_GEOMETRIES(MASS3DPA_OPENMP_TUNING)
-#undef MASS3DPA_OPENMP_TUNING
+    addVariantTuning<&MASS3DPA::runOpenMPVariant>(vid, getDefaultTuningName());
   }
 }
 
