@@ -329,11 +329,11 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
       using launch_policy =
           RAJA::LaunchPolicy<RAJA::hip_launch_t<async, zgm_m_block_sz*zgm_g_block_sz*zgm_z_block_sz>>;
 
-      using z_policy = RAJA::LoopPolicy<RAJA::hip_global_size_z_loop<zgm_z_block_sz>>;
+      using z_policy = RAJA::LoopPolicy<RAJA::hip_global_size_z_direct<zgm_z_block_sz>>;
 
-      using g_policy = RAJA::LoopPolicy<RAJA::hip_global_size_y_loop<zgm_g_block_sz>>;
+      using g_policy = RAJA::LoopPolicy<RAJA::hip_global_size_y_direct<zgm_g_block_sz>>;
 
-      using m_policy = RAJA::LoopPolicy<RAJA::hip_global_size_x_loop<zgm_m_block_sz>>;
+      using m_policy = RAJA::LoopPolicy<RAJA::hip_global_size_x_direct<zgm_m_block_sz>>;
 
       using d_policy = RAJA::LoopPolicy<RAJA::seq_exec>;
 
