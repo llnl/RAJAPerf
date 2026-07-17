@@ -354,6 +354,23 @@ class RunParams;
 
 namespace apps {
 
+struct MASS3DPAValidGPUBlockSize
+{
+  static constexpr bool valid(size_t block_size)
+  {
+    return block_size > 0u &&
+           block_size % (mpa::Q1D * mpa::Q1D) == 0u;
+  }
+};
+
+struct MASS3DPAValidSyclGPUBlockSize
+{
+  static constexpr bool valid(size_t block_size)
+  {
+    return block_size == mpa::Q1D * mpa::Q1D;
+  }
+};
+
 class MASS3DPA : public KernelBase {
 public:
   MASS3DPA(const RunParams &params);
@@ -387,7 +404,14 @@ public:
 
 private:
   static const size_t default_gpu_block_size = mpa::Q1D * mpa::Q1D * mpa::TBATCH;
-  using gpu_block_sizes_type = integer::list_type<default_gpu_block_size>;
+  static const size_t sycl_gpu_block_size = mpa::Q1D * mpa::Q1D;
+
+  using gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<default_gpu_block_size,
+                                             MASS3DPAValidGPUBlockSize>;
+  using sycl_gpu_block_sizes_type =
+      integer::make_gpu_block_size_list_type<sycl_gpu_block_size,
+                                             MASS3DPAValidSyclGPUBlockSize>;
 
   Real_ptr m_B;
   Real_ptr m_Bt;

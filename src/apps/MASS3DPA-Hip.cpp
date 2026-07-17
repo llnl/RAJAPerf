@@ -397,29 +397,19 @@ void MASS3DPA::runHipVariantImpl(VariantID vid) {
 void MASS3DPA::defineHipVariantTunings()
 {
   for (VariantID vid : {Base_HIP, RAJA_HIP}) {
-    constexpr Index_type TBATCH_16 = 16;
-    constexpr size_t block_size_16 = mpa::Q1D * mpa::Q1D * TBATCH_16;
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size_16)) {
-      addVariantTuning<&MASS3DPA::runHipVariantImpl<
-          mpa::D1D, mpa::Q1D, TBATCH_16>>(vid, "block_64_batch_16");
-    }
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+      constexpr size_t block_size_value = decltype(block_size)::value;
+      constexpr Index_type TBATCH =
+          static_cast<Index_type>(block_size_value / (mpa::Q1D * mpa::Q1D));
 
-    constexpr Index_type TBATCH_8 = 8;
-    constexpr size_t block_size_8 = mpa::Q1D * mpa::Q1D * TBATCH_8;
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size_8)) {
-      addVariantTuning<&MASS3DPA::runHipVariantImpl<
-          mpa::D1D, mpa::Q1D, TBATCH_8>>(vid, "block_32_batch_8");
-    }
-
-    constexpr Index_type TBATCH_4 = 4;
-    constexpr size_t block_size_4 = mpa::Q1D * mpa::Q1D * TBATCH_4;
-    if (run_params.numValidGPUBlockSize() == 0u ||
-        run_params.validGPUBlockSize(block_size_4)) {
-      addVariantTuning<&MASS3DPA::runHipVariantImpl<
-          mpa::D1D, mpa::Q1D, TBATCH_4>>(vid, "block_16_batch_4");
-    }
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size_value)) {
+        addVariantTuning<&MASS3DPA::runHipVariantImpl<
+            mpa::D1D, mpa::Q1D, TBATCH>>(
+            vid, "block_" + std::to_string(block_size_value) +
+                     "_batch_" + std::to_string(TBATCH));
+      }
+    });
   }
 }
 
