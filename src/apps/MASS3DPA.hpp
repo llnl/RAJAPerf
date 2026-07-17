@@ -187,6 +187,8 @@ constexpr RAJA::Index_type TBATCH = 16;
   D[qx + MQ1 * qy + MQ1 * MQ1 * qz + MQ1 * MQ1 * MQ1 * e]
 
 #define MASS3DPA_0_CPU                                                         \
+  constexpr Index_type MD1 = mpa::D1D;                                         \
+  constexpr Index_type MQ1 = mpa::Q1D;                                         \
   constexpr Index_type MDQ = (MQ1 > MD1) ? MQ1 : MD1;                          \
   Real_type sDQ[MQ1 * MD1];                                                    \
   Real_type(*Bsmem)[MD1] = (Real_type(*)[MD1])sDQ;                             \
