@@ -395,9 +395,9 @@ public:
   void runSeqVariantImpl(VariantID vid);
   template <Index_type D1D, Index_type Q1D>
   void runOpenMPVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
+  template <size_t block_size>
   void runCudaVariantImpl(VariantID vid);
-  template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
+  template <size_t block_size>
   void runHipVariantImpl(VariantID vid);
   template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
   void runSyclVariantImpl(VariantID vid);

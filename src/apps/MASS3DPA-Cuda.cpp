@@ -23,13 +23,17 @@
 namespace rajaperf {
 namespace apps {
 
-template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
-  __launch_bounds__(Q1D * Q1D * TBATCH)
+template <size_t block_size>
+  __launch_bounds__(block_size)
 __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
                          const Real_ptr D, const Real_ptr X, Real_ptr Y,
                          Index_type NE) {
-  constexpr Index_type MD1 = D1D;
-  constexpr Index_type MQ1 = Q1D;
+  constexpr Index_type MD1 = mpa::D1D;
+  constexpr Index_type MQ1 = mpa::Q1D;
+  static_assert(block_size % (MQ1 * MQ1) == 0u,
+                "MASS3DPA block_size must be divisible by Q1D*Q1D");
+  constexpr Index_type TBATCH =
+      static_cast<Index_type>(block_size / (MQ1 * MQ1));
 
   const Index_type zbatch = threadIdx.z;
   const Index_type e = blockIdx.x * blockDim.z + zbatch;
@@ -117,11 +121,14 @@ __global__ void Mass3DPA(const Real_ptr B, const Real_ptr Bt,
   }
 }
 
-template <Index_type D1D, Index_type Q1D, Index_type TBATCH>
+template <size_t block_size>
 void MASS3DPA::runCudaVariantImpl(VariantID vid) {
-  constexpr Index_type MD1 = D1D;
-  constexpr Index_type MQ1 = Q1D;
-  constexpr size_t block_size = Q1D * Q1D * TBATCH;
+  constexpr Index_type MD1 = mpa::D1D;
+  constexpr Index_type MQ1 = mpa::Q1D;
+  static_assert(block_size % (MQ1 * MQ1) == 0u,
+                "MASS3DPA block_size must be divisible by Q1D*Q1D");
+  constexpr Index_type TBATCH =
+      static_cast<Index_type>(block_size / (MQ1 * MQ1));
   setBlockSize(block_size);
 
   const Index_type run_reps = getRunReps();
@@ -143,7 +150,7 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
       dim3 nthreads_per_block(MQ1, MQ1, TBATCH);
       constexpr size_t shmem = 0;
 
-      RPlaunchCudaKernel( (Mass3DPA<D1D, Q1D, TBATCH>),
+      RPlaunchCudaKernel( (Mass3DPA<block_size>),
                           num_elem_blocks, nthreads_per_block,
                           shmem, res.get_stream(),
                           B, Bt, D, X, Y, NE );
@@ -393,24 +400,7 @@ void MASS3DPA::runCudaVariantImpl(VariantID vid) {
   }
 }
 
-void MASS3DPA::defineCudaVariantTunings()
-{
-  for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
-    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
-      constexpr size_t block_size_value = decltype(block_size)::value;
-      constexpr Index_type TBATCH =
-          static_cast<Index_type>(block_size_value / (mpa::Q1D * mpa::Q1D));
-
-      if (run_params.numValidGPUBlockSize() == 0u ||
-          run_params.validGPUBlockSize(block_size_value)) {
-        addVariantTuning<&MASS3DPA::runCudaVariantImpl<
-            mpa::D1D, mpa::Q1D, TBATCH>>(
-            vid, "block_" + std::to_string(block_size_value) +
-                     "_batch_" + std::to_string(TBATCH));
-      }
-    });
-  }
-}
+RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(MASS3DPA, Cuda, Base_CUDA, RAJA_CUDA)
 
 } // end namespace apps
 } // end namespace rajaperf
