@@ -29,6 +29,7 @@
 
 
 #include "common/KernelBase.hpp"
+#include <random>
 
 namespace rajaperf
 {
@@ -53,6 +54,57 @@ public:
   void defineSeqVariantTunings();
 
   void runSeqVariant(VariantID vid);
+
+  enum Event {
+    CENSUS,
+    SCATTER,
+    ABSORB,
+    BORN,
+  };
+
+  enum BC {
+    ELEMENT,
+    REFLECT,
+    VACUUM,
+    SOURCE,
+  };
+
+  struct XS {
+    double scatter;
+    double abs;
+    double fission;
+    double nu_fission;
+    double total;
+  };
+
+  struct Cell {
+    public:
+      int ID;
+      std::array<double, 6> planes; //-x, +x, -y, +y, -z, +z
+      std::array<double, 6> BC;
+      std::array<int, 6> next;
+      int matID; 
+  };
+
+  struct Material {
+    int isotopeCt;
+    std:vector<double> conc;
+    std:vector<int> nucIDs;
+  }
+
+  struct Particles {
+    public:
+      std::vector<int> cell;
+      std::vector<int> group;
+      std::vector<Event> lastEvent; //doubles as tracker for particle alive
+      std::vector<double> pos;
+      std::vector<double> dir;
+      std::vector<double> E;
+      std::vector<double> dx;     //remaining distance to census
+      std::vector<uint64_t> seed; 
+      std::vector<XS> prevXS;
+      std::vector<bool> newState; //quick lookup to see if particle state changed and if prevXS valid
+  };
 
 private:
   Real_ptr m_in;
