@@ -78,19 +78,15 @@ public:
   void runOpenMPVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
 
+  template < size_t tune_idx >
   void runCudaVariantM(VariantID vid);
-  template < size_t block_size >
+  template < size_t tune_idx, size_t block_size >
   void runCudaVariantZGM(VariantID vid);
-  void runCudaVariantLaunchM(VariantID vid);
-  template < size_t block_size >
-  void runCudaVariantLaunchZGM(VariantID vid);
 
+  template < size_t tune_idx >
   void runHipVariantM(VariantID vid);
-  template < size_t block_size >
+  template < size_t tune_idx, size_t block_size >
   void runHipVariantZGM(VariantID vid);
-  void runHipVariantLaunchM(VariantID vid);
-  template < size_t block_size >
-  void runHipVariantLaunchZGM(VariantID vid);
 
   void runSyclVariantM(VariantID vid);
   void runSyclVariantLaunchM(VariantID vid);

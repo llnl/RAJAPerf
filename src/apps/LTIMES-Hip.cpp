@@ -379,26 +379,16 @@ void LTIMES::runHipVariantImpl(VariantID vid)
 }
 
 
+template < size_t tune_idx >
 void LTIMES::runHipVariantM(VariantID vid)
 {
-  runHipVariantImpl<0>(vid);
+  runHipVariantImpl<tune_idx>(vid);
 }
 
-template < size_t block_size >
+template < size_t tune_idx, size_t block_size >
 void LTIMES::runHipVariantZGM(VariantID vid)
 {
-  runHipVariantImpl<1, block_size>(vid);
-}
-
-void LTIMES::runHipVariantLaunchM(VariantID vid)
-{
-  runHipVariantImpl<2>(vid);
-}
-
-template < size_t block_size >
-void LTIMES::runHipVariantLaunchZGM(VariantID vid)
-{
-  runHipVariantImpl<3, block_size>(vid);
+  runHipVariantImpl<tune_idx, block_size>(vid);
 }
 
 
@@ -413,12 +403,12 @@ void LTIMES::defineHipVariantTunings()
         run_params.validGPUBlockSize(m_block_size)) {
 
       if (vid == RAJA_HIP) {
-        addVariantTuning<&LTIMES::runHipVariantM>(
+        addVariantTuning<&LTIMES::runHipVariantM<0>>(
             vid, "kernel_m_"+std::to_string(m_block_size));
-        addVariantTuning<&LTIMES::runHipVariantLaunchM>(
+        addVariantTuning<&LTIMES::runHipVariantM<2>>(
             vid, "launch_m_"+std::to_string(m_block_size));
       } else {
-        addVariantTuning<&LTIMES::runHipVariantM>(
+        addVariantTuning<&LTIMES::runHipVariantM<0>>(
             vid, "block_m_"+std::to_string(m_block_size));
       }
 
@@ -434,12 +424,12 @@ void LTIMES::defineHipVariantTunings()
           run_params.validGPUBlockSize(block_size)) {
 
         if (vid == RAJA_HIP) {
-          addVariantTuning<&LTIMES::runHipVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES::runHipVariantZGM<1, block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
-          addVariantTuning<&LTIMES::runHipVariantLaunchZGM<block_size>>(
+          addVariantTuning<&LTIMES::runHipVariantZGM<3, block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
         } else {
-          addVariantTuning<&LTIMES::runHipVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES::runHipVariantZGM<1, block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
         }
 

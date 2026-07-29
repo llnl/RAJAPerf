@@ -383,26 +383,16 @@ void LTIMES_NOVIEW::runHipVariantImpl(VariantID vid)
 }
 
 
+template < size_t tune_idx >
 void LTIMES_NOVIEW::runHipVariantM(VariantID vid)
 {
-  runHipVariantImpl<0>(vid);
+  runHipVariantImpl<tune_idx>(vid);
 }
 
-template < size_t block_size >
+template < size_t tune_idx, size_t block_size >
 void LTIMES_NOVIEW::runHipVariantZGM(VariantID vid)
 {
-  runHipVariantImpl<1, block_size>(vid);
-}
-
-void LTIMES_NOVIEW::runHipVariantLaunchM(VariantID vid)
-{
-  runHipVariantImpl<2>(vid);
-}
-
-template < size_t block_size >
-void LTIMES_NOVIEW::runHipVariantLaunchZGM(VariantID vid)
-{
-  runHipVariantImpl<3, block_size>(vid);
+  runHipVariantImpl<tune_idx, block_size>(vid);
 }
 
 
@@ -418,15 +408,15 @@ void LTIMES_NOVIEW::defineHipVariantTunings()
 
       if (vid == RAJA_HIP) {
 
-        addVariantTuning<&LTIMES_NOVIEW::runHipVariantM>(
+        addVariantTuning<&LTIMES_NOVIEW::runHipVariantM<0>>(
             vid, "kernel_m_"+std::to_string(m_block_size));
 
-        addVariantTuning<&LTIMES_NOVIEW::runHipVariantLaunchM>(
+        addVariantTuning<&LTIMES_NOVIEW::runHipVariantM<2>>(
             vid, "launch_m_"+std::to_string(m_block_size));
 
       } else {
 
-        addVariantTuning<&LTIMES_NOVIEW::runHipVariantM>(
+        addVariantTuning<&LTIMES_NOVIEW::runHipVariantM<0>>(
             vid, "block_m_"+std::to_string(m_block_size));
 
       }
@@ -444,15 +434,15 @@ void LTIMES_NOVIEW::defineHipVariantTunings()
 
         if (vid == RAJA_HIP) {
 
-          addVariantTuning<&LTIMES_NOVIEW::runHipVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runHipVariantZGM<1, block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
 
-          addVariantTuning<&LTIMES_NOVIEW::runHipVariantLaunchZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runHipVariantZGM<3, block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
 
         } else {
 
-          addVariantTuning<&LTIMES_NOVIEW::runHipVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runHipVariantZGM<1, block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
 
         }

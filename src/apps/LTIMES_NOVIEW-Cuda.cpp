@@ -383,26 +383,16 @@ void LTIMES_NOVIEW::runCudaVariantImpl(VariantID vid)
 }
 
 
+template < size_t tune_idx >
 void LTIMES_NOVIEW::runCudaVariantM(VariantID vid)
 {
-  runCudaVariantImpl<0>(vid);
+  runCudaVariantImpl<tune_idx>(vid);
 }
 
-template < size_t block_size >
+template < size_t tune_idx, size_t block_size >
 void LTIMES_NOVIEW::runCudaVariantZGM(VariantID vid)
 {
-  runCudaVariantImpl<1, block_size>(vid);
-}
-
-void LTIMES_NOVIEW::runCudaVariantLaunchM(VariantID vid)
-{
-  runCudaVariantImpl<2>(vid);
-}
-
-template < size_t block_size >
-void LTIMES_NOVIEW::runCudaVariantLaunchZGM(VariantID vid)
-{
-  runCudaVariantImpl<3, block_size>(vid);
+  runCudaVariantImpl<tune_idx, block_size>(vid);
 }
 
 
@@ -418,15 +408,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
 
       if (vid == RAJA_CUDA) {
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM<0>>(
             vid, "kernel_m_"+std::to_string(m_block_size));
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantLaunchM>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM<2>>(
             vid, "launch_m_"+std::to_string(m_block_size));
 
       } else {
 
-        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM>(
+        addVariantTuning<&LTIMES_NOVIEW::runCudaVariantM<0>>(
             vid, "block_m_"+std::to_string(m_block_size));
 
       }
@@ -444,15 +434,15 @@ void LTIMES_NOVIEW::defineCudaVariantTunings()
 
         if (vid == RAJA_CUDA) {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<1, block_size>>(
               vid, "kernel_zgm_"+std::to_string(block_size));
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantLaunchZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<3, block_size>>(
               vid, "launch_zgm_"+std::to_string(block_size));
 
         } else {
 
-          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<block_size>>(
+          addVariantTuning<&LTIMES_NOVIEW::runCudaVariantZGM<1, block_size>>(
               vid, "block_zgm_"+std::to_string(block_size));
 
         }
