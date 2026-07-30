@@ -20,12 +20,56 @@
 
 
 #define TRANSPORT3DMC_DATA_SETUP \
-  Real_ptr in = m_in; \
-  Real_ptr out = m_out;
+  TRANSPORT3DMC::XS cross; \
+  double scatterDx; \
+  double absDX;\
+  double fissionDX; \
+  double boundaryDX; \
+  double censusDX; \
+  double minDX;\
+  Index_type p; \
+  Index_type nxt; \
+  Material m;
 
-// Placeholder body. Replace this statement with the target kernel operation.
+
 #define TRANSPORT3DMC_BODY \
-  out[i] = in[i];
+  for (p = 0; p < particles.count; p++) { \
+    while(particles.lastEvent[p] != CENSUS || particles.lastEvent[p] != ABSORB ) { \
+      if (particles.cell[p] == -1) \
+        break; \
+        //TODO: Implement search for particle to find cell 
+      m = mesh[particles.cell[p]].matID; \
+      cross = calcMacroXS(m, particles.group[p]); \
+      scatterDX = calcDistScatter(cross.scatter); \
+      absDX = calcDistAbs(cross.abs); \
+      fissionDX = calcDistFission(cross.fission); \
+      nufissionDX = calcDistNuFission(cross.nu_fission); \
+      boundaryDX = particles.cell[p].getBoundary(particles.pos[p], particles.dir[p], nxt); \
+      particles.calcDX(p); \
+      minDX = min(scatterDX, min(absDX, min(fissionDX, min(boundaryDX, particles.dx[p])))); \
+      particles.dx[p] -= minDX; \
+      if (particles.E[p] < cutoff || minDX == absDX) \
+        particles.lastEvent[p] = ABSORB; \
+      else if (minDX == scatterDX) { \
+        particles.lastEvent[p] = SCATTER; \
+        //TODO: Sample direction
+      } \
+      else if (minDX == fissionDX) { \
+        particles.lastEvent[p] = FISSION; \
+        //TODO: Handle fission (kill particle? do nothing?)
+      } \
+      else if (minDX == nufissionDX) { \
+        particles.lastEvent[p] = FISSION; \
+        //TODO: Handle nu-fission (extend lifetime?)
+      } \
+      else if (minDX == boundaryDX) {\
+        //TODO: Handle BCs
+      }
+      else {
+        particles.lastEvent[p] = CENSUS;
+      }
+    } \
+  } \
 
 
 #include "common/KernelBase.hpp"
@@ -55,11 +99,18 @@ public:
 
   void runSeqVariant(VariantID vid);
 
+  #define dt 0.001
+  #define n_isotope 5
+  #define groups 1
+  #define cutoff 1e-5
+
   enum Event {
     CENSUS,
     SCATTER,
     ABSORB,
     BORN,
+    FISSION,
+    BOUNDARY
   };
 
   enum BC {
@@ -75,40 +126,72 @@ public:
     double fission;
     double nu_fission;
     double total;
+
+    XS();
+    operator*(int c);
+    operator+(XS sigma);
   };
 
   struct Cell {
     public:
+      static int GLBL = 0;
       int ID;
       std::array<double, 6> planes; //-x, +x, -y, +y, -z, +z
       std::array<double, 6> BC;
       std::array<int, 6> next;
-      int matID; 
+      int matID;
+
+      Cell(); 
+      double getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross);
   };
 
   struct Material {
     int isotopeCt;
     std:vector<double> conc;
     std:vector<int> nucIDs;
+
+    Material() {
+      isotopeCt = 1;
+      conc = std::vector(1, 500.0);
+      nucIDs = std::vector(1, 0);
+    }
   }
 
   struct Particles {
     public:
+      size_t count;
       std::vector<int> cell;
-      std::vector<int> group;
+      std::vector<int> group;       //lower is higher energy
       std::vector<Event> lastEvent; //doubles as tracker for particle alive
-      std::vector<double> pos;
-      std::vector<double> dir;
+      std::vector<std::array<double,3> > pos;
+      std::vector<std::array<double,3> > dir;
       std::vector<double> E;
       std::vector<double> dx;     //remaining distance to census
       std::vector<uint64_t> seed; 
       std::vector<XS> prevXS;
       std::vector<bool> newState; //quick lookup to see if particle state changed and if prevXS valid
+
+      //using fixed parameters for debug for now
+      Particles();
+      // convert energy to speed to distance
+      calcDX(Index_type i);
   };
 
+  // simple MFP
+  XS calcMacroXS (size_t mat);
+  double calcDistScatter(double SigmaS);
+  double calcDistAbs(double SigmaA);
+  double calcDistFission(double SigmaF);
+  double calcDistNuFission(double SigmaNF);
+  std::array<double,3> > sampleScatter(u_int64_t seed);
+
+
 private:
-  Real_ptr m_in;
-  Real_ptr m_out;
+  std::vector<XS> XSTable; //(n_isotope*groups, );
+  std::vector<Material> materials; //(5, Material());
+  std::vector<Cell> mesh; // (1, Cell());
+  std::vector<double> bin;
+  Particles* particles;
 };
 
 } // end namespace apps
