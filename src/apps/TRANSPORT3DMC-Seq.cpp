@@ -21,11 +21,11 @@ namespace apps
 
 void TRANSPORT3DMC::runSeqVariant(VariantID vid)
 {
-  const Index_type run_reps = getRunReps();
+  const Index_type run_reps = 20;
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
-  TRANSPORT3DMC_DATA_SETUP;
+  TRANSPORT3DMC_DATA_SETUP(vid, iend);
 
 #if defined(RUN_RAJA_SEQ)
   auto transport3dmc_lam = [=](Index_type i) {
