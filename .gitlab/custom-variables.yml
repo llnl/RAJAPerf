@@ -57,7 +57,7 @@ variables:
 
   # Tuolumne (flux) allocation settings
   TUOLUMNE_SHARED_ALLOC: "OFF"
-  TUOLUMNE_JOB_ALLOC: "--queue=pci --nodes=1 --time-limit=15m"
+  TUOLUMNE_JOB_ALLOC: "--queue=pci --nodes=1 --time-limit=20m"
   # Arguments for performance job allocation (dedicated allocation with no overlapping).
   TUOLUMNE_PERF_ALLOC: "--queue=pci --exclusive --time-limit=15m --nodes=1"
   # Project specific variants for tuolumne
