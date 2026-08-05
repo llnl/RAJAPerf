@@ -61,12 +61,17 @@ TRANSPORT3DMC::~TRANSPORT3DMC()
 {
 }
 
+int TRANSPORT3DMC::Cell::GLBL = 0;
+
 void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
 {
-  dT = deltaT;
-  GROUPS = groups;
+  //GROUPS = groups;
+  RNGr.seed(18446744073709551557UL);
+  dist = std::uniform_real_distribution<double>(-1,1);
+  posDist = std::uniform_real_distribution<double>(0,1);
+
   CALI_MARK_BEGIN("Table setup");
-  XSTable = std::vector<XS>(N_ISOTOPE*groups, XS(1442695040888963407)); //arbitrary seed for cross section table
+  XSTable = std::vector<XS>(N_ISOTOPE*GROUPS, XS(RNGr, posDist)); //arbitrary seed for cross section table
   CALI_MARK_END("Table setup");
   
   //Materials copy-pasted from XSBench small problem
@@ -78,27 +83,27 @@ void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
   const size_t meshSide = 3;
 
   CALI_MARK_BEGIN("Init Mesh");
-  buildMeshCube(meshSide, mesh);
+  buildMeshCube(meshSide, mesh, RNGr, posDist);
   CALI_MARK_END("Init Mesh");
 
   CALI_MARK_BEGIN("Init Particles");
-  particles = Particles(partCt);
+  particles = Particles(partCt, RNGr, dist, posDist);
   CALI_MARK_BEGIN("Init Particles");
 
   // size_t centerCell = (meshSide / 2) * meshSide * meshSide + (meshSide / 2) * meshSide + (meshSide / 2);
   // std::fill(particles.cell.begin(), particles.cell.end(), static_cast<int>(centerCell));
   CALI_MARK_BEGIN("Bin Init");
-  bins = std::vector<double>(groups);
+  bins = std::vector<double>(GROUPS);
 
-  double binWidth = 14.1e6/(double)groups, binUpperBound = 0;
-  for (size_t i = 0; i < groups; i++) {
+  double binWidth = 14.1e6/(double)GROUPS, binUpperBound = 0;
+  for (size_t i = 0; i < GROUPS; i++) {
     binUpperBound += binWidth;
     bins[i] = binUpperBound;
   }
   CALI_MARK_END("Bin Init");
 }
 
-void initMaterials(std::vector<Material> &mats) {
+void TRANSPORT3DMC::initMaterials(std::vector<TRANSPORT3DMC::Material> &mats) {
   size_t matCt = 12;
   mats.resize(matCt);
 
@@ -147,7 +152,7 @@ void initMaterials(std::vector<Material> &mats) {
   
 }
 
-void buildMeshCube(size_t side, std::vector<Cell> &mesh) {
+void TRANSPORT3DMC::buildMeshCube(size_t side, std::vector<TRANSPORT3DMC::Cell> &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist) {
   if (side == 0) {
     throw std::invalid_argument("buildMeshCube side must be nonzero");
   }
@@ -156,27 +161,21 @@ void buildMeshCube(size_t side, std::vector<Cell> &mesh) {
   size_t layerSize = side * side;
   size_t cubeSz = side * side * side;
 
-  Cell::GLBL = 0;
+  TRANSPORT3DMC::Cell::GLBL = 0;
   mesh.clear();
-  mesh.reserve(cubeSz);
-  for (size_t i = 0; i < cubeSz; i++) {
-    mesh.emplace_back();
-  }
+  mesh.resize(cubeSz);
 
   auto index = [side, layerSize](size_t row, size_t col, size_t layer) {
     return static_cast<int>(layer * layerSize + col * side + row);
   };
 
   const double halfWidth = 0.5 * side * cellWidth;
-
-  std::uniform_int_distribution<int> matDist(0, 11);
-  std::mt19937_64 genr(11111111111111111111);
   
   for (size_t layer = 0; layer < side; layer++) {
     for (size_t col = 0; col < side; col++) {
       for (size_t row = 0; row < side; row++) {
         int i = index(row, col, layer);
-        Cell &cell = mesh[i];
+        TRANSPORT3DMC::Cell &cell = mesh[i];
 
         cell.next = {
           row > 0 ? index(row - 1, col, layer) : -1,
@@ -203,7 +202,7 @@ void buildMeshCube(size_t side, std::vector<Cell> &mesh) {
           zMin, zMin + cellWidth
         };
 
-        cell.matID = matDist(genr);      
+        cell.matID = 11 * posDist(RNGr);      
       }
     }
   }
@@ -227,7 +226,7 @@ void buildMeshCube(size_t side, std::vector<Cell> &mesh) {
 
 void TRANSPORT3DMC::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_out, getActualProblemSize(), vid);
+  addToChecksum(0);
 }
 
 void TRANSPORT3DMC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -248,7 +247,7 @@ TRANSPORT3DMC::XS::XS() {
   total = 0;
 }
 
-XS::XS(uint64_t seed) {
+TRANSPORT3DMC::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist) {
   //std::mt19937_64 rng(seed);
   scatter = posDist(RNGr);
   abs = posDist(RNGr);
@@ -257,23 +256,27 @@ XS::XS(uint64_t seed) {
   total = scatter + abs + fission + nu_fission;
 }
 
-TRANSPORT3DMC::XS::operator*(int c) {
-  scatter *= c;
-  abs *= c;
-  fission *= c;
-  nu_fission *= c;
-  total *= c;
+TRANSPORT3DMC::XS TRANSPORT3DMC::XS::operator*(const double c) const {
+  XS result = *this;
+  result.scatter *= c;
+  result.abs *= c;
+  result.fission *= c;
+  result.nu_fission *= c;
+  result.total *= c;
+  return result;
 }
 
-TRANSPORT3DMC::XS::operator+(XS sigma) {
-  scatter += sigma.scatter;
-  abs += sigma.abs;
-  fission += sigma.fission;
-  nu_fission += sigma.fission;
-  total += sigma.total;
+TRANSPORT3DMC::XS TRANSPORT3DMC::XS::operator+(const XS &sigma) const {
+  XS result = *this;
+  result.scatter += sigma.scatter;
+  result.abs += sigma.abs;
+  result.fission += sigma.fission;
+  result.nu_fission += sigma.fission;
+  result.total += sigma.total;
+  return result;
 }
 
-XS calcMacroXS(size_t mat, double E) {
+TRANSPORT3DMC::XS TRANSPORT3DMC::calcMacroXS(size_t mat, double E) {
   CALI_CXX_MARK_FUNCTION;
   XS Sigma;
   size_t bin = std::upper_bound(bins.begin(), bins.end(), E) - bins.begin();
@@ -283,11 +286,11 @@ XS calcMacroXS(size_t mat, double E) {
   return Sigma;
 }
 
-double calcEventDist(double Sigma, std::mt19937_64 &rng) {
+double TRANSPORT3DMC::calcEventDist(double Sigma, std::mt19937_64 &rng) {
   return (dist(rng)/2 + 0.5) /Sigma;
 }
 
-std::array<double, 3> sampleScatter(std::mt19937_64 &rng, double &E) {
+std::array<double, 3> TRANSPORT3DMC::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double E) {
   CALI_CXX_MARK_FUNCTION;
   double x = dist(rng), y = dist(rng), z = dist(rng);
   double norm = std::sqrt(x*x + y*y + z*z);
@@ -298,13 +301,13 @@ std::array<double, 3> sampleScatter(std::mt19937_64 &rng, double &E) {
   return {x,y,z};
 }
 
-double sampleNuFission(std::mt19937_64 &rng) {
+double TRANSPORT3DMC::sampleNuFission(std::mt19937_64 &rng) {
   CALI_CXX_MARK_FUNCTION;
   return 5 * (dist(rng) + 1);
 }
 
 //Cell/mesh constructor helper functions
-Cell::Cell() {
+TRANSPORT3DMC::Cell::Cell() {
     for (int i = 0; i < 6; i++){
       next[i] = -1;
       bc[i] = ELEMENT;
@@ -316,14 +319,17 @@ Cell::Cell() {
   }
 
 double TRANSPORT3DMC::Cell::getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross) {
-  double min_dist = 1.0e16;
+  double min_dist = std::numeric_limits<double>::infinity();
   double dist = 0.0;
   uint32_t index;
   // only check the positive or negative surface
   for (uint32_t i = 0; i < 3; i++) {
+    if (std::abs(angle[i]) < 1.0e-14) {
+      continue;
+    }
     index = 2 * i + ( (angle[i] > 0) ? 1 : 0 );
-    dist = (nodes[index] - pos[i]) / angle[i];
-    if (dist < min_dist) {
+    dist = (planes[index] - pos[i]) / angle[i];
+    if (dist >= 0.0 && dist < min_dist) {
       min_dist = dist;
       surface_cross = index;
     }
@@ -331,7 +337,7 @@ double TRANSPORT3DMC::Cell::getBoundary(const std::array<double,3> &pos, const s
   return min_dist;
 }
 
-Event handleBC(Cell &cell, int face) {
+TRANSPORT3DMC::Event TRANSPORT3DMC::handleBC(Cell &cell, int face) {
   CALI_CXX_MARK_FUNCTION;
   Event pState;
   switch (cell.bc[face]) {
@@ -356,12 +362,12 @@ Event handleBC(Cell &cell, int face) {
 TRANSPORT3DMC::Material::Material() {
   isotopeCt = 1;
   conc = std::vector<double>();
-  nucIDs = std::vector<int>;
+  nucIDs = std::vector<int>();
 }
 
 //particle constructor and helpers
 
-Particles::Particles() {
+TRANSPORT3DMC::Particles::Particles() {
 
   cell  = std::vector(1, 0);
   group = std::vector(1, 0);
@@ -381,7 +387,7 @@ Particles::Particles() {
   }
 }
 
-Particles::Particles(const size_t numParticles) {
+TRANSPORT3DMC::Particles::Particles(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist) {
 
   cell  = std::vector<int>(numParticles);
   group = std::vector(numParticles, 0);
@@ -397,14 +403,14 @@ Particles::Particles(const size_t numParticles) {
 
   for (size_t i = 0; i < numParticles; i++) {
     seed[i] = i*3;
-    dir[i] = sampleScatter(RNGr, E[i]);
+    dir[i] = sampleScatter(RNGr, dist, posDist, E[i]);
     cell[i] = 26 * posDist(RNGr);
     calcDX(i);
   }
 }
 
-TRANSPORT3DMC::Particles::calcDX(Index_type i) {
-  dx[i] = sqrt(2/1.7e-27 * E[i]/(double)1.6e-13 ) * dt;
+void TRANSPORT3DMC::Particles::calcDX(Index_type i) {
+  dx[i] = sqrt(2/1.7e-27 * E[i]/(double)1.6e-13 ) * dT;
 }
 
 } // end namespace apps
