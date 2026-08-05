@@ -409,6 +409,20 @@ TRANSPORT3DMC::Particles::Particles(const size_t numParticles, std::mt19937_64 &
   }
 }
 
+TRANSPORT3DMC::Particles::Particles(const TRANSPORT3DMC::Particles &other) {
+  cell = other.cell;
+  group = other.group;
+  lastEvent = other.lastEvent;
+  pos = other.pos;
+  dir = other.dir;
+  E = other.E;
+  dx = other.dx;
+  seed = other.seed;
+  prevXS = other.prevXS;
+  newState = other.newState;
+  count = other.count;
+} 
+
 void TRANSPORT3DMC::Particles::calcDX(Index_type i) {
   dx[i] = sqrt(2/1.7e-27 * E[i]/(double)1.6e-13 ) * dT;
 }

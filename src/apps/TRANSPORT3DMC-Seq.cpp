@@ -32,6 +32,9 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
   auto transport3dmc_lam_setup = [=](VariantID vid, size_t partCt) {
                                     TRANSPORT3DMC_DATA_SETUP(vid, partCt);
                                   };
+  auto transport3dmc_lam_reset = [=]() {
+                                    TRANSPORT3DMC_RESET
+                                  };
 #endif
 
   switch ( vid ) {
@@ -42,7 +45,7 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       TRANSPORT3DMC_DATA_SETUP(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
+        TRANSPORT3DMC_RESET
         for (Index_type i = ibegin; i < iend; ++i ) {
           TRANSPORT3DMC_BODY
         }
@@ -60,7 +63,7 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       transport3dmc_lam_setup(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
+        transport3dmc_lam_reset();
         for (Index_type i = ibegin; i < iend; ++i ) {
           transport3dmc_lam(i);
         }
@@ -79,7 +82,7 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       transport3dmc_lam_setup(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
+        transport3dmc_lam_reset;
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), transport3dmc_lam);
 
