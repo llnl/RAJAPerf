@@ -52,7 +52,7 @@ void NESTED_INIT::runSyclVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      qu->submit([&] (::sycl::handler& h) {
+      qu.submit([&] (::sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) { 
 

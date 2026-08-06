@@ -50,7 +50,7 @@ void DOT::runSyclVariantImpl(VariantID vid)
 
       initSyclDeviceData(dot, &m_dot_init, 1, qu); 
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
 
         auto sumReduction = sycl::reduction(dot, sycl::plus<Real_type>());
 

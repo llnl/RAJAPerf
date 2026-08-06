@@ -54,7 +54,7 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 
       sycl::range<3> wkgroup_dim(i_wg_sz, j_wg_sz, k_wg_sz);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
@@ -69,7 +69,7 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 

@@ -45,7 +45,7 @@ void DIFFUSION3DPA::runSyclVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      qu->submit([&](::sycl::handler& h) {
+      qu.submit([&](::sycl::handler& h) {
 
         constexpr Index_type MQ1 = diff::Q1D;
         constexpr Index_type MD1 = diff::D1D;

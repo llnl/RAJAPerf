@@ -44,7 +44,7 @@ void CONVECTION3DPA::runSyclVariantImpl(VariantID vid) {
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      qu->submit([&](::sycl::handler& h) {
+      qu.submit([&](::sycl::handler& h) {
 
         constexpr Index_type max_D1D = conv::D1D;
         constexpr Index_type max_Q1D = conv::Q1D;

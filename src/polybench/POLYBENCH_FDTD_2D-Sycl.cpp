@@ -49,7 +49,7 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
 
       const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(ny, work_group_size);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size1, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -67,7 +67,7 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
 
       sycl::range<3> wkgroup_dim234(1, i_wg_sz, j_wg_sz);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
                        [=] (sycl::nd_item<3> item) {
 
@@ -81,7 +81,7 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
                        [=] (sycl::nd_item<3> item) {
 
@@ -95,7 +95,7 @@ void POLYBENCH_FDTD_2D::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim234, wkgroup_dim234),
                        [=] (sycl::nd_item<3> item) {
 

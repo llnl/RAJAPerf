@@ -42,7 +42,7 @@ void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
 
       const size_t global_size1 = work_group_size * RAJA_DIVIDE_CEILING_INT(N, work_group_size);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size1, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -56,7 +56,7 @@ void GEN_LIN_RECUR::runSyclVariantImpl(VariantID vid)
 
       const size_t global_size2 = work_group_size * RAJA_DIVIDE_CEILING_INT(N+1, work_group_size);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size2, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 

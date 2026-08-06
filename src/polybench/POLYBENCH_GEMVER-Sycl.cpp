@@ -54,7 +54,7 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim1, wkgroup_dim1),
                        [=] (sycl::nd_item<3> item) {
 
@@ -68,7 +68,7 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1>(global_size234, work_group_size),
                        [=] (sycl::nd_item<1> item ) {
 
@@ -84,7 +84,7 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1>(global_size234, work_group_size),
                        [=] (sycl::nd_item<1> item ) {
 
@@ -96,7 +96,7 @@ void POLYBENCH_GEMVER::runSyclVariantImpl(VariantID vid)
         });
       });
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1>(global_size234, work_group_size),
                        [=] (sycl::nd_item<1> item ) {
 
