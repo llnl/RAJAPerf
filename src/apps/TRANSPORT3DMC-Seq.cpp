@@ -82,7 +82,7 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       transport3dmc_lam_setup(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        transport3dmc_lam_reset;
+        transport3dmc_lam_reset();
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), transport3dmc_lam);
 

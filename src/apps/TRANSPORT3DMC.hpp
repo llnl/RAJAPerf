@@ -20,7 +20,7 @@
 
 
 #define TRANSPORT3DMC_DATA_SETUP(vid, partCt) \
-  setUp((VariantID)vid, (size_t) partCt); \
+  setUp((VariantID)vid, (size_t)partCt); \
   cross = XS();                \
   scatterDX = 0.0;                       \
   absDX = 0.0;                           \
@@ -36,7 +36,9 @@
   t_particles = particles;  \
 
 #define TRANSPORT3DMC_BODY                                                                                                \
+  CALI_MARK_BEGIN("Transport");                                                                                                  \
   std::cout << "Starting particle " << i << "...\n";                                                                      \
+  std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl; \ 
       RNG.seed(t_particles.seed[i]);                                                                                             \
       while(t_particles.lastEvent[i] != CENSUS && t_particles.lastEvent[i] != ABSORB && t_particles.lastEvent[i] != ESCAPE ) {  \
         if (t_particles.cell[i] == -1) {                                                                                  \
@@ -47,7 +49,7 @@
                    << t_particles.cell[i]                                                                                   \
                    << " with material " << m << "\n";                                                                     \
         cross = calcMacroXS(m, t_particles.group[i]);                                                                       \
-        CALI_MARK_BEGIN("Calc Event distances");                                                                          \
+        CALI_MARK_BEGIN("Calc Event Distances");                                                                          \
         scatterDX = calcEventDist(cross.scatter, RNG);                                                                    \
         absDX = calcEventDist(cross.abs, RNG);                                                                            \
         fissionDX = calcEventDist(cross.fission, RNG);                                                                    \
@@ -130,6 +132,7 @@
       CALI_MARK_BEGIN("Logging");                                                                                         \
       std::cout << "Particle " << i << " done, moving to next\n" << std::endl;                                            \
       CALI_MARK_END("Logging");                                                                                           \
+      CALI_MARK_END("Transport");                                                                                             \
 
 #include "common/KernelBase.hpp"
 #include <random>
@@ -229,8 +232,7 @@ public:
       std::vector<bool> newState; //quick lookup to see if particle state changed and if prevXS valid
 
       Particles();
-      Particles(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist);
-      // convert energy to speed to distance
+      Particles(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, std::vector<Cell> &mesh);
       void calcDX(Index_type i);
   };
 
