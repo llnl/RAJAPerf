@@ -64,10 +64,6 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid)
         RAJA::statement::Collapse<RAJA::omp_target_parallel_collapse_exec,
                                   RAJA::ArgList<0, 1>,
           RAJA::statement::Lambda<0>
-        >,
-        RAJA::statement::Collapse<RAJA::omp_target_parallel_collapse_exec,
-                                  RAJA::ArgList<0, 1>,
-          RAJA::statement::Lambda<1>
         >
       >;
 
@@ -81,7 +77,13 @@ void POLYBENCH_JACOBI_2D::runOpenMPTargetVariant(VariantID vid)
         res,
         [=] (Index_type i, Index_type j) {
           POLYBENCH_JACOBI_2D_BODY1_RAJA;
-        },
+        }
+      );
+
+      RAJA::kernel_resource<EXEC_POL>(
+        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                         RAJA::RangeSegment{1, N-1}),
+        res,
         [=] (Index_type i, Index_type j) {
           POLYBENCH_JACOBI_2D_BODY2_RAJA;
         }
@@ -102,4 +104,3 @@ RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, OpenMPTarget, Ba
 } // end namespace rajaperf
 
 #endif  // RAJA_ENABLE_TARGET_OPENMP
-
