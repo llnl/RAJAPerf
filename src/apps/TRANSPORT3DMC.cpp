@@ -22,6 +22,8 @@ namespace apps
 TRANSPORT3DMC::TRANSPORT3DMC(const RunParams& params)
   : KernelBase(rajaperf::Apps_TRANSPORT3DMC, params)
 {
+  dim = params.getTransport3DmcCubeSz();
+  GROUPS = params.getTransport3DmcGroups();
   setDefaultProblemSize(1);
   setDefaultReps(1000);
 
@@ -74,22 +76,27 @@ void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
   CALI_MARK_BEGIN("Table setup");
   XSTable = std::vector<XS>(N_ISOTOPE*GROUPS, XS(RNGr, posDist)); //arbitrary seed for cross section table
   CALI_MARK_END("Table setup");
+
+  std::cout << GROUPS << " groups\n"; 
   
   //Materials copy-pasted from XSBench small problem
   CALI_MARK_BEGIN("Init XSBench Materials");
   initMaterials(materials);
   CALI_MARK_END("Init XSBench Materials");
 
-  //TODO: Implement function to set up actual mesh
-  const size_t meshSide = 3;
+  //const size_t meshSide = 3;
 
   CALI_MARK_BEGIN("Init Mesh");
-  buildMeshCube(meshSide, mesh, RNGr, posDist);
+  buildMeshCube(dim, mesh, RNGr, posDist);
   CALI_MARK_END("Init Mesh");
+
+  std::cout << dim * dim * dim << " zones/cells\n";
 
   CALI_MARK_BEGIN("Init Particles");
   particles = Particles(partCt, RNGr, dist, posDist, mesh);
   CALI_MARK_END("Init Particles");
+
+  std::cout << partCt << " particles\n";
 
   // size_t centerCell = (meshSide / 2) * meshSide * meshSide + (meshSide / 2) * meshSide + (meshSide / 2);
   // std::fill(particles.cell.begin(), particles.cell.end(), static_cast<int>(centerCell));

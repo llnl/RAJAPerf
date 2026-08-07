@@ -174,7 +174,7 @@ public:
 
   #define dT 0.001
   #define N_ISOTOPE 68
-  #define GROUPS 10
+  //#define GROUPS 10
   #define cutoff 1e-5
 
   enum Event {
@@ -270,6 +270,7 @@ private:
   std::uniform_real_distribution<double> posDist;
   // int GROUPS;
   std::mt19937_64 RNGr;
+
   bool logging;
   TRANSPORT3DMC::XS cross;                
   double scatterDX;                       
@@ -279,8 +280,11 @@ private:
   double boundaryDX;                      
   double minDX;                           
   uint32_t nxt;                           
-  int m;                                  
-  std::mt19937_64 RNG;                    
+  int m;
+  std::mt19937_64 RNG;
+
+  size_t dim;
+  size_t GROUPS;
 };
 
 } // end namespace apps
