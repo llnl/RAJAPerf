@@ -25,16 +25,12 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
+  TRANSPORT3DMC_DATA_SETUP(vid, iend);
+
 #if defined(RUN_RAJA_SEQ)
-  auto transport3dmc_lam = [=](Index_type i) {
+  auto transport3dmc_lam = [&](Index_type i) {
                              TRANSPORT3DMC_BODY
                            };
-  auto transport3dmc_lam_setup = [=](VariantID vid, size_t partCt) {
-                                    TRANSPORT3DMC_DATA_SETUP(vid, partCt);
-                                  };
-  auto transport3dmc_lam_reset = [=]() {
-                                    TRANSPORT3DMC_RESET
-                                  };
 #endif
 
   switch ( vid ) {
@@ -42,7 +38,7 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      TRANSPORT3DMC_DATA_SETUP(vid, iend);
+      //TRANSPORT3DMC_DATA_SETUP(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
         TRANSPORT3DMC_RESET
@@ -60,10 +56,10 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
     case Lambda_Seq : {
 
       startTimer();
-      transport3dmc_lam_setup(vid, iend);
+      //TRANSPORT3DMC_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        transport3dmc_lam_reset();
+        TRANSPORT3DMC_RESET
         for (Index_type i = ibegin; i < iend; ++i ) {
           transport3dmc_lam(i);
         }
@@ -79,10 +75,10 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      transport3dmc_lam_setup(vid, iend);
+      //TRANSPORT3DMC_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        transport3dmc_lam_reset();
+        TRANSPORT3DMC_RESET
         RAJA::forall<RAJA::seq_exec>( res,
           RAJA::RangeSegment(ibegin, iend), transport3dmc_lam);
 

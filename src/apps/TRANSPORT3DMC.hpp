@@ -7,7 +7,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-///
+///TODO: REPLACE
 /// TRANSPORT3DMC placeholder reference implementation:
 ///
 /// for (Index_type i = ibegin; i < iend; ++i ) {
@@ -15,31 +15,47 @@
 /// }
 ///
 
+#include "camp/helpers.hpp"
+
 #ifndef RAJAPerf_Apps_TRANSPORT3DMC_HPP
 #define RAJAPerf_Apps_TRANSPORT3DMC_HPP
 
+#define dT 0.001
+#define N_ISOTOPE 68
+//#define GROUPS 10
+#define cutoff 1e-5
+
 
 #define TRANSPORT3DMC_DATA_SETUP(vid, partCt) \
-  setUp((VariantID)vid, (size_t)partCt); \
-  cross = XS();                \
-  scatterDX = 0.0;                       \
-  absDX = 0.0;                           \
-  fissionDX = 0.0;                       \
-  nufissionDX = 0.0;                     \
-  boundaryDX = 0.0;                      \
-  minDX = 0.0;                           \
-  nxt = -1;                           \
-  m = -1;                                  \
-  logging = false; \
+  setUp((VariantID)vid, (size_t)partCt);       \
+  XS cross = XS();                \
+  double scatterDX = 0.0;                       \
+  double absDX = 0.0;                           \
+  double fissionDX = 0.0;                       \
+  double nufissionDX = 0.0;                     \
+  double boundaryDX = 0.0;                      \
+  double minDX = 0.0;                           \
+  u_int32_t nxt = -1;                           \
+  int m = -1;                                  \
+  bool logging = true; \
 
 
 #define TRANSPORT3DMC_RESET \
-  t_particles = particles;  \
+    std::copy_n(particles.cell,      particles.count, t_particles.cell); \
+  std::copy_n(particles.group,     particles.count, t_particles.group); \
+  std::copy_n(particles.lastEvent, particles.count, t_particles.lastEvent); \
+  std::copy_n(particles.pos,       particles.count, t_particles.pos); \
+  std::copy_n(particles.dir,       particles.count, t_particles.dir); \
+  std::copy_n(particles.E,         particles.count, t_particles.E); \
+  std::copy_n(particles.dx,        particles.count, t_particles.dx); \
+  std::copy_n(particles.seed,      particles.count, t_particles.seed); \
+  std::copy_n(particles.prevXS,    particles.count, t_particles.prevXS); \
+  std::copy_n(particles.newState,  particles.count, t_particles.newState); \ 
 
 #define TRANSPORT3DMC_BODY                                                                                                \
   CALI_MARK_BEGIN("Transport");                                                                                                  \
   std::cout << "Starting particle " << i << "...\n";                                                                      \
-  std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl; \ 
+  std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl; \
   RNG.seed(t_particles.seed[i]);                                                                                             \
   while(t_particles.lastEvent[i] != CENSUS && t_particles.lastEvent[i] != ABSORB && t_particles.lastEvent[i] != ESCAPE ) {  \
     if (t_particles.cell[i] == -1) {                                                                                  \
@@ -174,11 +190,6 @@ public:
 
   void runSeqVariant(VariantID vid);
 
-  #define dT 0.001
-  #define N_ISOTOPE 68
-  //#define GROUPS 10
-  #define cutoff 1e-5
-
   enum Event {
     CENSUS,
     SCATTER,
@@ -224,8 +235,8 @@ public:
 
   struct Material {
     int isotopeCt;
-    std::vector<double> conc;
-    std::vector<int> nucIDs;
+    Real_ptr conc;
+    Int_ptr nucIDs;
 
     Material();
   };
@@ -233,19 +244,18 @@ public:
   struct Particles {
     public:
       size_t count;
-      std::vector<int> cell;
-      std::vector<int> group;       //lower is higher energy
-      std::vector<Event> lastEvent; //doubles as tracker for particle alive
-      std::vector<std::array<double,3> > pos;
-      std::vector<std::array<double,3> > dir;
-      std::vector<double> E;
-      std::vector<double> dx;     //remaining distance to census
-      std::vector<uint64_t> seed; 
-      std::vector<XS> prevXS;
-      std::vector<bool> newState; //quick lookup to see if particle state changed and if prevXS valid
+      Int_ptr cell;
+      Int_ptr group;       //lower is higher energy
+      Event * lastEvent; //doubles as tracker for particle alive
+      std::array<double,3> * pos;
+      std::array<double,3> * dir;
+      Real_ptr E;
+      Real_ptr dx;     //remaining distance to census
+      uint64_t * seed; 
+      XS * prevXS;
+      bool * newState; //quick lookup to see if particle state changed and if prevXS valid
 
-      Particles();
-      Particles(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, std::vector<Cell> &mesh);
+      void distribute(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, Cell* &mesh, uint64_t dim);
       void calcDX(Index_type i);
   };
 
@@ -254,35 +264,35 @@ public:
   double calcEventDist(double Sigma, std::mt19937_64 &rng);
   double sampleNuFission(std::mt19937_64 &rng);
   Event handleBC(Cell &cell, int face);
-  void initMaterials(std::vector<Material> &mats);
-  void buildMeshCube(size_t side, std::vector<TRANSPORT3DMC::Cell> &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist);
-  static std::array<double, 3> sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double E);
+  void initMaterials(Material* &mats, VariantID vid);
+  void buildMeshCube(size_t side, TRANSPORT3DMC::Cell* &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist, VariantID vid);
+  static std::array<double, 3> sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E);
   //void setup(size_t particles, size_t groups, double deltaT);
   //void Transport(double time);
 
 
 private:
-  std::vector<XS> XSTable;
-  std::vector<Material> materials;
-  std::vector<Cell> mesh;
+  XS * XSTable;
+  Material * materials;
+  Cell * mesh;
   Particles particles;
   Particles t_particles;
-  std::vector<double> bins;
+  Real_ptr bins;
   std::uniform_real_distribution<double> dist;
   std::uniform_real_distribution<double> posDist;
   // int GROUPS;
   std::mt19937_64 RNGr;
 
   bool logging;
-  TRANSPORT3DMC::XS cross;                
-  double scatterDX;                       
-  double absDX;                           
-  double fissionDX;                       
-  double nufissionDX;                     
-  double boundaryDX;                      
-  double minDX;                           
-  uint32_t nxt;                           
-  int m;
+  // TRANSPORT3DMC::XS cross;                
+  // double scatterDX;                       
+  // double absDX;                           
+  // double fissionDX;                       
+  // double nufissionDX;                     
+  // double boundaryDX;                      
+  // double minDX;                           
+  // uint32_t nxt;                           
+  // int m;
   std::mt19937_64 RNG;
 
   size_t dim;
