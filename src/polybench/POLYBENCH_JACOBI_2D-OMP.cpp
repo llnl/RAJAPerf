@@ -108,11 +108,6 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid)
             RAJA::statement::For<1, RAJA::seq_exec,
               RAJA::statement::Lambda<0>
             >
-          >,
-          RAJA::statement::For<0, RAJA::omp_parallel_for_exec,
-            RAJA::statement::For<1, RAJA::seq_exec,
-              RAJA::statement::Lambda<1>
-            >
           >
         >;
 
@@ -124,8 +119,13 @@ void POLYBENCH_JACOBI_2D::runOpenMPVariant(VariantID vid)
           RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
                            RAJA::RangeSegment{1, N-1}),
           res,
+          poly_jacobi2d_lam1
+        );
 
-          poly_jacobi2d_lam1,
+        RAJA::kernel_resource<EXEC_POL>(
+          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
+                           RAJA::RangeSegment{1, N-1}),
+          res,
           poly_jacobi2d_lam2
         );
 
