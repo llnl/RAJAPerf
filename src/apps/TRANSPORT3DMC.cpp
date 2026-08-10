@@ -345,26 +345,6 @@ TRANSPORT3DMC::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<doub
   total = scatter + abs + fission + nu_fission;
 }
 
-TRANSPORT3DMC::XS TRANSPORT3DMC::XS::operator*(const double c) const {
-  XS result = *this;
-  result.scatter *= c;
-  result.abs *= c;
-  result.fission *= c;
-  result.nu_fission *= c;
-  result.total *= c;
-  return result;
-}
-
-TRANSPORT3DMC::XS TRANSPORT3DMC::XS::operator+(const XS &sigma) const {
-  XS result = *this;
-  result.scatter += sigma.scatter;
-  result.abs += sigma.abs;
-  result.fission += sigma.fission;
-  result.nu_fission += sigma.nu_fission;
-  result.total += sigma.total;
-  return result;
-}
-
 TRANSPORT3DMC::XS TRANSPORT3DMC::calcMacroXS(size_t mat, double E) {
   CALI_CXX_MARK_FUNCTION;
   XS Sigma;

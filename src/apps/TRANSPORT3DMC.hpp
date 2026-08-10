@@ -216,8 +216,24 @@ public:
 
     XS();
     XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist);
-    XS operator*(const double c) const;
-    XS operator+(const XS &sigma) const;
+    inline XS operator*(const double c) const {
+      XS result = *this;
+      result.scatter *= c;
+      result.abs *= c;
+      result.fission *= c;
+      result.nu_fission *= c;
+      result.total *= c;
+      return result;
+    }
+    inline XS operator+(const XS &sigma) const{
+      XS result = *this;
+      result.scatter += sigma.scatter;
+      result.abs += sigma.abs;
+      result.fission += sigma.fission;
+      result.nu_fission += sigma.nu_fission;
+      result.total += sigma.total;
+      return result;
+    }
   };
 
   struct Cell {
@@ -284,15 +300,6 @@ private:
   std::mt19937_64 RNGr;
 
   bool logging;
-  // TRANSPORT3DMC::XS cross;                
-  // double scatterDX;                       
-  // double absDX;                           
-  // double fissionDX;                       
-  // double nufissionDX;                     
-  // double boundaryDX;                      
-  // double minDX;                           
-  // uint32_t nxt;                           
-  // int m;
   std::mt19937_64 RNG;
 
   size_t dim;
