@@ -37,11 +37,11 @@
   double minDX = 0.0;                           \
   u_int32_t nxt = -1;                           \
   int m = -1;                                  \
-  bool logging = true; \
+  bool logging = false; \
 
 
 #define TRANSPORT3DMC_RESET \
-    std::copy_n(particles.cell,      particles.count, t_particles.cell); \
+  std::copy_n(particles.cell,      particles.count, t_particles.cell); \
   std::copy_n(particles.group,     particles.count, t_particles.group); \
   std::copy_n(particles.lastEvent, particles.count, t_particles.lastEvent); \
   std::copy_n(particles.pos,       particles.count, t_particles.pos); \
@@ -238,7 +238,6 @@ public:
 
   struct Cell {
     public:
-      static int GLBL;
       int ID;
       std::array<double, 6> planes; //-x, +x, -y, +y, -z, +z
       std::array<BC, 6> bc;

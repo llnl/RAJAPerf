@@ -63,8 +63,6 @@ TRANSPORT3DMC::~TRANSPORT3DMC()
 {
 }
 
-int TRANSPORT3DMC::Cell::GLBL = 0;
-
 void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
 {
   CALI_CXX_MARK_FUNCTION;
@@ -219,8 +217,6 @@ void TRANSPORT3DMC::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNG
   size_t layerSize = side * side;
   size_t cubeSz = side * side * side;
 
-  TRANSPORT3DMC::Cell::GLBL = 0;
-
   auto index = [side, layerSize](size_t row, size_t col, size_t layer) {
     return static_cast<int>(layer * layerSize + col * side + row);
   };
@@ -232,7 +228,7 @@ void TRANSPORT3DMC::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNG
       for (size_t row = 0; row < side; row++) {
         int i = index(row, col, layer);
         TRANSPORT3DMC::Cell &cell = mesh[i];
-
+        cell.ID = i;
         cell.next = {
           row > 0 ? index(row - 1, col, layer) : -1,
           row + 1 < side ? index(row + 1, col, layer) : -1,
@@ -382,8 +378,7 @@ TRANSPORT3DMC::Cell::Cell() {
       bc[i] = ELEMENT;
       planes[i] = (i % 2 == 0) ? -1.0 : 1.0;
     }
-    ID = GLBL;
-    GLBL++;
+    ID = -1;
     matID = 0;
   }
 
