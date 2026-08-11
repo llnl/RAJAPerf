@@ -65,7 +65,7 @@ MC_HISTORY_PARTICLE_TRANSPORT::~MC_HISTORY_PARTICLE_TRANSPORT()
 
 void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
 {
-  CALI_CXX_MARK_FUNCTION;
+  RP_CALI_SUBKERNEL_BEGIN("setUp");
   //GROUPS = groups;
   RNGr.seed(18446744073709551557UL);
   dist = std::uniform_real_distribution<double>(-1,1);
@@ -137,6 +137,8 @@ void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
     bins[i] = binUpperBound;
   }
   RP_CALI_SUBKERNEL_END("Bin Init");
+
+  RP_CALI_SUBKERNEL_END("setUp");
 
 }
 
@@ -342,12 +344,13 @@ MC_HISTORY_PARTICLE_TRANSPORT::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_d
 }
 
 MC_HISTORY_PARTICLE_TRANSPORT::XS MC_HISTORY_PARTICLE_TRANSPORT::calcMacroXS(size_t mat, double E) {
-  CALI_CXX_MARK_FUNCTION;
+  RP_CALI_SUBKERNEL_BEGIN("calcMacroXS");
   XS Sigma;
   size_t bin = std::upper_bound(bins, bins + GROUPS, E) - bins;
   for (int i = 0; i < materials[mat].isotopeCt; i++) {
     Sigma = Sigma + XSTable[GROUPS * materials[mat].nucIDs[i] + bin] * materials[mat].conc[i];
   }
+  RP_CALI_SUBKERNEL_END("calcMacroXS");
   return Sigma;
 }
 
@@ -356,7 +359,6 @@ double MC_HISTORY_PARTICLE_TRANSPORT::calcEventDist(double Sigma, std::mt19937_6
 }
 
 std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E) {
-  CALI_CXX_MARK_FUNCTION;
   double x = dist(rng), y = dist(rng), z = dist(rng);
   double norm = std::sqrt(x*x + y*y + z*z);
   x /= norm; y/= norm; z/= norm;
@@ -367,7 +369,6 @@ std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_
 }
 
 double MC_HISTORY_PARTICLE_TRANSPORT::sampleNuFission(std::mt19937_64 &rng) {
-  CALI_CXX_MARK_FUNCTION;
   return 5 * (dist(rng) + 1);
 }
 
