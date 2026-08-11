@@ -42,7 +42,6 @@
   int m = -1;                                  \
   bool logging = false; \
   u_int64_t loopCt ; \
-  std::ofstream outFile("100k.csv");  outFile.is_open(); \
   std::map<size_t, size_t> iterData ;
 
 
@@ -59,13 +58,12 @@
   std::copy_n(particles.newState,  particles.count, t_particles.newState); \
 
 #define MC_HISTORY_PARTICLE_TRANSPORT_BODY                                                                                                \
-  loopCt = 0; \
-  RP_CALI_SUBKERNEL_BEGIN("Transport");                                                                                                  \
+  RP_CALI_SUBKERNEL_BEGIN("Transport");     \
+  if (logging) {                                                                                             \
   std::cout << "Starting particle " << i << "...\n";                                                                      \
-  std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl; \
+  std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl;} \
   RNG.seed(t_particles.seed[i]);                                                                                             \
   while(t_particles.lastEvent[i] != CENSUS && t_particles.lastEvent[i] != ABSORB && t_particles.lastEvent[i] != ESCAPE ) {  \
-    loopCt++; \
     if (t_particles.cell[i] == -1) {                                                                                  \
       std::cout << "LOST\n"; break;                                                                                   \
     }                                                                                                                 \
@@ -165,7 +163,6 @@
       break;                                                                                                          \
     }                                                                                                                 \
   }                                                                                                                   \
-  outFile << i << "," << loopCt << "\n"; \
   if (logging) {                                                                                                      \
   RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                         \
   std::cout << "Particle " << i << " done, moving to next\n" << std::endl;                                            \

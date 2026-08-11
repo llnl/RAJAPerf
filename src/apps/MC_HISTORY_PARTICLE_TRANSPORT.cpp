@@ -261,21 +261,21 @@ void MC_HISTORY_PARTICLE_TRANSPORT::buildMeshCube(size_t side, Cell* &mesh, std:
     }
   }
 
-  for (size_t i = 0; i < cubeSz; i++) {
-    std::cout << "cell " << i << " info:\n" 
-              << " bounds:\n"
-              << "  x: " << mesh[i].planes[0] << " " << mesh[i].planes[1] << "\n"
-              << "  y: " << mesh[i].planes[2] << " " << mesh[i].planes[3] << "\n"
-              << "  z: " << mesh[i].planes[4] << " " << mesh[i].planes[5] << "\n"
-              << " neighbors:\n" 
-              << "  x: " << mesh[i].next[0] << " " << mesh[i].next[1] << "\n"
-              << "  y: " << mesh[i].next[2] << " " << mesh[i].next[3] << "\n"
-              << "  z: " << mesh[i].next[4] << " " << mesh[i].next[5] << "\n"
-              << " BCs:\n" 
-              << "  x: " << mesh[i].bc[0] << " " << mesh[i].bc[1] << "\n"
-              << "  y: " << mesh[i].bc[2] << " " << mesh[i].bc[3] << "\n"
-              << "  z: " << mesh[i].bc[4] << " " << mesh[i].bc[5] << "\n";
-  }
+  // for (size_t i = 0; i < cubeSz; i++) {
+  //   std::cout << "cell " << i << " info:\n" 
+  //             << " bounds:\n"
+  //             << "  x: " << mesh[i].planes[0] << " " << mesh[i].planes[1] << "\n"
+  //             << "  y: " << mesh[i].planes[2] << " " << mesh[i].planes[3] << "\n"
+  //             << "  z: " << mesh[i].planes[4] << " " << mesh[i].planes[5] << "\n"
+  //             << " neighbors:\n" 
+  //             << "  x: " << mesh[i].next[0] << " " << mesh[i].next[1] << "\n"
+  //             << "  y: " << mesh[i].next[2] << " " << mesh[i].next[3] << "\n"
+  //             << "  z: " << mesh[i].next[4] << " " << mesh[i].next[5] << "\n"
+  //             << " BCs:\n" 
+  //             << "  x: " << mesh[i].bc[0] << " " << mesh[i].bc[1] << "\n"
+  //             << "  y: " << mesh[i].bc[2] << " " << mesh[i].bc[3] << "\n"
+  //             << "  z: " << mesh[i].bc[4] << " " << mesh[i].bc[5] << "\n";
+  // }
 }
 
 void MC_HISTORY_PARTICLE_TRANSPORT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
