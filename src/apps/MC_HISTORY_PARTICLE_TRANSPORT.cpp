@@ -7,7 +7,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#include "TRANSPORT3DMC.hpp"
+#include "MC_HISTORY_PARTICLE_TRANSPORT.hpp"
 
 #include "RAJA/RAJA.hpp"
 
@@ -19,11 +19,11 @@ namespace apps
 {
 
 
-TRANSPORT3DMC::TRANSPORT3DMC(const RunParams& params)
-  : KernelBase(rajaperf::Apps_TRANSPORT3DMC, params)
+MC_HISTORY_PARTICLE_TRANSPORT::MC_HISTORY_PARTICLE_TRANSPORT(const RunParams& params)
+  : KernelBase(rajaperf::Apps_MC_HISTORY_PARTICLE_TRANSPORT, params)
 {
-  dim = params.getTransport3DmcCubeSz();
-  GROUPS = params.getTransport3DmcGroups();
+  dim = params.getMCHistoryCubeSz();
+  GROUPS = params.getMCHistoryGroups();
   setDefaultProblemSize(1);
   setDefaultReps(1000);
 
@@ -43,7 +43,7 @@ TRANSPORT3DMC::TRANSPORT3DMC(const RunParams& params)
   addVariantTunings();
 }
 
-void TRANSPORT3DMC::setSize(Index_type target_size, Index_type target_reps)
+void MC_HISTORY_PARTICLE_TRANSPORT::setSize(Index_type target_size, Index_type target_reps)
 {
   setActualProblemSize( target_size );
   setRunReps( target_reps );
@@ -51,19 +51,19 @@ void TRANSPORT3DMC::setSize(Index_type target_size, Index_type target_reps)
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
 
-  setBytesAllocatedPerRep( 0 ); // in, out
-  setBytesReadPerRep( 0 ); // in
-  setBytesWrittenPerRep( 0 ); // out
-  setBytesModifyWrittenPerRep( 0 );
-  setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( 0 );
+  setBytesAllocatedPerRep( 140 * target_size ); // in, out
+  setBytesReadPerRep( -1 ); // in
+  setBytesWrittenPerRep( -1 ); // out
+  setBytesModifyWrittenPerRep( -1 );
+  setBytesAtomicModifyWrittenPerRep( -1 );
+  setFLOPsPerRep( -1 );
 }
 
-TRANSPORT3DMC::~TRANSPORT3DMC()
+MC_HISTORY_PARTICLE_TRANSPORT::~MC_HISTORY_PARTICLE_TRANSPORT()
 {
 }
 
-void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
+void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
 {
   CALI_CXX_MARK_FUNCTION;
   //GROUPS = groups;
@@ -71,30 +71,30 @@ void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
   dist = std::uniform_real_distribution<double>(-1,1);
   posDist = std::uniform_real_distribution<double>(0,1);
   
-  CALI_MARK_BEGIN("Table setup");
+  RP_CALI_SUBKERNEL_BEGIN("Table setup");
   //XSTable = std::vector<XS>(N_ISOTOPE*GROUPS, XS(RNGr, posDist)); //arbitrary seed for cross section table
   auto debugXStable = allocDataForInit(XSTable, N_ISOTOPE*GROUPS, vid);
   for (size_t x = 0; x < N_ISOTOPE*GROUPS; x++)
     XSTable[x] = XS(RNGr, posDist);
 
-  CALI_MARK_END("Table setup");
+  RP_CALI_SUBKERNEL_END("Table setup");
 
   std::cout << GROUPS << " groups\n"; 
   
   //Materials copy-pasted from XSBench small problem
-  CALI_MARK_BEGIN("Init XSBench Materials");
+  RP_CALI_SUBKERNEL_BEGIN("Init XSBench Materials");
   initMaterials(materials, vid);
-  CALI_MARK_END("Init XSBench Materials");
+  RP_CALI_SUBKERNEL_END("Init XSBench Materials");
 
   //const size_t meshSide = 3;
 
-  CALI_MARK_BEGIN("Init Mesh");
+  RP_CALI_SUBKERNEL_BEGIN("Init Mesh");
   buildMeshCube(dim, mesh, RNGr, posDist, vid);
-  CALI_MARK_END("Init Mesh");
+  RP_CALI_SUBKERNEL_END("Init Mesh");
 
   std::cout << dim * dim * dim << " zones/cells\n";
 
-  CALI_MARK_BEGIN("Init Particles");
+  RP_CALI_SUBKERNEL_BEGIN("Init Particles");
   //particles = Particles();
 
   allocDataForInit(particles.cell, partCt, vid);
@@ -122,13 +122,13 @@ void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
   allocDataForInit(t_particles.pos, partCt, vid);
   t_particles.count = partCt;
 
-  CALI_MARK_END("Init Particles");
+  RP_CALI_SUBKERNEL_END("Init Particles");
 
   std::cout << partCt << " particles\n";
 
   // size_t centerCell = (meshSide / 2) * meshSide * meshSide + (meshSide / 2) * meshSide + (meshSide / 2);
   // std::fill(particles.cell.begin(), particles.cell.end(), static_cast<int>(centerCell));
-  CALI_MARK_BEGIN("Bin Init");
+  RP_CALI_SUBKERNEL_BEGIN("Bin Init");
   allocDataForInit(bins, GROUPS, vid);
 
   double binWidth = 14.1e6/(double)GROUPS, binUpperBound = 0;
@@ -136,11 +136,11 @@ void TRANSPORT3DMC::setUp(VariantID vid, size_t partCt)
     binUpperBound += binWidth;
     bins[i] = binUpperBound;
   }
-  CALI_MARK_END("Bin Init");
+  RP_CALI_SUBKERNEL_END("Bin Init");
 
 }
 
-void TRANSPORT3DMC::initMaterials(Material* &mats, VariantID vid) {
+void MC_HISTORY_PARTICLE_TRANSPORT::initMaterials(Material* &mats, VariantID vid) {
   size_t matCt = 12;
   auto debugMeshInit = allocDataForInit(mats, matCt, vid);
 
@@ -206,7 +206,7 @@ void TRANSPORT3DMC::initMaterials(Material* &mats, VariantID vid) {
   
 }
 
-void TRANSPORT3DMC::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist, VariantID vid) {
+void MC_HISTORY_PARTICLE_TRANSPORT::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist, VariantID vid) {
   if (side == 0) {
     throw std::invalid_argument("buildMeshCube side must be nonzero");
   }
@@ -227,7 +227,7 @@ void TRANSPORT3DMC::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNG
     for (size_t col = 0; col < side; col++) {
       for (size_t row = 0; row < side; row++) {
         int i = index(row, col, layer);
-        TRANSPORT3DMC::Cell &cell = mesh[i];
+        MC_HISTORY_PARTICLE_TRANSPORT::Cell &cell = mesh[i];
         cell.ID = i;
         cell.next = {
           row > 0 ? index(row - 1, col, layer) : -1,
@@ -276,12 +276,12 @@ void TRANSPORT3DMC::buildMeshCube(size_t side, Cell* &mesh, std::mt19937_64 &RNG
   }
 }
 
-void TRANSPORT3DMC::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MC_HISTORY_PARTICLE_TRANSPORT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   addToChecksum(0);
 }
 
-void TRANSPORT3DMC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
+void MC_HISTORY_PARTICLE_TRANSPORT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
   // XSTable.clear();
   // materials.clear();
@@ -324,7 +324,7 @@ void TRANSPORT3DMC::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx)
 }
 
 //Cross Section Helper functions
-TRANSPORT3DMC::XS::XS() {
+MC_HISTORY_PARTICLE_TRANSPORT::XS::XS() {
   scatter = 0;
   abs = 0;
   fission = 0;
@@ -332,7 +332,7 @@ TRANSPORT3DMC::XS::XS() {
   total = 0;
 }
 
-TRANSPORT3DMC::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist) {
+MC_HISTORY_PARTICLE_TRANSPORT::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist) {
   //std::mt19937_64 rng(seed);
   scatter = posDist(RNGr);
   abs = posDist(RNGr);
@@ -341,7 +341,7 @@ TRANSPORT3DMC::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<doub
   total = scatter + abs + fission + nu_fission;
 }
 
-TRANSPORT3DMC::XS TRANSPORT3DMC::calcMacroXS(size_t mat, double E) {
+MC_HISTORY_PARTICLE_TRANSPORT::XS MC_HISTORY_PARTICLE_TRANSPORT::calcMacroXS(size_t mat, double E) {
   CALI_CXX_MARK_FUNCTION;
   XS Sigma;
   size_t bin = std::upper_bound(bins, bins + GROUPS, E) - bins;
@@ -351,11 +351,11 @@ TRANSPORT3DMC::XS TRANSPORT3DMC::calcMacroXS(size_t mat, double E) {
   return Sigma;
 }
 
-double TRANSPORT3DMC::calcEventDist(double Sigma, std::mt19937_64 &rng) {
+double MC_HISTORY_PARTICLE_TRANSPORT::calcEventDist(double Sigma, std::mt19937_64 &rng) {
   return posDist(rng)/Sigma;
 }
 
-std::array<double, 3> TRANSPORT3DMC::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E) {
+std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E) {
   CALI_CXX_MARK_FUNCTION;
   double x = dist(rng), y = dist(rng), z = dist(rng);
   double norm = std::sqrt(x*x + y*y + z*z);
@@ -366,13 +366,13 @@ std::array<double, 3> TRANSPORT3DMC::sampleScatter(std::mt19937_64 &rng, std::un
   return {x,y,z};
 }
 
-double TRANSPORT3DMC::sampleNuFission(std::mt19937_64 &rng) {
+double MC_HISTORY_PARTICLE_TRANSPORT::sampleNuFission(std::mt19937_64 &rng) {
   CALI_CXX_MARK_FUNCTION;
   return 5 * (dist(rng) + 1);
 }
 
 //Cell/mesh constructor helper functions
-TRANSPORT3DMC::Cell::Cell() {
+MC_HISTORY_PARTICLE_TRANSPORT::Cell::Cell() {
     for (int i = 0; i < 6; i++){
       next[i] = -1;
       bc[i] = ELEMENT;
@@ -382,7 +382,7 @@ TRANSPORT3DMC::Cell::Cell() {
     matID = 0;
   }
 
-double TRANSPORT3DMC::Cell::getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross) {
+double MC_HISTORY_PARTICLE_TRANSPORT::Cell::getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross) {
   double min_dist = std::numeric_limits<double>::infinity();
   double dist = 0.0;
   uint32_t index;
@@ -401,7 +401,7 @@ double TRANSPORT3DMC::Cell::getBoundary(const std::array<double,3> &pos, const s
   return min_dist;
 }
 
-TRANSPORT3DMC::Event TRANSPORT3DMC::handleBC(Cell &cell, int face) {
+MC_HISTORY_PARTICLE_TRANSPORT::Event MC_HISTORY_PARTICLE_TRANSPORT::handleBC(Cell &cell, int face) {
   Event pState;
   switch (cell.bc[face]) {
   case ELEMENT:
@@ -421,7 +421,7 @@ TRANSPORT3DMC::Event TRANSPORT3DMC::handleBC(Cell &cell, int face) {
   return pState;
 }
 
-void TRANSPORT3DMC::Particles::distribute(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, Cell* &mesh, uint64_t dim) {
+void MC_HISTORY_PARTICLE_TRANSPORT::Particles::distribute(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, Cell* &mesh, uint64_t dim) {
 
   std::uniform_int_distribution<int> cellDist(0, dim - 1);
 
@@ -438,7 +438,7 @@ void TRANSPORT3DMC::Particles::distribute(const size_t numParticles, std::mt1993
   }
 }
 
-void TRANSPORT3DMC::Particles::calcDX(Index_type i) {
+void MC_HISTORY_PARTICLE_TRANSPORT::Particles::calcDX(Index_type i) {
   dx[i] = sqrt((2/1.7e-27) * (E[i]/(double)6.242e12) ) * dT;
 }
 

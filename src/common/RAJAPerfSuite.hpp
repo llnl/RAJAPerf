@@ -143,7 +143,7 @@ enum KernelID {
 //
 // Apps kernels...
 //
-  Apps_TRANSPORT3DMC,
+  Apps_MC_HISTORY_PARTICLE_TRANSPORT,
   Apps_CONVECTION3DPA,
   Apps_DEL_DOT_VEC_2D,
   Apps_DIFFUSION3DPA,

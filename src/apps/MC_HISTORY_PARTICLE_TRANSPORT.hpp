@@ -8,7 +8,7 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
 ///TODO: REPLACE
-/// TRANSPORT3DMC placeholder reference implementation:
+/// MC_HISTORY_PARTICLE_TRANSPORT placeholder reference implementation:
 ///
 /// for (Index_type i = ibegin; i < iend; ++i ) {
 ///   out[i] = in[i];
@@ -16,9 +16,12 @@
 ///
 
 #include "camp/helpers.hpp"
+#include <fstream>
+#include <map>
+#include <iostream>
 
-#ifndef RAJAPerf_Apps_TRANSPORT3DMC_HPP
-#define RAJAPerf_Apps_TRANSPORT3DMC_HPP
+#ifndef RAJAPerf_Apps_MC_HISTORY_PARTICLE_TRANSPORT_HPP
+#define RAJAPerf_Apps_MC_HISTORY_PARTICLE_TRANSPORT_HPP
 
 #define dT 0.001
 #define N_ISOTOPE 68
@@ -26,7 +29,7 @@
 #define cutoff 1e-5
 
 
-#define TRANSPORT3DMC_DATA_SETUP(vid, partCt) \
+#define MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP(vid, partCt) \
   setUp((VariantID)vid, (size_t)partCt);       \
   XS cross = XS();                \
   double scatterDX = 0.0;                       \
@@ -38,9 +41,12 @@
   u_int32_t nxt = -1;                           \
   int m = -1;                                  \
   bool logging = false; \
+  u_int64_t loopCt ; \
+  std::ofstream outFile("100k.csv");  outFile.is_open(); \
+  std::map<size_t, size_t> iterData ;
 
 
-#define TRANSPORT3DMC_RESET \
+#define MC_HISTORY_PARTICLE_TRANSPORT_RESET \
   std::copy_n(particles.cell,      particles.count, t_particles.cell); \
   std::copy_n(particles.group,     particles.count, t_particles.group); \
   std::copy_n(particles.lastEvent, particles.count, t_particles.lastEvent); \
@@ -50,14 +56,16 @@
   std::copy_n(particles.dx,        particles.count, t_particles.dx); \
   std::copy_n(particles.seed,      particles.count, t_particles.seed); \
   std::copy_n(particles.prevXS,    particles.count, t_particles.prevXS); \
-  std::copy_n(particles.newState,  particles.count, t_particles.newState); \ 
+  std::copy_n(particles.newState,  particles.count, t_particles.newState); \
 
-#define TRANSPORT3DMC_BODY                                                                                                \
-  CALI_MARK_BEGIN("Transport");                                                                                                  \
+#define MC_HISTORY_PARTICLE_TRANSPORT_BODY                                                                                                \
+  loopCt = 0; \
+  RP_CALI_SUBKERNEL_BEGIN("Transport");                                                                                                  \
   std::cout << "Starting particle " << i << "...\n";                                                                      \
   std::cout << "info:\n cell " << particles.cell[i] << std::endl << "t_cell " << t_particles.cell[i] << std::endl; \
   RNG.seed(t_particles.seed[i]);                                                                                             \
   while(t_particles.lastEvent[i] != CENSUS && t_particles.lastEvent[i] != ABSORB && t_particles.lastEvent[i] != ESCAPE ) {  \
+    loopCt++; \
     if (t_particles.cell[i] == -1) {                                                                                  \
       std::cout << "LOST\n"; break;                                                                                   \
     }                                                                                                                 \
@@ -67,7 +75,7 @@
                 << t_particles.cell[i]                                                                                   \
                 << " with material " << m << "\n";         }                                                            \
     cross = calcMacroXS(m, t_particles.group[i]);                                                                       \
-    CALI_MARK_BEGIN("Calc Event Distances");                                                                          \
+    RP_CALI_SUBKERNEL_BEGIN("Calc Event Distances");                                                                          \
     scatterDX = calcEventDist(cross.scatter, RNG);                                                                    \
     absDX = calcEventDist(cross.abs, RNG);                                                                            \
     fissionDX = calcEventDist(cross.fission, RNG);                                                                    \
@@ -75,9 +83,9 @@
     boundaryDX = mesh[t_particles.cell[i]].getBoundary(t_particles.pos[i], t_particles.dir[i], nxt);                        \
     t_particles.calcDX(i);                                                                                              \
     minDX = std::min({scatterDX, absDX, fissionDX, nufissionDX, boundaryDX, t_particles.dx[i]});                        \
-    CALI_MARK_END("Calc Event Distances");                                                                            \
+    RP_CALI_SUBKERNEL_END("Calc Event Distances");                                                                            \
     if(logging) {                                                                                                     \
-    CALI_MARK_BEGIN("Logging");                                                                                       \
+    RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                       \
     std::cout << "\nTraveled dist: " << minDX << "\n";                                                                \
     std::cout << "Event distances: \n";                                                                               \
     std::cout << "Scatter:       " << scatterDX << "\n";                                                              \
@@ -86,7 +94,7 @@
     std::cout << "nufission:     " << nufissionDX << "\n";                                                            \
     std::cout << "boundary:      " << boundaryDX << "\n";                                                             \
     std::cout << "census:        " << t_particles.dx[i] << "\n";                                                        \
-    CALI_MARK_END("Logging");   }                                                                                      \
+    RP_CALI_SUBKERNEL_END("Logging");   }                                                                                      \
     t_particles.pos[i] = {                                                                                              \
       t_particles.pos[i][0] + t_particles.dir[i][0] * minDX,                                                              \
       t_particles.pos[i][1] + t_particles.dir[i][1] * minDX,                                                              \
@@ -96,72 +104,73 @@
     if (t_particles.E[i] < cutoff || minDX == absDX) {                                                                  \
       t_particles.lastEvent[i] = ABSORB;                                                                              \
       if (logging) {                                                                                                  \
-      CALI_MARK_BEGIN("Logging");                                                                                     \
+      RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Absorbed\n";                                                                                      \
-      CALI_MARK_END("Logging"); }                                                                                     \
+      RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == scatterDX) {                                                                                    \
       t_particles.lastEvent[i] = SCATTER;                                                                             \
       t_particles.dir[i] = sampleScatter(RNG, dist, posDist, t_particles.E[i]);                                       \
       if (logging) {                                                                                                  \
-      CALI_MARK_BEGIN("Logging");                                                                                     \
+      RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Scattered\n";                                                                                     \
-      CALI_MARK_END("Logging"); }                                                                                     \
+      RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == fissionDX) {                                                                                    \
       t_particles.lastEvent[i] = FISSION;                                                                             \
       if (logging) {                                                                                                  \
-      CALI_MARK_BEGIN("Logging");                                                                                     \
+      RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Fission Occured\n";                                                                               \
-      CALI_MARK_END("Logging"); }                                                                                     \
+      RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == nufissionDX) {                                                                                  \
       t_particles.lastEvent[i] = FISSION;                                                                             \
       t_particles.dx[i] *= sampleNuFission(RNG);                                                                      \
       if (logging) {                                                                                                  \
-      CALI_MARK_BEGIN("Logging");                                                                                     \
+      RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "NuFission, life extended\n";                                                                      \
-      CALI_MARK_END("Logging"); }                                                                                     \
+      RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == boundaryDX) {                                                                                   \
-      CALI_MARK_BEGIN("Handle BCs");                                                                                  \
+      RP_CALI_SUBKERNEL_BEGIN("Handle BCs");                                                                                  \
       t_particles.lastEvent[i] = handleBC(mesh[t_particles.cell[i]], nxt);                                            \
       if (t_particles.lastEvent[i] == BOUNDARY) {                                                                     \
         t_particles.cell[i] = mesh[t_particles.cell[i]].next[nxt];                                                    \
         if (logging) {                                                                                                \
-        CALI_MARK_BEGIN("Logging");                                                                                   \
+        RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                   \
         std::cout << "Boundary, pass\n";                                                                              \
-        CALI_MARK_END("Logging"); }                                                                                   \
+        RP_CALI_SUBKERNEL_END("Logging"); }                                                                                   \
       }                                                                                                               \
       else if (t_particles.lastEvent[i] == FISSION || t_particles.lastEvent[i] == SCATTER) {                          \
         t_particles.dir[i][0] *= -1.0; t_particles.dir[i][1] *= -1.0; t_particles.dir[i][2] *= -1.0;                  \
         if (logging) {                                                                                                \
-        CALI_MARK_BEGIN("Logging");                                                                                   \
+        RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                   \
         std::cout << "Boundary, Reflected\n";                                                                         \
-        CALI_MARK_END("Logging"); }                                                                                   \
+        RP_CALI_SUBKERNEL_END("Logging"); }                                                                                   \
       }                                                                                                               \
       else if (t_particles.lastEvent[i] == ESCAPE) {                                                                  \
         if (logging) {                                                                                                \
-        CALI_MARK_BEGIN("Logging");                                                                                   \
+        RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                   \
         std::cout << "Boundary, escape\n";                                                                            \
-        CALI_MARK_END("Logging"); }                                                                                   \
+        RP_CALI_SUBKERNEL_END("Logging"); }                                                                                   \
       }                                                                                                               \
-      CALI_MARK_END("Handle BCs");                                                                                  \
+      RP_CALI_SUBKERNEL_END("Handle BCs");                                                                                  \
     }                                                                                                                 \
     else {                                                                                                            \
       t_particles.lastEvent[i] = CENSUS;                                                                              \
       if (logging) {                                                                                                  \
-      CALI_MARK_BEGIN("Logging");                                                                                     \
+      RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Census, end of lifetime.\n";                                                                      \
-      CALI_MARK_END("Logging"); }                                                                                     \
+      RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
       break;                                                                                                          \
     }                                                                                                                 \
   }                                                                                                                   \
+  outFile << i << "," << loopCt << "\n"; \
   if (logging) {                                                                                                      \
-  CALI_MARK_BEGIN("Logging");                                                                                         \
+  RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                         \
   std::cout << "Particle " << i << " done, moving to next\n" << std::endl;                                            \
-  CALI_MARK_END("Logging"); }                                                                                      \
-  CALI_MARK_END("Transport");                                                                                       \
+  RP_CALI_SUBKERNEL_END("Logging"); }                                                                                      \
+  RP_CALI_SUBKERNEL_END("Transport");                                                                                       \
 
 #include "common/KernelBase.hpp"
 #include <random>
@@ -173,13 +182,13 @@ class RunParams;
 namespace apps
 {
 
-class TRANSPORT3DMC : public KernelBase
+class MC_HISTORY_PARTICLE_TRANSPORT : public KernelBase
 {
 public:
 
-  TRANSPORT3DMC(const RunParams& params);
+  MC_HISTORY_PARTICLE_TRANSPORT(const RunParams& params);
 
-  ~TRANSPORT3DMC();
+  ~MC_HISTORY_PARTICLE_TRANSPORT();
 
   void setSize(Index_type target_size, Index_type target_reps);
   void setUp(VariantID vid, size_t tune_idx);
@@ -280,7 +289,7 @@ public:
   double sampleNuFission(std::mt19937_64 &rng);
   Event handleBC(Cell &cell, int face);
   void initMaterials(Material* &mats, VariantID vid);
-  void buildMeshCube(size_t side, TRANSPORT3DMC::Cell* &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist, VariantID vid);
+  void buildMeshCube(size_t side, MC_HISTORY_PARTICLE_TRANSPORT::Cell* &mesh, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist, VariantID vid);
   static std::array<double, 3> sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E);
   //void setup(size_t particles, size_t groups, double deltaT);
   //void Transport(double time);

@@ -47,8 +47,8 @@ blt_add_executable(
   NAME raja-perf-omptarget.exe
   SOURCES RAJAPerfSuiteDriver.cpp
   apps/AppsData.cpp
-  apps/TRANSPORT3DMC.cpp
-  apps/TRANSPORT3DMC-Seq.cpp
+  apps/MC_HISTORY_PARTICLE_TRANSPORT.cpp
+  apps/MC_HISTORY_PARTICLE_TRANSPORT-Seq.cpp
   apps/CONVECTION3DPA.cpp
   apps/CONVECTION3DPA-Seq.cpp
   apps/DEL_DOT_VEC_2D.cpp

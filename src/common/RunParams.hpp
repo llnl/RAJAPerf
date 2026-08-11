@@ -263,9 +263,9 @@ public:
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
 
-  Index_type getTransport3DmcParticles() const {return transport3dMC_particles; }
-  Index_type getTransport3DmcCubeSz() const {return transport3dMC_cube_dim; }
-  Index_type getTransport3DmcGroups() const {return transport3dMC_groups; }
+  Index_type getMCHistoryParticles() const {return MCHistoryParticles; }
+  Index_type getMCHistoryCubeSz() const {return MCHistoryCubeSz; }
+  Index_type getMCHistoryGroups() const {return MCHistoryGroups; }
 
   Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
   Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
@@ -444,9 +444,9 @@ private:
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
 
-  Index_type transport3dMC_particles;
-  Index_type transport3dMC_cube_dim;
-  Index_type transport3dMC_groups;
+  Index_type MCHistoryParticles;
+  Index_type MCHistoryCubeSz;
+  Index_type MCHistoryGroups;
 
   Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
   Index_type femsweep_angles_azim; /*!< azimuthal angles used in femsweep kernel (input option) */

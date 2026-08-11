@@ -47,9 +47,9 @@ RunParams::RunParams(int argc, char** argv)
    ltimes_num_d(6),
    ltimes_num_g(32),
    ltimes_num_m(25),
-   transport3dMC_particles(10000),
-   transport3dMC_cube_dim(3),
-   transport3dMC_groups(10),
+   MCHistoryParticles(10000),
+   MCHistoryCubeSz(3),
+   MCHistoryGroups(10),
    femsweep_angles_polar(3),
    femsweep_angles_azim(3),
    femsweep_groups(16),
@@ -713,7 +713,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--transport3dMC_particles") ) {
+    } else if ( opt == std::string("--MCHistoryParticles") ) {
 
       i++;
       if ( i < argc ) {
@@ -725,7 +725,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 << std::endl;
           input_state = BadInput;
         } else {
-          transport3dMC_particles = num;
+          MCHistoryParticles = num;
         }
       } else {
         getCout() << "\nBad input:"
@@ -734,7 +734,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--transport3dMC_cube_dim") ) {
+    } else if ( opt == std::string("--MCHistoryCubeSz") ) {
 
       i++;
       if ( i < argc ) {
@@ -746,7 +746,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 << std::endl;
           input_state = BadInput;
         } else {
-          transport3dMC_cube_dim = num;
+          MCHistoryCubeSz = num;
         }
       } else {
         getCout() << "\nBad input:"
@@ -755,7 +755,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
         input_state = BadInput;
       }
 
-    } else if ( opt == std::string("--transport3dMC_groups") ) {
+    } else if ( opt == std::string("--MCHistoryGroups") ) {
 
       i++;
       if ( i < argc ) {
@@ -767,7 +767,7 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                 << std::endl;
           input_state = BadInput;
         } else {
-          transport3dMC_groups = num;
+          MCHistoryGroups = num;
         }
       } else {
         getCout() << "\nBad input:"

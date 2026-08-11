@@ -7,7 +7,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#include "TRANSPORT3DMC.hpp"
+#include "MC_HISTORY_PARTICLE_TRANSPORT.hpp"
 
 #include "RAJA/RAJA.hpp"
 
@@ -19,17 +19,17 @@ namespace apps
 {
 
 
-void TRANSPORT3DMC::runSeqVariant(VariantID vid)
+void MC_HISTORY_PARTICLE_TRANSPORT::runSeqVariant(VariantID vid)
 {
-  const Index_type run_reps = 20;
+  const Index_type run_reps = 1;
   const Index_type ibegin = 0;
   const Index_type iend = getActualProblemSize();
 
-  TRANSPORT3DMC_DATA_SETUP(vid, iend);
+  MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP(vid, iend);
 
 #if defined(RUN_RAJA_SEQ)
-  auto transport3dmc_lam = [&](Index_type i) {
-                             TRANSPORT3DMC_BODY
+  auto MC_HISTORY_PARTICLE_TRANSPORT_lam = [&](Index_type i) {
+                             MC_HISTORY_PARTICLE_TRANSPORT_BODY
                            };
 #endif
 
@@ -38,12 +38,12 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
     case Base_Seq : {
 
       startTimer();
-      //TRANSPORT3DMC_DATA_SETUP(vid, iend);
+      //MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP(vid, iend);
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        TRANSPORT3DMC_RESET
+        MC_HISTORY_PARTICLE_TRANSPORT_RESET
         for (Index_type i = ibegin; i < iend; ++i ) {
-          TRANSPORT3DMC_BODY
+          MC_HISTORY_PARTICLE_TRANSPORT_BODY
         }
 
       }
@@ -56,17 +56,16 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
     case Lambda_Seq : {
 
       startTimer();
-      //TRANSPORT3DMC_DATA_SETUP
+      //MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        TRANSPORT3DMC_RESET
+        MC_HISTORY_PARTICLE_TRANSPORT_RESET
         for (Index_type i = ibegin; i < iend; ++i ) {
-          transport3dmc_lam(i);
+          MC_HISTORY_PARTICLE_TRANSPORT_lam(i);
         }
 
       }
       stopTimer();
-
       break;
     }
 
@@ -75,29 +74,28 @@ void TRANSPORT3DMC::runSeqVariant(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      //TRANSPORT3DMC_DATA_SETUP
+      //MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-        TRANSPORT3DMC_RESET
+        MC_HISTORY_PARTICLE_TRANSPORT_RESET
         RAJA::forall<RAJA::seq_exec>( res,
-          RAJA::RangeSegment(ibegin, iend), transport3dmc_lam);
+          RAJA::RangeSegment(ibegin, iend), MC_HISTORY_PARTICLE_TRANSPORT_lam);
 
       }
       stopTimer();
-
       break;
     }
 #endif // RUN_RAJA_SEQ
 
     default : {
-      getCout() << "\n  TRANSPORT3DMC : Unknown variant id = " << vid << std::endl;
+      getCout() << "\n  MC_HISTORY_PARTICLE_TRANSPORT : Unknown variant id = " << vid << std::endl;
     }
 
   }
 
 }
 
-RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(TRANSPORT3DMC, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
+RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(MC_HISTORY_PARTICLE_TRANSPORT, Seq, Base_Seq, Lambda_Seq, RAJA_Seq)
 
 } // end namespace apps
 } // end namespace rajaperf
