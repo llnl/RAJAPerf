@@ -64,6 +64,7 @@
 #include "polybench/POLYBENCH_FDTD_2D.hpp"
 #include "polybench/POLYBENCH_FLOYD_WARSHALL.hpp"
 #include "polybench/POLYBENCH_GEMM.hpp"
+#include "polybench/POLYBENCH_GEMM_LOADS.hpp"
 #include "polybench/POLYBENCH_GEMVER.hpp"
 #include "polybench/POLYBENCH_GESUMMV.hpp"
 #include "polybench/POLYBENCH_HEAT_3D.hpp"
@@ -224,6 +225,9 @@ static const std::string KernelNames [] =
   std::string("Polybench_FDTD_2D"),
   std::string("Polybench_FLOYD_WARSHALL"),
   std::string("Polybench_GEMM"),
+  std::string("Polybench_GEMM_A_ONLY"),
+  std::string("Polybench_GEMM_B_ONLY"),
+  std::string("Polybench_GEMM_A_B_LOAD"),
   std::string("Polybench_GEMVER"),
   std::string("Polybench_GESUMMV"),
   std::string("Polybench_HEAT_3D"),
@@ -1104,6 +1108,24 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Polybench_GEMM : {
        kernel = new polybench::POLYBENCH_GEMM(run_params);
+       break;
+    }
+    case Polybench_GEMM_A_ONLY : {
+       kernel = new polybench::POLYBENCH_GEMM_LOADS(
+           run_params, Polybench_GEMM_A_ONLY,
+           polybench::POLYBENCH_GEMM_LOAD_PROBE_A_ONLY);
+       break;
+    }
+    case Polybench_GEMM_B_ONLY : {
+       kernel = new polybench::POLYBENCH_GEMM_LOADS(
+           run_params, Polybench_GEMM_B_ONLY,
+           polybench::POLYBENCH_GEMM_LOAD_PROBE_B_ONLY);
+       break;
+    }
+    case Polybench_GEMM_A_B_LOAD : {
+       kernel = new polybench::POLYBENCH_GEMM_LOADS(
+           run_params, Polybench_GEMM_A_B_LOAD,
+           polybench::POLYBENCH_GEMM_LOAD_PROBE_A_B_LOAD);
        break;
     }
     case Polybench_GEMVER : {

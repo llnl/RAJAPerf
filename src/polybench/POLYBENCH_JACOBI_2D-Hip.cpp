@@ -42,10 +42,11 @@ namespace polybench
 
 template < size_t j_block_size, size_t i_block_size >
 __launch_bounds__(j_block_size*i_block_size)
-__global__ void poly_jacobi_2D_1(Real_ptr A, Real_ptr B, Index_type N)
+__global__ void poly_jacobi_2D_reorder_1(Real_ptr A, Real_ptr B, Index_type N)
 {
-  Index_type i = 1 + blockIdx.y * i_block_size + threadIdx.y;
-  Index_type j = 1 + blockIdx.x * j_block_size + threadIdx.x;
+  Index_type i = 1 + (gridDim.z * blockIdx.x + blockIdx.z) *
+                     i_block_size + threadIdx.y;
+  Index_type j = 1 + blockIdx.y * j_block_size + threadIdx.x;
 
   if ( i < N-1 && j < N-1 ) {
     POLYBENCH_JACOBI_2D_BODY1;
@@ -54,10 +55,11 @@ __global__ void poly_jacobi_2D_1(Real_ptr A, Real_ptr B, Index_type N)
 
 template < size_t j_block_size, size_t i_block_size >
 __launch_bounds__(j_block_size*i_block_size)
-__global__ void poly_jacobi_2D_2(Real_ptr A, Real_ptr B, Index_type N)
+__global__ void poly_jacobi_2D_reorder_2(Real_ptr A, Real_ptr B, Index_type N)
 {
-  Index_type i = 1 + blockIdx.y * i_block_size + threadIdx.y;
-  Index_type j = 1 + blockIdx.x * j_block_size + threadIdx.x;
+  Index_type i = 1 + (gridDim.z * blockIdx.x + blockIdx.z) *
+                     i_block_size + threadIdx.y;
+  Index_type j = 1 + blockIdx.y * j_block_size + threadIdx.x;
 
   if ( i < N-1 && j < N-1 ) {
     POLYBENCH_JACOBI_2D_BODY2;
@@ -95,17 +97,23 @@ void POLYBENCH_JACOBI_2D::runHipVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       JACOBI_2D_THREADS_PER_BLOCK_HIP;
-      JACOBI_2D_NBLOCKS_HIP;
+      constexpr Index_type reorder_num = 6;
+      const Index_type blocks_i = RAJA_DIVIDE_CEILING_INT(N-2, i_block_sz);
+      dim3 nblocks(static_cast<size_t>(reorder_num),
+                   static_cast<size_t>(
+                     RAJA_DIVIDE_CEILING_INT(N-2, j_block_sz)),
+                   static_cast<size_t>(
+                     RAJA_DIVIDE_CEILING_INT(blocks_i, reorder_num)));
       constexpr size_t shmem = 0;
 
       RPlaunchHipKernel(
-        (poly_jacobi_2D_1<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
+        (poly_jacobi_2D_reorder_1<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         A, B, N );
 
       RPlaunchHipKernel(
-        (poly_jacobi_2D_2<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
+        (poly_jacobi_2D_reorder_2<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_HIP>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
         A, B, N );
@@ -201,4 +209,3 @@ RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(POLYBENCH_JACOBI_2D, Hip, Base
 } // end namespace rajaperf
 
 #endif  // RAJA_ENABLE_HIP
-

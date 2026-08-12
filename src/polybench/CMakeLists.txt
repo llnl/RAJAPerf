@@ -58,6 +58,12 @@ blt_add_library(
           POLYBENCH_GEMM-OMP.cpp
           POLYBENCH_GEMM-OMPTarget.cpp
           POLYBENCH_GEMM-Sycl.cpp
+          POLYBENCH_GEMM_LOADS.cpp
+          POLYBENCH_GEMM_LOADS-Seq.cpp
+          POLYBENCH_GEMM_LOADS-Hip.cpp
+          POLYBENCH_GEMM_LOADS-Cuda.cpp
+          POLYBENCH_GEMM_LOADS-OMP.cpp
+          POLYBENCH_GEMM_LOADS-OMPTarget.cpp
           POLYBENCH_GEMVER.cpp
           POLYBENCH_GEMVER-Seq.cpp
           POLYBENCH_GEMVER-Hip.cpp

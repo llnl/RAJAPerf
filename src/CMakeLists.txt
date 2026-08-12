@@ -211,6 +211,9 @@ blt_add_executable(
   polybench/POLYBENCH_GEMM.cpp
   polybench/POLYBENCH_GEMM-Seq.cpp
   polybench/POLYBENCH_GEMM-OMPTarget.cpp
+  polybench/POLYBENCH_GEMM_LOADS.cpp
+  polybench/POLYBENCH_GEMM_LOADS-Seq.cpp
+  polybench/POLYBENCH_GEMM_LOADS-OMPTarget.cpp
   polybench/POLYBENCH_GEMVER.cpp
   polybench/POLYBENCH_GEMVER-Seq.cpp
   polybench/POLYBENCH_GEMVER-OMPTarget.cpp
