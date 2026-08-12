@@ -7,6 +7,7 @@
 // SPDX-License-Identifier: (BSD-3-Clause)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
+#define FEMSWEEP_ENABLE_UNROLL
 #include "FEMSWEEP.hpp"
 
 #include "RAJA/RAJA.hpp"
