@@ -41,8 +41,7 @@
   u_int32_t nxt = -1;                           \
   int m = -1;                                  \
   bool logging = false; \
-  u_int64_t loopCt ; \
-  std::map<size_t, size_t> iterData ;
+  std::ofstream outFile;  outFile.open("writes.csv", std::ios::app);  outFile << iend << "particles\n" ; writeCt = 0;\
 
 
 #define MC_HISTORY_PARTICLE_TRANSPORT_RESET \
@@ -67,20 +66,20 @@
     if (t_particles.cell[i] == -1) {                                                                                  \
       std::cout << "LOST\n"; break;                                                                                   \
     }                                                                                                                 \
-    m = mesh[t_particles.cell[i]].matID; \
+    m = mesh[t_particles.cell[i]].matID; writeCt += 4;\
     if (logging) {                                                                                \
     std:: cout << "inside cell "                                                                                      \
                 << t_particles.cell[i]                                                                                   \
                 << " with material " << m << "\n";         }                                                            \
-    cross = calcMacroXS(m, t_particles.group[i]);                                                                       \
+    cross = calcMacroXS(m, t_particles.group[i]);          writeCt += 40;                                                           \
     RP_CALI_SUBKERNEL_BEGIN("Calc Event Distances");                                                                          \
     scatterDX = calcEventDist(cross.scatter, RNG);                                                                    \
     absDX = calcEventDist(cross.abs, RNG);                                                                            \
     fissionDX = calcEventDist(cross.fission, RNG);                                                                    \
     nufissionDX = calcEventDist(cross.nu_fission, RNG);                                                               \
-    boundaryDX = mesh[t_particles.cell[i]].getBoundary(t_particles.pos[i], t_particles.dir[i], nxt);                        \
+    boundaryDX = mesh[t_particles.cell[i]].getBoundary(t_particles.pos[i], t_particles.dir[i], nxt); writeCt += 8*5;                   \
     t_particles.calcDX(i);                                                                                              \
-    minDX = std::min({scatterDX, absDX, fissionDX, nufissionDX, boundaryDX, t_particles.dx[i]});                        \
+    minDX = std::min({scatterDX, absDX, fissionDX, nufissionDX, boundaryDX, t_particles.dx[i]}); writeCt += 8;                       \
     RP_CALI_SUBKERNEL_END("Calc Event Distances");                                                                            \
     if(logging) {                                                                                                     \
     RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                       \
@@ -97,33 +96,33 @@
       t_particles.pos[i][0] + t_particles.dir[i][0] * minDX,                                                              \
       t_particles.pos[i][1] + t_particles.dir[i][1] * minDX,                                                              \
       t_particles.pos[i][2] + t_particles.dir[i][2] * minDX                                                               \
-    };                                                                                                                \
-    t_particles.dx[i] -= minDX;                                                                                         \
+    };   writeCt += 24;                                                                                                             \
+    t_particles.dx[i] -= minDX; writeCt += 8;                                                                                         \
     if (t_particles.E[i] < cutoff || minDX == absDX) {                                                                  \
-      t_particles.lastEvent[i] = ABSORB;                                                                              \
+      t_particles.lastEvent[i] = ABSORB;  writeCt += 4;                                                                            \
       if (logging) {                                                                                                  \
       RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Absorbed\n";                                                                                      \
       RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == scatterDX) {                                                                                    \
-      t_particles.lastEvent[i] = SCATTER;                                                                             \
-      t_particles.dir[i] = sampleScatter(RNG, dist, posDist, t_particles.E[i]);                                       \
+      t_particles.lastEvent[i] = SCATTER;   writeCt += 4;                                                                          \
+      t_particles.dir[i] = sampleScatter(RNG, dist, posDist, t_particles.E[i]);   writeCt += 24;                                  \
       if (logging) {                                                                                                  \
       RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Scattered\n";                                                                                     \
       RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == fissionDX) {                                                                                    \
-      t_particles.lastEvent[i] = FISSION;                                                                             \
+      t_particles.lastEvent[i] = FISSION;  writeCt += 4;                                                                           \
       if (logging) {                                                                                                  \
       RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Fission Occured\n";                                                                               \
       RP_CALI_SUBKERNEL_END("Logging"); }                                                                                     \
     }                                                                                                                 \
     else if (minDX == nufissionDX) {                                                                                  \
-      t_particles.lastEvent[i] = FISSION;                                                                             \
-      t_particles.dx[i] *= sampleNuFission(RNG);                                                                      \
+      t_particles.lastEvent[i] = FISSION;  writeCt += 4;                                                                           \
+      t_particles.dx[i] *= sampleNuFission(RNG);     writeCt += 8;                                                                 \
       if (logging) {                                                                                                  \
       RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "NuFission, life extended\n";                                                                      \
@@ -131,16 +130,16 @@
     }                                                                                                                 \
     else if (minDX == boundaryDX) {                                                                                   \
       RP_CALI_SUBKERNEL_BEGIN("Handle BCs");                                                                                  \
-      t_particles.lastEvent[i] = handleBC(mesh[t_particles.cell[i]], nxt);                                            \
+      t_particles.lastEvent[i] = handleBC(mesh[t_particles.cell[i]], nxt);     writeCt += 4;                                       \
       if (t_particles.lastEvent[i] == BOUNDARY) {                                                                     \
-        t_particles.cell[i] = mesh[t_particles.cell[i]].next[nxt];                                                    \
+        t_particles.cell[i] = mesh[t_particles.cell[i]].next[nxt];         writeCt += 4;                                           \
         if (logging) {                                                                                                \
         RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                   \
         std::cout << "Boundary, pass\n";                                                                              \
         RP_CALI_SUBKERNEL_END("Logging"); }                                                                                   \
       }                                                                                                               \
       else if (t_particles.lastEvent[i] == FISSION || t_particles.lastEvent[i] == SCATTER) {                          \
-        t_particles.dir[i][0] *= -1.0; t_particles.dir[i][1] *= -1.0; t_particles.dir[i][2] *= -1.0;                  \
+        t_particles.dir[i][0] *= -1.0; t_particles.dir[i][1] *= -1.0; t_particles.dir[i][2] *= -1.0;     writeCt += 24;             \
         if (logging) {                                                                                                \
         RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                   \
         std::cout << "Boundary, Reflected\n";                                                                         \
@@ -155,7 +154,7 @@
       RP_CALI_SUBKERNEL_END("Handle BCs");                                                                                  \
     }                                                                                                                 \
     else {                                                                                                            \
-      t_particles.lastEvent[i] = CENSUS;                                                                              \
+      t_particles.lastEvent[i] = CENSUS;   writeCt += 4;                                                                           \
       if (logging) {                                                                                                  \
       RP_CALI_SUBKERNEL_BEGIN("Logging");                                                                                     \
       std::cout << "Census, end of lifetime.\n";                                                                      \
@@ -168,6 +167,10 @@
   std::cout << "Particle " << i << " done, moving to next\n" << std::endl;                                            \
   RP_CALI_SUBKERNEL_END("Logging"); }                                                                                      \
   RP_CALI_SUBKERNEL_END("Transport");                                                                                       \
+
+
+#define MC_HISTORY_PARTICLE_TRANSPORT_WRITE_LOGS \
+    outFile << irep << "," << writeCt << "\n";
 
 #include "common/KernelBase.hpp"
 #include <random>
@@ -309,6 +312,8 @@ private:
 
   size_t dim;
   size_t GROUPS;
+
+  inline static u_int64_t writeCt ;
 };
 
 } // end namespace apps
