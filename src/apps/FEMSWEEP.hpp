@@ -98,14 +98,8 @@ constexpr long FDS = 4;  // number of DOFs per face
 
 #if defined(FEMSWEEP_ENABLE_UNROLL)
 #define FEMSWEEP_UNROLL _Pragma("unroll")
-#define FEMSWEEP_UNROLL_ND _Pragma("unroll 8")
-#define FEMSWEEP_UNROLL_NLF _Pragma("unroll 6")
-#define FEMSWEEP_UNROLL_FDS _Pragma("unroll 4")
 #else
 #define FEMSWEEP_UNROLL
-#define FEMSWEEP_UNROLL_ND
-#define FEMSWEEP_UNROLL_NLF
-#define FEMSWEEP_UNROLL_FDS
 #endif
 
 
@@ -144,17 +138,17 @@ constexpr long FDS = 4;  // number of DOFs per face
   Real_type A[ND*ND]; \
   Real_type b[ND]; \
   const Index_type e = order_r[k + nehp_pos + a * ne]; \
-  FEMSWEEP_UNROLL_ND \
+  FEMSWEEP_UNROLL \
   for (Index_type j = 0; j < ND; ++j) \
   { \
     b[j] = Bdat[j + e * ND + a * ne * ND]; \
-    FEMSWEEP_UNROLL_ND \
+    FEMSWEEP_UNROLL \
     for (Index_type i = 0; i < ND; ++i) \
     { \
       A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
     } \
   } \
-  FEMSWEEP_UNROLL_NLF \
+  FEMSWEEP_UNROLL \
   for (Index_type face = 0; face < NLF; ++face) \
   { \
     const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
@@ -164,13 +158,13 @@ constexpr long FDS = 4;  // number of DOFs per face
     { \
       continue; \
     } \
-    FEMSWEEP_UNROLL_FDS \
+    FEMSWEEP_UNROLL \
     for (Index_type j = 0; j < FDS; ++j) \
     { \
       const Index_type ffj = f * FDS + j; \
       const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
       Real_type F = 0.0; \
-      FEMSWEEP_UNROLL_FDS \
+      FEMSWEEP_UNROLL \
       for (Index_type i = 0; i < FDS; i++) \
       { \
         const Index_type ffi = f * FDS + i; \
