@@ -357,34 +357,196 @@ void INTSC_HEXHEX_EXP::runCudaVariantImpl(VariantID vid)
 
   } else if ( vid == RAJA_CUDA ) {
 
+    constexpr Size_type stage2_tile_size = 128;
+    constexpr Size_type stage2_transpose_block_size = 256;
+    constexpr Size_type stage2_target_tet_kernels = 6;
+    constexpr Size_type stage2_transpose_kernels = 1;
+    setKernelsPerRep(stage2_transpose_kernels + stage2_target_tet_kernels);
+    const Size_type stage2_grid_size =
+        RAJA_DIVIDE_CEILING_INT(n_subz_intsc, stage2_tile_size);
+    const Size_type stage2_aosoa_len =
+        24 * stage2_grid_size * stage2_tile_size;
+
+    Real_ptr dsubz_blk;
+    Real_ptr tsubz_blk;
+    allocData(DataSpace::CudaDevice, dsubz_blk, stage2_aosoa_len);
+    allocData(DataSpace::CudaDevice, tsubz_blk, stage2_aosoa_len);
+
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i)
-          {
-            RAJA_TEAM_SHARED Real_type vv_reduce[hexhex_exp_len_vv_reduce] ;
+      nvtxRangePushA("INTSC_HEXHEX_EXP RAJA stage2_aosoa");
 
-            Index_type blksize   = block_size ;
-            Index_type blk       = i / block_size ;
-            Index_type ith       = i ;
-            Index_type thridx    = i % block_size ;
+      RAJA::forall< RAJA::cuda_exec<stage2_transpose_block_size,
+                                    true /*async*/> >( res,
+        RAJA::RangeSegment(
+            ibegin, stage2_grid_size * stage2_transpose_block_size),
+        [=] __device__ (Index_type i) {
+          RAJA_TEAM_SHARED Real_type tile[24][stage2_tile_size + 1];
 
-            Real_ptr vv_int_p = (Real_ptr ) vv_int + 8*blk ;
-            INTSC_HEXHEX_EXP_BODY;
+          Index_type const tileId = i / stage2_transpose_block_size;
+          Index_type const pairBase = tileId * stage2_tile_size;
+          Index_type const tid = i % stage2_transpose_block_size;
+
+          for (Int_type pass = 0; pass < 2; ++pass) {
+            Real_ptr const src = pass == 0 ? dsubz : tsubz;
+
+            for (Index_type e = tid; e < 24 * stage2_tile_size;
+                 e += stage2_transpose_block_size) {
+              Int_type const p = e / 24;
+              Int_type const component = e - 24 * p;
+              Index_type const ipair = pairBase + p;
+
+              tile[component][p] = (ipair < n_subz_intsc)
+                                 ? src[24 * ipair + component]
+                                 : Real_type(0.0);
+            }
+
+            __syncthreads();
+
+            Real_ptr const dst =
+                (pass == 0 ? dsubz_blk : tsubz_blk) +
+                tileId * 24 * stage2_tile_size;
+
+            for (Index_type e = tid; e < 24 * stage2_tile_size;
+                 e += stage2_transpose_block_size) {
+              Int_type const component = e / stage2_tile_size;
+              Int_type const p = e - component * stage2_tile_size;
+
+              dst[component * stage2_tile_size + p] = tile[component][p];
+            }
+
+            __syncthreads();
           }
-      ) ;
+        }
+      );
 
-      RAJA::forall< RAJA::cuda_exec<block_size, true /*async*/> >( res,
-        RAJA::RangeSegment(ibegin, iend_fixup), [=] __device__ (Index_type i)
-          {
-            INTSC_HEXHEX_EXP_FIXUP_VV_BODY ;
-          }
-      ) ;
+#define RAJA_LAUNCH_TARGET_TET(TTET)                                          \
+      RAJA::forall< RAJA::cuda_exec<stage2_tile_size,                         \
+                                    true /*async*/> >( res,                   \
+        RAJA::RangeSegment(ibegin, stage2_grid_size * stage2_tile_size),      \
+        [=] __device__ (Index_type i) {                                       \
+          RAJA_TEAM_SHARED Real_type cand_vx[12 * stage2_tile_size];          \
+          RAJA_TEAM_SHARED Real_type cand_vy[12 * stage2_tile_size];          \
+          RAJA_TEAM_SHARED Real_type cand_vz[12 * stage2_tile_size];          \
+                                                                               \
+          Index_type const lane = i % stage2_tile_size;                       \
+          Index_type const tile = i / stage2_tile_size;                       \
+          Index_type const ipair = tile * stage2_tile_size + lane;            \
+                                                                               \
+          if (ipair >= n_subz_intsc) {                                        \
+            return;                                                           \
+          }                                                                   \
+                                                                               \
+          Real_const_ptr const dTile =                                        \
+              dsubz_blk + tile * 24 * stage2_tile_size;                       \
+          Real_const_ptr const tTile =                                        \
+              tsubz_blk + tile * 24 * stage2_tile_size;                       \
+                                                                               \
+          HexHexTargetRefMapExp ref_map;                                      \
+          make_target_tet_ref_map_new_fixed_aosoa<TTET, stage2_tile_size>(    \
+              tTile, lane, ref_map);                                          \
+                                                                               \
+          Moment4 ref_sum;                                                    \
+          ref_sum.v = Real_type(0.0);                                         \
+          ref_sum.mx = Real_type(0.0);                                        \
+          ref_sum.my = Real_type(0.0);                                        \
+          ref_sum.mz = Real_type(0.0);                                        \
+                                                                               \
+          _Pragma("unroll 1")                                                 \
+          for (Int_type dtet = 0; dtet < 6; ++dtet) {                         \
+            Tet4 t;                                                           \
+                                                                               \
+            transform_donor_tet_fixed_runtime_dtet_aosoa<                     \
+                TTET, stage2_tile_size>(dTile, lane, dtet, ref_map, t);       \
+                                                                               \
+            Moment4 const ref_mom =                                           \
+                intersect_tettet_edgeface_shared_exp<stage2_tile_size>(       \
+                    t, cand_vx, cand_vy, cand_vz, lane);                      \
+                                                                               \
+            ref_sum.v += ref_mom.v;                                           \
+            ref_sum.mx += ref_mom.mx;                                         \
+            ref_sum.my += ref_mom.my;                                         \
+            ref_sum.mz += ref_mom.mz;                                         \
+          }                                                                   \
+                                                                               \
+          Real_type const det =                                               \
+              compute_target_det_exp<TTET, stage2_tile_size>(tTile, lane);    \
+                                                                               \
+          Real_type const vv_sum = det * ref_sum.v;                           \
+                                                                               \
+          Real_type vx_sum;                                                   \
+          {                                                                   \
+            Real_type x0, e1x, e2x, e3x;                                      \
+            load_target_x_row_exp<TTET, stage2_tile_size>(                    \
+                tTile, lane, x0, e1x, e2x, e3x);                              \
+            vx_sum = det * (x0 * ref_sum.v +                                  \
+                            e1x * ref_sum.mx +                                \
+                            e2x * ref_sum.my +                                \
+                            e3x * ref_sum.mz);                                \
+          }                                                                   \
+                                                                               \
+          Real_type vy_sum;                                                   \
+          {                                                                   \
+            Real_type y0, e1y, e2y, e3y;                                      \
+            load_target_y_row_exp<TTET, stage2_tile_size>(                    \
+                tTile, lane, y0, e1y, e2y, e3y);                              \
+            vy_sum = det * (y0 * ref_sum.v +                                  \
+                            e1y * ref_sum.mx +                                \
+                            e2y * ref_sum.my +                                \
+                            e3y * ref_sum.mz);                                \
+          }                                                                   \
+                                                                               \
+          Real_type vz_sum;                                                   \
+          {                                                                   \
+            Real_type z0, e1z, e2z, e3z;                                      \
+            load_target_z_row_exp<TTET, stage2_tile_size>(                    \
+                tTile, lane, z0, e1z, e2z, e3z);                              \
+            vz_sum = det * (z0 * ref_sum.v +                                  \
+                            e1z * ref_sum.mx +                                \
+                            e2z * ref_sum.my +                                \
+                            e3z * ref_sum.mz);                                \
+          }                                                                   \
+                                                                               \
+          Index_type const std_i = ipair / hexhex_exp_fixup_groupsize;         \
+          Index_type const sub_i = ipair % hexhex_exp_fixup_groupsize;         \
+                                                                               \
+          Real_ptr out =                                                      \
+              vv_pair +                                                       \
+              hexhex_exp_nvals_per_std_intsc * std_i +                        \
+              hexhex_exp_nvals_per_pair * sub_i;                              \
+                                                                               \
+          if constexpr (TTET == 0) {                                          \
+            out[0] = vv_sum;                                                  \
+            out[1] = vx_sum;                                                  \
+            out[2] = vy_sum;                                                  \
+            out[3] = vz_sum;                                                  \
+          } else {                                                            \
+            out[0] += vv_sum;                                                 \
+            out[1] += vx_sum;                                                 \
+            out[2] += vy_sum;                                                 \
+            out[3] += vz_sum;                                                 \
+          }                                                                   \
+        }                                                                     \
+      )
+
+      RAJA_LAUNCH_TARGET_TET(0);
+      RAJA_LAUNCH_TARGET_TET(1);
+      RAJA_LAUNCH_TARGET_TET(2);
+      RAJA_LAUNCH_TARGET_TET(3);
+      RAJA_LAUNCH_TARGET_TET(4);
+      RAJA_LAUNCH_TARGET_TET(5);
+
+#undef RAJA_LAUNCH_TARGET_TET
+
+      nvtxRangePop();
 
     }
     stopTimer();
+
+    deallocData(DataSpace::CudaDevice, dsubz_blk);
+    deallocData(DataSpace::CudaDevice, tsubz_blk);
 
   } else {
      getCout() << "\n  INTSC_HEXHEX_EXP : Unknown Cuda variant id = " << vid << std::endl;
