@@ -96,13 +96,7 @@ constexpr long ND = 8;   // number of corners per element
 constexpr long NLF = 6;  // number of faces per element
 constexpr long FDS = 4;  // number of DOFs per face
 
-#if defined(FEMSWEEP_ENABLE_UNROLL)
-#define FEMSWEEP_UNROLL _Pragma("unroll")
-#else
-#define FEMSWEEP_UNROLL
-#endif
-
-
+#define FEMSWEEP_UNROLL_64_TUNING_NAME "unroll_64"
 
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \
@@ -134,21 +128,21 @@ constexpr long FDS = 4;  // number of DOFs per face
   const Index_type ohp = ohpaa_r[a]; \
   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
 
-#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT \
+#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT_IMPL(UNROLL, SOLVE) \
   Real_type A[ND*ND]; \
   Real_type b[ND]; \
   const Index_type e = order_r[k + nehp_pos + a * ne]; \
-  FEMSWEEP_UNROLL \
+  UNROLL \
   for (Index_type j = 0; j < ND; ++j) \
   { \
     b[j] = Bdat[j + e * ND + a * ne * ND]; \
-    FEMSWEEP_UNROLL \
+    UNROLL \
     for (Index_type i = 0; i < ND; ++i) \
     { \
       A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
     } \
   } \
-  FEMSWEEP_UNROLL \
+  UNROLL \
   for (Index_type face = 0; face < NLF; ++face) \
   { \
     const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
@@ -158,13 +152,13 @@ constexpr long FDS = 4;  // number of DOFs per face
     { \
       continue; \
     } \
-    FEMSWEEP_UNROLL \
+    UNROLL \
     for (Index_type j = 0; j < FDS; ++j) \
     { \
       const Index_type ffj = f * FDS + j; \
       const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
       Real_type F = 0.0; \
-      FEMSWEEP_UNROLL \
+      UNROLL \
       for (Index_type i = 0; i < FDS; i++) \
       { \
         const Index_type ffi = f * FDS + i; \
@@ -175,122 +169,123 @@ constexpr long FDS = 4;  // number of DOFs per face
     } \
   } \
   const Real_type s = Sgdat[e + g * ne]; \
-  SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
+  SOLVE<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
+
+#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT \
+  FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT_IMPL(, SolveLinearSystemNxN)
+
+#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT_UNROLL \
+  FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT_IMPL(RAJA_UNROLL, SolveLinearSystemNxNUnroll)
 
 
 namespace rajaperf
 {
 
 // LU factorization with no pivoting
-template <long N>
-RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A, 
-                                                  const Real_type s,
-                                                  Real_const_ptr M, 
-                                                  Real_ptr b, 
-                                                  Real_ptr x)
-{
-  Real_type tempA[N][N];
-  Real_type L[N][N];
-  Real_type U[N][N];
-  Real_type D[N];
-  Real_type tempx[N];
-
-  // tempA = A + s * M0
-  // set L to 0, U to identity
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = 0; ii < N; ++ii )
-  {
-    FEMSWEEP_UNROLL
-    for ( Index_type jj = 0; jj < N; ++jj )
-    {
-      tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
-      L[ii][jj] = 0.0;
-      if ( ii == jj )
-      {
-        U[ii][jj] = 1.0;
-      }
-      else
-      {
-        U[ii][jj] = 0.0;
-      }
-    }
-  }
-
-  // set first column of L, and first row of U
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = 0; ii < N; ++ii )
-  {
-    L[ii][0] = tempA[ii][0];
-  }
-
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = 1; ii < N; ++ii )
-  {
-    U[0][ii] = tempA[0][ii]/tempA[0][0];
-  }
-
-  // form L & U
-  // L formed one column at a time
-  // U formed one row at a time
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = 1; ii < N; ++ii )
-  {
-    // L column formation
-    FEMSWEEP_UNROLL
-    for ( Index_type jj = ii; jj < N; ++jj )
-    {
-      Real_type sum = 0.0;
-      FEMSWEEP_UNROLL
-      for ( Index_type kk = 0; kk < jj; ++kk )
-      {
-        sum += L[jj][kk] * U[kk][ii];
-      }
-      L[jj][ii] = tempA[jj][ii] - sum;
-    }
-
-    // U row formation
-    FEMSWEEP_UNROLL
-    for ( Index_type jj = ii+1; jj < N; ++jj )
-    {
-      Real_type sum = 0.0;
-      FEMSWEEP_UNROLL
-      for ( Index_type kk = 0; kk < ii; ++kk )
-      {
-        sum += L[ii][kk] * U[kk][jj];
-      }
-      U[ii][jj] = (tempA[ii][jj] - sum)/L[ii][ii];
-    }
-  }
-
-  // forward substitution
-  D[0] = b[0]/L[0][0];
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = 1; ii < N; ++ii )
-  {
-    Real_type sum = 0.0;
-    FEMSWEEP_UNROLL
-    for ( Index_type jj = 0; jj < ii; ++jj )
-    {
-      sum += L[ii][jj] * D[jj];
-    }
-    D[ii] = (b[ii] - sum)/L[ii][ii];
-  }
-
-  // backward substitution
-  x[N-1] = tempx[N-1] = D[N-1];
-  FEMSWEEP_UNROLL
-  for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
-  {
-    Real_type sum = 0.0;
-    FEMSWEEP_UNROLL
-    for ( Index_type jj = ii+1; jj < N; ++jj )
-    {
-      sum += U[ii][jj] * tempx[jj];
-    }
-    x[ii] = tempx[ii] = D[ii] - sum;
-  }
-
+#define FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN(FUNCTION_NAME, UNROLL) \
+template <long N> \
+RAJA_HOST_DEVICE inline void FUNCTION_NAME(Real_ptr A, \
+                                           const Real_type s, \
+                                           Real_const_ptr M, \
+                                           Real_ptr b, \
+                                           Real_ptr x) \
+{ \
+  Real_type tempA[N][N]; \
+  Real_type L[N][N]; \
+  Real_type U[N][N]; \
+  Real_type D[N]; \
+  Real_type tempx[N]; \
+\
+  UNROLL \
+  for ( Index_type ii = 0; ii < N; ++ii ) \
+  { \
+    UNROLL \
+    for ( Index_type jj = 0; jj < N; ++jj ) \
+    { \
+      tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj]; \
+      L[ii][jj] = 0.0; \
+      if ( ii == jj ) \
+      { \
+        U[ii][jj] = 1.0; \
+      } \
+      else \
+      { \
+        U[ii][jj] = 0.0; \
+      } \
+    } \
+  } \
+\
+  UNROLL \
+  for ( Index_type ii = 0; ii < N; ++ii ) \
+  { \
+    L[ii][0] = tempA[ii][0]; \
+  } \
+\
+  UNROLL \
+  for ( Index_type ii = 1; ii < N; ++ii ) \
+  { \
+    U[0][ii] = tempA[0][ii]/tempA[0][0]; \
+  } \
+\
+  UNROLL \
+  for ( Index_type ii = 1; ii < N; ++ii ) \
+  { \
+    UNROLL \
+    for ( Index_type jj = ii; jj < N; ++jj ) \
+    { \
+      Real_type sum = 0.0; \
+      UNROLL \
+      for ( Index_type kk = 0; kk < jj; ++kk ) \
+      { \
+        sum += L[jj][kk] * U[kk][ii]; \
+      } \
+      L[jj][ii] = tempA[jj][ii] - sum; \
+    } \
+\
+    UNROLL \
+    for ( Index_type jj = ii+1; jj < N; ++jj ) \
+    { \
+      Real_type sum = 0.0; \
+      UNROLL \
+      for ( Index_type kk = 0; kk < ii; ++kk ) \
+      { \
+        sum += L[ii][kk] * U[kk][jj]; \
+      } \
+      U[ii][jj] = (tempA[ii][jj] - sum)/L[ii][ii]; \
+    } \
+  } \
+\
+  D[0] = b[0]/L[0][0]; \
+  UNROLL \
+  for ( Index_type ii = 1; ii < N; ++ii ) \
+  { \
+    Real_type sum = 0.0; \
+    UNROLL \
+    for ( Index_type jj = 0; jj < ii; ++jj ) \
+    { \
+      sum += L[ii][jj] * D[jj]; \
+    } \
+    D[ii] = (b[ii] - sum)/L[ii][ii]; \
+  } \
+\
+  x[N-1] = tempx[N-1] = D[N-1]; \
+  UNROLL \
+  for ( Index_type ii = N - 1 - 1; ii > -1; --ii ) \
+  { \
+    Real_type sum = 0.0; \
+    UNROLL \
+    for ( Index_type jj = ii+1; jj < N; ++jj ) \
+    { \
+      sum += U[ii][jj] * tempx[jj]; \
+    } \
+    x[ii] = tempx[ii] = D[ii] - sum; \
+  } \
 }
+
+FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN(SolveLinearSystemNxN, )
+FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN(SolveLinearSystemNxNUnroll, RAJA_UNROLL)
+
+#undef FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN
 
 
 class RunParams;
@@ -321,6 +316,8 @@ public:
 
   template < size_t block_size >
   void runCudaVariantImpl(VariantID vid);
+  template < size_t block_size >
+  void runCudaVariantImplUnroll(VariantID vid);
   template < size_t block_size >
   void runHipVariantImpl(VariantID vid);
 
