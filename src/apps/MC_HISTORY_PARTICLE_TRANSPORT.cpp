@@ -74,36 +74,33 @@ MC_HISTORY_PARTICLE_TRANSPORT::~MC_HISTORY_PARTICLE_TRANSPORT()
 void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
 {
   RP_CALI_SUBKERNEL_BEGIN("setUp");
-  //GROUPS = groups;
+
+  // Seed distributions and random number generators
   RNGr.seed(18446744073709551557UL);
   dist = std::uniform_real_distribution<double>(-1,1);
   posDist = std::uniform_real_distribution<double>(0,1);
   
+  // Construct the flattened Cross-Section table
   RP_CALI_SUBKERNEL_BEGIN("Table setup");
-  //XSTable = std::vector<XS>(N_ISOTOPE*GROUPS, XS(RNGr, posDist)); //arbitrary seed for cross section table
   auto debugXStable = allocDataForInit(XSTable, N_ISOTOPE*GROUPS, vid);
   for (size_t x = 0; x < N_ISOTOPE*GROUPS; x++)
     XSTable[x] = XS(RNGr, posDist);
 
   RP_CALI_SUBKERNEL_END("Table setup");
 
-  std::cout << GROUPS << " groups\n"; 
   
-  //Materials copy-pasted from XSBench small problem
+  // initalize material metadata using copy-pasted values from XSBench's small problem size
   RP_CALI_SUBKERNEL_BEGIN("Init XSBench Materials");
   initMaterials(materials, vid);
   RP_CALI_SUBKERNEL_END("Init XSBench Materials");
 
-  //const size_t meshSide = 3;
-
+  // Initialize dim x dim x dim cube mesh of randomly assigned materials
   RP_CALI_SUBKERNEL_BEGIN("Init Mesh");
   buildMeshCube(dim, mesh, RNGr, posDist, vid);
   RP_CALI_SUBKERNEL_END("Init Mesh");
 
-  std::cout << dim * dim * dim << " zones/cells\n";
-
+  // Initialize particle SOA
   RP_CALI_SUBKERNEL_BEGIN("Init Particles");
-  //particles = Particles();
 
   allocDataForInit(particles.cell, partCt, vid);
   allocAndInitDataConst(particles.group, partCt, -1, vid);
@@ -118,6 +115,7 @@ void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
   particles.count = partCt;
   particles.distribute(partCt, RNGr, dist, posDist, mesh, dim * dim * dim);
 
+  // initalize scratch SOA to store data for transported particles
   allocDataForInit(t_particles.cell, partCt, vid);
   allocAndInitDataConst(t_particles.group, partCt, -1, vid);
   allocAndInitDataConst(t_particles.lastEvent, partCt, BORN, vid);
@@ -132,10 +130,8 @@ void MC_HISTORY_PARTICLE_TRANSPORT::setUp(VariantID vid, size_t partCt)
 
   RP_CALI_SUBKERNEL_END("Init Particles");
 
-  std::cout << partCt << " particles\n";
-
-  // size_t centerCell = (meshSide / 2) * meshSide * meshSide + (meshSide / 2) * meshSide + (meshSide / 2);
-  // std::fill(particles.cell.begin(), particles.cell.end(), static_cast<int>(centerCell));
+  
+  // init bins for cross sections
   RP_CALI_SUBKERNEL_BEGIN("Bin Init");
   allocDataForInit(bins, GROUPS, vid);
 
@@ -154,6 +150,7 @@ void MC_HISTORY_PARTICLE_TRANSPORT::initMaterials(Material* &mats, VariantID vid
   size_t matCt = 12;
   auto debugMeshInit = allocDataForInit(mats, matCt, vid);
 
+  // metadata copied from XSBench, 68 nuclides
   mats[0].isotopeCt = 34;
   mats[1].isotopeCt  = 5;
 	mats[2].isotopeCt  = 4;
@@ -207,6 +204,7 @@ void MC_HISTORY_PARTICLE_TRANSPORT::initMaterials(Material* &mats, VariantID vid
   std::copy(std::begin(ids11), std::end(ids11), mats[11].nucIDs);
 
 
+  // random assignement of materials ot mesh cells
   for (int i = 0; i < matCt; i++) {
     auto debugConcs = allocDataForInit(mats[i].conc, mats[i].isotopeCt, vid);
     for (int m = 0; m < materials[i].isotopeCt; m++) {
@@ -268,22 +266,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::buildMeshCube(size_t side, Cell* &mesh, std:
       }
     }
   }
-
-  // for (size_t i = 0; i < cubeSz; i++) {
-  //   std::cout << "cell " << i << " info:\n" 
-  //             << " bounds:\n"
-  //             << "  x: " << mesh[i].planes[0] << " " << mesh[i].planes[1] << "\n"
-  //             << "  y: " << mesh[i].planes[2] << " " << mesh[i].planes[3] << "\n"
-  //             << "  z: " << mesh[i].planes[4] << " " << mesh[i].planes[5] << "\n"
-  //             << " neighbors:\n" 
-  //             << "  x: " << mesh[i].next[0] << " " << mesh[i].next[1] << "\n"
-  //             << "  y: " << mesh[i].next[2] << " " << mesh[i].next[3] << "\n"
-  //             << "  z: " << mesh[i].next[4] << " " << mesh[i].next[5] << "\n"
-  //             << " BCs:\n" 
-  //             << "  x: " << mesh[i].bc[0] << " " << mesh[i].bc[1] << "\n"
-  //             << "  y: " << mesh[i].bc[2] << " " << mesh[i].bc[3] << "\n"
-  //             << "  z: " << mesh[i].bc[4] << " " << mesh[i].bc[5] << "\n";
-  // }
 }
 
 void MC_HISTORY_PARTICLE_TRANSPORT::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
@@ -293,11 +275,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::updateChecksum(VariantID vid, size_t RAJAPER
 
 void MC_HISTORY_PARTICLE_TRANSPORT::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  // XSTable.clear();
-  // materials.clear();
-  // mesh.clear();
-  // bins.clear();
-
   deallocData(XSTable, vid);
 
   for (size_t m = 0; m < 12; m++) {
@@ -333,7 +310,7 @@ void MC_HISTORY_PARTICLE_TRANSPORT::tearDown(VariantID vid, size_t RAJAPERF_UNUS
   deallocData(t_particles.seed, vid);
 }
 
-//Cross Section Helper functions
+
 MC_HISTORY_PARTICLE_TRANSPORT::XS::XS() {
   scatter = 0;
   abs = 0;
@@ -343,7 +320,6 @@ MC_HISTORY_PARTICLE_TRANSPORT::XS::XS() {
 }
 
 MC_HISTORY_PARTICLE_TRANSPORT::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &posDist) {
-  //std::mt19937_64 rng(seed);
   scatter = posDist(RNGr);
   abs = posDist(RNGr);
   fission = posDist(RNGr);
@@ -351,6 +327,7 @@ MC_HISTORY_PARTICLE_TRANSPORT::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_d
   total = scatter + abs + fission + nu_fission;
 }
 
+// calculate aggregate cross section for a material
 MC_HISTORY_PARTICLE_TRANSPORT::XS MC_HISTORY_PARTICLE_TRANSPORT::calcMacroXS(size_t mat, double E) {
   RP_CALI_SUBKERNEL_BEGIN("calcMacroXS");
   XS Sigma;
@@ -362,10 +339,12 @@ MC_HISTORY_PARTICLE_TRANSPORT::XS MC_HISTORY_PARTICLE_TRANSPORT::calcMacroXS(siz
   return Sigma;
 }
 
+// sample MFPs
 double MC_HISTORY_PARTICLE_TRANSPORT::calcEventDist(double Sigma, std::mt19937_64 &rng) {
   return posDist(rng)/Sigma;
 }
 
+// sample direction and loss of energy during a scatter event
 std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E) {
   double x = dist(rng), y = dist(rng), z = dist(rng);  
   double norm = std::sqrt(x*x + y*y + z*z);
@@ -376,11 +355,12 @@ std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_
   return {x,y,z};
 }
 
+// sample extended lifetime for fissioned particle to simulate fission products
 double MC_HISTORY_PARTICLE_TRANSPORT::sampleNuFission(std::mt19937_64 &rng) {
   return 5 * (dist(rng) + 1);
 }
 
-//Cell/mesh constructor helper functions
+
 MC_HISTORY_PARTICLE_TRANSPORT::Cell::Cell() {
     for (int i = 0; i < 6; i++){
       next[i] = -1;
@@ -391,6 +371,7 @@ MC_HISTORY_PARTICLE_TRANSPORT::Cell::Cell() {
     matID = 0;
   }
 
+// calculate distance to boundary particle traveling toward from current direction and position
 double MC_HISTORY_PARTICLE_TRANSPORT::Cell::getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross) {
   double min_dist = std::numeric_limits<double>::infinity();
   double dist = 0.0;
@@ -410,6 +391,7 @@ double MC_HISTORY_PARTICLE_TRANSPORT::Cell::getBoundary(const std::array<double,
   return min_dist;
 }
 
+// state handler for boundary conditions
 MC_HISTORY_PARTICLE_TRANSPORT::Event MC_HISTORY_PARTICLE_TRANSPORT::handleBC(Cell &cell, int face) {
   Event pState;
   switch (cell.bc[face]) {
@@ -429,6 +411,7 @@ MC_HISTORY_PARTICLE_TRANSPORT::Event MC_HISTORY_PARTICLE_TRANSPORT::handleBC(Cel
   return pState;
 }
 
+// distribute particles uniformly across mesh
 void MC_HISTORY_PARTICLE_TRANSPORT::Particles::distribute(const size_t numParticles, std::mt19937_64 &RNGr, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, Cell* &mesh, uint64_t dim) {
 
   std::uniform_int_distribution<int> cellDist(0, dim - 1);
@@ -446,6 +429,7 @@ void MC_HISTORY_PARTICLE_TRANSPORT::Particles::distribute(const size_t numPartic
   }
 }
 
+// convert MeV to m, assuming neutron
 void MC_HISTORY_PARTICLE_TRANSPORT::Particles::calcDX(Index_type i) {
   dx[i] = sqrt((2/1.7e-27) * (E[i]/(double)6.242e12) ) * dT;
 }

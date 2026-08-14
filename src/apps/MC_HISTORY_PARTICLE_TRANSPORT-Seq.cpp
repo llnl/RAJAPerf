@@ -55,7 +55,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::runSeqVariant(VariantID vid)
     case Lambda_Seq : {
 
       startTimer();
-      //MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
         MC_HISTORY_PARTICLE_TRANSPORT_RESET
@@ -73,7 +72,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::runSeqVariant(VariantID vid)
       auto res{getHostResource()};
 
       startTimer();
-      //MC_HISTORY_PARTICLE_TRANSPORT_DATA_SETUP
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
         MC_HISTORY_PARTICLE_TRANSPORT_RESET
