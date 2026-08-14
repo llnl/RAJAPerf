@@ -51,10 +51,18 @@ void MC_HISTORY_PARTICLE_TRANSPORT::setSize(Index_type target_size, Index_type t
   setItsPerRep( getActualProblemSize() );
   setKernelsPerRep(1);
 
+  // per particle: cell, group, lastEvent, pos, dir, E, dx, seed, prevXS, newState
+  const Index_type part_bytes = 4+4+4+24+24+8+8+8+sizeof(XS)+1;
+  // pos, dir, dx, lastEvent, cell, E are read then written by the transport loop
+  const Index_type rmw_bytes  = 24+24+8+4+4+8;
+
   setBytesAllocatedPerRep( 140 * target_size ); // in, out
-  setBytesReadPerRep( -1 ); // in
-  setBytesWrittenPerRep( -1 ); // out
-  setBytesModifyWrittenPerRep( -1 );
+  setBytesReadPerRep( part_bytes * target_size              // RESET source
+                  + dim*dim*dim * sizeof(Cell)           // mesh, read-only
+                  + N_ISOTOPE * GROUPS * sizeof(XS)       // XS table, read-only
+                  + GROUPS * sizeof(Real_type) );         // bins
+  setBytesWrittenPerRep( (part_bytes - rmw_bytes) * target_size );
+  setBytesModifyWrittenPerRep( rmw_bytes * target_size );
   setBytesAtomicModifyWrittenPerRep( -1 );
   setFLOPsPerRep( -1 );
 }
@@ -345,10 +353,10 @@ MC_HISTORY_PARTICLE_TRANSPORT::XS::XS(std::mt19937_64 &RNGr, std::uniform_real_d
 
 MC_HISTORY_PARTICLE_TRANSPORT::XS MC_HISTORY_PARTICLE_TRANSPORT::calcMacroXS(size_t mat, double E) {
   RP_CALI_SUBKERNEL_BEGIN("calcMacroXS");
-  XS Sigma; writeCt += 40;
-  size_t bin = std::upper_bound(bins, bins + GROUPS, E) - bins; writeCt += 8;
+  XS Sigma;
+  size_t bin = std::upper_bound(bins, bins + GROUPS, E) - bins;
   for (int i = 0; i < materials[mat].isotopeCt; i++) {
-    Sigma = Sigma + XSTable[GROUPS * materials[mat].nucIDs[i] + bin] * materials[mat].conc[i]; writeCt += 40;
+    Sigma = Sigma + XSTable[GROUPS * materials[mat].nucIDs[i] + bin] * materials[mat].conc[i];
   }
   RP_CALI_SUBKERNEL_END("calcMacroXS");
   return Sigma;
@@ -359,11 +367,11 @@ double MC_HISTORY_PARTICLE_TRANSPORT::calcEventDist(double Sigma, std::mt19937_6
 }
 
 std::array<double, 3> MC_HISTORY_PARTICLE_TRANSPORT::sampleScatter(std::mt19937_64 &rng, std::uniform_real_distribution<double> &dist, std::uniform_real_distribution<double> &posDist, double &E) {
-  double x = dist(rng), y = dist(rng), z = dist(rng); writeCt += 24;
-  double norm = std::sqrt(x*x + y*y + z*z); writeCt += 8;
-  x /= norm; y/= norm; z/= norm; writeCt += 24;
+  double x = dist(rng), y = dist(rng), z = dist(rng);  
+  double norm = std::sqrt(x*x + y*y + z*z);
+  x /= norm; y/= norm; z/= norm; 
 
-  E *= posDist(rng); writeCt += 8;
+  E *= posDist(rng);
 
   return {x,y,z};
 }
@@ -386,19 +394,17 @@ MC_HISTORY_PARTICLE_TRANSPORT::Cell::Cell() {
 double MC_HISTORY_PARTICLE_TRANSPORT::Cell::getBoundary(const std::array<double,3> &pos, const std::array<double,3> &angle, uint32_t &surface_cross) {
   double min_dist = std::numeric_limits<double>::infinity();
   double dist = 0.0;
-  writeCt += 2*8; 
   uint32_t index;
   // only check the positive or negative surface
   for (uint32_t i = 0; i < 3; i++) {
     if (std::abs(angle[i]) < 1.0e-14) {
       continue;
     }
-    index = 2 * i + ( (angle[i] > 0) ? 1 : 0 ); writeCt += 4;
-    dist = (planes[index] - pos[i]) / angle[i]; writeCt += 8;
+    index = 2 * i + ( (angle[i] > 0) ? 1 : 0 ); 
+    dist = (planes[index] - pos[i]) / angle[i]; 
     if (dist >= 0.0 && dist < min_dist) {
       min_dist = dist;
       surface_cross = index;
-      writeCt += 8 + 4;
     }
   }
   return min_dist;
@@ -420,7 +426,6 @@ MC_HISTORY_PARTICLE_TRANSPORT::Event MC_HISTORY_PARTICLE_TRANSPORT::handleBC(Cel
     pState = FISSION;
     break;
   }
-  writeCt += 4;
   return pState;
 }
 
@@ -442,7 +447,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::Particles::distribute(const size_t numPartic
 }
 
 void MC_HISTORY_PARTICLE_TRANSPORT::Particles::calcDX(Index_type i) {
-  writeCt += 8;
   dx[i] = sqrt((2/1.7e-27) * (E[i]/(double)6.242e12) ) * dT;
 }
 

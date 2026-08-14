@@ -45,7 +45,6 @@ void MC_HISTORY_PARTICLE_TRANSPORT::runSeqVariant(VariantID vid)
         for (Index_type i = ibegin; i < iend; ++i ) {
           MC_HISTORY_PARTICLE_TRANSPORT_BODY
         }
-        MC_HISTORY_PARTICLE_TRANSPORT_WRITE_LOGS
       }
       stopTimer();
 
