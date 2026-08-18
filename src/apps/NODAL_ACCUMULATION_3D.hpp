@@ -106,6 +106,9 @@ private:
   Real_ptr m_x;
   Real_ptr m_vol;
 
+  Index_type m_i_zones;
+  Index_type m_j_zones;
+  Index_type m_k_zones;
   std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_nodal_array_length;

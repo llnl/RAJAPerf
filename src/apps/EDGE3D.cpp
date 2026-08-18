@@ -26,6 +26,10 @@ namespace apps
 EDGE3D::EDGE3D(const RunParams& params)
   : KernelBase(rajaperf::Apps_EDGE3D, params)
 {
+  m_i_zones = params.getADomain3DIZones();
+  m_j_zones = params.getADomain3DJZones();
+  m_k_zones = params.getADomain3DKZones();
+
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(10);
 
@@ -47,8 +51,14 @@ EDGE3D::EDGE3D(const RunParams& params)
 
 void EDGE3D::setSize(Index_type target_size, Index_type target_reps)
 {
-  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
-  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
+  if (!run_params.useADomain3DMeshDims())
+  {
+    Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+    m_i_zones = rzmax-1;
+    m_j_zones = rzmax-1;
+    m_k_zones = rzmax-1;
+  }
+  m_domain.reset(new ADomain(ADomain::Zonal{}, m_i_zones, m_j_zones, m_k_zones));
 
   m_array_length = m_domain->nnalls;
   size_t number_of_elements = m_domain->lpz+1 - m_domain->fpz;

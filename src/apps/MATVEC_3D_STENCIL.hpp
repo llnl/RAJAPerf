@@ -191,6 +191,9 @@ private:
   Real_ptr m_x;
   Matrix m_matrix;
 
+  Index_type m_i_zones;
+  Index_type m_j_zones;
+  Index_type m_k_zones;
   std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_zonal_array_length;
