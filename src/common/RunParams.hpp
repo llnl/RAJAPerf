@@ -259,6 +259,15 @@ public:
   Index_type getMultiReduceNumBins() const { return multi_reduce_num_bins; }
   BinAssignmentAlgorithm getMultiReduceBinAssignmentAlgorithm() const { return multi_reduce_bin_assignment_algorithm; }
 
+  Index_type getADomain2DIZones() const { return adomain_2d_mesh_dims[0]; }
+  Index_type getADomain2DJZones() const { return adomain_2d_mesh_dims[1]; }
+  bool useADomain2DMeshDims() const { return use_adomain_2d_mesh_dims; }
+
+  Index_type getADomain3DIZones() const { return adomain_3d_mesh_dims[0]; }
+  Index_type getADomain3DJZones() const { return adomain_3d_mesh_dims[1]; }
+  Index_type getADomain3DKZones() const { return adomain_3d_mesh_dims[2]; }
+  bool useADomain3DMeshDims() const { return use_adomain_3d_mesh_dims; }
+
   Index_type getLtimesNumD() const { return ltimes_num_d; }
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
@@ -435,6 +444,12 @@ private:
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */
   BinAssignmentAlgorithm multi_reduce_bin_assignment_algorithm; /*!< algorithm used to assign bins to iterates used in multi reduction kernels (input option) */
+
+  std::vector<Index_type> adomain_2d_mesh_dims; /*!< mesh dimensions i, j used in 2d ADomain kernels (input option) */
+  bool use_adomain_2d_mesh_dims; /*!< enable user input of ADomain mesh dimensions multiple kernel (true if vector adomain_2D_dims is properly passed on command line) */
+
+  std::vector<Index_type> adomain_3d_mesh_dims; /*!< mesh dimensions i, j, k used in 3d ADomain kernels (input option) */
+  bool use_adomain_3d_mesh_dims; /*!< enable user input of ADomain mesh dimensions multiple kernel (true if vector adomain_3D_dims is properly passed on command line) */
 
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
