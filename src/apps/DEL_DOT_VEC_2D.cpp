@@ -26,6 +26,9 @@ namespace apps
 DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
   : KernelBase(rajaperf::Apps_DEL_DOT_VEC_2D, params)
 {
+  m_i_zones = params.getADomain2DIZones();
+  m_j_zones = params.getADomain2DJZones();
+
   setDefaultProblemSize(1000*1000);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
@@ -47,8 +50,13 @@ DEL_DOT_VEC_2D::DEL_DOT_VEC_2D(const RunParams& params)
 
 void DEL_DOT_VEC_2D::setSize(Index_type target_size, Index_type target_reps)
 {
-  Index_type rzmax = std::sqrt(target_size) + 1 + std::sqrt(2)-1;
-  m_domain.reset(new ADomain(rzmax, /* ndims = */ 2));
+  if (!run_params.useADomain2DMeshDims())
+  {
+    Index_type rzmax = std::sqrt(target_size) + 1 + std::sqrt(2)-1;
+    m_i_zones = rzmax-1;
+    m_j_zones = rzmax-1;
+  }
+  m_domain.reset(new ADomain(ADomain::Zonal{}, m_i_zones, m_j_zones));
 
   m_array_length = m_domain->nnalls;
 
