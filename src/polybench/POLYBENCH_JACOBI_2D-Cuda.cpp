@@ -35,43 +35,43 @@ namespace polybench
   dim3 nthreads_per_block(JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA, 1);
 
 #define JACOBI_2D_NBLOCKS_CUDA \
-  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(N-2, j_block_sz)), \
-               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(N-2, i_block_sz)), \
+  dim3 nblocks(static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(NJ-2, j_block_sz)), \
+               static_cast<size_t>(RAJA_DIVIDE_CEILING_INT(NI-2, i_block_sz)), \
                static_cast<size_t>(1));
 
 
 template < size_t j_block_size, size_t i_block_size >
 __launch_bounds__(j_block_size*i_block_size)
-__global__ void poly_jacobi_2D_1(Real_ptr A, Real_ptr B, Index_type N)
+__global__ void poly_jacobi_2D_1(Real_ptr A, Real_ptr B, Index_type NI, Index_type NJ)
 {
   Index_type i = 1 + blockIdx.y * i_block_size + threadIdx.y;
   Index_type j = 1 + blockIdx.x * j_block_size + threadIdx.x;
 
-  if ( i < N-1 && j < N-1 ) {
+  if ( i < NI-1 && j < NJ-1 ) {
     POLYBENCH_JACOBI_2D_BODY1;
   }
 }
 
 template < size_t j_block_size, size_t i_block_size >
 __launch_bounds__(j_block_size*i_block_size)
-__global__ void poly_jacobi_2D_2(Real_ptr A, Real_ptr B, Index_type N)
+__global__ void poly_jacobi_2D_2(Real_ptr A, Real_ptr B, Index_type NI, Index_type NJ)
 {
   Index_type i = 1 + blockIdx.y * i_block_size + threadIdx.y;
   Index_type j = 1 + blockIdx.x * j_block_size + threadIdx.x;
 
-  if ( i < N-1 && j < N-1 ) {
+  if ( i < NI-1 && j < NJ-1 ) {
     POLYBENCH_JACOBI_2D_BODY2;
   }
 }
 
 template < size_t j_block_size, size_t i_block_size, typename Lambda >
 __launch_bounds__(j_block_size*i_block_size)
-__global__ void poly_jacobi_2D_lam(Index_type N, Lambda body)
+__global__ void poly_jacobi_2D_lam(Index_type NI, Index_type NJ, Lambda body)
 {
   Index_type i = 1 + blockIdx.y * i_block_size + threadIdx.y;
   Index_type j = 1 + blockIdx.x * j_block_size + threadIdx.x;
 
-  if ( i < N-1 && j < N-1 ) {
+  if ( i < NI-1 && j < NJ-1 ) {
     body(i, j);
   }
 }
@@ -103,7 +103,7 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
         (poly_jacobi_2D_1<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
-        A, B, N );
+        A, B, NI, NJ );
       RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_1");
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_2");
@@ -111,7 +111,7 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
         (poly_jacobi_2D_2<JACOBI_2D_THREADS_PER_BLOCK_TEMPLATE_PARAMS_CUDA>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
-        A, B, N );
+        A, B, NI, NJ );
       RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_2");
 
     }
@@ -138,7 +138,7 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
                             decltype(poly_jacobi_2D_1_lambda)>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
-        N, poly_jacobi_2D_1_lambda );
+        NI, NJ, poly_jacobi_2D_1_lambda );
       RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_1");
 
       auto poly_jacobi_2D_2_lambda = [=] __device__ (Index_type i,
@@ -152,7 +152,7 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
                             decltype(poly_jacobi_2D_2_lambda)>),
         nblocks, nthreads_per_block,
         shmem, res.get_stream(),
-        N, poly_jacobi_2D_2_lambda );
+        NI, NJ, poly_jacobi_2D_2_lambda );
       RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_2");
 
     }
@@ -179,8 +179,8 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_1");
       RAJA::kernel_resource<EXEC_POL>(
-        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1}),
+        RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                         RAJA::RangeSegment{1, NJ-1}),
         res,
         [=] __device__ (Index_type i, Index_type j) {
           POLYBENCH_JACOBI_2D_BODY1_RAJA;
@@ -190,8 +190,8 @@ void POLYBENCH_JACOBI_2D::runCudaVariantImpl(VariantID vid)
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_2");
       RAJA::kernel_resource<EXEC_POL>(
-        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1}),
+        RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                         RAJA::RangeSegment{1, NJ-1}),
         res,
         [=] __device__ (Index_type i, Index_type j) {
           POLYBENCH_JACOBI_2D_BODY2_RAJA;

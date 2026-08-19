@@ -23,8 +23,8 @@ void POLYBENCH_JACOBI_2D::runKokkosVariant(VariantID vid) {
 
   POLYBENCH_JACOBI_2D_DATA_SETUP;
 
-  auto A_view = getViewFromPointer(A, N, N);
-  auto B_view = getViewFromPointer(B, N, N);
+  auto A_view = getViewFromPointer(A, NI, NJ);
+  auto B_view = getViewFromPointer(B, NI, NJ);
 
   switch (vid) {
     case Kokkos_Lambda: {
@@ -40,7 +40,7 @@ void POLYBENCH_JACOBI_2D::runKokkosVariant(VariantID vid) {
             "JACOBI_2D_Kokkos Kokkos_Lambda--BODY1",
             Kokkos::MDRangePolicy<Kokkos::Rank<2>,
                                   Kokkos::IndexType<Index_type>>(
-                {1, 1}, {N - 1, N - 1}),
+                {1, 1}, {NI - 1, NJ - 1}),
             KOKKOS_LAMBDA(Index_type i, Index_type j) {
               B_view(i, j) =
                   0.2 * (A_view(i, j) + A_view(i, j - 1) + A_view(i, j + 1) +
@@ -53,7 +53,7 @@ void POLYBENCH_JACOBI_2D::runKokkosVariant(VariantID vid) {
             "JACOBI_2D_Kokkos Kokkos_Lambda--BODY2",
             Kokkos::MDRangePolicy<Kokkos::Rank<2>,
                                   Kokkos::IndexType<Index_type>>(
-                {1, 1}, {N - 1, N - 1}),
+                {1, 1}, {NI - 1, NJ - 1}),
             KOKKOS_LAMBDA(Index_type i, Index_type j) {
               A_view(i, j) =
                   0.2 * (B_view(i, j) + B_view(i, j - 1) + B_view(i, j + 1) +
@@ -66,8 +66,8 @@ void POLYBENCH_JACOBI_2D::runKokkosVariant(VariantID vid) {
       Kokkos::fence();
       stopTimer();
 
-      moveDataToHostFromKokkosView(A, A_view, N, N);
-      moveDataToHostFromKokkosView(B, B_view, N, N);
+      moveDataToHostFromKokkosView(A, A_view, NI, NJ);
+      moveDataToHostFromKokkosView(B, B_view, NI, NJ);
 
       break;
     }

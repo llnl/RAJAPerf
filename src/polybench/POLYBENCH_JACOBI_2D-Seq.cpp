@@ -35,16 +35,16 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_1");
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
+        for (Index_type i = 1; i < NI-1; ++i ) {
+          for (Index_type j = 1; j < NJ-1; ++j ) {
             POLYBENCH_JACOBI_2D_BODY1;
           }
         }
         RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_1");
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_2");
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
+        for (Index_type i = 1; i < NI-1; ++i ) {
+          for (Index_type j = 1; j < NJ-1; ++j ) {
             POLYBENCH_JACOBI_2D_BODY2;
           }
         }
@@ -72,16 +72,16 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid)
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_1");
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
+        for (Index_type i = 1; i < NI-1; ++i ) {
+          for (Index_type j = 1; j < NJ-1; ++j ) {
             poly_jacobi2d_base_lam1(i, j);
           }
         }
         RP_CALI_SUBKERNEL_END("POLYBENCH_JACOBI_2D_1");
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_2");
-        for (Index_type i = 1; i < N-1; ++i ) {
-          for (Index_type j = 1; j < N-1; ++j ) {
+        for (Index_type i = 1; i < NI-1; ++i ) {
+          for (Index_type j = 1; j < NJ-1; ++j ) {
             poly_jacobi2d_base_lam2(i, j);
           }
         }
@@ -121,8 +121,8 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid)
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_1");
         RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
+          RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                           RAJA::RangeSegment{1, NJ-1}),
           res,
           poly_jacobi2d_lam1
         );
@@ -130,8 +130,8 @@ void POLYBENCH_JACOBI_2D::runSeqVariant(VariantID vid)
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_JACOBI_2D_2");
         RAJA::kernel_resource<EXEC_POL>(
-          RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                           RAJA::RangeSegment{1, N-1}),
+          RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                           RAJA::RangeSegment{1, NJ-1}),
           res,
           poly_jacobi2d_lam2
         );
