@@ -25,9 +25,11 @@ namespace basic
 NESTED_INIT::NESTED_INIT(const RunParams& params)
   : KernelBase(rajaperf::Basic_NESTED_INIT, params)
 {
-  m_n_init = 100;
+  m_ni = params.getGrid3DMeshX();
+  m_nj = params.getGrid3DMeshY();
+  m_nk = params.getGrid3DMeshZ();
 
-  setDefaultProblemSize(m_n_init * m_n_init * m_n_init);
+  setDefaultProblemSize(100 * 100 * 100);
   setDefaultReps(1000);
 
   setSize(params.getTargetSize(getDefaultProblemSize()),
@@ -48,10 +50,13 @@ NESTED_INIT::NESTED_INIT(const RunParams& params)
 
 void NESTED_INIT::setSize(Index_type target_size, Index_type target_reps)
 {
-  auto n_final = std::cbrt( target_size ) + std::cbrt(3)-1;
-  m_ni = n_final;
-  m_nj = n_final;
-  m_nk = n_final;
+  if (!run_params.useGrid3DMeshDims())
+  {
+    auto n_final = std::cbrt( target_size ) + std::cbrt(3)-1;
+    m_ni = n_final;
+    m_nj = n_final;
+    m_nk = n_final;
+  }
   m_array_length = m_ni * m_nj * m_nk;
 
   setActualProblemSize( m_array_length );
