@@ -23,8 +23,8 @@ void POLYBENCH_HEAT_3D::runKokkosVariant(VariantID vid) {
 
   POLYBENCH_HEAT_3D_DATA_SETUP;
 
-  auto A_view = getViewFromPointer(A, N, N, N);
-  auto B_view = getViewFromPointer(B, N, N, N);
+  auto A_view = getViewFromPointer(A, NI, NJ, NK);
+  auto B_view = getViewFromPointer(B, NI, NJ, NK);
 
   switch (vid) {
     case Kokkos_Lambda: {
@@ -40,7 +40,7 @@ void POLYBENCH_HEAT_3D::runKokkosVariant(VariantID vid) {
             "POLYBENCH_HEAT_3D Kokkos_Lambda--BODY1",
             Kokkos::MDRangePolicy<Kokkos::Rank<3>,
                                   Kokkos::IndexType<Index_type>>(
-                {1, 1, 1}, {N - 1, N - 1, N - 1}),
+                {1, 1, 1}, {NI - 1, NJ - 1, NK - 1}),
             KOKKOS_LAMBDA(Index_type i, Index_type j, Index_type k) {
               B_view(i, j, k) =
                   0.125 * (A_view(i + 1, j, k) - 2.0 * A_view(i, j, k) +
@@ -58,7 +58,7 @@ void POLYBENCH_HEAT_3D::runKokkosVariant(VariantID vid) {
             "POLYBENCH_HEAT_3D Kokkos_Lambda--BODY2",
             Kokkos::MDRangePolicy<Kokkos::Rank<3>,
                                   Kokkos::IndexType<Index_type>>(
-                {1, 1, 1}, {N - 1, N - 1, N - 1}),
+                {1, 1, 1}, {NI - 1, NJ - 1, NK - 1}),
             KOKKOS_LAMBDA(Index_type i, Index_type j, Index_type k) {
               A_view(i, j, k) =
                   0.125 * (B_view(i + 1, j, k) - 2.0 * B_view(i, j, k) +
@@ -76,8 +76,8 @@ void POLYBENCH_HEAT_3D::runKokkosVariant(VariantID vid) {
       Kokkos::fence();
       stopTimer();
 
-      moveDataToHostFromKokkosView(A, A_view, N, N, N);
-      moveDataToHostFromKokkosView(B, B_view, N, N, N);
+      moveDataToHostFromKokkosView(A, A_view, NI, NJ, NK);
+      moveDataToHostFromKokkosView(B, B_view, NI, NJ, NK);
 
       break;
     }

@@ -48,9 +48,9 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      sycl::range<3> global_dim(i_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, i_wg_sz),
-                                j_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, j_wg_sz),
-                                k_wg_sz * RAJA_DIVIDE_CEILING_INT(N-2, k_wg_sz));
+      sycl::range<3> global_dim(i_wg_sz * RAJA_DIVIDE_CEILING_INT(NI-2, i_wg_sz),
+                                j_wg_sz * RAJA_DIVIDE_CEILING_INT(NJ-2, j_wg_sz),
+                                k_wg_sz * RAJA_DIVIDE_CEILING_INT(NK-2, k_wg_sz));
 
       sycl::range<3> wkgroup_dim(i_wg_sz, j_wg_sz, k_wg_sz);
 
@@ -63,7 +63,7 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
           Index_type j = 1 + item.get_global_id(1);
           Index_type k = 1 + item.get_global_id(2);
 
-          if (i < N-1 && j < N-1 && k < N-1) {
+          if (i < NI-1 && j < NJ-1 && k < NK-1) {
             POLYBENCH_HEAT_3D_BODY1;
           }
 
@@ -80,7 +80,7 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
           Index_type j = 1 + item.get_global_id(1);
           Index_type k = 1 + item.get_global_id(2);
 
-          if (i < N-1 && j < N-1 && k < N-1) {
+          if (i < NI-1 && j < NJ-1 && k < NK-1) {
             POLYBENCH_HEAT_3D_BODY2;
           }
 
@@ -115,9 +115,9 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_HEAT_3D_1");
       RAJA::kernel_resource<EXEC_POL>(
-        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1}),
+        RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                         RAJA::RangeSegment{1, NJ-1},
+                         RAJA::RangeSegment{1, NK-1}),
         res,
         [=] (Index_type i, Index_type j, Index_type k) {
           POLYBENCH_HEAT_3D_BODY1_RAJA;
@@ -127,9 +127,9 @@ void POLYBENCH_HEAT_3D::runSyclVariantImpl(VariantID vid)
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_HEAT_3D_2");
       RAJA::kernel_resource<EXEC_POL>(
-        RAJA::make_tuple(RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1},
-                         RAJA::RangeSegment{1, N-1}),
+        RAJA::make_tuple(RAJA::RangeSegment{1, NI-1},
+                         RAJA::RangeSegment{1, NJ-1},
+                         RAJA::RangeSegment{1, NK-1}),
         res,
         [=] (Index_type i, Index_type j, Index_type k) {
           POLYBENCH_HEAT_3D_BODY2_RAJA;
