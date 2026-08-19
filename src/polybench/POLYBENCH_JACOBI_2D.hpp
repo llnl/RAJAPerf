@@ -28,14 +28,15 @@
 #define POLYBENCH_JACOBI_2D_DATA_SETUP \
   Real_ptr A = m_A; \
   Real_ptr B = m_B; \
-  const Index_type N = m_N;
+  const Index_type NI = m_ni; \
+  const Index_type NJ = m_nj;
 
 
 #define POLYBENCH_JACOBI_2D_BODY1 \
-  B[j + i*N] = 0.2 * (A[j + i*N] + A[j-1 + i*N] + A[j+1 + i*N] + A[j + (i+1)*N] + A[j + (i-1)*N]);
+  B[j + i*NJ] = 0.2 * (A[j + i*NJ] + A[j-1 + i*NJ] + A[j+1 + i*NJ] + A[j + (i+1)*NJ] + A[j + (i-1)*NJ]);
 
 #define POLYBENCH_JACOBI_2D_BODY2 \
-  A[j + i*N] = 0.2 * (B[j + i*N] + B[j-1 + i*N] + B[j+1 + i*N] + B[j + (i+1)*N] + B[j + (i-1)*N]);
+  A[j + i*NJ] = 0.2 * (B[j + i*NJ] + B[j-1 + i*NJ] + B[j+1 + i*NJ] + B[j + (i+1)*NJ] + B[j + (i-1)*NJ]);
 
 
 #define POLYBENCH_JACOBI_2D_BODY1_RAJA \
@@ -49,8 +50,8 @@
 using VIEW_TYPE = RAJA::View<Real_type, \
                              RAJA::Layout<2, Index_type, 1>>; \
 \
-  VIEW_TYPE Aview(A, RAJA::Layout<2>(N, N)); \
-  VIEW_TYPE Bview(B, RAJA::Layout<2>(N, N));
+  VIEW_TYPE Aview(A, RAJA::Layout<2>(NI, NJ)); \
+  VIEW_TYPE Bview(B, RAJA::Layout<2>(NI, NJ));
 
 
 #include "common/KernelBase.hpp"
@@ -101,7 +102,8 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
-  Index_type m_N;
+  Index_type m_ni;
+  Index_type m_nj;
 
   Real_ptr m_A;
   Real_ptr m_B;

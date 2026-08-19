@@ -146,6 +146,8 @@ private:
   Real_type m_ptiny;
   Real_type m_half;
 
+  Index_type m_i_zones;
+  Index_type m_j_zones;
   std::unique_ptr<ADomain> m_domain;
   Index_type* m_real_zones;
   Index_type m_array_length;

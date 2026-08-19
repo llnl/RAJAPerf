@@ -23,6 +23,8 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   : KernelBase(rajaperf::Polybench_JACOBI_2D, params)
 {
   Index_type N_default = 1002;
+  m_ni = params.getGrid2DMeshX() + 2;
+  m_nj = params.getGrid2DMeshY() + 2;
 
   setDefaultProblemSize( (N_default-2)*(N_default-2) );
   setDefaultReps(2000);
@@ -45,25 +47,28 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
 
 void POLYBENCH_JACOBI_2D::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_N = std::sqrt( target_size ) + 2 + std::sqrt(2)-1;
+  if (!run_params.useGrid2DMeshDims())
+  {
+    m_ni = m_nj = std::sqrt( target_size ) + 2 + std::sqrt(2)-1;
+  }
 
-  setActualProblemSize( (m_N-2)*(m_N-2) );
+  setActualProblemSize( (m_ni-2)*(m_nj-2) );
   setRunReps( target_reps );
 
-  setItsPerRep( 2 * (m_N-2)*(m_N-2) );
+  setItsPerRep( 2 * (m_ni-2)*(m_nj-2) );
   setKernelsPerRep(2);
 
-  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N*m_N ); // A, B
-  setBytesReadPerRep( 1*sizeof(Real_type) * (m_N*m_N - 4) + // A (5 point stencil)
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_ni*m_nj ); // A, B
+  setBytesReadPerRep( 1*sizeof(Real_type) * (m_ni*m_nj - 4) + // A (5 point stencil)
 
-                      1*sizeof(Real_type) * (m_N*m_N - 4) ); // B (5 point stencil)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_N-2)*(m_N-2) + // B
+                      1*sizeof(Real_type) * (m_ni*m_nj - 4) ); // B (5 point stencil)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_ni-2)*(m_nj-2) + // B
 
-                         1*sizeof(Real_type) * (m_N-2)*(m_N-2) ); // A
+                         1*sizeof(Real_type) * (m_ni-2)*(m_nj-2) ); // A
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( 5 * (m_N-2)*(m_N-2) +
-                  5 * (m_N-2)*(m_N-2) );
+  setFLOPsPerRep( 5 * (m_ni-2)*(m_nj-2) +
+                  5 * (m_ni-2)*(m_nj-2) );
 }
 
 POLYBENCH_JACOBI_2D::~POLYBENCH_JACOBI_2D()
@@ -72,14 +77,14 @@ POLYBENCH_JACOBI_2D::~POLYBENCH_JACOBI_2D()
 
 void POLYBENCH_JACOBI_2D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_A, m_N*m_N, vid);
-  allocAndInitData(m_B, m_N*m_N, vid);
+  allocAndInitData(m_A, m_ni*m_nj, vid);
+  allocAndInitData(m_B, m_ni*m_nj, vid);
 }
 
 void POLYBENCH_JACOBI_2D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_A, m_N*m_N, vid);
-  addToChecksum(m_B, m_N*m_N, vid);
+  addToChecksum(m_A, m_ni*m_nj, vid);
+  addToChecksum(m_B, m_ni*m_nj, vid);
 }
 
 void POLYBENCH_JACOBI_2D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

@@ -25,13 +25,13 @@ namespace lcals
 HYDRO_2D::HYDRO_2D(const RunParams& params)
   : KernelBase(rajaperf::Lcals_HYDRO_2D, params)
 {
-  m_jn = 1000;
-  m_kn = 1000;
+  m_jn = params.getGrid2DMeshX() + 2;
+  m_kn = params.getGrid2DMeshY() + 2;
 
   m_s = 0.0041;
   m_t = 0.0037;
 
-  setDefaultProblemSize(m_kn * m_jn);
+  setDefaultProblemSize((m_kn - 2) * (m_jn - 2));
   setDefaultReps(100);
 
   setSize(params.getTargetSize(getDefaultProblemSize()),
@@ -52,9 +52,14 @@ HYDRO_2D::HYDRO_2D(const RunParams& params)
 
 void HYDRO_2D::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_jn = m_kn = std::sqrt(target_size) + std::sqrt(2)-1;
+  if (!run_params.useGrid2DMeshDims())
+  {
+    const Index_type active_extent = std::sqrt(target_size) + std::sqrt(2)-1;
+    m_jn = active_extent + 2;
+    m_kn = active_extent + 2;
+  }
 
-  setActualProblemSize( m_kn*m_jn );
+  setActualProblemSize( (m_kn-2)*(m_jn-2) );
   setRunReps( target_reps );
 
   setItsPerRep( 3 * (m_kn-2)*(m_jn-2) );

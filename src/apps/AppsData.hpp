@@ -10,6 +10,7 @@
 #ifndef RAJAPerf_AppsData_HPP
 #define RAJAPerf_AppsData_HPP
 
+#include <array>
 #include <ostream>
 
 #include "common/RPTypes.hpp"
@@ -48,9 +49,47 @@ class ADomain
 {
 public:
 
+   struct Nodal {};
+   struct Zonal {};
+
    ADomain() = delete;
 
    ADomain( Index_type real_nodes_per_dim, Index_type ndims )
+      : ADomain(Nodal{}, {real_nodes_per_dim, real_nodes_per_dim, real_nodes_per_dim}, ndims)
+   {
+   }
+
+   ADomain( Zonal,
+            Index_type real_zones_i,
+            Index_type real_zones_j)
+      : ADomain(Nodal{}, {real_zones_i+1, real_zones_j+1, 0}, 2)
+   {
+   }
+
+   ADomain( Zonal,
+            Index_type real_zones_i,
+            Index_type real_zones_j,
+            Index_type real_zones_k)
+      : ADomain(Nodal{}, {real_zones_i+1, real_zones_j+1, real_zones_k+1}, 3)
+   {
+   }
+
+   ADomain( Nodal,
+            Index_type real_nodes_i,
+            Index_type real_nodes_j)
+      : ADomain(Nodal{}, {real_nodes_i, real_nodes_j, 0}, 2)
+   {
+   }
+
+   ADomain( Nodal,
+            Index_type real_nodes_i,
+            Index_type real_nodes_j,
+            Index_type real_nodes_k)
+      : ADomain(Nodal{}, {real_nodes_i, real_nodes_j, real_nodes_k}, 3)
+   {
+   }
+
+   ADomain( Nodal, std::array<Index_type, 3> dims, Index_type ndims)
       : ndims(ndims), NPNL(2), NPNR(1)
    {
       int NPZL = NPNL - 1;
@@ -58,7 +97,7 @@ public:
 
       if ( ndims >= 1 ) {
          imin = NPNL;
-         imax = NPNL + real_nodes_per_dim-1;
+         imax = NPNL + dims[0]-1;
          nnalls = (imax+1 - imin + NPNL + NPNR);
          n_real_zones = (imax - imin);
          n_real_nodes = (imax+1 - imin);
@@ -70,7 +109,7 @@ public:
 
       if ( ndims >= 2 ) {
          jmin = NPNL;
-         jmax = NPNL + real_nodes_per_dim-1;
+         jmax = NPNL + dims[1]-1;
          jp = nnalls;
          nnalls *= (jmax+1 - jmin + NPNL + NPNR);
          n_real_zones *= (jmax - jmin);
@@ -83,7 +122,7 @@ public:
 
       if ( ndims >= 3 ) {
          kmin = NPNL;
-         kmax = NPNL + real_nodes_per_dim-1;
+         kmax = NPNL + dims[2]-1;
          kp = nnalls;
          nnalls *= (kmax+1 - kmin + NPNL + NPNR);
          n_real_zones *= (kmax - kmin);

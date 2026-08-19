@@ -24,6 +24,9 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
   : KernelBase(rajaperf::Polybench_HEAT_3D, params)
 {
   Index_type N_default = 102;
+  m_ni = params.getGrid3DMeshX() + 2;
+  m_nj = params.getGrid3DMeshY() + 2;
+  m_nk = params.getGrid3DMeshZ() + 2;
   setDefaultProblemSize( (N_default-2)*(N_default-2)*(N_default-2) );
   setDefaultReps(400);
 
@@ -45,25 +48,30 @@ POLYBENCH_HEAT_3D::POLYBENCH_HEAT_3D(const RunParams& params)
 
 void POLYBENCH_HEAT_3D::setSize(Index_type target_size, Index_type target_reps)
 {
-  m_N = std::cbrt( target_size ) + 2 + std::cbrt(3)-1;
+  if (!run_params.useGrid3DMeshDims())
+  {
+    m_ni = m_nj = m_nk = std::cbrt( target_size ) + 2 + std::cbrt(3)-1;
+  }
 
-  setActualProblemSize( (m_N-2)*(m_N-2)*(m_N-2) );
+  setActualProblemSize( (m_ni-2)*(m_nj-2)*(m_nk-2) );
   setRunReps( target_reps );
 
   setItsPerRep( 2 * getActualProblemSize() );
   setKernelsPerRep( 2 );
 
-  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_N*m_N*m_N ); // A, B
-  setBytesReadPerRep( 1*sizeof(Real_type) * (m_N*m_N*m_N - 12*(m_N-2) - 8) + // A (7 point stencil)
+  setBytesAllocatedPerRep( 2*sizeof(Real_type) * m_ni*m_nj*m_nk ); // A, B
+  setBytesReadPerRep( 1*sizeof(Real_type) *
+                      (m_ni*m_nj*m_nk - 4*(m_ni-2) - 4*(m_nj-2) - 4*(m_nk-2) - 8) + // A (7 point stencil)
 
-                      1*sizeof(Real_type) * (m_N*m_N*m_N - 12*(m_N-2) - 8)); // B (7 point stencil)
-  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_N-2)*(m_N-2)*(m_N-2) +  // B
+                      1*sizeof(Real_type) *
+                      (m_ni*m_nj*m_nk - 4*(m_ni-2) - 4*(m_nj-2) - 4*(m_nk-2) - 8) ); // B (7 point stencil)
+  setBytesWrittenPerRep( 1*sizeof(Real_type) * (m_ni-2)*(m_nj-2)*(m_nk-2) +  // B
 
-                         1*sizeof(Real_type) * (m_N-2)*(m_N-2)*(m_N-2) ); // A
+                         1*sizeof(Real_type) * (m_ni-2)*(m_nj-2)*(m_nk-2) ); // A
   setBytesModifyWrittenPerRep( 0 );
   setBytesAtomicModifyWrittenPerRep( 0 );
-  setFLOPsPerRep( 15 * (m_N-2)*(m_N-2)*(m_N-2) +
-                  15 * (m_N-2)*(m_N-2)*(m_N-2) );
+  setFLOPsPerRep(15 * (m_ni-2)*(m_nj-2)*(m_nk-2) +
+                  15 * (m_ni-2)*(m_nj-2)*(m_nk-2) );
 }
 
 POLYBENCH_HEAT_3D::~POLYBENCH_HEAT_3D()
@@ -72,14 +80,14 @@ POLYBENCH_HEAT_3D::~POLYBENCH_HEAT_3D()
 
 void POLYBENCH_HEAT_3D::setUp(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  allocAndInitData(m_A, m_N*m_N*m_N, vid);
-  allocAndInitData(m_B, m_N*m_N*m_N, vid);
+  allocAndInitData(m_A, m_ni*m_nj*m_nk, vid);
+  allocAndInitData(m_B, m_ni*m_nj*m_nk, vid);
 }
 
 void POLYBENCH_HEAT_3D::updateChecksum(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))
 {
-  addToChecksum(m_A, m_N*m_N*m_N, vid);
-  addToChecksum(m_B, m_N*m_N*m_N, vid);
+  addToChecksum(m_A, m_ni*m_nj*m_nk, vid);
+  addToChecksum(m_B, m_ni*m_nj*m_nk, vid);
 }
 
 void POLYBENCH_HEAT_3D::tearDown(VariantID vid, size_t RAJAPERF_UNUSED_ARG(tune_idx))

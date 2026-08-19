@@ -39,28 +39,30 @@
 #define POLYBENCH_HEAT_3D_DATA_SETUP \
   Real_ptr A = m_A; \
   Real_ptr B = m_B; \
-  const Index_type N = m_N;
+  const Index_type NI = m_ni; \
+  const Index_type NJ = m_nj; \
+  const Index_type NK = m_nk;
 
 
 #define POLYBENCH_HEAT_3D_BODY1 \
-  B[k + N*(j + N*i)] = \
-                   0.125*( A[k + N*(j + N*(i+1))] - 2.0*A[k + N*(j + N*i)] + \
-                           A[k + N*(j + N*(i-1))] ) + \
-                   0.125*( A[k + N*(j+1 + N*i)]   - 2.0*A[k + N*(j + N*i)] + \
-                           A[k + N*(j-1 + N*i)] ) + \
-                   0.125*( A[k+1 + N*(j + N*i)]   - 2.0*A[k + N*(j + N*i)] + \
-                           A[k-1 + N*(j + N*i)] ) + \
-                   A[k + N*(j + N*i)];
+  B[k + NK*(j + NJ*i)] = \
+                   0.125*( A[k + NK*(j + NJ*(i+1))] - 2.0*A[k + NK*(j + NJ*i)] + \
+                           A[k + NK*(j + NJ*(i-1))] ) + \
+                   0.125*( A[k + NK*(j+1 + NJ*i)]   - 2.0*A[k + NK*(j + NJ*i)] + \
+                           A[k + NK*(j-1 + NJ*i)] ) + \
+                   0.125*( A[k+1 + NK*(j + NJ*i)]   - 2.0*A[k + NK*(j + NJ*i)] + \
+                           A[k-1 + NK*(j + NJ*i)] ) + \
+                   A[k + NK*(j + NJ*i)];
 
 #define POLYBENCH_HEAT_3D_BODY2 \
-  A[k + N*(j + N*i)] = \
-                   0.125*( B[k + N*(j + N*(i+1))] - 2.0*B[k + N*(j + N*i)] + \
-                           B[k + N*(j + N*(i-1))] ) + \
-                   0.125*( B[k + N*(j+1 + N*i)]   - 2.0*B[k + N*(j + N*i)] + \
-                           B[k + N*(j-1 + N*i)] ) + \
-                   0.125*( B[k+1 + N*(j + N*i)]   - 2.0*B[k + N*(j + N*i)] + \
-                           B[k-1 + N*(j + N*i)] ) + \
-                   B[k + N*(j + N*i)];
+  A[k + NK*(j + NJ*i)] = \
+                   0.125*( B[k + NK*(j + NJ*(i+1))] - 2.0*B[k + NK*(j + NJ*i)] + \
+                           B[k + NK*(j + NJ*(i-1))] ) + \
+                   0.125*( B[k + NK*(j+1 + NJ*i)]   - 2.0*B[k + NK*(j + NJ*i)] + \
+                           B[k + NK*(j-1 + NJ*i)] ) + \
+                   0.125*( B[k+1 + NK*(j + NJ*i)]   - 2.0*B[k + NK*(j + NJ*i)] + \
+                           B[k-1 + NK*(j + NJ*i)] ) + \
+                   B[k + NK*(j + NJ*i)];
 
 
 #define POLYBENCH_HEAT_3D_BODY1_RAJA \
@@ -82,8 +84,8 @@
 using VIEW_TYPE = RAJA::View<Real_type, \
                              RAJA::Layout<3, Index_type, 2>>; \
 \
-  VIEW_TYPE Aview(A, RAJA::Layout<3>(N, N, N)); \
-  VIEW_TYPE Bview(B, RAJA::Layout<3>(N, N, N));
+  VIEW_TYPE Aview(A, RAJA::Layout<3>(NI, NJ, NK)); \
+  VIEW_TYPE Bview(B, RAJA::Layout<3>(NI, NJ, NK));
 
 
 #include "common/KernelBase.hpp"
@@ -134,7 +136,9 @@ private:
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
 
-  Index_type m_N;
+  Index_type m_ni;
+  Index_type m_nj;
+  Index_type m_nk;
 
   Real_ptr m_A;
   Real_ptr m_B;

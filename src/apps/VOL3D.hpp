@@ -190,6 +190,9 @@ private:
 
   Real_type m_vnormq;
 
+  Index_type m_i_zones;
+  Index_type m_j_zones;
+  Index_type m_k_zones;
   std::unique_ptr<ADomain> m_domain;
   Index_type m_array_length;
 };

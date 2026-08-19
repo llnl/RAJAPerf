@@ -26,6 +26,10 @@ namespace apps
 ZONAL_ACCUMULATION_3D::ZONAL_ACCUMULATION_3D(const RunParams& params)
   : KernelBase(rajaperf::Apps_ZONAL_ACCUMULATION_3D, params)
 {
+  m_i_zones = params.getGrid3DMeshX();
+  m_j_zones = params.getGrid3DMeshY();
+  m_k_zones = params.getGrid3DMeshZ();
+
   setDefaultProblemSize(100*100*100);  // See rzmax in ADomain struct
   setDefaultReps(100);
 
@@ -47,8 +51,14 @@ ZONAL_ACCUMULATION_3D::ZONAL_ACCUMULATION_3D(const RunParams& params)
 
 void ZONAL_ACCUMULATION_3D::setSize(Index_type target_size, Index_type target_reps)
 {
-  Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
-  m_domain.reset(new ADomain(rzmax, /* ndims = */ 3));
+  if (!run_params.useGrid3DMeshDims())
+  {
+    Index_type rzmax = std::cbrt(target_size) + 1 + std::cbrt(3)-1;
+    m_i_zones = rzmax-1;
+    m_j_zones = rzmax-1;
+    m_k_zones = rzmax-1;
+  }
+  m_domain.reset(new ADomain(ADomain::Zonal{}, m_i_zones, m_j_zones, m_k_zones));
 
   m_nodal_array_length = m_domain->nnalls;
   m_zonal_array_length = m_domain->lpz+1;

@@ -259,6 +259,15 @@ public:
   Index_type getMultiReduceNumBins() const { return multi_reduce_num_bins; }
   BinAssignmentAlgorithm getMultiReduceBinAssignmentAlgorithm() const { return multi_reduce_bin_assignment_algorithm; }
 
+  Index_type getGrid2DMeshX() const { return grid_2d_mesh_dims[0]; }
+  Index_type getGrid2DMeshY() const { return grid_2d_mesh_dims[1]; }
+  bool useGrid2DMeshDims() const { return use_grid_2d_mesh_dims; }
+
+  Index_type getGrid3DMeshX() const { return grid_3d_mesh_dims[0]; }
+  Index_type getGrid3DMeshY() const { return grid_3d_mesh_dims[1]; }
+  Index_type getGrid3DMeshZ() const { return grid_3d_mesh_dims[2]; }
+  bool useGrid3DMeshDims() const { return use_grid_3d_mesh_dims; }
+
   Index_type getLtimesNumD() const { return ltimes_num_d; }
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
@@ -435,6 +444,12 @@ private:
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */
   BinAssignmentAlgorithm multi_reduce_bin_assignment_algorithm; /*!< algorithm used to assign bins to iterates used in multi reduction kernels (input option) */
+
+  std::vector<Index_type> grid_2d_mesh_dims; /*!< active mesh dimensions x, y used by supported 2d kernels (input option) */
+  bool use_grid_2d_mesh_dims; /*!< enable user input of 2d active mesh dimensions */
+
+  std::vector<Index_type> grid_3d_mesh_dims; /*!< active mesh dimensions x, y, z used by supported 3d kernels (input option) */
+  bool use_grid_3d_mesh_dims; /*!< enable user input of 3d active mesh dimensions */
 
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */

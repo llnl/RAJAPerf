@@ -44,6 +44,10 @@ RunParams::RunParams(int argc, char** argv)
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
+   grid_2d_mesh_dims({1000, 1000}),
+   use_grid_2d_mesh_dims(false),
+   grid_3d_mesh_dims({100, 100, 100}),
+   use_grid_3d_mesh_dims(false),
    ltimes_num_d(6),
    ltimes_num_g(32),
    ltimes_num_m(25),
@@ -146,6 +150,18 @@ void RunParams::print(std::ostream& str) const
 
   str << "\n multi_reduce_num_bins = " << multi_reduce_num_bins;
   str << "\n multi_reduce_bin_assignment_algorithm = " << BinAssignmentAlgorithmToStr(multi_reduce_bin_assignment_algorithm);
+
+  str << "\n use_grid_2d_mesh_dims = " << (use_grid_2d_mesh_dims ? "true" : "false");
+  str << "\n grid_2d_mesh_dims = ";
+  for (size_t j = 0; j < grid_2d_mesh_dims.size(); ++j) {
+    str << "\n\t" << grid_2d_mesh_dims[j];
+  }
+
+  str << "\n use_grid_3d_mesh_dims = " << (use_grid_3d_mesh_dims ? "true" : "false");
+  str << "\n grid_3d_mesh_dims = ";
+  for (size_t j = 0; j < grid_3d_mesh_dims.size(); ++j) {
+    str << "\n\t" << grid_3d_mesh_dims[j];
+  }
 
   str << "\n ltimes_num_d = " << ltimes_num_d;
   str << "\n ltimes_num_g = " << ltimes_num_g;
@@ -645,6 +661,49 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                   << " must give " << opt << " a value (string)"
                   << std::endl;
         input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--grid_2d_mesh_dims") ||
+                opt == std::string("--grid_3d_mesh_dims") ) {
+
+      bool done = false;
+      std::string mesh_opt = opt;
+      const int total_dims = (mesh_opt == std::string("--grid_2d_mesh_dims")) ? 2 : 3;
+      int count = 0;
+      std::vector<Index_type>& dims =
+          total_dims == 2 ? grid_2d_mesh_dims : grid_3d_mesh_dims;
+      dims.clear();
+      i++;
+      while ( i < argc && !done ) {
+        opt = std::string(argv[i]);
+        if ( opt.at(0) == '-' ) {
+          i--;
+          done = true;
+        } else {
+          int dimension = ::atoi( opt.c_str() );
+          if ( dimension <= 0 ) {
+            getCout() << "\nBad input:"
+                      << " must give " << mesh_opt << " POSITIVE values (int)"
+                      << std::endl;
+            input_state = BadInput;
+          } else {
+            dims.push_back(dimension);
+            ++count;
+          }
+          ++i;
+        }
+      }
+      if (count != total_dims) {
+        getCout() << "\nBad input:"
+                  << " must give " << mesh_opt << " exactly " << total_dims
+                  << " positive values (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+      if (total_dims == 2) {
+        use_grid_2d_mesh_dims = true;
+      } else {
+        use_grid_3d_mesh_dims = true;
       }
 
     } else if ( opt == std::string("--ltimes_num_d") ) {
@@ -1712,6 +1771,20 @@ void RunParams::printHelpMessage(std::ostream& str) const
   str << "\t\t Example...\n"
       << "\t\t --sizefact 0.5 (run each kernel with size half its calculated size)\n"
       << "\t\t --sizefact 2.0 (run each kernel with size twice its calculated size)\n\n";
+
+  str << "\t --grid_2d_mesh_dims <two space-separated ints>\n"
+      << "\t      (Active grid dimensions x and y for supported 2D kernels)\n"
+      << "\t      Must be greater than 0.\n"
+      << "\t      If specified, these dimensions override --size and --memory* options.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --grid_2d_mesh_dims 2000 500 (runs supported 2D kernels with a 2000 by 500 active grid)\n\n";
+
+  str << "\t --grid_3d_mesh_dims <three space-separated ints>\n"
+      << "\t      (Active grid dimensions x, y, and z for supported 3D kernels)\n"
+      << "\t      Must be greater than 0.\n"
+      << "\t      If specified, these dimensions override --size and --memory* options.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --grid_3d_mesh_dims 200 100 50 (runs supported 3D kernels with a 200 by 100 by 50 active grid)\n\n";
 
   str << "\t --ltimes_num_d <int> [default is 6]\n"
       << "\t      (For LTIMES kernels only: num_d used in kernels)\n"
