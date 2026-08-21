@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787353113697,
+  "lastUpdate": 1787353409707,
   "repoUrl": "https://github.com/llnl/RAJAPerf",
   "entries": {
     "clang_14_0_6_mpi_caliper": [
@@ -14958,6 +14958,526 @@ window.BENCHMARK_DATA = {
           {
             "name": "RAJA_HIP-occgs_256_EMPTY_1",
             "value": 0.000004420010000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1000, total_time: 0.004s"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Rich Hornung",
+            "username": "rhornung67",
+            "email": "hornung1@llnl.gov"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "4f9e9a85ff9e5e0ce75c230eed7244b9f305cfb0",
+          "message": "Merge pull request #688 from llnl/woptim/rsc-2026-6-0\n\nFrom RAJA: Point at RSC release candidate",
+          "timestamp": "2026-08-21T21:34:01Z",
+          "url": "https://github.com/llnl/RAJAPerf/commit/4f9e9a85ff9e5e0ce75c230eed7244b9f305cfb0"
+        },
+        "date": 1787353407463,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "RAJA_HIP-atomic_direct_256_Basic_MULTI_REDUCE",
+            "value": 0.04437,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-atomic_direct_256_MULTI_REDUCE_1",
+            "value": 0.0008733960000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-atomic_occgs_256_Basic_MULTI_REDUCE",
+            "value": 0.042965800000000005,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-atomic_occgs_256_MULTI_REDUCE_1",
+            "value": 0.0008460199999999998,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_Basic_PI_REDUCE",
+            "value": 0.0395326,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_PI_REDUCE_1",
+            "value": 0.0007787040000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_Basic_REDUCE3_INT",
+            "value": 0.0633966,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_REDUCE3_INT_1",
+            "value": 0.001254296,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_Basic_REDUCE_STRUCT",
+            "value": 0.1984328,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_REDUCE_STRUCT_1",
+            "value": 0.00395242,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_Basic_TRAP_INT",
+            "value": 0.04950859999999999,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_direct_256_TRAP_INT_1",
+            "value": 0.000976988,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_Basic_PI_REDUCE",
+            "value": 0.021532999999999997,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_PI_REDUCE_1",
+            "value": 0.00041944800000000005,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_Basic_REDUCE3_INT",
+            "value": 0.026158800000000003,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_REDUCE3_INT_1",
+            "value": 0.000508264,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_Basic_REDUCE_STRUCT",
+            "value": 0.0562288,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_REDUCE_STRUCT_1",
+            "value": 0.0011090960000000002,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_Basic_TRAP_INT",
+            "value": 0.025322200000000003,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkatm_occgs_256_TRAP_INT_1",
+            "value": 0.0004944,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_Basic_PI_REDUCE",
+            "value": 0.0434506,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_PI_REDUCE_1",
+            "value": 0.0008578240000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_Basic_REDUCE3_INT",
+            "value": 0.08539100000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.004s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_REDUCE3_INT_1",
+            "value": 0.001691892,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.004s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_Basic_REDUCE_STRUCT",
+            "value": 0.218964,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.011s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_REDUCE_STRUCT_1",
+            "value": 0.00436472,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.011s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_Basic_TRAP_INT",
+            "value": 0.048651,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_256_TRAP_INT_1",
+            "value": 0.000960712,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_Basic_PI_REDUCE",
+            "value": 0.488076,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.024s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_PI_REDUCE_1",
+            "value": 0.009749800000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.024s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_Basic_REDUCE3_INT",
+            "value": 1.45869,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.073s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_REDUCE3_INT_1",
+            "value": 0.02915648,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.073s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_Basic_REDUCE_STRUCT",
+            "value": 3.01548,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.151s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_REDUCE_STRUCT_1",
+            "value": 0.06029480000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.151s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_Basic_TRAP_INT",
+            "value": 0.49232,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.025s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_direct_new_256_TRAP_INT_1",
+            "value": 0.00983384,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.025s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_Basic_PI_REDUCE",
+            "value": 0.0210948,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_PI_REDUCE_1",
+            "value": 0.0004109319999999999,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_Basic_REDUCE3_INT",
+            "value": 0.0276088,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_REDUCE3_INT_1",
+            "value": 0.0005367880000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_Basic_REDUCE_STRUCT",
+            "value": 0.058473,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_REDUCE_STRUCT_1",
+            "value": 0.001155904,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_Basic_TRAP_INT",
+            "value": 0.025693999999999998,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_256_TRAP_INT_1",
+            "value": 0.000501964,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_Basic_PI_REDUCE",
+            "value": 0.056686999999999994,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_PI_REDUCE_1",
+            "value": 0.00112284,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_Basic_REDUCE3_INT",
+            "value": 0.1404668,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.007s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_REDUCE3_INT_1",
+            "value": 0.002794116,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.007s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_Basic_REDUCE_STRUCT",
+            "value": 0.284348,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.014s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_REDUCE_STRUCT_1",
+            "value": 0.00567364,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.014s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_Basic_TRAP_INT",
+            "value": 0.0575096,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-blkdev_occgs_new_256_TRAP_INT_1",
+            "value": 0.0011393240000000002,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_ARRAY_OF_PTRS",
+            "value": 0.36471800000000004,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.018s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_ARRAY_OF_PTRS_1",
+            "value": 0.00008968080000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.000s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_COPY8",
+            "value": 0.207074,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_COPY8_1",
+            "value": 0.0000934808,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.000s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_DAXPY",
+            "value": 0.0421988,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 1, total_time: 0.021s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_DAXPY_1",
+            "value": 0.000007558879999999999,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 500, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_DAXPY_ATOMIC",
+            "value": 0.023901,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 1, total_time: 0.012s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_DAXPY_ATOMIC_1",
+            "value": 0.00000743192,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 500, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_IF_QUAD",
+            "value": 0.06263333333333333,
+            "unit": "ms/rep",
+            "extra": "reps: 180, passes: 1, total_time: 0.011s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_IF_QUAD_1",
+            "value": 0.00002328104938271605,
+            "unit": "ms/rep",
+            "extra": "reps: 180, passes: 180, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_INDEXLIST_3LOOP",
+            "value": 0.0986018,
+            "unit": "ms/rep",
+            "extra": "reps: 100, passes: 1, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_INDEXLIST_3LOOP_1",
+            "value": 0.000031649299999999995,
+            "unit": "ms/rep",
+            "extra": "reps: 100, passes: 100, total_time: 0.000s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_INDEXLIST_3LOOP_2",
+            "value": 0.000027750000000000004,
+            "unit": "ms/rep",
+            "extra": "reps: 100, passes: 100, total_time: 0.000s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_INIT3",
+            "value": 0.0531314,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 1, total_time: 0.027s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_INIT3_1",
+            "value": 0.000007869760000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 500, passes: 500, total_time: 0.002s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_INIT_VIEW1D",
+            "value": 0.01680768,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 0.042s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_INIT_VIEW1D_1",
+            "value": 0.000001553664,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 2500, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_INIT_VIEW1D_OFFSET",
+            "value": 0.017153,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 1, total_time: 0.043s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_INIT_VIEW1D_OFFSET_1",
+            "value": 0.0000015246383999999997,
+            "unit": "ms/rep",
+            "extra": "reps: 2500, passes: 2500, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_MAT_MAT_SHARED",
+            "value": 5.36824,
+            "unit": "ms/rep",
+            "extra": "reps: 5, passes: 1, total_time: 0.027s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_MAT_MAT_SHARED_1",
+            "value": 0.00224244,
+            "unit": "ms/rep",
+            "extra": "reps: 5, passes: 5, total_time: 0.000s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_MULADDSUB",
+            "value": 0.05828685714285713,
+            "unit": "ms/rep",
+            "extra": "reps: 350, passes: 1, total_time: 0.020s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_MULADDSUB_1",
+            "value": 0.000011804408163265306,
+            "unit": "ms/rep",
+            "extra": "reps: 350, passes: 350, total_time: 0.001s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_NESTED_INIT",
+            "value": 0.0221379,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1, total_time: 0.022s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_NESTED_INIT_1",
+            "value": 0.0000042985000000000004,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1000, total_time: 0.004s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_Basic_PI_ATOMIC",
+            "value": 0.7175320000000001,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 1, total_time: 0.036s"
+          },
+          {
+            "name": "RAJA_HIP-block_256_PI_ATOMIC_1",
+            "value": 0.01433852,
+            "unit": "ms/rep",
+            "extra": "reps: 50, passes: 50, total_time: 0.036s"
+          },
+          {
+            "name": "RAJA_HIP-direct_256_Basic_EMPTY",
+            "value": 0.0103408,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1, total_time: 0.010s"
+          },
+          {
+            "name": "RAJA_HIP-direct_256_EMPTY_1",
+            "value": 0.00000334197,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1000, total_time: 0.003s"
+          },
+          {
+            "name": "RAJA_HIP-occgs_256_Basic_EMPTY",
+            "value": 0.00447311,
+            "unit": "ms/rep",
+            "extra": "reps: 1000, passes: 1, total_time: 0.004s"
+          },
+          {
+            "name": "RAJA_HIP-occgs_256_EMPTY_1",
+            "value": 0.00000395922,
             "unit": "ms/rep",
             "extra": "reps: 1000, passes: 1000, total_time: 0.004s"
           }
