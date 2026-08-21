@@ -38,8 +38,9 @@ if(NOT DEFINED BLT_CXX_STD)
 else() #check BLT_CXX_STD is high enough by disallowing the only invalid option
   if(("${BLT_CXX_STD}" STREQUAL "c++98") OR
      ("${BLT_CXX_STD}" STREQUAL "c++11") OR
-     ("${BLT_CXX_STD}" STREQUAL "c++14"))
-    message(FATAL_ERROR "RAJA requires minimum C++ standard of c++17")
+     ("${BLT_CXX_STD}" STREQUAL "c++14") OR
+     ("${BLT_CXX_STD}" STREQUAL "c++17"))
+    message(FATAL_ERROR "RAJAPerf requires minimum C++ standard of c++20")
   endif()
 endif(NOT DEFINED BLT_CXX_STD)
 
@@ -180,9 +181,9 @@ if (PERFSUITE_RUN_SHORT_TEST)
   add_definitions(-DRUN_RAJAPERF_SHORT_TEST)
 endif()
 
-set(RAJA_PERFSUITE_VERSION_MAJOR 2025)
-set(RAJA_PERFSUITE_VERSION_MINOR 12)
-set(RAJA_PERFSUITE_VERSION_PATCHLEVEL 1)
+set(RAJA_PERFSUITE_VERSION_MAJOR 2026)
+set(RAJA_PERFSUITE_VERSION_MINOR 07)
+set(RAJA_PERFSUITE_VERSION_PATCHLEVEL 0)
 
 set(RAJA_PERFSUITE_DEPENDS RAJA)
 
