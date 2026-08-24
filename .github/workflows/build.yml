@@ -64,7 +64,7 @@ jobs:
           build-dir: build
           options:
             ENABLE_WARNINGS_AS_ERRORS=Off
-            BLT_CXX_STD=c++17
+            BLT_CXX_STD=c++20
             CMAKE_BUILD_TYPE=Release
             PERFSUITE_RUN_SHORT_TEST=On
             ${{ matrix.shared.args }}
