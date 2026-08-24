@@ -55,7 +55,7 @@ void PI_REDUCE::runSyclVariantImpl(VariantID vid)
 
       initSyclDeviceData(pi, &m_pi_init, 1, qu);
 
-      qu->submit([&] (sycl::handler& hdl) {
+      qu.submit([&] (sycl::handler& hdl) {
 
         auto sum_reduction = sycl::reduction(pi, sycl::plus<>());
 

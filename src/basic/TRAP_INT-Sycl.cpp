@@ -53,7 +53,7 @@ void TRAP_INT::runSyclVariantImpl(VariantID vid)
 
       initSyclDeviceData(sumx, &m_sumx_init, 1, qu);
   
-      qu->submit([&] (sycl::handler& hdl) {
+      qu.submit([&] (sycl::handler& hdl) {
 
         auto sum_reduction = sycl::reduction(sumx, sycl::plus<>());
 

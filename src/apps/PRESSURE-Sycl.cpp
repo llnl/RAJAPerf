@@ -47,7 +47,7 @@ void PRESSURE::runSyclVariantImpl(VariantID vid)
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size);
 
       RP_CALI_SUBKERNEL_BEGIN("PRESSURE_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -61,7 +61,7 @@ void PRESSURE::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("PRESSURE_1");
 
       RP_CALI_SUBKERNEL_BEGIN("PRESSURE_2");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 

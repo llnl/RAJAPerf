@@ -51,7 +51,7 @@ void MAT_MAT_SHARED::runSyclVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RP_CALI_SUBKERNEL_BEGIN("MAT_MAT_SHARED_1");
-      qu->submit([&](::sycl::handler& h) {
+      qu.submit([&](::sycl::handler& h) {
 
        ::sycl::local_accessor<double, 2> As(::sycl::range<2>(tile_size, tile_size), h);
        ::sycl::local_accessor<double, 2> Bs(::sycl::range<2>(tile_size, tile_size), h);

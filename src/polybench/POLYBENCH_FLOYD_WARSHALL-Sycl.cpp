@@ -54,7 +54,7 @@ void POLYBENCH_FLOYD_WARSHALL::runSyclVariantImpl(VariantID vid)
       for (Index_type k = 0; k < N; ++k) {
 
         RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_FLOYD_WARSHALL_k");
-        qu->submit([&] (sycl::handler& h) {
+        qu.submit([&] (sycl::handler& h) {
           h.parallel_for(sycl::nd_range<3>( global_dim, wkgroup_dim),
                          [=] (sycl::nd_item<3> item) {
 
