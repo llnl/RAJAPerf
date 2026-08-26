@@ -53,7 +53,7 @@ FROM ghcr.io/llnl/radiuss:ubuntu-24.04-clang-19 AS clang19_debug
 ENV GTEST_COLOR=1
 COPY . /home/raja/workspace
 WORKDIR /home/raja/workspace/build
-RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug  -DENABLE_OPENMP=On -DBLT_CXX_STD=c++20 .. && \
+RUN cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug -DENABLE_OPENMP=On -DPERFSUITE_RUN_SHORT_TEST=On -DBLT_CXX_STD=c++20 .. && \
     make -j 16 &&\
     ctest -T test --output-on-failure && \
     make clean
