@@ -83,6 +83,7 @@
 //
 // Apps kernels...
 //
+#include "apps/MC_HISTORY_PARTICLE_TRANSPORT.hpp"
 #include "apps/CONVECTION3DPA.hpp"
 #include "apps/DEL_DOT_VEC_2D.hpp"
 #include "apps/DIFFUSION3DPA.hpp"
@@ -243,6 +244,7 @@ static const std::string KernelNames [] =
 //
 // Apps kernels...
 //
+  std::string("Apps_MC_HISTORY_PARTICLE_TRANSPORT"),
   std::string("Apps_CONVECTION3DPA"),
   std::string("Apps_DEL_DOT_VEC_2D"),
   std::string("Apps_DIFFUSION3DPA"),
@@ -1158,6 +1160,11 @@ KernelBase* getKernelObject(KernelID kid,
 //
 // Apps kernels...
 //
+    case Apps_MC_HISTORY_PARTICLE_TRANSPORT : {
+       kernel = new apps::MC_HISTORY_PARTICLE_TRANSPORT(run_params);
+       break;
+    }
+
     case Apps_CONVECTION3DPA : {
        kernel = new apps::CONVECTION3DPA(run_params);
        break;
