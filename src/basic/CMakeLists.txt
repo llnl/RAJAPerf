@@ -43,6 +43,12 @@ blt_add_library(
           EMPTY-OMP.cpp
           EMPTY-OMPTarget.cpp
           EMPTY-Sycl.cpp
+          QUADRATURE_LOOP.cpp
+          QUADRATURE_LOOP-Seq.cpp
+          QUADRATURE_LOOP-OMP.cpp
+          QUADRATURE_LOOP-Cuda.cpp
+          QUADRATURE_LOOP-Hip.cpp
+          QUADRATURE_LOOP-Sycl.cpp
           IF_QUAD.cpp
           IF_QUAD-Seq.cpp
           IF_QUAD-Hip.cpp
