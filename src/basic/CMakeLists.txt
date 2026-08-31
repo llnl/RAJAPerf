@@ -36,6 +36,12 @@ blt_add_library(
           DAXPY_ATOMIC-Cuda.cpp
           DAXPY_ATOMIC-OMP.cpp
           DAXPY_ATOMIC-OMPTarget.cpp
+          DYANAMIC_TILE.cpp
+          DYANAMIC_TILE-Seq.cpp
+          DYANAMIC_TILE-Hip.cpp
+          DYANAMIC_TILE-Cuda.cpp
+          DYANAMIC_TILE-OMP.cpp
+          DYANAMIC_TILE-Sycl.cpp
           EMPTY.cpp
           EMPTY-Seq.cpp
           EMPTY-Hip.cpp

@@ -22,6 +22,7 @@
 #include "basic/COPY8.hpp"
 #include "basic/DAXPY.hpp"
 #include "basic/DAXPY_ATOMIC.hpp"
+#include "basic/DYANAMIC_TILE.hpp"
 #include "basic/EMPTY.hpp"
 #include "basic/QUADRATURE_LOOP.hpp"
 #include "basic/IF_QUAD.hpp"
@@ -183,6 +184,7 @@ static const std::string KernelNames [] =
   std::string("Basic_COPY8"),
   std::string("Basic_DAXPY"),
   std::string("Basic_DAXPY_ATOMIC"),
+  std::string("Basic_DYANAMIC_TILE"),
   std::string("Basic_EMPTY"),
   std::string("Basic_QUADRATURE_LOOP"),
   std::string("Basic_IF_QUAD"),
@@ -962,6 +964,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Basic_DAXPY_ATOMIC : {
        kernel = new basic::DAXPY_ATOMIC(run_params);
+       break;
+    }
+    case Basic_DYANAMIC_TILE : {
+       kernel = new basic::DYANAMIC_TILE(run_params);
        break;
     }
     case Basic_EMPTY : {

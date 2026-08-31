@@ -82,6 +82,7 @@ enum KernelID {
   Basic_COPY8,
   Basic_DAXPY,
   Basic_DAXPY_ATOMIC,
+  Basic_DYANAMIC_TILE,
   Basic_EMPTY,
   Basic_QUADRATURE_LOOP,
   Basic_IF_QUAD,
