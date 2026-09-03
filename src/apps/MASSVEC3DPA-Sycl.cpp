@@ -48,7 +48,7 @@ void MASSVEC3DPA::runSyclVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RP_CALI_SUBKERNEL_BEGIN("MASSVEC3DPA_1");
-      qu->submit([&](::sycl::handler& h) {
+      qu.submit([&](::sycl::handler& h) {
 
         constexpr Index_type MQ1 = mvpa::Q1D;
         constexpr Index_type MD1 = mvpa::D1D;

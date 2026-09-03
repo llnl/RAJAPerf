@@ -430,7 +430,7 @@ public:
 #if defined(RAJA_ENABLE_SYCL)
     if ( running_variant == Base_SYCL ||
          running_variant == RAJA_SYCL ) {
-      getSyclResource().get_queue()->wait();
+      getSyclResource().get_queue().wait();
     }
 #endif
 

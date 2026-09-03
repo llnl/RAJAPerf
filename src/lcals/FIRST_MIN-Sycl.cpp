@@ -50,7 +50,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
 
     using result_type = reduce_pair<Real_type, Index_type>;
 
-    auto result = sycl::malloc_shared< result_type >(1, *qu); 
+    auto result = sycl::malloc_shared< result_type >(1, qu); 
  
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
@@ -63,7 +63,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
       *result = result_init;
       auto reduction_obj = sycl::reduction( result, result_init, sycl::minimum<result_type>() ); 
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
 
         h.parallel_for(sycl::nd_range<1>(global_size, work_group_size),
                        reduction_obj,
@@ -78,7 +78,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
 
       });
 
-      qu->wait();
+      qu.wait();
 
       m_minloc = static_cast<Index_type>(result->idx);
       RP_CALI_SUBKERNEL_END("FIRST_MIN_1");
@@ -86,7 +86,7 @@ void FIRST_MIN::runSyclVariantImpl(VariantID vid)
     }
     stopTimer();
 
-    sycl::free(result, *qu);
+    sycl::free(result, qu);
 
   } else if ( vid == RAJA_SYCL ) {
 

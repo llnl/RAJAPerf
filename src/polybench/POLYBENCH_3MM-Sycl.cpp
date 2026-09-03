@@ -62,7 +62,7 @@ void POLYBENCH_3MM::runSyclVariantImpl(VariantID vid)
       sycl::range<3> wkgroup_dim(1, out_wg_sz, in_wg_sz);
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_3MM_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim1, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
@@ -82,7 +82,7 @@ void POLYBENCH_3MM::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("POLYBENCH_3MM_1");
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_3MM_2");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim2, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
@@ -102,7 +102,7 @@ void POLYBENCH_3MM::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("POLYBENCH_3MM_2");
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_3MM_3");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim3, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 

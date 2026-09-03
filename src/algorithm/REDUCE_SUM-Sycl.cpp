@@ -51,7 +51,7 @@ void REDUCE_SUM::runSyclVariantImpl(VariantID vid)
 
       initSyclDeviceData(sum, &m_sum_init, 1, qu); 
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
 
         auto sumReduction = sycl::reduction(sum, sycl::plus<Real_type>());
 

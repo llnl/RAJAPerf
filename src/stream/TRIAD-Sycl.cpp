@@ -45,7 +45,7 @@ void TRIAD::runSyclVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RP_CALI_SUBKERNEL_BEGIN("TRIAD_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 

@@ -48,7 +48,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(iend, work_group_size); 
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -62,7 +62,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("ENERGY_1");
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_2");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
             
@@ -76,7 +76,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("ENERGY_2");
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_3");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -89,7 +89,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("ENERGY_3");
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_4");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -103,7 +103,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("ENERGY_4");
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_5");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -117,7 +117,7 @@ void ENERGY::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("ENERGY_5");
 
       RP_CALI_SUBKERNEL_BEGIN("ENERGY_6");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 

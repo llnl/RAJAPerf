@@ -43,7 +43,7 @@ void POLYBENCH_ATAX::runSyclVariantImpl(VariantID vid)
       const size_t global_size = work_group_size * RAJA_DIVIDE_CEILING_INT(N, work_group_size);
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_ATAX_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) {
 
@@ -62,7 +62,7 @@ void POLYBENCH_ATAX::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("POLYBENCH_ATAX_1");
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_ATAX_2");
-      qu->submit([&] (sycl::handler& h) { 
+      qu.submit([&] (sycl::handler& h) { 
         h.parallel_for(sycl::nd_range<1> (global_size, work_group_size),
                        [=] (sycl::nd_item<1> item) { 
 

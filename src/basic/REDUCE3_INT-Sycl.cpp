@@ -57,7 +57,7 @@ void REDUCE3_INT::runSyclVariantImpl(VariantID vid)
       initSyclDeviceData(hmin, &m_vmin_init, 1, qu);
       initSyclDeviceData(hmax, &m_vmax_init, 1, qu);
 
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
 
         auto sum_reduction = sycl::reduction(hsum, sycl::plus<>());
         auto min_reduction = sycl::reduction(hmin, sycl::minimum<>());

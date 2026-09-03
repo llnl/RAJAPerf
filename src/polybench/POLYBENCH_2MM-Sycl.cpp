@@ -59,7 +59,7 @@ void POLYBENCH_2MM::runSyclVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_2MM_1");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim1, wkgroup_dim), 
                        [=] (sycl::nd_item<3> item) {
 
@@ -79,7 +79,7 @@ void POLYBENCH_2MM::runSyclVariantImpl(VariantID vid)
       RP_CALI_SUBKERNEL_END("POLYBENCH_2MM_1");
 
       RP_CALI_SUBKERNEL_BEGIN("POLYBENCH_2MM_2");
-      qu->submit([&] (sycl::handler& h) {
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3>( global_dim2, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
