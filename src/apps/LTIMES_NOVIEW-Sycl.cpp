@@ -51,7 +51,8 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
-      qu->submit([&] (sycl::handler& h) {
+      RP_CALI_SUBKERNEL_BEGIN("LTIMES_NOVIEW_1");
+      qu.submit([&] (sycl::handler& h) {
         h.parallel_for(sycl::nd_range<3> ( global_dim, wkgroup_dim),
                        [=] (sycl::nd_item<3> item) {
 
@@ -67,6 +68,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
 
         });
       });
+      RP_CALI_SUBKERNEL_END("LTIMES_NOVIEW_1");
 
     }
     stopTimer();
@@ -94,6 +96,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_NOVIEW_1");
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
                            RAJA::RangeSegment(0, num_z),
@@ -103,6 +106,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
           [=] (Index_type d, Index_type z, Index_type g, Index_type m) {
           LTIMES_NOVIEW_BODY;
         });
+        RP_CALI_SUBKERNEL_END("LTIMES_NOVIEW_1");
 
       }
       stopTimer();
@@ -129,6 +133,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_NOVIEW_1");
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(1, g_grid_sz, z_grid_sz),
                                RAJA::Threads(num_m, g_wg_sz, z_wg_sz)),
@@ -154,6 +159,7 @@ void LTIMES_NOVIEW::runSyclVariantImpl(VariantID vid)
 
             } // outer lambda (ctx)
         );    // RAJA::launch
+        RP_CALI_SUBKERNEL_END("LTIMES_NOVIEW_1");
 
       } // loop over kernel reps
       stopTimer();

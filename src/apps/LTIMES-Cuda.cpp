@@ -132,7 +132,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
+      RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
       constexpr size_t shmem = 0;
 
       if constexpr (tune_idx == 0) {
@@ -156,7 +156,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
           phi, ell, psi,
           num_d, num_m, num_g, num_z );
       }
-
+      RP_CALI_SUBKERNEL_END("LTIMES_1");
     }
     stopTimer();
 
@@ -165,6 +165,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
     startTimer();
     // Loop counter increment uses macro to quiet C++20 compiler warning
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+      RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
 
       auto ltimes_lambda = [=] __device__ (IZ z, IG g, IM m) {
         for (ID d(0); d < num_d; ++d ) {
@@ -196,7 +197,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
           num_m, num_g, num_z,
           ltimes_lambda );
       }
-
+      RP_CALI_SUBKERNEL_END("LTIMES_1");
     }
     stopTimer();
 
@@ -222,7 +223,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
-
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(IDRange(0, *num_d),
                            IZRange(0, *num_z),
@@ -233,7 +234,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
             LTIMES_BODY;
           }
         );
-
+        RP_CALI_SUBKERNEL_END("LTIMES_1");
       }
       stopTimer();
 
@@ -257,6 +258,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
 
         RAJA::kernel_resource<EXEC_POL>(
           RAJA::make_tuple(IDRange(0, *num_d),
@@ -268,7 +270,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
             LTIMES_BODY;
           }
         );
-
+        RP_CALI_SUBKERNEL_END("LTIMES_1");
       }
       stopTimer();
 
@@ -290,6 +292,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(*num_z, *num_g, 1),
@@ -316,7 +319,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
             } // outer lambda (ctx)
         );    // RAJA::launch
-
+        RP_CALI_SUBKERNEL_END("LTIMES_1");
       } // loop over kernel reps
       stopTimer();
     } else if constexpr (tune_idx == 3) {
@@ -343,6 +346,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
       startTimer();
       // Loop counter increment uses macro to quiet C++20 compiler warning
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
+        RP_CALI_SUBKERNEL_BEGIN("LTIMES_1");
 
         RAJA::launch<launch_policy>( res,
             RAJA::LaunchParams(RAJA::Teams(m_grid_sz, g_grid_sz, z_grid_sz),
@@ -369,7 +373,7 @@ void LTIMES::runCudaVariantImpl(VariantID vid)
 
             } // outer lambda (ctx)
         );    // RAJA::launch
-
+        RP_CALI_SUBKERNEL_END("LTIMES_1");
       } // loop over kernel reps
       stopTimer();
     }
