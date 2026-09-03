@@ -50,7 +50,7 @@ void MAT_MAT::runSyclVariantImpl(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
       RP_CALI_SUBKERNEL_BEGIN("MAT_MAT_1");
-      qu->submit([&](::sycl::handler& h) {
+      qu.submit([&](::sycl::handler& h) {
 
         //No local accessors are needed as nothing is shared between
         //work-items in this variant
