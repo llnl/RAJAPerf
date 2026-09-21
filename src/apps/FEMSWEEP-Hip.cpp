@@ -52,7 +52,11 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
     const Index_type nehp = phpaa_r[ohp + hp];
     for (Index_type k = threadIdx.x; k < nehp; k += block_size)
     {
-      FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+      femsweepHyperplaneElement<false>(
+          Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+          ne, ng, sharedinteriorfaces, order_r,
+          AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
+          a, g, k, nehp_pos, Ffactor);
     }
     __syncthreads();
     nehp_pos += nehp;
@@ -147,7 +151,11 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
                  const Index_type nehp = phpaa_r[ohp + hp];
                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
                      [&](Index_type k) {
-                   FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                   femsweepHyperplaneElement<false>(
+                       Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+                       ne, ng, sharedinteriorfaces, order_r,
+                       AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
+                       a, g, k, nehp_pos, Ffactor);
                  });  // k loop
                  ctx.teamSync();
                  nehp_pos += nehp;

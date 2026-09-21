@@ -60,7 +60,11 @@ RP_CALI_SUBKERNEL_BEGIN("FEMSWEEP_1");
               const Index_type nehp = phpaa_r[ohp + hp];
               for (Index_type k = 0; k < nehp; ++k)
               {
-                FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                femsweepHyperplaneElement<false>(
+                    Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+                    ne, ng, sharedinteriorfaces, order_r,
+                    AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
+                    a, g, k, nehp_pos, Ffactor);
               }
               nehp_pos += nehp;
             }
@@ -107,7 +111,11 @@ RP_CALI_SUBKERNEL_END("FEMSWEEP_1");
               const Index_type nehp = phpaa_r[ohp + hp];
               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
                   [&](Index_type k) {
-                FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT;
+                femsweepHyperplaneElement<false>(
+                    Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+                    ne, ng, sharedinteriorfaces, order_r,
+                    AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
+                    a, g, k, nehp_pos, Ffactor);
               });  // k loop
               ctx.teamSync();
               nehp_pos += nehp;
