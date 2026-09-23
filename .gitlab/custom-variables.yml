@@ -59,7 +59,7 @@ variables:
   TUOLUMNE_SHARED_ALLOC: "OFF"
   TUOLUMNE_JOB_ALLOC: "--queue=pci --nodes=1 --time-limit=20m"
   # Arguments for performance job allocation (dedicated allocation with no overlapping).
-  TUOLUMNE_PERF_ALLOC: "--queue=pci --exclusive --time-limit=15m --nodes=1"
+  TUOLUMNE_PERF_ALLOC: "--queue=pci --exclusive --time-limit=20m --nodes=1"
   # Project specific variants for tuolumne
   PROJECT_TUOLUMNE_VARIANTS: "~shared +openmp"
   # Project specific deps for tuolumne
