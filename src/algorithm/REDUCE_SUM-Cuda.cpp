@@ -17,6 +17,7 @@
 
 #include "cub/device/device_reduce.cuh"
 #include "cub/util_allocator.cuh"
+#include <cuda/std/functional>
 
 #include <iostream>
 #include <utility>
@@ -31,24 +32,24 @@ namespace experimental
 {
 
 template<>
-struct StreamInsertHelper<::cub::Sum&>
+struct StreamInsertHelper<::cuda::std::plus<>&>
 {
-  ::cub::Sum& m_val;
+  ::cuda::std::plus<>& m_val;
 
   std::ostream& operator()(std::ostream& str) const
   {
-    return str << "::cub::Sum";
+    return str << "::cuda::std::plus<>";
   }
 };
 ///
 template<>
-struct StreamInsertHelper<::cub::Sum const&>
+struct StreamInsertHelper<::cuda::std::plus<> const&>
 {
-  ::cub::Sum const& m_val;
+  ::cuda::std::plus<> const& m_val;
 
   std::ostream& operator()(std::ostream& str) const
   {
-    return str << "::cub::Sum";
+    return str << "::cuda::std::plus<>";
   }
 };
 
@@ -116,7 +117,7 @@ void REDUCE_SUM::runCudaVariantCub(VariantID vid)
         x+ibegin,
         sum,
         len,
-        ::cub::Sum(),
+        ::cuda::std::plus<>(),
         m_sum_init,
         stream);
 
@@ -137,7 +138,7 @@ void REDUCE_SUM::runCudaVariantCub(VariantID vid)
           x+ibegin,
           sum,
           len,
-          ::cub::Sum(),
+          ::cuda::std::plus<>(),
           m_sum_init,
           stream);
 
