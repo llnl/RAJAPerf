@@ -81,6 +81,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+         RP_CALI_SUBKERNEL_BEGIN("FEMSWEEP_1");
          const dim3 grid_size(ng, na);
          constexpr size_t shmem = 0;
 
@@ -105,6 +106,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
                              F_g2l,
                              idx1,
                              idx2 );
+         RP_CALI_SUBKERNEL_END("FEMSWEEP_1");
 
       }
       stopTimer();
@@ -131,6 +133,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; RP_REPCOUNTINC(irep)) {
 
+         RP_CALI_SUBKERNEL_BEGIN("FEMSWEEP_1");
          RAJA::launch<launch_policy>( res,
              RAJA::LaunchParams(RAJA::Teams(ng, na),
                                 RAJA::Threads(block_size)),
@@ -158,6 +161,7 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
              });
            });
          });
+         RP_CALI_SUBKERNEL_END("FEMSWEEP_1");
 
       }
       stopTimer();
