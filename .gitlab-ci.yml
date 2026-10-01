@@ -40,6 +40,9 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_UPDATE_FLAGS: --jobs 4
 
+# This sha fixes the version of RAJA used in gitlab CI by RAJAPerf
+  RAJA_REFERENCE: "a7230d0fd7b2d8df7433f8f0464e833db42d38df"
+
 # SHARED_CI CONFIGURATION
 # Required information about GitHub repository
   GITHUB_PROJECT_NAME: "RAJAPerf"
