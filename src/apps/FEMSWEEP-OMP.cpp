@@ -24,6 +24,7 @@ namespace apps
 {
 
 
+template < bool unroll >
 void FEMSWEEP::runOpenMPVariant(VariantID vid)
 {
 #if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)
@@ -60,7 +61,7 @@ RP_CALI_SUBKERNEL_BEGIN("FEMSWEEP_1");
               const Index_type nehp = phpaa_r[ohp + hp];
               for (Index_type k = 0; k < nehp; ++k)
               {
-                femsweepHyperplaneElement<false>(
+                femsweepHyperplaneElement<unroll>(
                     Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
                     ne, ng, sharedinteriorfaces, order_r,
                     AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -111,7 +112,7 @@ RP_CALI_SUBKERNEL_END("FEMSWEEP_1");
               const Index_type nehp = phpaa_r[ohp + hp];
               RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
                   [&](Index_type k) {
-                femsweepHyperplaneElement<false>(
+                femsweepHyperplaneElement<unroll>(
                     Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
                     ne, ng, sharedinteriorfaces, order_r,
                     AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -142,7 +143,16 @@ RP_CALI_SUBKERNEL_END("FEMSWEEP_1");
 
 }
 
-RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, OpenMP, Base_OpenMP, RAJA_OpenMP)
+void FEMSWEEP::defineOpenMPVariantTunings()
+{
+  for (VariantID vid : {Base_OpenMP, RAJA_OpenMP}) {
+    addVariantTuning<&FEMSWEEP::runOpenMPVariant<false>>(
+        vid, getDefaultTuningName());
+
+    addVariantTuning<&FEMSWEEP::runOpenMPVariant<true>>(
+        vid, FEMSWEEP_UNROLL_TUNING_NAME);
+  }
+}
 
 } // end namespace apps
 } // end namespace rajaperf
