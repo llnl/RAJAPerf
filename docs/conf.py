@@ -188,7 +188,7 @@ html_logo = '../share/raja/logo/RAJA_LOGO_CMYK_White_Background_large.png'
 html_static_path = [os.path.join(conf_directory, 'sphinx/_static')]
 
 html_css_files = [
-    'raja.css',
+    'rajaperf.css',
 ]
 
 # Add any extra paths that contain custom files (such as robots.txt or
