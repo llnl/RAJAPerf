@@ -118,8 +118,11 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
       constexpr bool async = true;
 
+      // Target 5 blocks per SM for the unrolled version to constrain NVCC's per-thread register allocation.
+      constexpr size_t min_blocks_per_sm = unroll ? 5 : 1;
+
       using launch_policy =
-          RAJA::LaunchPolicy<RAJA::cuda_launch_t<async, block_size>>;
+          RAJA::LaunchPolicy<RAJA::cuda_launch_explicit_t<async, block_size, min_blocks_per_sm>>;
 
       using outer_y =
           RAJA::LoopPolicy<RAJA::cuda_block_y_direct_unchecked>;
