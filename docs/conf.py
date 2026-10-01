@@ -61,6 +61,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax'
+    'sphinxcontrib.jquery'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -185,6 +186,10 @@ html_logo = '../share/raja/logo/RAJA_LOGO_CMYK_White_Background_large.png'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = [os.path.join(conf_directory, 'sphinx/_static')]
+
+html_css_files = [
+    'raja.css',
+]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -314,7 +319,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'RAJAPerf', u'RAJA Perf Documentation',
-     'RAJA Team', 'RAJAPerf', 'Performance Portability for HPC Simulations',
+     'RAJA Team', 'RAJAPerf', 'RAJA Performance Analysis for HPC Simulations',
      'Miscellaneous'),
 ]
 
