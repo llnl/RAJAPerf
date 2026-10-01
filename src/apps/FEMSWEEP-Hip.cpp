@@ -22,7 +22,7 @@ namespace rajaperf
 namespace apps
 {
 
-template < size_t block_size >
+template < size_t block_size, bool unroll >
 __launch_bounds__(block_size)
 __global__ void FEMSweep3D( const Real_ptr Bdat,
                             const Real_ptr Adat,
@@ -52,7 +52,7 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
     const Index_type nehp = phpaa_r[ohp + hp];
     for (Index_type k = threadIdx.x; k < nehp; k += block_size)
     {
-      femsweepHyperplaneElement<false>(
+      femsweepHyperplaneElement<unroll>(
           Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
           ne, ng, sharedinteriorfaces, order_r,
           AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -63,7 +63,7 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
   }
 }
 
-template < size_t block_size >
+template < size_t block_size, bool unroll >
 void FEMSWEEP::runHipVariantImpl(VariantID vid)
 {
   setBlockSize(block_size);
@@ -86,7 +86,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
          const dim3 grid_size(ng, na);
          constexpr size_t shmem = 0;
 
-         RPlaunchHipKernel( (FEMSweep3D<block_size>),
+         RPlaunchHipKernel( (FEMSweep3D<block_size, unroll>),
                             grid_size, block_size,
                             shmem, res.get_stream(),
                             Bdat,
@@ -151,7 +151,7 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
                  const Index_type nehp = phpaa_r[ohp + hp];
                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
                      [&](Index_type k) {
-                   femsweepHyperplaneElement<false>(
+                   femsweepHyperplaneElement<unroll>(
                        Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
                        ne, ng, sharedinteriorfaces, order_r,
                        AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -179,7 +179,28 @@ void FEMSWEEP::runHipVariantImpl(VariantID vid)
 
 }
 
-RAJAPERF_GPU_BLOCK_SIZE_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Hip, Base_HIP, RAJA_HIP)
+void FEMSWEEP::defineHipVariantTunings()
+{
+  for (VariantID vid : {Base_HIP, RAJA_HIP}) {
+    seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
+      if (run_params.numValidGPUBlockSize() == 0u ||
+          run_params.validGPUBlockSize(block_size)) {
+        if (block_size == 0u) {
+          addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, false>>(
+              vid, "block_auto");
+        } else {
+          addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, false>>(
+              vid, "block_" + std::to_string(block_size));
+        }
+
+        if (block_size == default_gpu_block_size) {
+          addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, true>>(
+              vid, FEMSWEEP_UNROLL_64_TUNING_NAME);
+        }
+      }
+    });
+  }
+}
 
 } // end namespace apps
 } // end namespace rajaperf
