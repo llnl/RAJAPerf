@@ -96,6 +96,7 @@ constexpr long ND = 8;   // number of corners per element
 constexpr long NLF = 6;  // number of faces per element
 constexpr long FDS = 4;  // number of DOFs per face
 
+#define FEMSWEEP_UNROLL_TUNING_NAME "unroll"
 #define FEMSWEEP_UNROLL_64_TUNING_NAME "unroll_64"
 
 #define FEMSWEEP_DATA_SETUP \
@@ -517,11 +518,12 @@ public:
   void defineHipVariantTunings();
 
   void runSeqVariant(VariantID vid);
+  template < bool unroll >
   void runOpenMPVariant(VariantID vid);
 
   template < size_t block_size, bool unroll >
   void runCudaVariantImpl(VariantID vid);
-  template < size_t block_size >
+  template < size_t block_size, bool unroll >
   void runHipVariantImpl(VariantID vid);
 
 private:
