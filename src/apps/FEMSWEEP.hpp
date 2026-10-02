@@ -92,9 +92,9 @@
 
 #include "FEMSWEEPMeshGen.hpp"
 
-constexpr long ND = 8;   // number of corners per element
-constexpr long NLF = 6;  // number of faces per element
-constexpr long FDS = 4;  // number of DOFs per face
+constexpr RAJA::Index_type ND = 8;   // number of corners per element
+constexpr RAJA::Index_type NLF = 6;  // number of faces per element
+constexpr RAJA::Index_type FDS = 4;  // number of DOFs per face
 
 #define FEMSWEEP_UNROLL_TUNING_NAME "unroll"
 #define FEMSWEEP_UNROLL_64_TUNING_NAME "unroll_64"
@@ -140,7 +140,7 @@ namespace rajaperf
   for (__VA_ARGS__)
 
 // LU factorization with no pivoting
-template <long N>
+template <Index_type N>
 RAJA_HOST_DEVICE RAJA_INLINE
 void SolveLinearSystemNxN(Real_ptr        RAJA_RESTRICT A,
                           const Real_type               s,
@@ -227,7 +227,7 @@ void SolveLinearSystemNxN(Real_ptr        RAJA_RESTRICT A,
   }
 }
 
-template <long N>
+template <Index_type N>
 RAJA_HOST_DEVICE RAJA_INLINE
 void SolveLinearSystemNxNUnroll(Real_ptr        RAJA_RESTRICT A,
                                 const Real_type               s,
