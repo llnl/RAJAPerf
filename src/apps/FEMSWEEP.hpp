@@ -92,9 +92,12 @@
 
 #include "FEMSWEEPMeshGen.hpp"
 
-constexpr long ND = 8;   // number of corners per element
-constexpr long NLF = 6;  // number of faces per element
-constexpr long FDS = 4;  // number of DOFs per face
+constexpr RAJA::Index_type ND = 8;   // number of corners per element
+constexpr RAJA::Index_type NLF = 6;  // number of faces per element
+constexpr RAJA::Index_type FDS = 4;  // number of DOFs per face
+
+#define FEMSWEEP_UNROLL_TUNING_NAME "unroll"
+#define FEMSWEEP_UNROLL_64_TUNING_NAME "unroll_64"
 
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \
@@ -126,55 +129,24 @@ constexpr long FDS = 4;  // number of DOFs per face
   const Index_type ohp = ohpaa_r[a]; \
   Real_type Ffactor = fmax(sin(Adat[order_r[a*ne]*ND*ND + a*ne*ND*ND]) - 2.0, 0.0);
 
-#define FEMSWEEP_KERNEL_HYPERPLANE_ELEMENT \
-  Real_type A[ND*ND]; \
-  Real_type b[ND]; \
-  const Index_type e = order_r[k + nehp_pos + a * ne]; \
-  for (Index_type j = 0; j < ND; ++j) \
-  { \
-    b[j] = Bdat[j + e * ND + a * ne * ND]; \
-    for (Index_type i = 0; i < ND; ++i) \
-    { \
-      A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND]; \
-    } \
-  } \
-  for (Index_type face = 0; face < NLF; ++face) \
-  { \
-    const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]]; \
-    const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl; \
-    const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1; \
-    if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0)) \
-    { \
-      continue; \
-    } \
-    for (Index_type j = 0; j < FDS; ++j) \
-    { \
-      const Index_type ffj = f * FDS + j; \
-      const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj]; \
-      Real_type F = 0.0; \
-      for (Index_type i = 0; i < FDS; i++) \
-      { \
-        const Index_type ffi = f * FDS + i; \
-        const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi]; \
-        F += Ffactor * Fdat[i + j * FDS + (s ^ 1) * FDS * FDS + f * 2 * FDS * FDS + a * sharedinteriorfaces * 2 * FDS * FDS] * Xdat[dis + g * ND * ne + a * ng * ND * ne]; \
-      } \
-      b[djs % ND] -= F; \
-    } \
-  } \
-  const Real_type s = Sgdat[e + g * ne]; \
-  SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
-
-
 namespace rajaperf
 {
 
+#define FEMSWEEP_ROLL
+#define FEMSWEEP_UNROLL RAJA_UNROLL
+
+#define FEMSWEEP_FOR(ROLLING, ...) \
+  ROLLING \
+  for (__VA_ARGS__)
+
 // LU factorization with no pivoting
-template <long N>
-RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A, 
-                                                  const Real_type s,
-                                                  Real_const_ptr M, 
-                                                  Real_ptr b, 
-                                                  Real_ptr x)
+template <Index_type N>
+RAJA_HOST_DEVICE RAJA_INLINE
+void SolveLinearSystemNxN(Real_ptr        RAJA_RESTRICT A,
+                          const Real_type               s,
+                          Real_const_ptr  RAJA_RESTRICT M,
+                          Real_ptr        RAJA_RESTRICT b,
+                          Real_ptr        RAJA_RESTRICT x)
 {
   Real_type tempA[N][N];
   Real_type L[N][N];
@@ -182,11 +154,9 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
   Real_type D[N];
   Real_type tempx[N];
 
-  // tempA = A + s * M0
-  // set L to 0, U to identity
-  for ( Index_type ii = 0; ii < N; ++ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = 0; ii < N; ++ii)
   {
-    for ( Index_type jj = 0; jj < N; ++jj )
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type jj = 0; jj < N; ++jj)
     {
       tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
       L[ii][jj] = 0.0;
@@ -201,38 +171,32 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
     }
   }
 
-  // set first column of L, and first row of U
-  for ( Index_type ii = 0; ii < N; ++ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = 0; ii < N; ++ii)
   {
     L[ii][0] = tempA[ii][0];
   }
 
-  for ( Index_type ii = 1; ii < N; ++ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = 1; ii < N; ++ii)
   {
     U[0][ii] = tempA[0][ii]/tempA[0][0];
   }
 
-  // form L & U
-  // L formed one column at a time
-  // U formed one row at a time
-  for ( Index_type ii = 1; ii < N; ++ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = 1; ii < N; ++ii)
   {
-    // L column formation
-    for ( Index_type jj = ii; jj < N; ++jj )
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type jj = ii; jj < N; ++jj)
     {
       Real_type sum = 0.0;
-      for ( Index_type kk = 0; kk < jj; ++kk )
+      FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type kk = 0; kk < jj; ++kk)
       {
         sum += L[jj][kk] * U[kk][ii];
       }
       L[jj][ii] = tempA[jj][ii] - sum;
     }
 
-    // U row formation
-    for ( Index_type jj = ii+1; jj < N; ++jj )
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type jj = ii + 1; jj < N; ++jj)
     {
       Real_type sum = 0.0;
-      for ( Index_type kk = 0; kk < ii; ++kk )
+      FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type kk = 0; kk < ii; ++kk)
       {
         sum += L[ii][kk] * U[kk][jj];
       }
@@ -240,31 +204,294 @@ RAJA_HOST_DEVICE inline void SolveLinearSystemNxN(Real_ptr A,
     }
   }
 
-  // forward substitution
   D[0] = b[0]/L[0][0];
-  for ( Index_type ii = 1; ii < N; ++ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = 1; ii < N; ++ii)
   {
     Real_type sum = 0.0;
-    for ( Index_type jj = 0; jj < ii; ++jj )
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type jj = 0; jj < ii; ++jj)
     {
       sum += L[ii][jj] * D[jj];
     }
     D[ii] = (b[ii] - sum)/L[ii][ii];
   }
 
-  // backward substitution
   x[N-1] = tempx[N-1] = D[N-1];
-  for ( Index_type ii = N - 1 - 1; ii > -1; --ii )
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type ii = N - 1 - 1; ii > -1; --ii)
   {
     Real_type sum = 0.0;
-    for ( Index_type jj = ii+1; jj < N; ++jj )
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type jj = ii + 1; jj < N; ++jj)
     {
       sum += U[ii][jj] * tempx[jj];
     }
     x[ii] = tempx[ii] = D[ii] - sum;
   }
-
 }
+
+template <Index_type N>
+RAJA_HOST_DEVICE RAJA_INLINE
+void SolveLinearSystemNxNUnroll(Real_ptr        RAJA_RESTRICT A,
+                                const Real_type               s,
+                                Real_const_ptr  RAJA_RESTRICT M,
+                                Real_ptr        RAJA_RESTRICT b,
+                                Real_ptr        RAJA_RESTRICT x)
+{
+  Real_type tempA[N][N];
+  Real_type L[N][N];
+  Real_type U[N][N];
+  Real_type D[N];
+  Real_type tempx[N];
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = 0; ii < N; ++ii)
+  {
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type jj = 0; jj < N; ++jj)
+    {
+      tempA[ii][jj] = A[ii * N + jj] + s * M[ii * N + jj];
+      L[ii][jj] = 0.0;
+      if ( ii == jj )
+      {
+        U[ii][jj] = 1.0;
+      }
+      else
+      {
+        U[ii][jj] = 0.0;
+      }
+    }
+  }
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = 0; ii < N; ++ii)
+  {
+    L[ii][0] = tempA[ii][0];
+  }
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = 1; ii < N; ++ii)
+  {
+    U[0][ii] = tempA[0][ii]/tempA[0][0];
+  }
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = 1; ii < N; ++ii)
+  {
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type jj = ii; jj < N; ++jj)
+    {
+      Real_type sum = 0.0;
+      FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type kk = 0; kk < jj; ++kk)
+      {
+        sum += L[jj][kk] * U[kk][ii];
+      }
+      L[jj][ii] = tempA[jj][ii] - sum;
+    }
+
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type jj = ii + 1; jj < N; ++jj)
+    {
+      Real_type sum = 0.0;
+      FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type kk = 0; kk < ii; ++kk)
+      {
+        sum += L[ii][kk] * U[kk][jj];
+      }
+      U[ii][jj] = (tempA[ii][jj] - sum)/L[ii][ii];
+    }
+  }
+
+  D[0] = b[0]/L[0][0];
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = 1; ii < N; ++ii)
+  {
+    Real_type sum = 0.0;
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type jj = 0; jj < ii; ++jj)
+    {
+      sum += L[ii][jj] * D[jj];
+    }
+    D[ii] = (b[ii] - sum)/L[ii][ii];
+  }
+
+  x[N-1] = tempx[N-1] = D[N-1];
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type ii = N - 1 - 1; ii > -1; --ii)
+  {
+    Real_type sum = 0.0;
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type jj = ii + 1; jj < N; ++jj)
+    {
+      sum += U[ii][jj] * tempx[jj];
+    }
+    x[ii] = tempx[ii] = D[ii] - sum;
+  }
+}
+
+RAJA_HOST_DEVICE RAJA_INLINE
+void femsweepHyperplaneElementRolled(Real_const_ptr RAJA_RESTRICT Bdat,
+                                     Real_const_ptr RAJA_RESTRICT Adat,
+                                     Real_const_ptr RAJA_RESTRICT Fdat,
+                                     Real_ptr       RAJA_RESTRICT Xdat,
+                                     Real_const_ptr RAJA_RESTRICT Sgdat,
+                                     Real_const_ptr RAJA_RESTRICT M0dat,
+                                     const Index_type ne,
+                                     const Index_type ng,
+                                     const Index_type sharedinteriorfaces,
+                                     Index_type const * RAJA_RESTRICT order_r,
+                                     Index_type const * RAJA_RESTRICT AngleElem2FaceType,
+                                     Index_type const * RAJA_RESTRICT elem_to_faces,
+                                     Index_type const * RAJA_RESTRICT F_g2l,
+                                     Index_type const * RAJA_RESTRICT idx1,
+                                     Index_type const * RAJA_RESTRICT idx2,
+                                     const Index_type a,
+                                     const Index_type g,
+                                     const Index_type k,
+                                     const Index_type nehp_pos,
+                                     const Real_type Ffactor)
+{
+  Real_type A[ND*ND];
+  Real_type b[ND];
+  const Index_type e = order_r[k + nehp_pos + a * ne];
+
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type j = 0; j < ND; ++j)
+  {
+    b[j] = Bdat[j + e * ND + a * ne * ND];
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type i = 0; i < ND; ++i)
+    {
+      A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND];
+    }
+  }
+
+  FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type face = 0; face < NLF; ++face)
+  {
+    const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
+    const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl;
+    const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1;
+    if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0))
+    {
+      continue;
+    }
+
+    FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type j = 0; j < FDS; ++j)
+    {
+      const Index_type ffj = f * FDS + j;
+      const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj];
+      Real_type F = 0.0;
+      FEMSWEEP_FOR(FEMSWEEP_ROLL, Index_type i = 0; i < FDS; ++i)
+      {
+        const Index_type ffi = f * FDS + i;
+        const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi];
+        F += Ffactor *
+             Fdat[i + j * FDS + (s ^ 1) * FDS * FDS +
+                  f * 2 * FDS * FDS +
+                  a * sharedinteriorfaces * 2 * FDS * FDS] *
+             Xdat[dis + g * ND * ne + a * ng * ND * ne];
+      }
+      b[djs % ND] -= F;
+    }
+  }
+
+  const Real_type s = Sgdat[e + g * ne];
+  SolveLinearSystemNxN<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
+}
+
+RAJA_HOST_DEVICE RAJA_INLINE
+void femsweepHyperplaneElementUnrolled(Real_const_ptr RAJA_RESTRICT Bdat,
+                                       Real_const_ptr RAJA_RESTRICT Adat,
+                                       Real_const_ptr RAJA_RESTRICT Fdat,
+                                       Real_ptr       RAJA_RESTRICT Xdat,
+                                       Real_const_ptr RAJA_RESTRICT Sgdat,
+                                       Real_const_ptr RAJA_RESTRICT M0dat,
+                                       const Index_type ne,
+                                       const Index_type ng,
+                                       const Index_type sharedinteriorfaces,
+                                       Index_type const * RAJA_RESTRICT order_r,
+                                       Index_type const * RAJA_RESTRICT AngleElem2FaceType,
+                                       Index_type const * RAJA_RESTRICT elem_to_faces,
+                                       Index_type const * RAJA_RESTRICT F_g2l,
+                                       Index_type const * RAJA_RESTRICT idx1,
+                                       Index_type const * RAJA_RESTRICT idx2,
+                                       const Index_type a,
+                                       const Index_type g,
+                                       const Index_type k,
+                                       const Index_type nehp_pos,
+                                       const Real_type Ffactor)
+{
+  Real_type A[ND*ND];
+  Real_type b[ND];
+  const Index_type e = order_r[k + nehp_pos + a * ne];
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type j = 0; j < ND; ++j)
+  {
+    b[j] = Bdat[j + e * ND + a * ne * ND];
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type i = 0; i < ND; ++i)
+    {
+      A[i + j * ND] = Adat[i + j * ND + e * ND * ND + a * ne * ND * ND];
+    }
+  }
+
+  FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type face = 0; face < NLF; ++face)
+  {
+    const Index_type sf_gl = F_g2l[elem_to_faces[NLF * e + face]];
+    const Index_type f = sf_gl >= 0 ? sf_gl : -1 - sf_gl;
+    const Index_type s = (e == idx1[f * FDS] / ND) ? 0 : 1;
+    if ((AngleElem2FaceType[face + e * NLF + a * ne * NLF] == 0) || (sf_gl < 0))
+    {
+      continue;
+    }
+
+    FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type j = 0; j < FDS; ++j)
+    {
+      const Index_type ffj = f * FDS + j;
+      const Index_type djs = s == 0 ? idx1[ffj] : idx2[ffj];
+      Real_type F = 0.0;
+      FEMSWEEP_FOR(FEMSWEEP_UNROLL, Index_type i = 0; i < FDS; ++i)
+      {
+        const Index_type ffi = f * FDS + i;
+        const Index_type dis = s == 0 ? idx2[ffi] : idx1[ffi];
+        F += Ffactor *
+             Fdat[i + j * FDS + (s ^ 1) * FDS * FDS +
+                  f * 2 * FDS * FDS +
+                  a * sharedinteriorfaces * 2 * FDS * FDS] *
+             Xdat[dis + g * ND * ne + a * ng * ND * ne];
+      }
+      b[djs % ND] -= F;
+    }
+  }
+
+  const Real_type s = Sgdat[e + g * ne];
+  SolveLinearSystemNxNUnroll<ND>(A, s, &M0dat[0 + 0 * ND + e * ND * ND], b, &Xdat[e * ND + g * ND * ne + a * ng * ND * ne]);
+}
+
+template <bool unroll>
+RAJA_HOST_DEVICE RAJA_INLINE
+void femsweepHyperplaneElement(Real_const_ptr Bdat,
+                               Real_const_ptr Adat,
+                               Real_const_ptr Fdat,
+                               Real_ptr Xdat,
+                               Real_const_ptr Sgdat,
+                               Real_const_ptr M0dat,
+                               const Index_type ne,
+                               const Index_type ng,
+                               const Index_type sharedinteriorfaces,
+                               Index_type const * order_r,
+                               Index_type const * AngleElem2FaceType,
+                               Index_type const * elem_to_faces,
+                               Index_type const * F_g2l,
+                               Index_type const * idx1,
+                               Index_type const * idx2,
+                               const Index_type a,
+                               const Index_type g,
+                               const Index_type k,
+                               const Index_type nehp_pos,
+                               const Real_type Ffactor)
+{
+  if constexpr (unroll)
+  {
+    femsweepHyperplaneElementUnrolled(Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+                                      ne, ng, sharedinteriorfaces, order_r,
+                                      AngleElem2FaceType, elem_to_faces, F_g2l,
+                                      idx1, idx2, a, g, k, nehp_pos, Ffactor);
+  }
+  else
+  {
+    femsweepHyperplaneElementRolled(Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
+                                    ne, ng, sharedinteriorfaces, order_r,
+                                    AngleElem2FaceType, elem_to_faces, F_g2l,
+                                    idx1, idx2, a, g, k, nehp_pos, Ffactor);
+  }
+}
+
+#undef FEMSWEEP_FOR
+#undef FEMSWEEP_UNROLL
+#undef FEMSWEEP_ROLL
 
 
 class RunParams;
@@ -291,18 +518,19 @@ public:
   void defineHipVariantTunings();
 
   void runSeqVariant(VariantID vid);
+  template < bool unroll >
   void runOpenMPVariant(VariantID vid);
 
-  template < size_t block_size >
+  template < size_t block_size, bool unroll >
   void runCudaVariantImpl(VariantID vid);
-  template < size_t block_size >
+  template < size_t block_size, bool unroll >
   void runHipVariantImpl(VariantID vid);
 
 private:
 #if defined(RAJA_ENABLE_HIP)
   static const size_t default_gpu_block_size = 64;
 #else
-  static const size_t default_gpu_block_size = 128;
+  static const size_t default_gpu_block_size = 64;
 #endif
   using gpu_block_sizes_type = integer::make_gpu_block_size_list_type<default_gpu_block_size,
                                                          integer::MultipleOf<32>>;
