@@ -22,6 +22,8 @@ namespace rajaperf
 namespace apps
 {
 
+constexpr size_t unroll_min_blocks_per_sm = 5;
+
 template < size_t block_size, bool unroll >
 __launch_bounds__(block_size)
 __global__ void FEMSweep3D( const Real_ptr Bdat,
@@ -118,8 +120,10 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
       constexpr bool async = true;
 
-      // Target 5 blocks per SM for the unrolled version to constrain NVCC's per-thread register allocation.
-      constexpr size_t min_blocks_per_sm = unroll ? 5 : 1;
+      // Constrain NVCC's per-thread register allocation for unrolled tuning.
+      constexpr size_t min_blocks_per_sm =
+          unroll ? unroll_min_blocks_per_sm
+                 : RAJA::policy::cuda::MIN_BLOCKS_PER_SM;
 
       using launch_policy =
           RAJA::LaunchPolicy<RAJA::cuda_launch_explicit_t<async, block_size, min_blocks_per_sm>>;
