@@ -97,7 +97,6 @@ constexpr RAJA::Index_type NLF = 6;  // number of faces per element
 constexpr RAJA::Index_type FDS = 4;  // number of DOFs per face
 
 #define FEMSWEEP_UNROLL_TUNING_NAME "unroll"
-#define FEMSWEEP_UNROLL_64_TUNING_NAME "unroll_64"
 
 #define FEMSWEEP_DATA_SETUP \
   Real_ptr Bdat = m_Bdat; \

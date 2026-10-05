@@ -193,10 +193,9 @@ void FEMSWEEP::defineHipVariantTunings()
               vid, "block_" + std::to_string(block_size));
         }
 
-        if (block_size == default_gpu_block_size) {
-          addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, true>>(
-              vid, FEMSWEEP_UNROLL_64_TUNING_NAME);
-        }
+        addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, true>>(
+            vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
+                     std::to_string(block_size));
       }
     });
   }

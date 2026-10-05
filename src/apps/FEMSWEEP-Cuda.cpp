@@ -122,8 +122,9 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
       // Constrain NVCC's per-thread register allocation for unrolled tuning.
       constexpr size_t min_blocks_per_sm =
-          unroll ? unroll_min_blocks_per_sm
-                 : RAJA::policy::cuda::MIN_BLOCKS_PER_SM;
+          unroll && block_size == default_gpu_block_size
+              ? unroll_min_blocks_per_sm
+              : RAJA::policy::cuda::MIN_BLOCKS_PER_SM;
 
       using launch_policy =
           RAJA::LaunchPolicy<RAJA::cuda_launch_explicit_t<async, block_size, min_blocks_per_sm>>;
@@ -198,10 +199,9 @@ void FEMSWEEP::defineCudaVariantTunings()
               vid, "block_" + std::to_string(block_size));
         }
 
-        if (block_size == default_gpu_block_size) {
-          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<block_size, true>>(
-              vid, FEMSWEEP_UNROLL_64_TUNING_NAME);
-        }
+        addVariantTuning<&FEMSWEEP::runCudaVariantImpl<block_size, true>>(
+            vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
+                     std::to_string(block_size));
       }
     });
   }
