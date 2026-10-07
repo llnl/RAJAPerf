@@ -516,6 +516,7 @@ public:
   void defineCudaVariantTunings();
   void defineHipVariantTunings();
 
+  template < bool unroll >
   void runSeqVariant(VariantID vid);
   template < bool unroll >
   void runOpenMPVariant(VariantID vid);

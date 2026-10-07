@@ -19,6 +19,7 @@ namespace apps
 {
 
 
+template < bool unroll >
 void FEMSWEEP::runSeqVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -45,7 +46,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
               const Index_type nehp = phpaa_r[ohp + hp];
               for (Index_type k = 0; k < nehp; ++k)
               {
-                femsweepHyperplaneElement<false>(
+                femsweepHyperplaneElement<unroll>(
                     Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
                     ne, ng, sharedinteriorfaces, order_r,
                     AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -98,7 +99,7 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
                  const Index_type nehp = phpaa_r[ohp + hp];
                  RAJA::loop<inner_x>(ctx, RAJA::RangeSegment(0, nehp),
                      [&](Index_type k) {
-                   femsweepHyperplaneElement<false>(
+                   femsweepHyperplaneElement<unroll>(
                        Bdat, Adat, Fdat, Xdat, Sgdat, M0dat,
                        ne, ng, sharedinteriorfaces, order_r,
                        AngleElem2FaceType, elem_to_faces, F_g2l, idx1, idx2,
@@ -126,7 +127,16 @@ void FEMSWEEP::runSeqVariant(VariantID vid)
 
 }
 
-RAJAPERF_DEFAULT_TUNING_DEFINE_BOILERPLATE(FEMSWEEP, Seq, Base_Seq, RAJA_Seq)
+void FEMSWEEP::defineSeqVariantTunings()
+{
+  for (VariantID vid : {Base_Seq, RAJA_Seq}) {
+    addVariantTuning<&FEMSWEEP::runSeqVariant<false>>(
+        vid, getDefaultTuningName());
+
+    addVariantTuning<&FEMSWEEP::runSeqVariant<true>>(
+        vid, FEMSWEEP_UNROLL_TUNING_NAME);
+  }
+}
 
 } // end namespace apps
 } // end namespace rajaperf
