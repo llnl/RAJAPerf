@@ -22,7 +22,9 @@ namespace rajaperf
 namespace apps
 {
 
-constexpr size_t unroll_min_blocks_per_sm = 5;
+// Minimum resident blocks per SM for the occupancy-constrained unrolled
+// RAJA_CUDA tuning. This launch bound may reduce per-thread register use.
+constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
 
 template < size_t block_size, bool unroll >
 __launch_bounds__(block_size)
@@ -65,7 +67,7 @@ __global__ void FEMSweep3D( const Real_ptr Bdat,
   }
 }
 
-template < size_t block_size, bool unroll >
+template < size_t block_size, bool unroll, size_t min_blocks_per_sm >
 void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 {
   setBlockSize(block_size);
@@ -119,12 +121,6 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
     case RAJA_CUDA : {
 
       constexpr bool async = true;
-
-      // Constrain NVCC's per-thread register allocation for unrolled tuning.
-      constexpr size_t min_blocks_per_sm =
-          unroll && block_size == default_gpu_block_size
-              ? unroll_min_blocks_per_sm
-              : RAJA::policy::cuda::MIN_BLOCKS_PER_SM;
 
       using launch_policy =
           RAJA::LaunchPolicy<RAJA::cuda_launch_explicit_t<async, block_size, min_blocks_per_sm>>;
@@ -192,16 +188,29 @@ void FEMSWEEP::defineCudaVariantTunings()
       if (run_params.numValidGPUBlockSize() == 0u ||
           run_params.validGPUBlockSize(block_size)) {
         if (block_size == 0u) {
-          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<block_size, false>>(
+          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
+              block_size, false, RAJA::policy::cuda::MIN_BLOCKS_PER_SM>>(
               vid, "block_auto");
         } else {
-          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<block_size, false>>(
+          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
+              block_size, false, RAJA::policy::cuda::MIN_BLOCKS_PER_SM>>(
               vid, "block_" + std::to_string(block_size));
         }
 
-        addVariantTuning<&FEMSWEEP::runCudaVariantImpl<block_size, true>>(
+        addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
+            block_size, true, RAJA::policy::cuda::MIN_BLOCKS_PER_SM>>(
             vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
                      std::to_string(block_size));
+
+        // Separate unrolled CUDA-optimized tuning with a 5-block-per-SM launch bound
+        // so its register-use/occupancy tradeoff can be measured.
+        if (vid == RAJA_CUDA) {
+          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
+              block_size, true, unroll_min_blocks_per_sm_tuning>>(
+              vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
+                       std::to_string(block_size) + "_min_blocks_per_sm_" +
+                       std::to_string(unroll_min_blocks_per_sm_tuning));
+        }
       }
     });
   }

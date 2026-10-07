@@ -392,7 +392,7 @@ public:
   template < bool unroll >
   void runOpenMPVariant(VariantID vid);
 
-  template < size_t block_size, bool unroll >
+  template < size_t block_size, bool unroll, size_t min_blocks_per_sm >
   void runCudaVariantImpl(VariantID vid);
   template < size_t block_size, bool unroll >
   void runHipVariantImpl(VariantID vid);
