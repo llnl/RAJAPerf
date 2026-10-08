@@ -203,17 +203,18 @@ void FEMSWEEP::defineCudaVariantTunings()
             vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
                      std::to_string(block_size));
 
-        // Separate unrolled CUDA-optimized tuning with a 5-block-per-SM launch bound
-        // so its register-use/occupancy tradeoff can be measured.
-        if (vid == RAJA_CUDA) {
-          addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
-              unroll_block_size_tuning, true, unroll_min_blocks_per_sm_tuning>>(
-              vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
-                       std::to_string(unroll_block_size_tuning) + "_min_blocks_per_sm_" +
-                       std::to_string(unroll_min_blocks_per_sm_tuning));
-        }
       }
     });
+
+    // Separate unrolled CUDA-optimized tuning with a 5-block-per-SM launch bound
+    // so its register-use/occupancy tradeoff can be measured.
+    if (vid == RAJA_CUDA) {
+      addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
+          unroll_block_size_tuning, true, unroll_min_blocks_per_sm_tuning>>(
+          vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
+                   std::to_string(unroll_block_size_tuning) + "_min_blocks_per_sm_" +
+                   std::to_string(unroll_min_blocks_per_sm_tuning));
+    }
   }
 }
 
