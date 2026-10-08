@@ -195,7 +195,7 @@ void FEMSWEEP::defineHipVariantTunings()
 
         addVariantTuning<&FEMSWEEP::runHipVariantImpl<block_size, true>>(
             vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
-                     std::to_string(block_size));
+            std::to_string(block_size));
       }
     });
   }
