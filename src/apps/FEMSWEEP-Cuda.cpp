@@ -179,11 +179,6 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
 void FEMSWEEP::defineCudaVariantTunings()
 {
-  // Optimal tuning parameters for unrolled RAJA_CUDA tuning on the H100.
-  // These launch bounds reduce per-thread register use and increase occupancy.
-  constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
-  constexpr size_t unroll_block_size_tuning = 64; 
-
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
       if (run_params.numValidGPUBlockSize() == 0u ||
@@ -208,7 +203,9 @@ void FEMSWEEP::defineCudaVariantTunings()
 
     // Optimal unrolled RAJA CUDA tuning with a 5-block-per-SM launch bound, and 64
     // threads per block. These tuning parameters were determined empirically on 
-    // the H100.
+    // the H100, reducing per-thread register use and increasing occupancy.
+    constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
+    constexpr size_t unroll_block_size_tuning = 64; 
     if (vid == RAJA_CUDA) {
       addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
           unroll_block_size_tuning, true, unroll_min_blocks_per_sm_tuning>>(
