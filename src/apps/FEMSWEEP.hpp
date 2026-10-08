@@ -138,11 +138,11 @@ namespace rajaperf
 #define FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN(FUNCTION_NAME, UNROLL_MODE) \
 template <Index_type N> \
 RAJA_HOST_DEVICE RAJA_INLINE \
-void FUNCTION_NAME(Real_ptr        RAJA_RESTRICT A, \
-                   const Real_type               s, \
-                   Real_const_ptr  RAJA_RESTRICT M, \
-                   Real_ptr        RAJA_RESTRICT b, \
-                   Real_ptr        RAJA_RESTRICT x) \
+void FUNCTION_NAME(Real_ptr        A, \
+                   const Real_type s, \
+                   Real_const_ptr  M, \
+                   Real_ptr        b, \
+                   Real_ptr        x) \
 { \
   Real_type tempA[N][N]; \
   Real_type L[N][N]; \
@@ -243,21 +243,21 @@ FEMSWEEP_DEFINE_SOLVE_LINEAR_SYSTEM_NXN(SolveLinearSystemNxNUnroll, UNROLL)
 
 #define FEMSWEEP_DEFINE_HYPERPLANE_ELEMENT(FUNCTION_NAME, SOLVE, UNROLL_MODE) \
 RAJA_HOST_DEVICE RAJA_INLINE \
-void FUNCTION_NAME(Real_const_ptr RAJA_RESTRICT Bdat, \
-                   Real_const_ptr RAJA_RESTRICT Adat, \
-                   Real_const_ptr RAJA_RESTRICT Fdat, \
-                   Real_ptr       RAJA_RESTRICT Xdat, \
-                   Real_const_ptr RAJA_RESTRICT Sgdat, \
-                   Real_const_ptr RAJA_RESTRICT M0dat, \
+void FUNCTION_NAME(Real_const_ptr Bdat, \
+                   Real_const_ptr Adat, \
+                   Real_const_ptr Fdat, \
+                   Real_ptr       Xdat, \
+                   Real_const_ptr Sgdat, \
+                   Real_const_ptr M0dat, \
                    const Index_type ne, \
                    const Index_type ng, \
                    const Index_type sharedinteriorfaces, \
-                   Index_type const * RAJA_RESTRICT order_r, \
-                   Index_type const * RAJA_RESTRICT AngleElem2FaceType, \
-                   Index_type const * RAJA_RESTRICT elem_to_faces, \
-                   Index_type const * RAJA_RESTRICT F_g2l, \
-                   Index_type const * RAJA_RESTRICT idx1, \
-                   Index_type const * RAJA_RESTRICT idx2, \
+                   Index_type const * order_r, \
+                   Index_type const * AngleElem2FaceType, \
+                   Index_type const * elem_to_faces, \
+                   Index_type const * F_g2l, \
+                   Index_type const * idx1, \
+                   Index_type const * idx2, \
                    const Index_type a, \
                    const Index_type g, \
                    const Index_type k, \
