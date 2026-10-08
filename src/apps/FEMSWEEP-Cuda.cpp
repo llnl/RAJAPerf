@@ -22,10 +22,6 @@ namespace rajaperf
 namespace apps
 {
 
-// Minimum resident blocks per SM for the occupancy-constrained unrolled
-// RAJA_CUDA tuning. This launch bound may reduce per-thread register use.
-constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
-
 template < size_t block_size, bool unroll >
 __launch_bounds__(block_size)
 __global__ void FEMSweep3D( const Real_ptr Bdat,
@@ -183,6 +179,10 @@ void FEMSWEEP::runCudaVariantImpl(VariantID vid)
 
 void FEMSWEEP::defineCudaVariantTunings()
 {
+  // Minimum resident blocks per SM for the occupancy-constrained unrolled
+  // RAJA_CUDA tuning. This launch bound may reduce per-thread register use.
+  constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
+
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
       if (run_params.numValidGPUBlockSize() == 0u ||
