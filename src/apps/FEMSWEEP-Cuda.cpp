@@ -182,6 +182,7 @@ void FEMSWEEP::defineCudaVariantTunings()
   // Minimum resident blocks per SM for the occupancy-constrained unrolled
   // RAJA_CUDA tuning. This launch bound may reduce per-thread register use.
   constexpr size_t unroll_min_blocks_per_sm_tuning = 5;
+  constexpr size_t unroll_block_size_tuning = 64; 
 
   for (VariantID vid : {Base_CUDA, RAJA_CUDA}) {
     seq_for(gpu_block_sizes_type{}, [&](auto block_size) {
@@ -206,9 +207,9 @@ void FEMSWEEP::defineCudaVariantTunings()
         // so its register-use/occupancy tradeoff can be measured.
         if (vid == RAJA_CUDA) {
           addVariantTuning<&FEMSWEEP::runCudaVariantImpl<
-              block_size, true, unroll_min_blocks_per_sm_tuning>>(
+              unroll_block_size_tuning, true, unroll_min_blocks_per_sm_tuning>>(
               vid, std::string(FEMSWEEP_UNROLL_TUNING_NAME) + "_" +
-                       std::to_string(block_size) + "_min_blocks_per_sm_" +
+                       std::to_string(unroll_block_size_tuning) + "_min_blocks_per_sm_" +
                        std::to_string(unroll_min_blocks_per_sm_tuning));
         }
       }
