@@ -358,6 +358,33 @@ enum struct Complexity {
 /*!
  *******************************************************************************
  *
+ * \brief Enumeration defining how --force-block-alignment changes the
+ *        problem size of a kernel.
+ *
+ * IMPORTANT: This is only modified when a new problem size alignment is used
+ *            in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ProblemSizeAlignmentNames ARRAY IN IMPLEMENTATION
+ *            FILE!!!
+ *
+ *******************************************************************************
+ */
+enum struct ProblemSizeAlignment {
+
+  None = 0,   // problem size is never changed
+
+  MatrixEdge, // square-matrix edge is rounded up to a multiple of the GPU
+              // block size of the tunings selected to run
+
+  NumProblemSizeAlignments // Keep this one last and NEVER comment out (!!)
+
+};
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Enumeration defining attributes for tunings used in suite. These
  *
  * IMPORTANT: This is only modified when a new memory space is used in suite.
@@ -526,6 +553,16 @@ const std::string& getChecksumConsistencyName(ChecksumConsistency cc);
  *******************************************************************************
  */
 const std::string& getComplexityName(Complexity ac);
+
+/*!
+ *******************************************************************************
+ *
+ * \brief Return problem size alignment name associated with
+ *        ProblemSizeAlignment enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getProblemSizeAlignmentName(ProblemSizeAlignment psa);
 
 /*!
  *******************************************************************************

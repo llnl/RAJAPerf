@@ -113,18 +113,6 @@ public:
   static std::string getDefaultTuningName() { return "default"; }
 
   //
-  // How --force-block-alignment changes this kernel's problem size.
-  //   None       - never changed (default).
-  //   MatrixEdge - the kernel works on a square matrix whose edge is mapped
-  //                onto GPU blocks; the edge is rounded up to a multiple of
-  //                the GPU block size of every tuning selected to run.
-  //
-  enum struct ProblemSizeAlignment {
-    None,
-    MatrixEdge
-  };
-
-  //
   // Method to set state of all Kernel objects to indicate kernel runs 
   // are for warmup purposes if true is passed, else false.
   //
@@ -852,6 +840,7 @@ private:
   std::map<std::string, cali_id_t> Feature_attrs;
   cali_id_t ChecksumConsistency_attr;
   cali_id_t Complexity_attr;
+  cali_id_t ProblemSizeAlignment_attr;
   cali_id_t MaxPerfectLoopDimensions_attr;
   cali_id_t ProblemDimensionality_attr;
 

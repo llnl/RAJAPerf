@@ -109,6 +109,8 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
                                                    CALI_ATTR_SKIP_EVENTS);
   Complexity_attr = cali_create_attribute("Complexity", CALI_TYPE_STRING,
                                            CALI_ATTR_SKIP_EVENTS);
+  ProblemSizeAlignment_attr = cali_create_attribute("ProblemSizeAlignment", CALI_TYPE_STRING,
+                                                    CALI_ATTR_SKIP_EVENTS);
   MaxPerfectLoopDimensions_attr = cali_create_attribute("MaxPerfectLoopDimensions", CALI_TYPE_INT,
                                            CALI_ATTR_ASVALUE |
                                            CALI_ATTR_AGGREGATABLE |
@@ -372,6 +374,7 @@ void KernelBase::print(std::ostream& os) const
   }
   os << "\t\t\t checksum_consistency = " << getChecksumConsistencyName(checksum_consistency) << std::endl;
   os << "\t\t\t algorithmic_complexity = " << getComplexityName(complexity) << std::endl;
+  os << "\t\t\t problem_size_alignment = " << getProblemSizeAlignmentName(problem_size_alignment) << std::endl;
   os << "\t\t\t number_max_nested_perfect_loop_levels = " << num_nested_perfect_loops << std::endl;
   os << "\t\t\t problem_dimensionality = " << problem_dimensionality << std::endl;
   os << "\t\t\t variant_tuning_names: " << std::endl;
@@ -497,6 +500,7 @@ void KernelBase::doOnceCaliMetaBegin(VariantID vid, size_t tune_idx)
 
     cali_set_string(ChecksumConsistency_attr, getChecksumConsistencyName(getChecksumConsistency()).c_str());
     cali_set_string(Complexity_attr, getComplexityName(getComplexity()).c_str());
+    cali_set_string(ProblemSizeAlignment_attr, getProblemSizeAlignmentName(getProblemSizeAlignment()).c_str());
   }
 }
 
@@ -554,7 +558,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
           { "expr": "any(max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
-        "group by": ["Complexity", "ChecksumConsistency"],
+        "group by": ["Complexity", "ChecksumConsistency", "ProblemSizeAlignment"],
       },
       {
         "level"  : "cross",
@@ -585,7 +589,7 @@ void KernelBase::setCaliperMgrVariantTuning(VariantID vid,
           { "expr": "any(any#max#MaxPerfectLoopDimensions)", "as": "MaxPerfectLoopDimensions" },
           { "expr": "any(any#max#ProblemDimensionality)", "as": "ProblemDimensionality" },
         ],
-        "group by": ["Complexity", "ChecksumConsistency"],
+        "group by": ["Complexity", "ChecksumConsistency", "ProblemSizeAlignment"],
       }
     ]
   }

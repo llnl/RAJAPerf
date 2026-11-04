@@ -465,6 +465,30 @@ static const std::string ComplexityNames [] =
 /*!
  *******************************************************************************
  *
+ * \brief Array of names for each PROBLEM SIZE ALIGNMENT used in suite.
+ *
+ * IMPORTANT: This is only modified when a new problem size alignment is used
+ *            in suite.
+ *
+ *            IT MUST BE KEPT CONSISTENT (CORRESPONDING ONE-TO-ONE) WITH
+ *            ITEMS IN THE ProblemSizeAlignment enum IN HEADER FILE!!!
+ *
+ *******************************************************************************
+ */
+static const std::string ProblemSizeAlignmentNames [] =
+{
+  std::string("None"),
+
+  std::string("MatrixEdge"),
+
+  std::string("Unknown ProblemSizeAlignment")  // Keep this at the end and DO NOT remove....
+
+}; // END ProblemSizeAlignmentNames
+
+
+/*!
+ *******************************************************************************
+ *
  * \brief Array of names for each Memory Space in suite.
  *
  * IMPORTANT: This is only modified when a new memory space is added to the suite.
@@ -755,6 +779,19 @@ const std::string& getComplexityName(Complexity ac)
   return ComplexityNames[static_cast<int>(ac)];
 }
 
+/*
+ *******************************************************************************
+ *
+ * Return problem size alignment name associated with ProblemSizeAlignment
+ * enum value.
+ *
+ *******************************************************************************
+ */
+const std::string& getProblemSizeAlignmentName(ProblemSizeAlignment psa)
+{
+  return ProblemSizeAlignmentNames[static_cast<int>(psa)];
+}
+
 
 /*
  *******************************************************************************
@@ -955,7 +992,7 @@ void alignProblemSizeToGPUBlockSize(KernelBase* kernel,
                                     Index_type target_reps)
 {
   if (kernel->getProblemSizeAlignment() !=
-      KernelBase::ProblemSizeAlignment::MatrixEdge) {
+      ProblemSizeAlignment::MatrixEdge) {
     return;
   }
 
