@@ -56,7 +56,7 @@ perf_variants=${PERF_VARIANTS:-""}
 perf_run_opts=${PERF_RUN_OPTS:-""}
 perf_mpi_exec=${PERF_MPI_EXEC:-""}
 
-raja_version=${UPDATE_RAJA:-""}
+raja_reference=${RAJA_REFERENCE:-""}
 sys_type=${SYS_TYPE:-""}
 
 spack_upstream_path=${SPACK_UPSTREAM_PATH:-"/usr/workspace/umdev/RAJAPerf/upstream"}
@@ -390,11 +390,12 @@ then
     declare -A core_counts=(["dane"]=28 ["matrix"]=28 ["corona"]=32 ["rzansel"]=48 ["tioga"]=32 ["tuolumne"]=48)
 
     # If using Multi-project, set up the submodule
-    if [[ -n ${raja_version} ]]
+    if [[ -n ${raja_reference} ]]
     then
       section_start "submodule_update" "Updating RAJA Submodule" "collapsed"
       cd tpl/RAJA
-      git pull origin develop
+      git fetch origin "${raja_reference}"
+      git checkout --detach "${raja_reference}"
       git submodule update --init --recursive
       cd -
       section_end
@@ -409,31 +410,36 @@ then
     mkdir -p ${build_dir} && cd ${build_dir}
     section_end
 
-    # We set the MPI tests command to allow overlapping.
-    # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
-    # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
     cmake_options=""
     if [[ "${truehostname}" == "dane" || "${truehostname}" == "matrix" ]]
     then
-        cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
+       # We set the MPI tests command to allow overlapping.
+       # Shared allocation: Allows build_and_test.sh to run within a sub-allocation (see CI config).
+       # Use /dev/shm: Prevent MPI tests from running on a node where the build dir doesn't exist.
+       cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--overlap"
+    elif [[ "${truehostname}" == "tuolumne" ]]
+    then
+       # For El Capitan systems use the LC recommendations:
+       # https://hpc.llnl.gov/documentation/user-guides/using-el-capitan-systems/introduction-and-quickstart/pro-tips
+       # Without the --exclusive all the MPI ranks were assigned to same GPU.
+       # --exclusive requires number of nodes to be set
+       cmake_options="-DBLT_MPI_COMMAND_APPEND:STRING=--exclusive;-N;1"
     fi
 
     section_start "cmake_config" "CMake Configuration" "collapsed"
-    if $cmake_exe \
-      -C ${hostconfig_path} \
-      ${cmake_options} \
-      ${project_dir}
+
+    cmake_command="${cmake_exe} -C ${hostconfig_path} ${cmake_options} ${project_dir}"
+
+    print_info "Executing: ${cmake_command}"
+
+    if ${cmake_command}
     then
         section_end
     else
         status=$?
         section_end ; print_error "CMake configuration failed, dumping output..."
 
-        $cmake_exe \
-          -C ${hostconfig_path} \
-          ${cmake_options} \
-          -DCMAKE_INSTALL_PREFIX=${install_dir} \
-          ${project_dir} --debug-output --trace-expand
+        ${cmake_command} --debug-output --trace-expand
 
         exit ${status}
     fi
