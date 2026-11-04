@@ -34,6 +34,7 @@ POLYBENCH_MVT::POLYBENCH_MVT(const RunParams& params)
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+  setProblemSizeAlignment(ProblemSizeAlignment::MatrixEdge);
 
   setMaxPerfectLoopDimensions(1);
   setProblemDimensionality(2);

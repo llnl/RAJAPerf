@@ -668,6 +668,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
   size_t     operationalComplexity_width = 0;
   Index_type maxPerfectLoopDimensions_width = 0;
   Index_type problemDimensionality_width = 0;
+  size_t     problemSizeAlignment_width = 0;
 
   size_t     dash_width = 0;
 
@@ -689,6 +690,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
     operationalComplexity_width = max(operationalComplexity_width, getComplexityName(kernels[ik]->getComplexity()).size()+3);
     maxPerfectLoopDimensions_width = max(maxPerfectLoopDimensions_width, kernels[ik]->getMaxPerfectLoopDimensions());
     problemDimensionality_width = max(problemDimensionality_width, kernels[ik]->getProblemDimensionality());
+    problemSizeAlignment_width = max(problemSizeAlignment_width, getProblemSizeAlignmentName(kernels[ik]->getProblemSizeAlignment()).size());
   }
 
   const string sepchr(" , ");
@@ -792,6 +794,11 @@ void Executor::writeKernelInfoSummary(ostream& str,
                                      static_cast<Index_type>(pdsize) ) + 3;
   dash_width += problemDimensionality_width + static_cast<Index_type>(sepchr.size());
 
+  string problemSizeAlignment_head("ProblemSizeAlignment");
+  problemSizeAlignment_width = max( problemSizeAlignment_head.size(),
+                                    problemSizeAlignment_width ) + 2;
+  dash_width += problemSizeAlignment_width + static_cast<Index_type>(sepchr.size());
+
   str           <<left << setw(kernel_width) << kernel_head
       << sepchr <<right<< setw(psize_width) << psize_head
       << sepchr <<right<< setw(reps_width) << rsize_head
@@ -809,6 +816,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
       << sepchr <<left << setw(operationalComplexity_width) << operationalComplexity_head
       << sepchr <<left << setw(maxPerfectLoopDimensions_width) << maxPerfectLoopDimensions_head
       << sepchr <<left << setw(problemDimensionality_width) << problemDimensionality_head
+      << sepchr <<left << setw(problemSizeAlignment_width) << problemSizeAlignment_head
       << endl;
 
   if ( !to_file ) {
@@ -837,6 +845,7 @@ void Executor::writeKernelInfoSummary(ostream& str,
         << sepchr <<left << setw(operationalComplexity_width) << ("O("+getComplexityName(kern->getComplexity())+")")
         << sepchr <<right<< setw(maxPerfectLoopDimensions_width) << kern->getMaxPerfectLoopDimensions()
         << sepchr <<right<< setw(problemDimensionality_width) << kern->getProblemDimensionality()
+        << sepchr <<left << setw(problemSizeAlignment_width) << getProblemSizeAlignmentName(kern->getProblemSizeAlignment())
         << endl;
   }
 

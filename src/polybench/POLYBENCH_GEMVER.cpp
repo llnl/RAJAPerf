@@ -36,6 +36,7 @@ POLYBENCH_GEMVER::POLYBENCH_GEMVER(const RunParams& params)
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+  setProblemSizeAlignment(ProblemSizeAlignment::MatrixEdge);
 
   setMaxPerfectLoopDimensions(2);
   setProblemDimensionality(2);

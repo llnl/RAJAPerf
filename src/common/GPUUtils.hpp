@@ -373,7 +373,8 @@ using reducer_helpers = camp::list<
                 vid, "block_auto");                                            \
           } else {                                                             \
             addVariantTuning<&KERNEL::run##Variant##VariantImpl<block_size>>(  \
-                vid, "block_"+std::to_string(block_size));                     \
+                vid, "block_"+std::to_string(block_size),                      \
+                Index_type(block_size));                                       \
           }                                                                    \
         }                                                                      \
       });                                                                      \

@@ -36,6 +36,7 @@ POLYBENCH_GESUMMV::POLYBENCH_GESUMMV(const RunParams& params)
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+  setProblemSizeAlignment(ProblemSizeAlignment::MatrixEdge);
 
   setMaxPerfectLoopDimensions(1);
   setProblemDimensionality(2);

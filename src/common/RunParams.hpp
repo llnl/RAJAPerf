@@ -225,6 +225,8 @@ public:
 
   double getMinSize() const { return min_size; }
 
+  bool forceBlockAlignment() const { return force_block_alignment; }
+
   Index_type getTargetSize(Index_type default_prob_size) const
   {
     Index_type target_size = static_cast<Index_type>(0);
@@ -431,6 +433,7 @@ private:
   MemoryMeaning memory_meaning; /*!< meaning of memory value */
   double memory;           /*!< memory size to run (input option) */
   double min_size;           /*!< minimum kernel size to run (input option) */
+  bool force_block_alignment; /*!< round matrix edges up to GPU block size (input option) */
   Size_type data_alignment;
 
   Index_type multi_reduce_num_bins; /*!< number of bins used in multi reduction kernels (input option) */
