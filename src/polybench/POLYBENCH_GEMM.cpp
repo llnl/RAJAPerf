@@ -38,6 +38,7 @@ POLYBENCH_GEMM::POLYBENCH_GEMM(const RunParams& params)
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N_to_the_three_halves);
+  setProblemSizeAlignment(ProblemSizeAlignment::MatrixEdge);
 
   setMaxPerfectLoopDimensions(2);
   setProblemDimensionality(2);

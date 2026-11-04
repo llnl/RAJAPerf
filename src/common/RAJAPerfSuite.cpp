@@ -11,6 +11,10 @@
 
 #include "RunParams.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
 #include <mpi.h>
 #endif
@@ -931,6 +935,68 @@ bool isPseudoDataSpace(DataSpace dataSpace)
   return ret_val;
 }
 
+namespace {
+
+/*
+ *******************************************************************************
+ *
+ * \brief Apply --force-block-alignment to a kernel sized by a --memory* option.
+ *
+ * For a kernel with ProblemSizeAlignment::MatrixEdge, round its square-matrix
+ * edge up to a multiple of the GPU block size of every tuning selected to run
+ * (the least common multiple), so no selected tuning launches a partially
+ * filled block along the edge. Tunings without a GPU block size (CPU variants,
+ * block_auto) are ignored, and other kernels are left unchanged.
+ *
+ *******************************************************************************
+ */
+void alignProblemSizeToGPUBlockSize(KernelBase* kernel,
+                                    const RunParams& run_params,
+                                    Index_type target_reps)
+{
+  if (kernel->getProblemSizeAlignment() !=
+      KernelBase::ProblemSizeAlignment::MatrixEdge) {
+    return;
+  }
+
+  const std::vector<std::string>& selected = run_params.getTuningInput();
+  const std::vector<std::string>& excluded = run_params.getExcludeTuningInput();
+
+  Index_type alignment = 1;
+  for (VariantID vid : run_params.getVariantIDsToRun()) {
+    for (size_t tune_idx = 0; tune_idx < kernel->getNumVariantTunings(vid);
+         ++tune_idx) {
+      const std::string& tuning = kernel->getVariantTuningName(vid, tune_idx);
+      const bool is_selected = selected.empty() ||
+          std::find(selected.begin(), selected.end(), tuning) != selected.end();
+      const bool is_excluded =
+          std::find(excluded.begin(), excluded.end(), tuning) != excluded.end();
+      const Index_type block_size =
+          kernel->getVariantTuningGPUBlockSize(vid, tune_idx);
+      if (is_selected && !is_excluded && block_size > 0) {
+        alignment = std::lcm(alignment, block_size);
+      }
+    }
+  }
+
+  if (alignment == 1) {
+    return;
+  }
+
+  // the problem size of these kernels is edge*edge
+  const Index_type size = kernel->getActualProblemSize();
+  Index_type edge = static_cast<Index_type>(std::sqrt(static_cast<double>(size)));
+  while (edge > 0 && edge * edge > size) { --edge; }
+  while ((edge + 1) * (edge + 1) <= size) { ++edge; }
+
+  edge = std::max(edge, Index_type(1));
+  edge = ((edge + alignment - 1) / alignment) * alignment;
+
+  kernel->setSize(edge * edge, target_reps);
+}
+
+}  // anonymous namespace
+
 /*
  *******************************************************************************
  *
@@ -1410,6 +1476,10 @@ KernelBase* getKernelObject(KernelID kid,
     target_size = static_cast<Index_type>(kernel->getActualProblemSize()*run_params.getSizeFactor());
 
     kernel->setSize(target_size, target_reps);
+
+    if (run_params.forceBlockAlignment()) {
+      alignProblemSizeToGPUBlockSize(kernel, run_params, target_reps);
+    }
 
   }
 

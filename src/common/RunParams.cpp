@@ -41,6 +41,7 @@ RunParams::RunParams(int argc, char** argv)
    memory_meaning(MemoryMeaning::Unset),
    memory(0.0),
    min_size(0.0),
+   force_block_alignment(false),
    data_alignment(RAJA::DATA_ALIGN),
    multi_reduce_num_bins(10),
    multi_reduce_bin_assignment_algorithm(BinAssignmentAlgorithm::RunsRandomSizes),
@@ -142,6 +143,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n memory = " << memory;
   str << "\n min_size = " << min_size;
   str << "\n size_factor = " << size_factor;
+  str << "\n force_block_alignment = " << force_block_alignment;
   str << "\n data_alignment = " << data_alignment;
 
   str << "\n multi_reduce_num_bins = " << multi_reduce_num_bins;
@@ -547,6 +549,10 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
                   << std::endl;
         input_state = BadInput;
       }
+
+    } else if ( opt == std::string("--force-block-alignment") ) {
+
+      force_block_alignment = true;
 
     } else if ( opt == std::string("--min-size") ) {
 
@@ -1418,6 +1424,13 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
     size_meaning = SizeMeaning::Default;
   }
 
+  if (force_block_alignment && size_meaning != SizeMeaning::Memory) {
+    getCout() << "\nBad input:"
+              << " --force-block-alignment requires a --memory* option"
+              << std::endl;
+    input_state = BadInput;
+  }
+
 #if defined(RAJA_PERFSUITE_ENABLE_MPI)
 
   // assumes number is >= 0
@@ -1703,6 +1716,14 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t      May not be set if --size or other --memory* option is set.\n";
   str << "\t\t Example...\n"
       << "\t\t --memory-allocated 1000000 (runs each kernel such that it has ~1,000,000 bytes per rep)\n\n";
+
+  str << "\t --force-block-alignment [default is off]\n"
+      << "\t      (requires a --memory* option; for kernels that work on a\n"
+      << "\t        square matrix, rounds the matrix edge up to a multiple of\n"
+      << "\t        the GPU block size of the tunings selected to run (their\n"
+      << "\t        least common multiple); other kernels are unchanged)\n";
+  str << "\t\t Example...\n"
+      << "\t\t --memory-allocated 1000000000 --force-block-alignment\n\n";
 
   str << "\t --min-size <int> [default is 0]\n"
       << "\t      (minimum problem size to run for all kernels)\n"

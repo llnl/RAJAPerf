@@ -34,6 +34,7 @@ POLYBENCH_JACOBI_2D::POLYBENCH_JACOBI_2D(const RunParams& params)
   setChecksumTolerance(ChecksumTolerance::normal);
 
   setComplexity(Complexity::N);
+  setProblemSizeAlignment(ProblemSizeAlignment::MatrixEdge);
 
   setMaxPerfectLoopDimensions(2);
   setProblemDimensionality(2);

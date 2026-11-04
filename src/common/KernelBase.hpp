@@ -113,6 +113,18 @@ public:
   static std::string getDefaultTuningName() { return "default"; }
 
   //
+  // How --force-block-alignment changes this kernel's problem size.
+  //   None       - never changed (default).
+  //   MatrixEdge - the kernel works on a square matrix whose edge is mapped
+  //                onto GPU blocks; the edge is rounded up to a multiple of
+  //                the GPU block size of every tuning selected to run.
+  //
+  enum struct ProblemSizeAlignment {
+    None,
+    MatrixEdge
+  };
+
+  //
   // Method to set state of all Kernel objects to indicate kernel runs 
   // are for warmup purposes if true is passed, else false.
   //
@@ -151,6 +163,7 @@ public:
   void setComplexity(Complexity ac) { complexity = ac; }
   void setMaxPerfectLoopDimensions(Index_type nploops) { num_nested_perfect_loops = nploops; }
   void setProblemDimensionality(Index_type pdim) { problem_dimensionality = pdim; }
+  void setProblemSizeAlignment(ProblemSizeAlignment psa) { problem_size_alignment = psa; }
 
   void setUsesFeature(FeatureID fid) { uses_feature[fid] = true; }
 
@@ -187,6 +200,21 @@ public:
     addVariantTuning(vid, std::move(name), attrs,
         &KernelBase::wrapDerivedVariantTuningMethod<
             class_of_member_function_pointer_t<decltype(method)>, method>);
+  }
+
+  //
+  // Same as above, also recording the GPU block size the tuning launches
+  // with (read by --force-block-alignment).
+  //
+  template < auto method >
+  void addVariantTuning(VariantID vid, std::string name,
+                        Index_type gpu_block_size,
+                        TuningAttribute attrs = TuningAttribute::none)
+  {
+    addVariantTuning(vid, std::move(name), attrs,
+        &KernelBase::wrapDerivedVariantTuningMethod<
+            class_of_member_function_pointer_t<decltype(method)>, method>,
+        gpu_block_size);
   }
 
   void addVariantTunings()
@@ -244,6 +272,7 @@ public:
   Complexity getComplexity() const { return complexity; };
   Index_type getMaxPerfectLoopDimensions() const { return num_nested_perfect_loops; };
   Index_type getProblemDimensionality() const { return problem_dimensionality; };
+  ProblemSizeAlignment getProblemSizeAlignment() const { return problem_size_alignment; }
 
 
   bool usesFeature(FeatureID fid) const { return uses_feature[fid]; };
@@ -287,6 +316,10 @@ public:
 
   TuningAttribute getTuningAttributes(VariantID vid, size_t tune_idx) const
   { return variant_tuning_attrs[vid].at(tune_idx); }
+
+  // 0 if the tuning has no fixed GPU block size (CPU variants, block_auto)
+  Index_type getVariantTuningGPUBlockSize(VariantID vid, size_t tune_idx) const
+  { return variant_tuning_gpu_block_sizes[vid].at(tune_idx); }
 
   //
   // Methods to get information about kernel execution for reports
@@ -733,7 +766,8 @@ private:
   }
 
   void addVariantTuning(VariantID vid, std::string name, TuningAttribute attrs,
-                        variant_tuning_method_pointer method);
+                        variant_tuning_method_pointer method,
+                        Index_type gpu_block_size = 0);
 
   //
   // Boolean member shared by all kernel objects indicating whether they
@@ -767,9 +801,11 @@ private:
 
   Index_type num_nested_perfect_loops = -1;
   Index_type problem_dimensionality = -1;
+  ProblemSizeAlignment problem_size_alignment = ProblemSizeAlignment::None;
 
   std::vector<std::string> variant_tuning_names[NumVariants];
   std::vector<TuningAttribute> variant_tuning_attrs[NumVariants];
+  std::vector<Index_type> variant_tuning_gpu_block_sizes[NumVariants];
   std::vector<variant_tuning_method_pointer> variant_tuning_methods[NumVariants];
 
   //
