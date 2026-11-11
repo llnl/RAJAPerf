@@ -49,11 +49,13 @@ blt_add_executable(
   apps/AppsData.cpp
   apps/CONVECTION3DPA.cpp
   apps/CONVECTION3DPA-Seq.cpp
+  apps/CONVECTION3DPA_NOSHARED.cpp
   apps/DEL_DOT_VEC_2D.cpp
   apps/DEL_DOT_VEC_2D-Seq.cpp
   apps/DEL_DOT_VEC_2D-OMPTarget.cpp
   apps/DIFFUSION3DPA.cpp
   apps/DIFFUSION3DPA-Seq.cpp
+  apps/DIFFUSION3DPA_NOSHARED.cpp
   apps/EDGE3D.cpp
   apps/EDGE3D-Seq.cpp
   apps/EDGE3D-OMPTarget.cpp
@@ -77,8 +79,10 @@ blt_add_executable(
   apps/LTIMES_NOVIEW-OMPTarget.cpp
   apps/MASS3DEA.cpp
   apps/MASS3DEA-Seq.cpp
+  apps/MASS3DEA_NOSHARED.cpp
   apps/MASS3DPA.cpp
   apps/MASS3DPA-Seq.cpp
+  apps/MASS3DPA_NOSHARED.cpp
   apps/MASS3DPA_ATOMIC.cpp
   apps/MASS3DPA_ATOMIC-Seq.cpp  
   apps/MASSVEC3DPA.cpp

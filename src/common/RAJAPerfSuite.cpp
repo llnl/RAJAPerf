@@ -85,8 +85,10 @@
 // Apps kernels...
 //
 #include "apps/CONVECTION3DPA.hpp"
+#include "apps/CONVECTION3DPA_NOSHARED.hpp"
 #include "apps/DEL_DOT_VEC_2D.hpp"
 #include "apps/DIFFUSION3DPA.hpp"
+#include "apps/DIFFUSION3DPA_NOSHARED.hpp"
 #include "apps/EDGE3D.hpp"
 #include "apps/ENERGY.hpp"
 #include "apps/FEMSWEEP.hpp"
@@ -96,7 +98,9 @@
 #include "apps/LTIMES.hpp"
 #include "apps/LTIMES_NOVIEW.hpp"
 #include "apps/MASS3DEA.hpp"
+#include "apps/MASS3DEA_NOSHARED.hpp"
 #include "apps/MASS3DPA.hpp"
+#include "apps/MASS3DPA_NOSHARED.hpp"
 #include "apps/MASS3DPA_ATOMIC.hpp"
 #include "apps/MASSVEC3DPA.hpp"
 #include "apps/MATVEC_3D_STENCIL.hpp"
@@ -246,8 +250,10 @@ static const std::string KernelNames [] =
 // Apps kernels...
 //
   std::string("Apps_CONVECTION3DPA"),
+  std::string("Apps_CONVECTION3DPA_NOSHARED"),
   std::string("Apps_DEL_DOT_VEC_2D"),
   std::string("Apps_DIFFUSION3DPA"),
+  std::string("Apps_DIFFUSION3DPA_NOSHARED"),
   std::string("Apps_EDGE3D"),
   std::string("Apps_ENERGY"),
   std::string("Apps_FEMSWEEP"),
@@ -257,7 +263,9 @@ static const std::string KernelNames [] =
   std::string("Apps_LTIMES"),
   std::string("Apps_LTIMES_NOVIEW"),
   std::string("Apps_MASS3DEA"),
+  std::string("Apps_MASS3DEA_NOSHARED"),
   std::string("Apps_MASS3DPA"),
+  std::string("Apps_MASS3DPA_NOSHARED"),
   std::string("Apps_MASS3DPA_ATOMIC"),
   std::string("Apps_MASSVEC3DPA"),
   std::string("Apps_MATVEC_3D_STENCIL"),
@@ -1168,6 +1176,10 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new apps::CONVECTION3DPA(run_params);
        break;
     }
+    case Apps_CONVECTION3DPA_NOSHARED : {
+       kernel = new apps::CONVECTION3DPA_NOSHARED(run_params);
+       break;
+    }
 
     case Apps_DEL_DOT_VEC_2D : {
        kernel = new apps::DEL_DOT_VEC_2D(run_params);
@@ -1175,6 +1187,10 @@ KernelBase* getKernelObject(KernelID kid,
     }
     case Apps_DIFFUSION3DPA : {
        kernel = new apps::DIFFUSION3DPA(run_params);
+       break;
+    }
+    case Apps_DIFFUSION3DPA_NOSHARED : {
+       kernel = new apps::DIFFUSION3DPA_NOSHARED(run_params);
        break;
     }
     case Apps_EDGE3D : {
@@ -1213,8 +1229,16 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new apps::MASS3DEA(run_params);
        break;
     }
+    case Apps_MASS3DEA_NOSHARED : {
+       kernel = new apps::MASS3DEA_NOSHARED(run_params);
+       break;
+    }
     case Apps_MASS3DPA : {
        kernel = new apps::MASS3DPA(run_params);
+       break;
+    }
+    case Apps_MASS3DPA_NOSHARED : {
+       kernel = new apps::MASS3DPA_NOSHARED(run_params);
        break;
     }
     case Apps_MASS3DPA_ATOMIC : {

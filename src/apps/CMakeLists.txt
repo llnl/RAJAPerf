@@ -16,6 +16,9 @@ blt_add_library(
           CONVECTION3DPA-Seq.cpp
           CONVECTION3DPA-OMP.cpp
           CONVECTION3DPA-Sycl.cpp
+          CONVECTION3DPA_NOSHARED.cpp
+          CONVECTION3DPA_NOSHARED-Cuda.cpp
+          CONVECTION3DPA_NOSHARED-Hip.cpp
           DEL_DOT_VEC_2D.cpp
           DEL_DOT_VEC_2D-Seq.cpp
           DEL_DOT_VEC_2D-Hip.cpp
@@ -29,6 +32,9 @@ blt_add_library(
           DIFFUSION3DPA-Seq.cpp
           DIFFUSION3DPA-OMP.cpp
           DIFFUSION3DPA-Sycl.cpp
+          DIFFUSION3DPA_NOSHARED.cpp
+          DIFFUSION3DPA_NOSHARED-Cuda.cpp
+          DIFFUSION3DPA_NOSHARED-Hip.cpp
           EDGE3D.cpp
           EDGE3D-Cuda.cpp
           EDGE3D-Hip.cpp
@@ -86,12 +92,18 @@ blt_add_library(
           MASS3DEA-Seq.cpp
           MASS3DEA-OMP.cpp
           MASS3DEA-Sycl.cpp
+          MASS3DEA_NOSHARED.cpp
+          MASS3DEA_NOSHARED-Cuda.cpp
+          MASS3DEA_NOSHARED-Hip.cpp
           MASS3DPA.cpp
           MASS3DPA-Cuda.cpp
           MASS3DPA-Hip.cpp
           MASS3DPA-Seq.cpp
           MASS3DPA-OMP.cpp
           MASS3DPA-Sycl.cpp
+          MASS3DPA_NOSHARED.cpp
+          MASS3DPA_NOSHARED-Cuda.cpp
+          MASS3DPA_NOSHARED-Hip.cpp
           MASS3DPA_ATOMIC.cpp
           MASS3DPA_ATOMIC-Cuda.cpp
           MASS3DPA_ATOMIC-Hip.cpp
