@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <charconv>
 
 #include <list>
 #include <set>
@@ -47,6 +48,7 @@ RunParams::RunParams(int argc, char** argv)
    ltimes_num_d(6),
    ltimes_num_g(32),
    ltimes_num_m(25),
+   polybench_gemm_nk(1000),
    femsweep_angles_polar(3),
    femsweep_angles_azim(3),
    femsweep_groups(16),
@@ -150,6 +152,7 @@ void RunParams::print(std::ostream& str) const
   str << "\n ltimes_num_d = " << ltimes_num_d;
   str << "\n ltimes_num_g = " << ltimes_num_g;
   str << "\n ltimes_num_m = " << ltimes_num_m;
+  str << "\n polybench_gemm_nk = " << polybench_gemm_nk;
 
   str << "\n femsweep_angles_polar = " << femsweep_angles_polar;
   str << "\n femsweep_angles_azim = " << femsweep_angles_azim;
@@ -702,6 +705,29 @@ void RunParams::parseCommandLineOptions(int argc, char** argv)
           input_state = BadInput;
         } else {
           ltimes_num_m = num;
+        }
+      } else {
+        getCout() << "\nBad input:"
+                  << " must give " << opt << " a value (int)"
+                  << std::endl;
+        input_state = BadInput;
+      }
+
+    } else if ( opt == std::string("--polybench_gemm_nk") ) {
+
+      i++;
+      if ( i < argc ) {
+        std::string value(argv[i]);
+        Index_type nk = 0;
+        auto result = std::from_chars(value.data(), value.data() + value.size(), nk);
+        if ( result.ec != std::errc{} ||
+             result.ptr != value.data() + value.size() || nk <= 0 ) {
+          getCout() << "\nBad input:"
+                    << " must give " << opt << " a positive integer"
+                    << std::endl;
+          input_state = BadInput;
+        } else {
+          polybench_gemm_nk = nk;
         }
       } else {
         getCout() << "\nBad input:"
@@ -1737,6 +1763,13 @@ void RunParams::printHelpMessage(std::ostream& str) const
       << "\t      Must be greater than 0.\n";
   str << "\t\t Example...\n"
       << "\t\t --ltimes_num_m 100\n\n";
+
+  str << "\t --polybench_gemm_nk <int> [default is 1000]\n"
+      << "\t      (For POLYBENCH_GEMM only: NK at the default problem size)\n"
+      << "\t      Scales with NI when the problem size changes.\n"
+      << "\t      Must be greater than 0.\n";
+  str << "\t\t Example...\n"
+      << "\t\t --polybench_gemm_nk 1200\n\n";
 
   str << "\t --femsweep_angles_polar <int> [default is 3]\n"
       << "\t      (For FEMSWEEP kernel only)\n"
