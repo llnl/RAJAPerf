@@ -263,6 +263,8 @@ public:
   Index_type getLtimesNumG() const { return ltimes_num_g; }
   Index_type getLtimesNumM() const { return ltimes_num_m; }
 
+  Index_type getPolybenchGemmNk() const { return polybench_gemm_nk; }
+
   Index_type getFemsweepPolar() const { return femsweep_angles_polar; }
   Index_type getFemsweepAzim() const { return femsweep_angles_azim; }
   Index_type getFemsweepGroups() const { return femsweep_groups; }
@@ -439,6 +441,8 @@ private:
   Index_type ltimes_num_d; /*!< num_d used in ltimes kernels (input option) */
   Index_type ltimes_num_g; /*!< num_g used in ltimes kernels (input option) */
   Index_type ltimes_num_m; /*!< num_m used in ltimes kernels (input option) */
+
+  Index_type polybench_gemm_nk; /*!< default NK for POLYBENCH_GEMM (input option) */
 
   Index_type femsweep_angles_polar; /*!< polar angles used in femsweep kernel (input option) */
   Index_type femsweep_angles_azim; /*!< azimuthal angles used in femsweep kernel (input option) */
