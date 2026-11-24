@@ -34,5 +34,5 @@ clang_18_1_8_gcc_13_cuda_12_6_0:
 
 clang_18_1_8_cuda_12_6_0:
   variables:
-    SPEC: " ~shared +openmp +cuda cuda_arch=90 %%clang-18-gcc-13 ^cuda@12.6.0+allow-unsupported-compilers"
+    SPEC: " ~shared +openmp +cuda cuda_arch=90 %clang-18-gcc-13 ^cuda@12.6.0+allow-unsupported-compilers"
   extends: .job_on_matrix
