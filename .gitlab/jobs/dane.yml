@@ -42,7 +42,7 @@ oneapi_2025_2_0_gcc_10_3_1:
 
 clang_14_0_6:
   variables:
-    SPEC: " ~shared +openmp +omptask %clang-14-gcc-13"
+    SPEC: " ~shared +openmp +omptask %clang-14-gcc-11"
   extends: .job_on_dane
 
 clang_19_1_3:
