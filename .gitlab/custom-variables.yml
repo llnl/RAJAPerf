@@ -35,7 +35,7 @@ variables:
   # Note: we repeat the reservation, helpful when jobs are manually re-triggered.
   MATRIX_JOB_ALLOC: "--partition=pci --time=10 --gpus=1"
   # Project specific variants for matrix
-  PROJECT_MATRIX_VARIANTS: "~shared +openmp +cuda cuda_arch=90"
+  PROJECT_MATRIX_VARIANTS: "~shared +openmp +cuda"
   # Project specific deps for matrix
   PROJECT_MATRIX_DEPS: ""
 
@@ -45,8 +45,7 @@ variables:
   # Project specific variants for corona
   PROJECT_CORONA_VARIANTS: "~shared ~openmp"
   # Project specific deps for corona
-  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
-  PROJECT_CORONA_DEPS: "^[when=\"%c=llvm-amdgpu@=6.4.3 ^adiak\"]adiak %fortran=gcc@=13.3.1"
+  PROJECT_CORONA_DEPS: ""
 
   # Tioga (flux) allocation settings
   TIOGA_SHARED_ALLOC: "OFF"
@@ -54,8 +53,7 @@ variables:
   # Project specific variants for tioga
   PROJECT_TIOGA_VARIANTS: "~shared +openmp"
   # Project specific deps for tioga
-  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
-  PROJECT_TIOGA_DEPS: "^[when=\"%c=llvm-amdgpu@=6.4.3 ^adiak\"]adiak %fortran=gcc@=13.3.1"
+  PROJECT_TIOGA_DEPS: ""
 
   # Tuolumne (flux) allocation settings
   TUOLUMNE_SHARED_ALLOC: "OFF"
@@ -65,5 +63,4 @@ variables:
   # Project specific variants for tuolumne
   PROJECT_TUOLUMNE_VARIANTS: "~shared +openmp"
   # Project specific deps for tuolumne
-  # ROCm 6.4.3 needs GCC Fortran for Adiak, including when the root is ~fortran.
-  PROJECT_TUOLUMNE_DEPS: "^[when=\"%c=llvm-amdgpu@=6.4.3 ^adiak\"]adiak %fortran=gcc@=13.3.1"
+  PROJECT_TUOLUMNE_DEPS: ""

@@ -39,7 +39,8 @@ rocmcc_6_4_3_hip:
 
 rocmcc_6_4_3_hip_openmp:
   variables:
-    SPEC: "~shared +rocm +openmp amdgpu_target=gfx90a %c,cxx=llvm-amdgpu@=6.4.3 %[when='%fortran' virtuals=fortran]gcc@=13.3.1 ^hip@6.4.3 ${PROJECT_TIOGA_DEPS}"
+    RADIUSS_SPACK_STACK: "rocm-6.4.3-gcc-13.3.1-cray-mpich-9.0.1"
+    SPEC: "~shared +rocm +openmp ${PROJECT_TIOGA_DEPS}"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
@@ -47,7 +48,8 @@ rocmcc_6_4_3_hip_openmp:
 
 rocmcc_6_4_3_hip_openmp_mpi:
   variables:
-    SPEC: "~shared +rocm +openmp +mpi amdgpu_target=gfx90a %c,cxx=llvm-amdgpu@=6.4.3 %[when='%fortran' virtuals=fortran]gcc@=13.3.1 ^hip@6.4.3 ^cray-mpich%llvm-amdgpu@=6.4.3 ${PROJECT_TIOGA_DEPS}"
+    RADIUSS_SPACK_STACK: "rocm-6.4.3-gcc-13.3.1-cray-mpich-9.0.1"
+    SPEC: "~shared +rocm +openmp +mpi ^cray-mpich ${PROJECT_TIOGA_DEPS}"
     HSA_ENABLE_SDMA: "1"
     HSA_ENABLE_SDMA_COPY_SIZE_OVERRIDE: "0"
     GPU_FORCE_BLIT_COPY_SIZE: "0"
